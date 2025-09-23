@@ -1,96 +1,135 @@
-import React, {useEffect, useMemo, useState} from 'react'
-import Fraction from '../../components/Fraction.jsx'
+import React, { useMemo, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
+import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
-import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 
-export default function ScaleFactorModule(){
-  const [session,setSession] = useState(loadSession())
-  const [problem,setProblem] = useState(genScaleProblem())
-  const [misses,setMisses] = useState(0)
-  const [stage,setStage] = useState('A')
-  const [openSum,setOpenSum] = useState(false)
-  const [fraction,setFraction] = useState({num:null,den:null})
-  const [labels,setLabels] = useState({left:null,right:null}) // 'Original' | 'Copy'
-  const [pair,setPair] = useState(null) // index of chosen pair
-  const [simplified,setSimplified] = useState(false)
-  const [sf,setSf] = useState(null) // scale factor value as fraction {p,q}
-  const [part2,setPart2] = useState({equation:false,sf:false,chosen:false,computed:false})
+const STEP_HEADS = [
+  'Formula', 'Label Shapes', 'Pick Sides', 'Copy → Numerator', 'Original → Denominator', 'Calculate'
+]
 
-  useEffect(()=>{ if(!session.settings.keepOnReload){ /* start fresh each load */ } },[])
+export default function ScaleFactorModule({ goHome, goHTable }) {
+  const [session, setSession] = useState(loadSession())
+  const [problem, setProblem] = useState(genScaleProblem())
+  const [openSum, setOpenSum] = useState(false)
 
-  const wordChips = [
-    {id:'copy', label:'Copy', kind:'word'},
-    {id:'original', label:'Original', kind:'word'}
-  ]
+  const [step, setStep] = useState(0)
+  const [steps, setSteps] = useState(STEP_HEADS.map(() => ({ misses: 0, done: false })))
+  const miss = (idx) => setSteps(s => { const c = [...s]; c[idx].misses++; return c })
 
-  const numberChips = useMemo(()=>{
-    const vals = [...problem.original.sideLengths, ...problem.copy.sideLengths, ...problem.distractors]
-    return vals.map((v,i)=>({id:'n'+i,label:String(v),kind:'num',value:v}))
-  },[problem])
+  // labels
+  const [labels, setLabels] = useState({ left: null, right: null }) // 'Original' | 'Copy'
+  // side with visible numbers (depends on generator)
+  const visiblePair = problem.shownPair // 'horizontal' or 'vertical'
+  const [picked, setPicked] = useState(false)
 
-  const testWord = (want)=> (data)=> data?.kind==='word' && data.label.toLowerCase()===want
-  const testNum = ()=> (data)=> data?.kind==='num'
+  // fraction slots
+  const [slots, setSlots] = useState({ s0: null, s1: null, s2: null, s3: null, s4: null }) // five-part formula
+  const [num, setNum] = useState(null)
+  const [den, setDen] = useState(null)
+  const gcd = (a, b) => b === 0 ? a : gcd(b, a % b)
+  const [calc, setCalc] = useState({ simplified: null, steps: [] })
 
-  const markMiss = ()=> setMisses(m=>m+1)
+  // chips
+  const wordBank = useMemo(() => ([
+    { id: 'w_sf', label: 'Scale Factor', kind: 'word' },
+    { id: 'w_eq', label: '=', kind: 'word' },
+    { id: 'w_copy', label: 'Copy', kind: 'word' },
+    { id: 'w_div', label: '/', kind: 'word' },
+    { id: 'w_orig', label: 'Original', kind: 'word' },
+    // decoys
+    { id: 'w_ht', label: 'H Table', kind: 'word' },
+    { id: 'w_mul', label: 'Multiply', kind: 'word' },
+    { id: 'w_eight', label: 'Eight', kind: 'word' },
+    { id: 'w_nine', label: 'Nine', kind: 'word' },
+    { id: 'w_ten', label: 'Ten', kind: 'word' }
+  ]), [])
 
-  const onDropNum = (where,data)=>{
-    const v = data.value
-    if(where==='num'){ // numerator must be from copy
-      // if pair chosen, require copy value of that pair
-      const ok = pair==null ? (problem.copy.sideLengths.includes(v)) : (v===problem.copy.sideLengths[pair])
-      if(ok){ setFraction(f=>({...f,num:v})) } else { markMiss() }
+  // numbers that appear on shapes (only pair with values visible)
+  const copyVals = {
+    horizontal: problem.copy.w,
+    vertical: problem.copy.h
+  }
+  const origVals = {
+    horizontal: problem.original.w,
+    vertical: problem.original.h
+  }
+  const numberChips = useMemo(() => {
+    // include correct values + unique distractors
+    const vals = new Set([copyVals[visiblePair], origVals[visiblePair], ...problem.distractors])
+    return Array.from(vals).map((v, i) => ({ id: 'n' + i, label: String(v), kind: 'num', value: v }))
+  }, [problem])
+
+  const next = () => setStep(s => Math.min(s + 1, STEP_HEADS.length - 1))
+  const setDone = (i) => setSteps(s => { const c = [...s]; c[i].done = true; return c })
+
+  const testWord = (want) => (data) => data?.kind === 'word' && data.label === want
+  const testNum = () => (data) => data?.kind === 'num'
+
+  const onDropFormula = (slotKey, want) => (data) => {
+    if (data?.label !== want) { miss(0); return }
+    setSlots(prev => ({ ...prev, [slotKey]: want }))
+    // If all five placed correctly → done
+    const after = { ...slots, [slotKey]: want }
+    const ok = after.s0 === 'Scale Factor' && after.s1 === '=' && after.s2 === 'Copy' && after.s3 === '/' && after.s4 === 'Original'
+    if (ok) { setDone(0); next() }
+  }
+
+  const dropLabel = (side, data) => {
+    if (data?.kind !== 'word' || (data.label !== 'Copy' && data.label !== 'Original')) { miss(1); return }
+    setLabels(prev => ({ ...prev, [side]: data.label }))
+    const after = { ...labels, [side]: data.label }
+    if (after.left && after.right && after.left !== after.right) { setDone(1); next() }
+  }
+
+  const clickSide = (which) => {
+    // which: 'horizontal' | 'vertical'
+    if (!labels.left || !labels.right) { miss(2); return }
+    if (which === visiblePair) {
+      setPicked(true); setDone(2); next()
     } else {
-      const ok = pair==null ? (problem.original.sideLengths.includes(v)) : (v===problem.original.sideLengths[pair])
-      if(ok){ setFraction(f=>({...f,den:v})) } else { markMiss() }
+      miss(2)
     }
   }
 
-  const canSubmitPart1 = ()=>{
-    const okFrac = fraction.num && fraction.den
-    if(!okFrac) return false
-    const needsSimp = session.settings.countSimplification && (gcd(fraction.num,fraction.den)!==Math.min(fraction.num,fraction.den))
-    return okFrac && (!needsSimp || simplified)
+  const dropNum = (where, data) => {
+    if (data?.kind !== 'num') { miss(where === 'num' ? 3 : 4); return }
+    const correctCopy = copyVals[visiblePair]
+    const correctOrig = origVals[visiblePair]
+    if (where === 'num') {
+      if (data.value === correctCopy) { setNum(data.value); setDone(3); next() } else { miss(3) }
+    } else {
+      if (data.value === correctOrig) { setDen(data.value); setDone(4); next() } else { miss(4) }
+    }
   }
 
-  const gcd = (a,b)=> b===0?a:gcd(b,a%b)
-
-  const doSimplifyStep = (div)=>{
-    const n = +fraction.num, d = +fraction.den
-    if(n%div!==0 || d%div!==0){ markMiss(); return }
-    const nn = n/div, dd = d/div
-    setFraction({num:nn, den:dd})
-    if(gcd(nn,dd)===1) setSimplified(true)
-  }
-
-  const selectPair = (idx)=>{
-    setPair(idx)
-  }
-
-  const submitPart1 = ()=>{
-    const sfFrac = {p:fraction.num, q:fraction.den}
-    setSf(sfFrac)
-    setStage('F')
-  }
-
-  // part 2 compute
-  const computePart2 = ()=>{
-    if(pair==null){ markMiss(); return }
-    const orig = problem.original.sideLengths[pair]
-    const value = Math.round((orig*sf.p)/sf.q)
-    setPart2(p=>({...p,computed:true, value}))
-  }
-
-  const finishProblem = ()=>{
-    const missCount = misses
-    const scoreColor = missCount===0?'green':(missCount===1?'yellow':'red')
-    const attempt = {missCount, scoreColor}
-    const nextSession = {...session, attempts:[...session.attempts, attempt]}
+  const doCalculate = () => {
+    if (num == null || den == null) { miss(5); return }
+    let n = num, d = den; const stepsOut = []
+    let g = gcd(n, d)
+    while (g > 1) {
+      stepsOut.push(`${n} ÷ ${g} = ${n / g} ; ${d} ÷ ${g} = ${d / g}`)
+      n = n / g; d = d / g; g = gcd(n, d)
+    }
+    setCalc({ simplified: `${n}/${d}`, steps: stepsOut })
+    setDone(5)
+    // Save attempt
+    const missCount = steps.reduce((t, s) => t + s.misses, 0)
+    const scoreColor = missCount === 0 ? 'green' : (missCount === 1 ? 'yellow' : 'red')
+    const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
+    const nextSession = { ...session, attempts: [...session.attempts, attempt] }
     saveSession(nextSession); setSession(nextSession)
-    // reset
-    setProblem(genScaleProblem()); setMisses(0); setStage('A'); setFraction({num:null,den:null}); setSimplified(false); setPair(null); setSf(null); setPart2({equation:false,sf:false,chosen:false,computed:false})
+  }
+
+  const resetProblem = () => {
+    setProblem(genScaleProblem())
+    setStep(0)
+    setSteps(STEP_HEADS.map(() => ({ misses: 0, done: false })))
+    setLabels({ left: null, right: null })
+    setPicked(false)
+    setSlots({ s0: null, s1: null, s2: null, s3: null, s4: null })
+    setNum(null); setDen(null); setCalc({ simplified: null, steps: [] })
   }
 
   return (
@@ -98,78 +137,152 @@ export default function ScaleFactorModule(){
       <div className="header">
         <div className="brand">Scale Factor</div>
         <div className="toolbar">
-          <button className="button" onClick={()=>setOpenSum(true)}>Summary</button>
+          <button className="button" onClick={goHome}>Home</button>
+          <button className="button" onClick={goHTable}>H-Table</button>
+          <button className="button" onClick={() => setOpenSum(true)}>Summary</button>
+          <button className="button ghost" onClick={resetProblem}>New Problem</button>
         </div>
       </div>
 
       <div className="panes">
+        {/* LEFT: shapes */}
         <div className="card shape-area">
-          <div className="row">
-            <div className="shape">
-              <div className="shape-label">{labels.left||'?'}</div>
-              <div className="side-tag a">{problem.original.sideLengths[0]}</div>
-              <div className="side-tag b">{problem.original.sideLengths[1]??''}</div>
+          <div className="rects">
+            <div className="rect">
+              <div className={"shape-label " + (!labels.left ? 'hidden' : '')}>{labels.left || 'Label me'}</div>
+              {/* numbers only on the visible pair */}
+              {visiblePair === 'horizontal' && (
+                <>
+                  <div className="side-tag top">{problem.original.w}</div>
+                  <div className="side-tag bottom">{problem.original.w}</div>
+                </>
+              )}
+              {visiblePair === 'vertical' && (
+                <>
+                  <div className="side-tag left">{problem.original.h}</div>
+                  <div className="side-tag right">{problem.original.h}</div>
+                </>
+              )}
+              <div className={"side-hit top " + (picked && visiblePair === 'horizontal' ? 'good' : '')} onClick={() => clickSide('horizontal')} />
+              <div className={"side-hit bottom " + (picked && visiblePair === 'horizontal' ? 'good' : '')} onClick={() => clickSide('horizontal')} />
+              <div className={"side-hit left " + (picked && visiblePair === 'vertical' ? 'good' : '')} onClick={() => clickSide('vertical')} />
+              <div className={"side-hit right " + (picked && visiblePair === 'vertical' ? 'good' : '')} onClick={() => clickSide('vertical')} />
             </div>
-            <div className="shape copy">
-              <div className="shape-label">{labels.right||'?'}</div>
-              <div className="side-tag a">{problem.copy.sideLengths[0]}</div>
-              <div className="side-tag b">{problem.copy.sideLengths[1]??''}</div>
+
+            <div className="rect copy">
+              <div className={"shape-label " + (!labels.right ? 'hidden' : '')}>{labels.right || 'Label me'}</div>
+              {visiblePair === 'horizontal' && (
+                <>
+                  <div className="side-tag top">{problem.copy.w}</div>
+                  <div className="side-tag bottom">{problem.copy.w}</div>
+                </>
+              )}
+              {visiblePair === 'vertical' && (
+                <>
+                  <div className="side-tag left">{problem.copy.h}</div>
+                  <div className="side-tag right">{problem.copy.h}</div>
+                </>
+              )}
             </div>
           </div>
 
+          {/* word chips and number chips area (always available) */}
           <div className="chips">
-            {wordChips.map((c)=>(<Draggable key={c.id} id={c.id} label={c.label} data={{...c}} />))}
+            {wordBank.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={{ ...c }} />)}
           </div>
-
-          <div className="row">
-            <div>
-              <div className="muted">Drop “Copy” on top, “Original” on bottom</div>
-              <Fraction numerator={<Slot test={testWord('copy')} onDropContent={()=>{}}><span>Copy</span></Slot>} denominator={<Slot test={testWord('original')} onDropContent={()=>{}}><span>Original</span></Slot>} />
-            </div>
-            <div style={{marginLeft:20}}>
-              <div className="muted">Now place the numbers</div>
-              <Fraction numerator={<Slot test={testNum()} onDropContent={(d)=>onDropNum('num',d)}><span>{fraction.num??'—'}</span></Slot>} denominator={<Slot test={testNum()} onDropContent={(d)=>onDropNum('den',d)}><span>{fraction.den??'—'}</span></Slot>} />
-            </div>
-          </div>
-
           <div className="chips">
-            {numberChips.map((c)=>(<Draggable key={c.id} id={c.id} label={c.label} data={{...c}} />))}
-          </div>
-
-          <div className="toolbar" style={{marginTop:8}}>
-            <button className="button" onClick={()=>{ if(gcd(fraction.num||1,fraction.den||1)===1){ setSimplified(true) } }}>Are you done?</button>
-            <button className="button" onClick={()=>doSimplifyStep(2)}>÷2</button>
-            <button className="button" onClick={()=>doSimplifyStep(3)}>÷3</button>
-            <button className="button" onClick={()=>doSimplifyStep(5)}>÷5</button>
-            <button className="button primary" disabled={!canSubmitPart1()} onClick={submitPart1}>Submit Part 1</button>
+            {numberChips.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={{ ...c }} />)}
           </div>
         </div>
 
-        <div className="card">
-          <div className="subtitle">Pick a corresponding pair (click a value on Original then same-index on Copy)</div>
-          <div className="grid2">
-            {problem.original.sideLengths.map((v,i)=>(
-              <button key={'o'+i} className={"button "+(pair===i?'primary':'')} onClick={()=>selectPair(i)}>Original side {i+1}: {v}</button>
-            ))}
+        {/* RIGHT: one-step-at-a-time */}
+        <div className="card right-steps">
+          <div className="step-panel">
+            <div className="step-title">{STEP_HEADS[step]}</div>
+
+            {step === 0 && (
+              <>
+                <div className="muted">Drag words into the correct framework. Chips can be reused.</div>
+                <div className="fraction-row" style={{ marginTop: 10 }}>
+                  <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('s0', 'Scale Factor')}>{slots.s0 || '___'}</Slot>
+                  <Slot test={testWord('=')} onDropContent={onDropFormula('s1', '=')}>{slots.s1 || '___'}</Slot>
+                  <Slot test={testWord('Copy')} onDropContent={onDropFormula('s2', 'Copy')}>{slots.s2 || '___'}</Slot>
+                  <Slot test={testWord('/')} onDropContent={onDropFormula('s3', '/')}>{slots.s3 || '___'}</Slot>
+                  <Slot test={testWord('Original')} onDropContent={onDropFormula('s4', 'Original')}>{slots.s4 || '___'}</Slot>
+                </div>
+              </>
+            )}
+
+            {step === 1 && (
+              <>
+                <div className="muted">Drag “Original” and “Copy” onto the rectangles.</div>
+                <div className="row" style={{ marginTop: 10 }}>
+                  <Slot test={testWord('Original')} onDropContent={(d) => dropLabel('left', d)}><span>{labels.left || 'Left label'}</span></Slot>
+                  <Slot test={testWord('Copy')} onDropContent={(d) => dropLabel('right', d)}><span>{labels.right || 'Right label'}</span></Slot>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <div className="muted">Click the side pair that has values on both shapes.</div>
+                <div className="chips"><span className="badge">Hint appears only after a miss.</span></div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div className="muted">Drag the <b>Copy</b> value into the numerator.</div>
+                <div className="fraction" style={{ marginTop: 10 }}>
+                  <div><Slot test={testNum()} onDropContent={(d) => dropNum('num', d)}>{num ?? '—'}</Slot></div>
+                  <div className="frac-bar"></div>
+                  <div>{den ?? '—'}</div>
+                </div>
+              </>
+            )}
+
+            {step === 4 && (
+              <>
+                <div className="muted">Drag the <b>Original</b> value into the denominator.</div>
+                <div className="fraction" style={{ marginTop: 10 }}>
+                  <div>{num ?? '—'}</div>
+                  <div className="frac-bar"></div>
+                  <div><Slot test={testNum()} onDropContent={(d) => dropNum('den', d)}>{den ?? '—'}</Slot></div>
+                </div>
+              </>
+            )}
+
+            {step === 5 && (
+              <>
+                <div className="muted">Click calculate to simplify if needed.</div>
+                <div className="fraction" style={{ marginTop: 10 }}>
+                  <div>{num ?? '—'}</div>
+                  <div className="frac-bar"></div>
+                  <div>{den ?? '—'}</div>
+                </div>
+                <div className="toolbar" style={{ marginTop: 10 }}>
+                  <button className="button primary" onClick={doCalculate}>Calculate</button>
+                </div>
+                {calc.simplified && (
+                  <div style={{ marginTop: 10 }}>
+                    <div className="badge">Result: {calc.simplified}</div>
+                    {calc.steps.length > 0 && (
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        {calc.steps.map((s, i) => <div key={i}>{s}</div>)}
+                      </div>
+                    )}
+                    <div className="toolbar" style={{ marginTop: 10 }}>
+                      <button className="button" onClick={resetProblem}>Next Problem</button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          {stage==='F' && (
-            <div style={{marginTop:12}}>
-              <div className="subtitle">Part 2 — Missing Side</div>
-              <div className="row" style={{gap:8, alignItems:'center'}}>
-                <span>Original × SF = Copy</span>
-                <span className="code">{(sf?.p||'?')+'/'+(sf?.q||'?')}</span>
-              </div>
-              <div className="toolbar" style={{marginTop:8}}>
-                <button className="button" onClick={computePart2}>Compute Copy for chosen pair</button>
-                {part2.computed && <span className="badge">Result: {part2.value}</span>}
-                {part2.computed && <button className="button primary" onClick={finishProblem}>Submit Final</button>}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      <SummaryOverlay open={openSum} onClose={()=>setOpenSum(false)} attempts={session.attempts} />
+      <SummaryOverlay open={openSum} onClose={() => setOpenSum(false)} attempts={session.attempts} stepHeads={STEP_HEADS} />
     </div>
   )
 }
