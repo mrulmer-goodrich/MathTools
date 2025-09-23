@@ -11,11 +11,11 @@ export default function App(){
         <div className="container">
           <div className="header">
             <div className="brand">UG Math Tools</div>
-            <div className="subtitle">Scale Factor + H‑Table trainer (drag‑and‑drop)</div>
+            <div className="subtitle">Scale Factor + H-Table trainer (drag-and-drop)</div>
           </div>
           <div className="row">
             <BigButton onClick={()=>setRoute('scale')}>Scale Factor</BigButton>
-            <BigButton onClick={()=>setRoute('htable')}>H‑Table</BigButton>
+            <BigButton onClick={()=>setRoute('htable')}>H-Table</BigButton>
           </div>
         </div>
       )}
