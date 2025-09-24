@@ -9,7 +9,7 @@ const STEP_HEADS = [
   'Formula', 'Label Shapes', 'Pick Sides', 'Copy → Numerator', 'Original → Denominator', 'Calculate'
 ]
 
-export default function ScaleFactorModule({ goHome, goHTable }) {
+export default function ScaleFactorModule({ openHTable }) {
   const [session, setSession] = useState(loadSession())
   const [problem, setProblem] = useState(genScaleProblem())
   const [openSum, setOpenSum] = useState(false)
@@ -17,21 +17,19 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
   const [step, setStep] = useState(0)
   const [steps, setSteps] = useState(STEP_HEADS.map(() => ({ misses: 0, done: false })))
   const miss = (idx) => setSteps(s => { const c = [...s]; c[idx].misses++; return c })
+  const setDone = (idx) => setSteps(s => { const c = [...s]; c[idx].done = true; return c })
+  const next = () => setStep(s => Math.min(s + 1, STEP_HEADS.length - 1))
 
-  // labels
-  const [labels, setLabels] = useState({ left: null, right: null }) // 'Original' | 'Copy'
-  // side with visible numbers (depends on generator)
-  const visiblePair = problem.shownPair // 'horizontal' or 'vertical'
+  const [labels, setLabels] = useState({ left: null, right: null })
+  const visiblePair = problem.shownPair
   const [picked, setPicked] = useState(false)
 
-  // fraction slots
-  const [slots, setSlots] = useState({ s0: null, s1: null, s2: null, s3: null, s4: null }) // five-part formula
+  const [slots, setSlots] = useState({ s0: null, s1: null, s2: null, s3: null, s4: null })
   const [num, setNum] = useState(null)
   const [den, setDen] = useState(null)
   const gcd = (a, b) => b === 0 ? a : gcd(b, a % b)
   const [calc, setCalc] = useState({ simplified: null, steps: [] })
 
-  // chips
   const wordBank = useMemo(() => ([
     { id: 'w_sf', label: 'Scale Factor', kind: 'word' },
     { id: 'w_eq', label: '=', kind: 'word' },
@@ -46,53 +44,32 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
     { id: 'w_ten', label: 'Ten', kind: 'word' }
   ]), [])
 
-  // numbers that appear on shapes (only pair with values visible)
-  const copyVals = {
-    horizontal: problem.copy.w,
-    vertical: problem.copy.h
-  }
-  const origVals = {
-    horizontal: problem.original.w,
-    vertical: problem.original.h
-  }
+  const copyVals = { horizontal: problem.copy.w, vertical: problem.copy.h }
+  const origVals = { horizontal: problem.original.w, vertical: problem.original.h }
   const numberChips = useMemo(() => {
-    // include correct values + unique distractors
     const vals = new Set([copyVals[visiblePair], origVals[visiblePair], ...problem.distractors])
     return Array.from(vals).map((v, i) => ({ id: 'n' + i, label: String(v), kind: 'num', value: v }))
   }, [problem])
 
-  const next = () => setStep(s => Math.min(s + 1, STEP_HEADS.length - 1))
-  const setDone = (i) => setSteps(s => { const c = [...s]; c[i].done = true; return c })
-
   const testWord = (want) => (data) => data?.kind === 'word' && data.label === want
   const testNum = () => (data) => data?.kind === 'num'
-
   const onDropFormula = (slotKey, want) => (data) => {
     if (data?.label !== want) { miss(0); return }
     setSlots(prev => ({ ...prev, [slotKey]: want }))
-    // If all five placed correctly → done
     const after = { ...slots, [slotKey]: want }
     const ok = after.s0 === 'Scale Factor' && after.s1 === '=' && after.s2 === 'Copy' && after.s3 === '/' && after.s4 === 'Original'
     if (ok) { setDone(0); next() }
   }
-
   const dropLabel = (side, data) => {
     if (data?.kind !== 'word' || (data.label !== 'Copy' && data.label !== 'Original')) { miss(1); return }
     setLabels(prev => ({ ...prev, [side]: data.label }))
     const after = { ...labels, [side]: data.label }
     if (after.left && after.right && after.left !== after.right) { setDone(1); next() }
   }
-
   const clickSide = (which) => {
-    // which: 'horizontal' | 'vertical'
     if (!labels.left || !labels.right) { miss(2); return }
-    if (which === visiblePair) {
-      setPicked(true); setDone(2); next()
-    } else {
-      miss(2)
-    }
+    if (which === visiblePair) { setPicked(true); setDone(2); next() } else { miss(2) }
   }
-
   const dropNum = (where, data) => {
     if (data?.kind !== 'num') { miss(where === 'num' ? 3 : 4); return }
     const correctCopy = copyVals[visiblePair]
@@ -103,7 +80,6 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
       if (data.value === correctOrig) { setDen(data.value); setDone(4); next() } else { miss(4) }
     }
   }
-
   const doCalculate = () => {
     if (num == null || den == null) { miss(5); return }
     let n = num, d = den; const stepsOut = []
@@ -114,20 +90,16 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
     }
     setCalc({ simplified: `${n}/${d}`, steps: stepsOut })
     setDone(5)
-    // Save attempt
     const missCount = steps.reduce((t, s) => t + s.misses, 0)
     const scoreColor = missCount === 0 ? 'green' : (missCount === 1 ? 'yellow' : 'red')
     const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
     const nextSession = { ...session, attempts: [...session.attempts, attempt] }
     saveSession(nextSession); setSession(nextSession)
   }
-
   const resetProblem = () => {
-    setProblem(genScaleProblem())
-    setStep(0)
+    setProblem(genScaleProblem()); setStep(0)
     setSteps(STEP_HEADS.map(() => ({ misses: 0, done: false })))
-    setLabels({ left: null, right: null })
-    setPicked(false)
+    setLabels({ left: null, right: null }); setPicked(false)
     setSlots({ s0: null, s1: null, s2: null, s3: null, s4: null })
     setNum(null); setDen(null); setCalc({ simplified: null, steps: [] })
   }
@@ -137,8 +109,7 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
       <div className="header">
         <div className="brand">Scale Factor</div>
         <div className="toolbar">
-          <button className="button" onClick={goHome}>Home</button>
-          <button className="button" onClick={goHTable}>H-Table</button>
+          <button className="button" onClick={openHTable}>H-Table</button>
           <button className="button" onClick={() => setOpenSum(true)}>Summary</button>
           <button className="button ghost" onClick={resetProblem}>New Problem</button>
         </div>
@@ -150,19 +121,8 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
           <div className="rects">
             <div className="rect">
               <div className={"shape-label " + (!labels.left ? 'hidden' : '')}>{labels.left || 'Label me'}</div>
-              {/* numbers only on the visible pair */}
-              {visiblePair === 'horizontal' && (
-                <>
-                  <div className="side-tag top">{problem.original.w}</div>
-                  <div className="side-tag bottom">{problem.original.w}</div>
-                </>
-              )}
-              {visiblePair === 'vertical' && (
-                <>
-                  <div className="side-tag left">{problem.original.h}</div>
-                  <div className="side-tag right">{problem.original.h}</div>
-                </>
-              )}
+              {visiblePair === 'horizontal' && (<><div className="side-tag top">{problem.original.w}</div><div className="side-tag bottom">{problem.original.w}</div></>)}
+              {visiblePair === 'vertical' && (<><div className="side-tag left">{problem.original.h}</div><div className="side-tag right">{problem.original.h}</div></>)}
               <div className={"side-hit top " + (picked && visiblePair === 'horizontal' ? 'good' : '')} onClick={() => clickSide('horizontal')} />
               <div className={"side-hit bottom " + (picked && visiblePair === 'horizontal' ? 'good' : '')} onClick={() => clickSide('horizontal')} />
               <div className={"side-hit left " + (picked && visiblePair === 'vertical' ? 'good' : '')} onClick={() => clickSide('vertical')} />
@@ -171,22 +131,11 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
 
             <div className="rect copy">
               <div className={"shape-label " + (!labels.right ? 'hidden' : '')}>{labels.right || 'Label me'}</div>
-              {visiblePair === 'horizontal' && (
-                <>
-                  <div className="side-tag top">{problem.copy.w}</div>
-                  <div className="side-tag bottom">{problem.copy.w}</div>
-                </>
-              )}
-              {visiblePair === 'vertical' && (
-                <>
-                  <div className="side-tag left">{problem.copy.h}</div>
-                  <div className="side-tag right">{problem.copy.h}</div>
-                </>
-              )}
+              {visiblePair === 'horizontal' && (<><div className="side-tag top">{problem.copy.w}</div><div className="side-tag bottom">{problem.copy.w}</div></>)}
+              {visiblePair === 'vertical' && (<><div className="side-tag left">{problem.copy.h}</div><div className="side-tag right">{problem.copy.h}</div></>)}
             </div>
           </div>
 
-          {/* word chips and number chips area (always available) */}
           <div className="chips">
             {wordBank.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={{ ...c }} />)}
           </div>
@@ -195,7 +144,7 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
           </div>
         </div>
 
-        {/* RIGHT: one-step-at-a-time */}
+        {/* RIGHT: one-step panel */}
         <div className="card right-steps">
           <div className="step-panel">
             <div className="step-title">{STEP_HEADS[step]}</div>
@@ -224,10 +173,7 @@ export default function ScaleFactorModule({ goHome, goHTable }) {
             )}
 
             {step === 2 && (
-              <>
-                <div className="muted">Click the side pair that has values on both shapes.</div>
-                <div className="chips"><span className="badge">Hint appears only after a miss.</span></div>
-              </>
+              <div className="muted">Click the side pair that has values on both shapes (it will highlight).</div>
             )}
 
             {step === 3 && (
