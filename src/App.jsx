@@ -7,8 +7,8 @@ export default function App() {
   const [route, setRoute] = useState('home')
 
   const Nav = () => (
-    <div className="topnav">
-      <button className="link" onClick={() => setRoute('home')}>Home</button>
+    <div className="topnav centered">
+      <button className={"link " + (route === 'home' ? 'active' : '')} onClick={() => setRoute('home')}>Home</button>
       <span className="sp">•</span>
       <button className={"link " + (route === 'scale' ? 'active' : '')} onClick={() => setRoute('scale')}>Scale Factor</button>
       <span className="sp">•</span>
@@ -30,8 +30,8 @@ export default function App() {
           </div>
         </div>
       )}
-      {route === 'scale' && <ScaleFactorModule goHome={() => setRoute('home')} goHTable={() => setRoute('htable')} />}
-      {route === 'htable' && <HTableModule goHome={() => setRoute('home')} goScale={() => setRoute('scale')} />}
+      {route === 'scale' && <ScaleFactorModule openHTable={() => setRoute('htable')} />}
+      {route === 'htable' && <HTableModule openScale={() => setRoute('scale')} />}
     </div>
   )
 }
