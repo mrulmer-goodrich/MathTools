@@ -11,7 +11,10 @@ export function genScaleProblem() {
       const pair = choice(['horizontal','vertical'])
       const part2 = pair==='horizontal' ? 'vertical' : 'horizontal'
       return {
-        id: crypto.randomUUID?.() || String(Math.random()),
+      const _rid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random())
+...
+id: _rid,
+
         ratio: {p,q, value: p/q},
         original:{w,h},
         copy:{w:W,h:H},
@@ -82,7 +85,11 @@ export function genHProblem(){
   alts.BlackOut = ' '
 
   return {
-    id: crypto.randomUUID?.() || String(Math.random()),
+    
+    const _rid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random())
+...
+id: _rid,
+
     text: { english, alts },
     units: [uTop, uBottom],
     scale: [a, b],
