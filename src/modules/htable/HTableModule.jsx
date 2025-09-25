@@ -56,6 +56,7 @@ export default function HTableModule() {
   useEffect(() => {
     const next = { ...session, hSnap: { problem, table, step, steps } }
     saveSession(next); setSession(next)
+    // eslint-disable-next-line
   }, [problem, table, step, steps])
 
   /** ---------- Story + redaction scheduler ---------- */
@@ -79,7 +80,6 @@ export default function HTableModule() {
     stopTicker()
     timerRef.current = setInterval(() => {
       if (holdRef.current) return // paused while holding English
-      // pick a random mode different from current
       const pool = problem.altOrder
       const choices = pool.filter(m => m !== mode)
       const m = choices[Math.floor(Math.random()*choices.length)]
@@ -96,6 +96,7 @@ export default function HTableModule() {
     const first = setTimeout(() => applyMode(randomAlt(problem.altOrder)), 10000)
     startTicker()
     return () => { clearTimeout(first); stopTicker() }
+    // eslint-disable-next-line
   }, [problem.id])
 
   /** ---------- Choices (units & numbers) ---------- */
@@ -156,7 +157,7 @@ export default function HTableModule() {
   }
 
   const confirmUnits = () => {
-    // HT-3: Accept either arrangement as long as two distinct units are placed
+    // HT3: Accept either arrangement as long as two distinct units are placed (and they are from choices)
     const placed = new Set([unitTop, unitBottom].filter(Boolean))
     if (placed.size===2) { markDone(2); goNext() } else markMiss(2)
   }
@@ -219,7 +220,7 @@ export default function HTableModule() {
     setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
     // reset redaction
     stopTicker(); holdRef.current=false; setShowEnglish(true); setMode('Spanish'); setMaskClass('')
-    setTimeout(()=>applyMode(randomAlt(problem.altOrder)), 10) // will be replaced on next effect run
+    setTimeout(()=>applyMode(randomAlt(problem.altOrder)), 10) // will be replaced by effect
   }
 
   /** ---------- Story rendering ---------- */
@@ -264,7 +265,7 @@ export default function HTableModule() {
           <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
 
           {/* H-table appears only after Step 1 */}
-          {step >= 1 ? (
+          {step >= 1 && (
             <div className="hwrap">
               <div className="hgrid">
                 {/* headers row (1st + 2nd col only; 3rd column has no label) */}
@@ -292,91 +293,71 @@ export default function HTableModule() {
                 </div>
                 <div className="hhead"></div>
 
-{/* row 1 */}
-<div className="hcell">{/* col 1 */}
-  <Slot
-    className={`slot ${table.uTop ? 'filled' : ''}`}
-    test={acceptUnit}
-    onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
-  >
-    <span>{table.uTop || 'drop unit here'}</span>
-  </Slot>
-</div>
+                {/* row 1 */}
+                <div className="hcell">
+                  <Slot
+                    className={`slot ${table.uTop ? 'filled' : ''}`}
+                    test={acceptUnit}
+                    onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
+                  >
+                    <span>{table.uTop || 'drop unit here'}</span>
+                  </Slot>
+                </div>
 
-<div className="hcell vline">{/* col 2 */}
-  <Slot
-    className={`slot ${table.sTop!=null ? 'filled' : ''}`}
-    test={acceptScaleNum}
-    onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
-  >
-    <span
-      className={table.multPick.includes('sTop') ? 'red-oval' : ''}
-      role="button"
-      onClick={()=>clickCell('sTop')}
-    >
-      {table.sTop ?? 'drop scale #'}
-    </span>
-  </Slot>
-</div>
+                <div className="hcell vline">
+                  <Slot
+                    className={`slot ${table.sTop!=null ? 'filled' : ''}`}
+                    test={acceptScaleNum}
+                    onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
+                  >
+                    {ovalIf('sTop', <span>{table.sTop ?? 'drop scale #'}</span>)}
+                  </Slot>
+                </div>
 
-<div className="hcell vline">{/* col 3 */}
-  <Slot
-    className={`slot ${table.vTop!=null ? 'filled' : ''}`}
-    test={acceptGivenNum}
-    onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
-  >
-    <span
-      className={table.multPick.includes('vTop') ? 'red-oval' : ''}
-      role="button"
-      onClick={()=>clickCell('vTop')}
-    >
-      {table.vTop ?? 'drop given # (if top)'}
-    </span>
-  </Slot>
-</div>
+                <div className="hcell vline">
+                  <Slot
+                    className={`slot ${table.vTop!=null ? 'filled' : ''}`}
+                    test={acceptGivenNum}
+                    onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
+                  >
+                    {ovalIf('vTop', <span>{table.vTop ?? 'drop given # (if top)'}</span>)}
+                  </Slot>
+                </div>
 
-{/* row 2 */}
-<div className="hcell rowline">{/* col 1 */}
-  <Slot
-    className={`slot ${table.uBottom ? 'filled' : ''}`}
-    test={acceptUnit}
-    onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
-  >
-    <span>{table.uBottom || 'drop unit here'}</span>
-  </Slot>
-</div>
+                {/* row 2 */}
+                <div className="hcell rowline">
+                  <Slot
+                    className={`slot ${table.uBottom ? 'filled' : ''}`}
+                    test={acceptUnit}
+                    onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
+                  >
+                    <span>{table.uBottom || 'drop unit here'}</span>
+                  </Slot>
+                </div>
 
-<div className="hcell vline rowline">{/* col 2 */}
-  <Slot
-    className={`slot ${table.sBottom!=null ? 'filled' : ''}`}
-    test={acceptScaleNum}
-    onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
-  >
-    <span
-      className={table.multPick.includes('sBottom') ? 'red-oval' : ''}
-      role="button"
-      onClick={()=>clickCell('sBottom')}
-    >
-      {table.sBottom ?? 'drop scale #'}
-    </span>
-  </Slot>
-</div>
+                <div className="hcell vline rowline">
+                  <Slot
+                    className={`slot ${table.sBottom!=null ? 'filled' : ''}`}
+                    test={acceptScaleNum}
+                    onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
+                  >
+                    {ovalIf('sBottom', <span>{table.sBottom ?? 'drop scale #'}</span>)}
+                  </Slot>
+                </div>
 
-<div className="hcell vline rowline">{/* col 3 */}
-  <Slot
-    className={`slot ${table.vBottom!=null ? 'filled' : ''}`}
-    test={acceptGivenNum}
-    onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
-  >
-    <span
-      className={table.multPick.includes('vBottom') ? 'red-oval' : ''}
-      role="button"
-      onClick={()=>clickCell('vBottom')}
-    >
-      {table.vBottom ?? 'drop given # (if bottom)'}
-    </span>
-  </Slot>
-</div>
+                <div className="hcell vline rowline">
+                  <Slot
+                    className={`slot ${table.vBottom!=null ? 'filled' : ''}`}
+                    test={acceptGivenNum}
+                    onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
+                  >
+                    {ovalIf('vBottom', <span>{table.vBottom ?? 'drop given # (if bottom)'}</span>)}
+                  </Slot>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* RIGHT: steps & chips */}
         <div className="card right-steps">
@@ -400,7 +381,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 2 & 4: headers */}
-            {(step === 1 || step === 3) && (
+            {(step===1 || step===3) && (
               <div className="chips">
                 <Draggable id="c1" label="Units" data={{kind:'col', v:'Units'}} />
                 <Draggable id="c2" label="Scale" data={{kind:'col', v:'Scale'}} />
@@ -411,7 +392,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 3: units */}
-            {step === 2 && (
+            {step===2 && (
               <>
                 <div className="chips">
                   {unitChoices.map(u => <Draggable key={u.id} id={u.id} label={u.label} data={u} />)}
@@ -423,7 +404,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 5: scale numbers (alignment sensitive) */}
-            {step === 4 && (
+            {step===4 && (
               <>
                 <div className="chips">
                   {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
@@ -435,7 +416,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 6: given number */}
-            {step === 5 && (
+            {step===5 && (
               <>
                 <div className="chips">
                   {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
@@ -447,12 +428,12 @@ export default function HTableModule() {
             )}
 
             {/* Step 7 & 9: next actions */}
-            {(step === 6 || step === 8) && (
+            {(step===6 || step===8) && (
               <>
                 <div className="chips">
                   <Draggable id="n1" label="Divide then Multiply" data={{kind:'nx', v:'x'}} />
-                  <Draggable id="n2" label="Cross Multiply" data={{kind:'nx', v: step === 6 ? 'ok' : 'x'}} />
-                  <Draggable id="n3" label="Divide" data={{kind:'nx', v: step === 8 ? 'ok' : 'x'}} />
+                  <Draggable id="n2" label="Cross Multiply" data={{kind:'nx', v: step===6 ? 'ok' : 'x'}} />
+                  <Draggable id="n3" label="Divide" data={{kind:'nx', v: step===8 ? 'ok' : 'x'}} />
                   <Draggable id="n4" label="Multiply Across" data={{kind:'nx', v:'x'}} />
                   <Draggable id="n5" label="Add the Numbers" data={{kind:'nx', v:'x'}} />
                 </div>
@@ -463,7 +444,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 8: click multiply pair */}
-            {step === 7 && (
+            {step===7 && (
               <>
                 <div className="muted">Click the <b>given</b> and the <b>opposite-row scale</b> in the H-table. Then confirm.</div>
                 <div className="toolbar" style={{marginTop:8}}>
@@ -474,7 +455,7 @@ export default function HTableModule() {
             )}
 
             {/* Step 10: click divisor & submit */}
-            {step === 9 && (
+            {step===9 && (
               <>
                 <div className="muted">Click the divisor (scale on the <b>same row</b> as the given), then Submit.</div>
                 <div className="toolbar" style={{marginTop:8}}>
