@@ -264,100 +264,99 @@ export default function HTableModule() {
           <Story />
           <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
 
-          {/* H-table appears only after Step 1 */}
-          {step >= 1 && (
-            <div className="hwrap">
-              <div className="hgrid">
-                {/* headers row (1st + 2nd col only; 3rd column has no label) */}
-                <div className="hhead">
-                  <Slot
-                    test={acceptHeader1}
-                    onDropContent={(d)=>{
-                      if (d.v==='Units') { setTable(t=>({...t, head1:'Units'})); markDone(1); goNext() }
-                      else markMiss(1)
-                    }}
-                  >
-                    <span>{table.head1 || 'Header 1'}</span>
-                  </Slot>
-                </div>
-                <div className="hhead">
-                  <Slot
-                    test={acceptHeader2}
-                    onDropContent={(d)=>{
-                      if (d.v==='Scale') { setTable(t=>({...t, head2:'Scale'})); markDone(3); goNext() }
-                      else markMiss(3)
-                    }}
-                  >
-                    <span>{table.head2 || 'Header 2'}</span>
-                  </Slot>
-                </div>
-                <div className="hhead"></div>
+         {/* H-table appears only after Step 1 */}
+{step >= 1 && (
+  <div className="hwrap">
+    <div className="hgrid">
+      {/* headers row (1st + 2nd col only; 3rd column has no label) */}
+      <div className="hhead">
+        <Slot
+          test={acceptHeader1}
+          onDropContent={(d)=>{
+            if (d.v==='Units') { setTable(t=>({...t, head1:'Units'})); markDone(1); goNext() }
+            else markMiss(1)
+          }}
+        >
+          <span>{table.head1 || 'Header 1'}</span>
+        </Slot>
+      </div>
+      <div className="hhead">
+        <Slot
+          test={acceptHeader2}
+          onDropContent={(d)=>{
+            if (d.v==='Scale') { setTable(t=>({...t, head2:'Scale'})); markDone(3); goNext() }
+            else markMiss(3)
+          }}
+        >
+          <span>{table.head2 || 'Header 2'}</span>
+        </Slot>
+      </div>
+      <div className="hhead"></div>
 
-                {/* row 1 */}
-                <div className="hcell">
-                  <Slot
-                    className={`slot ${table.uTop ? 'filled' : ''}`}
-                    test={acceptUnit}
-                    onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
-                  >
-                    <span>{table.uTop || 'drop unit here'}</span>
-                  </Slot>
-                </div>
+      {/* row 1 — needs the horizontal bar across all three cells */}
+      <div className="hcell rowline">
+        <Slot
+          className={`slot ${table.uTop ? 'filled' : ''}`}
+          test={acceptUnit}
+          onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
+        >
+          <span>{table.uTop || 'drop unit here'}</span>
+        </Slot>
+      </div>
 
-                <div className="hcell vline">
-                  <Slot
-                    className={`slot ${table.sTop!=null ? 'filled' : ''}`}
-                    test={acceptScaleNum}
-                    onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
-                  >
-                    {ovalIf('sTop', <span>{table.sTop ?? 'drop scale #'}</span>)}
-                  </Slot>
-                </div>
+      <div className="hcell vline rowline">
+        <Slot
+          className={`slot ${table.sTop!=null ? 'filled' : ''}`}
+          test={acceptScaleNum}
+          onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
+        >
+          {ovalIf('sTop', <span>{table.sTop ?? 'drop scale #'}</span>)}
+        </Slot>
+      </div>
 
-                <div className="hcell vline">
-                  <Slot
-                    className={`slot ${table.vTop!=null ? 'filled' : ''}`}
-                    test={acceptGivenNum}
-                    onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
-                  >
-                    {ovalIf('vTop', <span>{table.vTop ?? 'drop given # (if top)'}</span>)}
-                  </Slot>
-                </div>
+      <div className="hcell vline rowline">
+        <Slot
+          className={`slot ${table.vTop!=null ? 'filled' : ''}`}
+          test={acceptGivenNum}
+          onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
+        >
+          {ovalIf('vTop', <span>{table.vTop ?? 'drop given # (if top)'}</span>)}
+        </Slot>
+      </div>
 
-                {/* row 2 */}
-                <div className="hcell rowline">
-                  <Slot
-                    className={`slot ${table.uBottom ? 'filled' : ''}`}
-                    test={acceptUnit}
-                    onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
-                  >
-                    <span>{table.uBottom || 'drop unit here'}</span>
-                  </Slot>
-                </div>
+      {/* row 2 — bottom half of the H; vertical bars continue in cols 2 & 3 */}
+      <div className="hcell">
+        <Slot
+          className={`slot ${table.uBottom ? 'filled' : ''}`}
+          test={acceptUnit}
+          onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
+        >
+          <span>{table.uBottom || 'drop unit here'}</span>
+        </Slot>
+      </div>
 
-                <div className="hcell vline rowline">
-                  <Slot
-                    className={`slot ${table.sBottom!=null ? 'filled' : ''}`}
-                    test={acceptScaleNum}
-                    onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
-                  >
-                    {ovalIf('sBottom', <span>{table.sBottom ?? 'drop scale #'}</span>)}
-                  </Slot>
-                </div>
+      <div className="hcell vline">
+        <Slot
+          className={`slot ${table.sBottom!=null ? 'filled' : ''}`}
+          test={acceptScaleNum}
+          onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
+        >
+          {ovalIf('sBottom', <span>{table.sBottom ?? 'drop scale #'}</span>)}
+        </Slot>
+      </div>
 
-                <div className="hcell vline rowline">
-                  <Slot
-                    className={`slot ${table.vBottom!=null ? 'filled' : ''}`}
-                    test={acceptGivenNum}
-                    onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
-                  >
-                    {ovalIf('vBottom', <span>{table.vBottom ?? 'drop given # (if bottom)'}</span>)}
-                  </Slot>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+      <div className="hcell vline">
+        <Slot
+          className={`slot ${table.vBottom!=null ? 'filled' : ''}`}
+          test={acceptGivenNum}
+          onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
+        >
+          {ovalIf('vBottom', <span>{table.vBottom ?? 'drop given # (if bottom)'}</span>)}
+        </Slot>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* RIGHT: steps & chips */}
         <div className="card right-steps">
