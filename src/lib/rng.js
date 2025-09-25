@@ -1,2 +1,2 @@
-export const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-export const choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+export const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a
+export const choice = (arr)=>arr[Math.floor(Math.random()*arr.length)]
