@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
 
@@ -8,11 +7,11 @@ export default function App() {
 
   const Nav = () => (
     <div className="topnav centered">
-      <button className={"link " + (route === 'home' ? 'active' : '')} onClick={() => setRoute('home')}>Home</button>
+      <button className={'link ' + (route === 'home' ? 'active' : '')} onClick={() => setRoute('home')}>Home</button>
       <span className="sp">•</span>
-      <button className={"link " + (route === 'scale' ? 'active' : '')} onClick={() => setRoute('scale')}>Scale Factor</button>
+      <button className={'link ' + (route === 'scale' ? 'active' : '')} onClick={() => setRoute('scale')}>Scale Factor</button>
       <span className="sp">•</span>
-      <button className={"link " + (route === 'htable' ? 'active' : '')} onClick={() => setRoute('htable')}>H-Table</button>
+      <button className={'link ' + (route === 'htable' ? 'active' : '')} onClick={() => setRoute('htable')}>H-Table</button>
     </div>
   )
 
