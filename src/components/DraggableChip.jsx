@@ -1,23 +1,19 @@
 import React from 'react'
 
-export default function DraggableChip({ id, label, data = {}, className = '', style }) {
+export default function Draggable({ id, label, data, inline=false }) {
   const onDragStart = (e) => {
-    const payload = JSON.stringify({ id, label, ...data })
-    e.dataTransfer.setData('application/json', payload)
-    // also set text/plain for broader compatibility
-    e.dataTransfer.setData('text/plain', payload)
-    e.dataTransfer.effectAllowed = 'copyMove'
+    e.dataTransfer.setData('application/json', JSON.stringify(data || { id, label }))
+    e.dataTransfer.effectAllowed = 'copy'
   }
   return (
-    <div
-      className={'chip ' + className}
+    <span
       draggable
       onDragStart={onDragStart}
-      style={style}
+      className={'chip' + (inline ? ' inline' : '')}
       aria-label={label}
-      role="button"
+      title={label}
     >
       {label}
-    </div>
+    </span>
   )
 }
