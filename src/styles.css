@@ -37,6 +37,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 .step-panel{position:sticky;top:66px}
 .step-title{font-weight:800;margin-bottom:8px}
 .muted{color:var(--muted);font-size:13px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:4px 10px}
 
 /* Buttons */
 .button{background:#fff;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}
