@@ -21,49 +21,40 @@ export default function ScaleFactorModule() {
   const done = (i)=>setSteps(s=>{const c=[...s];c[i].done=true;return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
 
-  // Persist snapshot
   const saveSnap = (extra={})=>{
     const snap = { problem, step, steps, ...extra }
     const nextSession = { ...session, scaleSnap: snap }
     saveSession(nextSession); setSession(nextSession)
   }
 
-  // labels
   const [labels, setLabels] = useState(()=>session.scaleSnap?.labels || { left:null, right:null })
 
-  // choose sizes with visual cue from generator
   const ow = problem.original.w, oh = problem.original.h
   const cw = problem.copy.w, ch = problem.copy.h
-  const shown = problem.shownPair      // 'horizontal' or 'vertical'
+  const shown = problem.shownPair
   const missingPair = problem.missingPair
 
-  const rectStyle = (w,h)=>({ width: Math.max(120, w*4)+'px', height: Math.max(90, h*4)+'px' })
+  const rectStyle = (w,h)=>({ width: Math.max(120, w*6)+'px', height: Math.max(90, h*6)+'px' })
 
-  // clickable side selection
   const [picked, setPicked] = useState(()=>session.scaleSnap?.picked || false)
 
-  // fraction word slots
   const [slots, setSlots] = useState(()=>session.scaleSnap?.slots || { sSF:null, sEQ:'=', sNUM:null, sDIV:'/', sDEN:null })
 
-  // numbers from shapes
   const copyVals = { horizontal: cw, vertical: ch }
   const origVals = { horizontal: ow, vertical: oh }
   const [num, setNum] = useState(()=>session.scaleSnap?.num ?? null)
   const [den, setDen] = useState(()=>session.scaleSnap?.den ?? null)
 
-  // part 2
-  const [missSide, setMissSide] = useState(()=>session.scaleSnap?.missSide || (missingPair)) // which side is missing on copy
+  const [missSide, setMissSide] = useState(()=>session.scaleSnap?.missSide || (missingPair))
   const [mSlots, setMSlots] = useState(()=>session.scaleSnap?.mSlots || { left:'Original', op:'×', right:'Scale Factor', eq:'=', out:null })
   const [missingResult, setMissingResult] = useState(()=>session.scaleSnap?.missingResult ?? null)
 
-  // word bank (max 10, related to proportions)
   const wordBank = useMemo(()=>{
     const words = ['Scale Factor','Copy','Original','Proportion','Ratio','Corresponding','Similar','Figure','Image','Equivalent']
     return words.map((w,i)=>({ id:'w'+i, label:w, kind:'word' }))
   },[])
 
   const testWord = want => d => d?.kind==='word' && d.label===want
-  const testAnyWord = d => d?.kind==='word'
   const testNum = d => d?.kind==='num'
 
   const onDropFormula = (slotKey, want) => d => {
@@ -83,7 +74,6 @@ export default function ScaleFactorModule() {
 
   const clickSide = (which)=>{
     if(!labels.left || !labels.right){ miss(2); return }
-    // Either side first is fine; we only accept the pair that has numbers visible (shown)
     if(which===shown){ setPicked(true); done(2); next(); saveSnap({picked:true}) } else { miss(2) }
   }
 
@@ -99,18 +89,15 @@ export default function ScaleFactorModule() {
 
   const doCalculate = ()=>{
     if(num==null || den==null){ miss(5); return }
-    done(5); next()
-    saveSnap()
+    done(5); next(); saveSnap()
   }
 
   const computeMissing = ()=>{
-    // target: copy side on missingPair
     const origSide = origVals[missingPair]
     const sf = num/den
     const result = origSide * sf
     setMissingResult(result)
     done(8)
-    // record attempt
     const missCount = steps.reduce((t,s)=>t+s.misses,0)
     const scoreColor = missCount===0?'green':(missCount===1?'yellow':'red')
     const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
@@ -129,7 +116,6 @@ export default function ScaleFactorModule() {
     saveSnap({ problem:p, step:0 })
   }
 
-  // number chips come from shapes only; to let them drag, we expose chips inline beneath shapes once side is picked
   const shapeNumChips = useMemo(()=>{
     const arr = []
     if(shown==='horizontal'){ arr.push({id:'cn', label:String(cw), kind:'num', value:cw}); arr.push({id:'on', label:String(ow), kind:'num', value:ow}) }
@@ -140,28 +126,25 @@ export default function ScaleFactorModule() {
   return (
     <div className="container">
       <div className="panes">
-        {/* LEFT: shapes */}
         <div className="card shape-area">
           <div className="rects">
             <div className="rect" style={rectStyle(ow,oh)}>
-              <div className={"shape-label "+(!labels.left?'hidden':'')}>{labels.left || 'Label me'}</div>
+              <div className={'shape-label '+(!labels.left?'hidden':'')}>{labels.left || 'Label me'}</div>
               {shown==='horizontal' && (<><div className="side-tag top">{ow}</div><div className="side-tag bottom">{ow}</div></>)}
               {shown==='vertical' && (<><div className="side-tag left">{oh}</div><div className="side-tag right">{oh}</div></>)}
-              <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('horizontal')}/>
-              <div className={"side-hit bottom "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('horizontal')}/>
-              <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('vertical')}/>
-              <div className={"side-hit right "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('vertical')}/>
+              <div className={'side-hit top '+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('horizontal')}/>
+              <div className={'side-hit bottom '+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('horizontal')}/>
+              <div className={'side-hit left '+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('vertical')}/>
+              <div className={'side-hit right '+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('vertical')}/>
             </div>
 
             <div className="rect copy" style={rectStyle(cw,ch)}>
-              <div className={"shape-label "+(!labels.right?'hidden':'')}>{labels.right || 'Label me'}</div>
+              <div className={'shape-label '+(!labels.right?'hidden':'')}>{labels.right || 'Label me'}</div>
               {shown==='horizontal' && (<><div className="side-tag top">{cw}</div><div className="side-tag bottom">{cw}</div></>)}
               {shown==='vertical' && (<><div className="side-tag left">{ch}</div><div className="side-tag right">{ch}</div></>)}
-              {/* missingPair has blank on copy (no number tags) */}
             </div>
           </div>
 
-          {/* Show the number chips only after the pair is picked */}
           {picked && (
             <div className="chips" style={{justifyContent:'center', marginTop:10}}>
               {shapeNumChips.map(c=><Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
@@ -171,17 +154,14 @@ export default function ScaleFactorModule() {
           <button className="button primary big-under" onClick={newProblem}>New Problem</button>
         </div>
 
-        {/* RIGHT: steps */}
         <div className="card right-steps">
           <div className="step-panel">
             <div className="step-title">{STEP_HEADS[step]}</div>
 
-            {/* Step 1: formula words only */}
             {step===0 && (
               <>
                 <div className="muted">Drag the words into the fraction (no numbers).</div>
                 <div className="fraction-row" style={{marginTop:8}}>
-                  {/* "Scale Factor" = [Copy]/[Original] */}
                   <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>{slots.sSF || '____'}</Slot>
                   <span>=</span>
                   <div className="fraction" style={{marginLeft:6}}>
@@ -196,7 +176,6 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 2: labels */}
             {step===1 && (
               <>
                 <div className="muted">Drag “Original” onto the left rectangle and “Copy” onto the right.</div>
@@ -211,25 +190,22 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 3: pick pair by clicking */}
             {step===2 && (
               <div className="muted">Click either one of the numbered side pairs on the rectangles.</div>
             )}
 
-            {/* Step 4: Copy → numerator */}
             {step===3 && (
               <>
                 <div className="muted">Drag the <b>Copy</b> side value into the numerator.</div>
                 <div className="fraction" style={{marginTop:8}}>
-                  <div><Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>{num ?? '—'}</Slot></div>
+                  <div><Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>{num ?? '—'}</div>
                   <div className="frac-bar"></div>
                   <div>{den ?? '—'}</div>
                 </div>
               </>
             )}
 
-            {/* Step 5: Original → denominator */}
-            {step===4 && (
+            {step===4 and (
               <>
                 <div className="muted">Drag the <b>Original</b> side value into the denominator.</div>
                 <div className="fraction" style={{marginTop:8}}>
@@ -240,8 +216,7 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 6: calculate scale */}
-            {step===5 && (
+            {step===5 and (
               <>
                 <div className="muted">We’ll compute and simplify if needed.</div>
                 <div className="fraction" style={{marginTop:8}}>
@@ -255,8 +230,7 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 7: build missing-side equation */}
-            {step===6 && (
+            {step===6 and (
               <>
                 <div className="muted">Drag words to build: Original × Scale Factor = Copy</div>
                 <div className="chips" style={{marginTop:8}}>
@@ -283,8 +257,7 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 8: identify missing side (click) */}
-            {step===7 && (
+            {step===7 and (
               <>
                 <div className="muted">Click the side on the Copy that is missing (the other orientation).</div>
                 <div className="toolbar" style={{marginTop:8}}>
@@ -293,8 +266,7 @@ export default function ScaleFactorModule() {
               </>
             )}
 
-            {/* Step 9: compute missing side */}
-            {step===8 && (
+            {step===8 and (
               <>
                 <div className="muted">We’ll use Original × (Copy/Original) to find the Copy’s missing side.</div>
                 <div className="toolbar" style={{marginTop:8}}>
@@ -302,7 +274,7 @@ export default function ScaleFactorModule() {
                     Compute Missing Side
                   </button>
                 </div>
-                {missingResult!=null && (
+                {missingResult!=null and (
                   <div className="chips" style={{marginTop:10}}>
                     <span className="badge">Result: {missingResult}</span>
                   </div>
