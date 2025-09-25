@@ -6,7 +6,7 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 const STEP_HEADS = [
-  'What do we do first?',
+  'What do{step >= 1 we do first?',
   'Column 1 header',
   'Place the units (drag onto left cells)',
   'Column 2 header',
@@ -229,72 +229,117 @@ export default function HTableModule() {
           <Story />
           <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
 
-          {step >= 1 and True and (
-            <div className="hwrap">
-              <div className="hgrid">
-                <div className="hhead">
-                  <Slot
-                    test={(d)=>step===1 && d.kind==='col'}
-                    onDropContent={(d)=>{
-                      if (d.v==='Units') { setTable(t=>({...t, head1:'Units'})); markDone(1); goNext() }
-                      else markMiss(1)
-                    }}
-                  >
-                    <span>{table.head1 || 'Header 1'}</span>
-                  </Slot>
-                </div>
-                <div className="hhead">
-                  <Slot
-                    test={(d)=>step===3 && d.kind==='col'}
-                    onDropContent={(d)=>{
-                      if (d.v==='Scale') { setTable(t=>({...t, head2:'Scale'})); markDone(3); goNext() }
-                      else markMiss(3)
-                    }}
-                  >
-                    <span>{table.head2 || 'Header 2'}</span>
-                  </Slot>
-                </div>
-                <div className="hhead"></div>
+{/* H-table appears only after Step 1 */}
+{step >= 1 ? (
+  <div className="hwrap">
+    <div className="hgrid">
+      {/* headers row (1st + 2nd col only; 3rd column has no label) */}
+      <div className="hhead">
+        <Slot
+          test={acceptHeader1}
+          onDropContent={(d) => {
+            if (d.v === 'Units') {
+              setTable((t) => ({ ...t, head1: 'Units' }))
+              markDone(1)
+              goNext()
+            } else {
+              markMiss(1)
+            }
+          }}
+        >
+          <span>{table.head1 || 'Header 1'}</span>
+        </Slot>
+      </div>
 
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===2 && d.kind==='unit'} onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}>
-                    <span>{table.uTop || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===4 && d.kind==='num'} onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}>
-                    {ovalIf('sTop', <span>{table.sTop ?? ''}</span>)}
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===5 && d.kind==='num'} onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}>
-                    {ovalIf('vTop', <span>{table.vTop ?? ''}</span>)}
-                  </Slot>
-                </div>
+      <div className="hhead">
+        <Slot
+          test={acceptHeader2}
+          onDropContent={(d) => {
+            if (d.v === 'Scale') {
+              setTable((t) => ({ ...t, head2: 'Scale' }))
+              markDone(3)
+              goNext()
+            } else {
+              markMiss(3)
+            }
+          }}
+        >
+          <span>{table.head2 || 'Header 2'}</span>
+        </Slot>
+      </div>
 
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===2 && d.kind==='unit'} onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}>
-                    <span>{table.uBottom || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===4 && d.kind==='num'} onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}>
-                    {ovalIf('sBottom', <span>{table.sBottom ?? ''}</span>)}
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={(d)=>step===5 && d.kind==='num'} onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}>
-                    {ovalIf('vBottom', <span>{table.vBottom ?? ''}</span>)}
-                  </Slot>
-                </div>
+      <div className="hhead">{/* intentionally empty third header */}</div>
 
-                <div className="hstroke horiz"></div>
-                <div className="hstroke vert-left"></div>
-                <div className="hstroke vert-right"></div>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* row 1 */}
+      <div className="hcell">
+        <Slot className="flat" test={acceptUnit} onDropContent={(d) => setTable((t) => ({ ...t, uTop: d.label }))}>
+          <span>{table.uTop || ''}</span>
+        </Slot>
+      </div>
+
+      <div className="hcell">
+        <Slot className="flat" test={acceptScaleNum} onDropContent={(d) => setTable((t) => ({ ...t, sTop: d.value }))}>
+          <span
+            className={table.multPick.includes('sTop') ? 'red-oval' : ''}
+            role="button"
+            onClick={() => clickCell('sTop')}
+          >
+            {table.sTop ?? ''}
+          </span>
+        </Slot>
+      </div>
+
+      <div className="hcell">
+        <Slot className="flat" test={acceptGivenNum} onDropContent={(d) => setTable((t) => ({ ...t, vTop: d.value }))}>
+          <span
+            className={table.multPick.includes('vTop') ? 'red-oval' : ''}
+            role="button"
+            onClick={() => clickCell('vTop')}
+          >
+            {table.vTop ?? ''}
+          </span>
+        </Slot>
+      </div>
+
+      {/* row 2 */}
+      <div className="hcell">
+        <Slot className="flat" test={acceptUnit} onDropContent={(d) => setTable((t) => ({ ...t, uBottom: d.label }))}>
+          <span>{table.uBottom || ''}</span>
+        </Slot>
+      </div>
+
+      <div className="hcell">
+        <Slot className="flat" test={acceptScaleNum} onDropContent={(d) => setTable((t) => ({ ...t, sBottom: d.value }))}>
+          <span
+            className={table.multPick.includes('sBottom') ? 'red-oval' : ''}
+            role="button"
+            onClick={() => clickCell('sBottom')}
+          >
+            {table.sBottom ?? ''}
+          </span>
+        </Slot>
+      </div>
+
+      <div className="hcell">
+        <Slot className="flat" test={acceptGivenNum} onDropContent={(d) => setTable((t) => ({ ...t, vBottom: d.value }))}>
+          <span
+            className={table.multPick.includes('vBottom') ? 'red-oval' : ''}
+            role="button"
+            onClick={() => clickCell('vBottom')}
+          >
+            {table.vBottom ?? ''}
+          </span>
+        </Slot>
+      </div>
+
+      {/* strokes to draw the H */}
+      <div className="hstroke horiz"></div>
+      <div className="hstroke vert-left"></div>
+      <div className="hstroke vert-right"></div>
+    </div>
+  </div>
+) : null}
+
 
         <div className="card right-steps">
           <div className="step-panel">
