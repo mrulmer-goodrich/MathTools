@@ -138,3 +138,23 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 /* Keep the old absolute stroke elements harmless if still present */
 .hstroke { display:none; }
 
+/* Show a dashed target in cells; hide border once filled */
+.hcell .slot{border:2px dashed #94a3b8}
+.hcell .slot.filled{border:0}
+
+/* Draw the H using borders on cells */
+.hcell.vline { border-left:5px solid #0f172a; }
+.hcell.rowline { border-top:5px solid #0f172a; }
+
+/* Make the whole cell a generous drop target */
+.hcell .slot {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* If old absolute stroke elements linger, hide them */
+.hstroke { display:none; }
+
