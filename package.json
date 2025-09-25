@@ -1,7 +1,7 @@
 {
-  "name": "ug-math-tools-scale-htable",
+  "name": "ugmathtools",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
-    "vite": "^5.0.8"
+    "vite": "^5.0.0"
   }
 }
