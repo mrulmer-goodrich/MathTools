@@ -1,24 +1,14 @@
 import React from 'react'
 
-/**
- * DraggableChip
- * - Sets both 'application/json' and 'text/plain' with the same JSON payload.
- * - Uses effectAllowed/dropEffect for better UX signals.
- */
-export default function Draggable({ id, label, data, inline = false }) {
-  const payload = data || { id, label }
+export default function Draggable({ id, label, data, inline=false }) {
+  const payload = data || { id, label, kind: 'chip' }
 
   const onDragStart = (e) => {
     const json = JSON.stringify(payload)
-    try {
-      e.dataTransfer.setData('application/json', json)
-      // Some browsers only accept text/plain during dragover
-      e.dataTransfer.setData('text/plain', json)
-    } catch {}
-    try {
-      e.dataTransfer.effectAllowed = 'copyMove'
-      e.dataTransfer.dropEffect = 'copy'
-    } catch {}
+    // Set both MIME types so all browsers provide something on drop
+    e.dataTransfer.setData('application/json', json)
+    e.dataTransfer.setData('text/plain', json)
+    e.dataTransfer.effectAllowed = 'copy'
   }
 
   return (
