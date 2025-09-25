@@ -19,27 +19,26 @@ export default function App() {
   return (
     <div>
       <Nav />
-      {/* Keep components mounted so state persists across nav */}
-      <div style={{ display: route === 'home' ? 'block' : 'none' }}>
+      {route === 'home' && (
         <div className="container">
-          <div className="lp-hero">
-            <div className="lp-title">UG Math Tools</div>
-            <div className="lp-sub">Practice tools for proportions, scale factor, & tables</div>
-          </div>
-          <div className="lp-grid">
-            <button className="lp-tile" onClick={() => setRoute('scale')}>Scale Factor</button>
-            <button className="lp-tile" onClick={() => setRoute('htable')}>H-Table</button>
-          </div>
+          <header className="lp-header">
+            <h1 className="lp-title">UG Math Tools</h1>
+            <p className="lp-sub">Interactive practice for Scale Factors & H-Tables</p>
+          </header>
+          <section className="lp-grid">
+            <button className="lp-tile" onClick={() => setRoute('scale')}>
+              <div className="lp-tile-title">Scale Factor</div>
+              <div className="lp-tile-sub">Copy ÷ Original • drag & drop</div>
+            </button>
+            <button className="lp-tile" onClick={() => setRoute('htable')}>
+              <div className="lp-tile-title">H-Table</div>
+              <div className="lp-tile-sub">Proportions • cross-multiply</div>
+            </button>
+          </section>
         </div>
-      </div>
-
-      <div style={{ display: route === 'scale' ? 'block' : 'none' }}>
-        <ScaleFactorModule />
-      </div>
-
-      <div style={{ display: route === 'htable' ? 'block' : 'none' }}>
-        <HTableModule />
-      </div>
+      )}
+      {route === 'scale' && <ScaleFactorModule />}
+      {route === 'htable' && <HTableModule />}
     </div>
   )
 }
