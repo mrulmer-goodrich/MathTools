@@ -110,7 +110,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui
 .hhead:first-child{grid-column:1}
 .hhead:nth-child(2){grid-column:2}
 .hcell{display:flex;align-items:center;justify-content:center;min-height:64px;position:relative}
-.hcell .slot{border:0}
+/* Show a dashed target in cells; hide border once filled */
+.hcell .slot{border:2px dashed #94a3b8}
+.hcell .slot.filled{border:0}
 .hstroke{
   position:absolute;pointer-events:none;background:#0f172a
 }
