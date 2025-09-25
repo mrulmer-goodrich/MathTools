@@ -1,18 +1,12 @@
-export const loadSession = () => {
+const KEY = 'ugmath.session.v2'
+export function loadSession(){
   try {
-    return JSON.parse(localStorage.getItem('ugmt_session')) || {
-      attempts: [],
-      settings: { countSimplification: true, keepOnReload: false }
-    };
-  } catch (e) {
-    return { attempts: [], settings: { countSimplification: true, keepOnReload: false } };
-  }
-};
-
-export const saveSession = (s) => {
-  localStorage.setItem('ugmt_session', JSON.stringify(s));
-};
-
-export const resetSession = () => {
-  localStorage.removeItem('ugmt_session');
-};
+    return JSON.parse(localStorage.getItem(KEY)) || { attempts: [], scaleSnap:null, hSnap:null }
+  } catch { return { attempts: [], scaleSnap:null, hSnap:null } }
+}
+export function saveSession(obj){
+  try { localStorage.setItem(KEY, JSON.stringify(obj)) } catch {}
+}
+export function clearSession(){
+  try { localStorage.removeItem(KEY) } catch {}
+}
