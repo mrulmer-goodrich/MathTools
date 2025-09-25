@@ -1,149 +1,122 @@
 import { rand, choice } from './rng.js'
 
-/* ---------------- SCALE FACTOR (rectangles) ---------------- */
+/* ---------------- SCALE FACTOR (rectangles w/ size cue) ---------------- */
 export function genScaleProblem() {
-  // pick integer ratio p/q (1..10) giving integer scaled sides (1..100)
-  const tryPick = () => {
-    for (let i = 0; i < 300; i++) {
-      const p = rand(1, 10), q = rand(1, 10)
-      if (p === q) continue
-      const w = rand(6, 40), h = rand(6, 40) // original
-      const W = (w * p) / q, H = (h * p) / q  // copy
-      if (Number.isInteger(W) && Number.isInteger(H) && W>=1 && W<=100 && H>=1 && H<=100) {
-        return { p, q, w, h, W, H }
+  // pick p/q (1..10) with integer dimensions in 1..100
+  for (let tries=0; tries<300; tries++){
+    const p = rand(1,10), q = rand(1,10)
+    if (p===q) continue
+    const w = rand(6,40), h = rand(6,40)
+    const W = (w*p)/q, H = (h*p)/q
+    if (Number.isInteger(W) && Number.isInteger(H) && W>=6 && W<=100 && H>=6 && H<=100){
+      const pair = choice(['horizontal','vertical'])
+      // choose a second pair for Part 2: leave copy blank for the other orientation
+      const part2 = pair==='horizontal' ? 'vertical' : 'horizontal'
+      return {
+        id: crypto.randomUUID?.() || String(Math.random()),
+        ratio: {p,q, value: p/q},
+        original:{w,h},
+        copy:{w:W,h:H},
+        shownPair: pair,          // numbers visible on this pair
+        missingPair: part2        // copy missing on this pair
       }
     }
-    return { p:2, q:1, w:12, h:8, W:24, H:16 }
   }
-  const r = tryPick()
-
-  // Choose which pair has values on BOTH shapes (for scale), and which pair has a missing value on Copy
-  const scalePair = choice(['horizontal','vertical'])
-  const missingPair = scalePair === 'horizontal' ? 'vertical' : 'horizontal'
-
-  return {
-    id: crypto.randomUUID?.() || String(Math.random()),
-    ratio: { p: r.p, q: r.q },
-    original: { w: r.w, h: r.h },
-    copy: { w: r.W, h: r.H },
-    scalePair,        // both sides numbered on both shapes
-    missingPair       // original shows number; copy is blank (to solve Part 2)
-  }
+  return { id:'fallback', ratio:{p:2,q:1,value:2}, original:{w:12,h:8}, copy:{w:24,h:16}, shownPair:'horizontal', missingPair:'vertical' }
 }
 
 /* ---------------- H-TABLE PROBLEMS ---------------- */
 
-// middle-school friendly unit pairs
+// Middle-school friendly unit pairs
 const UNIT_PAIRS = [
-  ['in', 'cm'], ['cm', 'm'], ['m', 'km'], ['meters','yards'], ['feet','yards'],
-  ['minutes','points'], ['minutes','pages'], ['hours','miles'], ['minutes','centimeters'],
-  ['liters','cups'], ['tablespoons','cups'], ['grams','ounces'], ['dollars','items'],
-  ['points','minutes'], ['pages','hours']
+  ['in','cm'], ['cm','km'], ['m','yd'], ['miles','km'], ['minutes','seconds'],
+  ['hours','miles'], ['liters','cups'], ['tablespoons','cups'], ['pages','hours'],
+  ['points','minutes'], ['dollars','items'], ['meters','yards']
 ]
 
-const NAMES = ['Alex','Jordan','Taylor','Riley','Sam','Casey','Avery','Morgan','Reese','Jamie','Parker','Quinn','Drew','Hayden','Rowan','Skyler','Elliot','Sage','Kai','Tatum']
-const PLACES = [
-  'the school track','the robotics lab','the art room','the hiking trail',
-  'a city transit map','a cooking club meeting','a blueprint workshop',
-  'a model-building contest','the library display','the stadium scoreboard'
+// Names & scene parts
+const FIRST = ['Alex','Jordan','Taylor','Riley','Sam','Casey','Avery','Morgan','Reese','Jamie','Parker','Quinn','Sasha','Rowan','Charlie','Emerson','Hayden','Skyler']
+const PLACES = ['the school track','a city transit map','a scale drawing of the gym','the robotics lab blueprint','a recipe card for a bake sale','a hiking trail brochure','an art poster resize','a model-car instruction sheet','a library display map']
+const MOTIVATIONS = [
+  'to estimate how long a lap would take',
+  'to convert between the two systems accurately',
+  'to check if the plan fits the page',
+  'to measure ingredients without the original spoons',
+  'to compare the printed map to real distance',
+  'to scale the poster to fit a bulletin board',
+  'to build a model that matches the instructions',
+  'to pace themselves for an upcoming event'
 ]
 
-// Build a long, silly story with explicit scale and one given value.
-// We return one paragraph with spans that surround the tokens so the mask can exclude them.
-function buildEnglishStory({name, place, a, u1, b, u2, g, givenRowTop}) {
-  const hook = [
-    `${name} volunteered to help at ${place}, where everything seems to be measured in confusing ways.`,
-    `During setup at ${place}, ${name} finds a handwritten note with mysterious measurements.`,
-    `It’s a chaotic afternoon at ${place}, and ${name} is trying to make sense of all the numbers.`
-  ]
-  const context = [
-    `Someone scribbled a conversion scale on the whiteboard: `,
-    `A crumpled card on the table lists a comparison: `,
-    `On the clipboard there’s a neat little ratio: `
-  ]
-  const why = [
-    `Apparently it helps convert for planning and timing, but the sentences go on and on and on.`,
-    `It’s supposed to keep track of scoring and timing, but the instructions are ridiculously long.`,
-    `It’s meant to relate progress with time, although the description is wildly verbose on purpose.`
-  ]
-  const ask = givenRowTop
-    ? `Later one sentence mentions ${g} ${u1}.`
-    : `Later one sentence mentions ${g} ${u2}.`
+// Language set (Latin script to avoid font issues)
+const LANGS = [
+  'Spanish','French','German','Italian','Swedish','Malay','Swahili',
+  'Portuguese','Dutch','Norwegian','Danish','Finnish','Polish','Czech',
+  'Slovak','Hungarian','Romanian','Turkish','Greek (Latin)','Croatian',
+  'Serbian (Latin)','Catalan','Galician','Estonian','Latvian','Lithuanian',
+  'Indonesian','Filipino','Vietnamese','Hindi (Latin)'
+]
+const ALT_ORDER = [...LANGS, 'FadeOut', 'BlackOut']
 
-  // token spans must survive masking
-  return [
-    choice(hook),
-    choice(context),
-    `<span class="token-inline">${a} ${u1} = ${b} ${u2}</span>.`,
-    choice(why),
-    ask,
-    ` What is the corresponding value in ${givenRowTop ? u2 : u1}?`
-  ].join(' ')
+// Parallel templates – numbers/units remain intact
+const L = {
+  English: ({name,place,why,a,u1,b,u2,g,gRow}) =>
+    `${name} is working with ${place} ${why}. A note on the page shows a scale: ${a} ${u1} = ${b} ${u2}. Later in the text, there is ${g} ${gRow==='top'?u1:u2}. What is the corresponding value in ${gRow==='top'?u2:u1}?`,
+  Spanish: (o)=>`${o.name} está trabajando con ${o.place} ${o.why}. En la página aparece una escala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Más tarde, hay ${o.g} ${o.gRow==='top'?o.u1:o.u2}. ¿Cuál es el valor correspondiente en ${o.gRow==='top'?o.u2:o.u1}?`,
+  French: (o)=>`${o.name} travaille avec ${o.place} ${o.why}. Une échelle indique : ${o.a} ${o.u1} = ${o.b} ${o.u2}. Plus tard, on voit ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Quelle est la valeur correspondante en ${o.gRow==='top'?o.u2:o.u1} ?`,
+  German: (o)=>`${o.name} arbeitet mit ${o.place} ${o.why}. Eine Notiz zeigt: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Später steht dort ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Wie groß ist der entsprechende Wert in ${o.gRow==='top'?o.u2:o.u1}?`,
+  Italian: (o)=>`${o.name} sta lavorando con ${o.place} ${o.why}. Una nota mostra la scala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Più tardi si legge ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Qual è il valore corrispondente in ${o.gRow==='top'?o.u2:o.u1}?`,
+  Swedish: (o)=>`${o.name} arbetar med ${o.place} ${o.why}. En anteckning visar skalan: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Senare nämns ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Vad är motsvarande värde i ${o.gRow==='top'?o.u2:o.u1}?`,
+  Malay: (o)=>`${o.name} sedang bekerja dengan ${o.place} ${o.why}. Nota menunjukkan skala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Kemudian terdapat ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Apakah nilai sepadan dalam ${o.gRow==='top'?o.u2:o.u1}?`,
+  Swahili: (o)=>`${o.name} anafanya kazi na ${o.place} ${o.why}. Kumbuka inaonyesha kiwango: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Baadaye kuna ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Thamani inayolingana katika ${o.gRow==='top'?o.u2:o.u1} ni ipi?`,
+  Portuguese: (o)=>`${o.name} está trabalhando com ${o.place} ${o.why}. Uma nota mostra a escala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Depois aparece ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Qual é o valor correspondente em ${o.gRow==='top'?o.u2:o.u1}?`,
+  Dutch: (o)=>`${o.name} werkt met ${o.place} ${o.why}. Een notitie toont de schaal: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Later staat er ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Wat is de overeenkomstige waarde in ${o.gRow==='top'?o.u2:o.u1}?`,
+  Norwegian: (o)=>`${o.name} jobber med ${o.place} ${o.why}. En lapp viser skalaen: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Senere står det ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Hva er tilsvarende verdi i ${o.gRow==='top'?o.u2:o.u1}?`,
+  Danish: (o)=>`${o.name} arbejder med ${o.place} ${o.why}. En note viser skalaen: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Senere nævnes ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Hvad er den tilsvarende værdi i ${o.gRow==='top'?o.u2:o.u1}?`,
+  Finnish: (o)=>`${o.name} työskentelee kohteessa ${o.place} ${o.why}. Muistiinpano näyttää mittakaavan: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Myöhemmin mainitaan ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Mikä on vastaava arvo yksikössä ${o.gRow==='top'?o.u2:o.u1}?`,
+  Polish: (o)=>`${o.name} pracuje z ${o.place} ${o.why}. Notatka pokazuje skalę: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Później pojawia się ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Jaka jest wartość odpowiadająca w ${o.gRow==='top'?o.u2:o.u1}?`,
+  Czech: (o)=>`${o.name} pracuje s ${o.place} ${o.why}. Poznámka ukazuje měřítko: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Později je uvedeno ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Jaká je odpovídající hodnota v ${o.gRow==='top'?o.u2:o.u1}?`,
+  Slovak: (o)=>`${o.name} pracuje s ${o.place} ${o.why}. Poznámka ukazuje mierku: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Neskôr sa spomína ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Aká je zodpovedajúca hodnota v ${o.gRow==='top'?o.u2:o.u1}?`,
+  Hungarian: (o)=>`${o.name} a(z) ${o.place} mellett dolgozik ${o.why}. Egy feljegyzés mutatja a skálát: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Később szerepel ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Mennyi az ennek megfelelő érték ${o.gRow==='top'?o.u2:o.u1}-ban/-ben?`,
+  Romanian: (o)=>`${o.name} lucrează cu ${o.place} ${o.why}. O notă arată scara: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Mai târziu apare ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Care este valoarea corespunzătoare în ${o.gRow==='top'?o.u2:o.u1}?`,
+  Turkish: (o)=>`${o.name}, ${o.place} ile ${o.why}. Bir notta ölçek şöyle: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Daha sonra ${o.g} ${o.gRow==='top'?o.u1:o.u2} geçiyor. ${o.gRow==='top'?o.u2:o.u1} cinsinden karşılık gelen değer nedir?`,
+  'Greek (Latin)': (o)=>`${o.name} ergazetai me ${o.place} ${o.why}. Semeiosi deixnei klidi: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Argotera, yparchei ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Poia einai i antistoixi timi se ${o.gRow==='top'?o.u2:o.u1};`,
+  Croatian: (o)=>`${o.name} radi s ${o.place} ${o.why}. Bilješka pokazuje razmjer: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Kasnije se spominje ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Koja je odgovarajuća vrijednost u ${o.gRow==='top'?o.u2:o.u1}?`,
+  'Serbian (Latin)': (o)=>`${o.name} radi sa ${o.place} ${o.why}. Napomena prikazuje razmeru: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Kasnije se pominje ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Koja je odgovarajuća vrednost u ${o.gRow==='top'?o.u2:o.u1}?`,
+  Catalan: (o)=>`${o.name} treballa amb ${o.place} ${o.why}. Una nota mostra l’escala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Més tard hi ha ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Quin és el valor corresponent en ${o.gRow==='top'?o.u2:o.u1}?`,
+  Galician: (o)=>`${o.name} está a traballar con ${o.place} ${o.why}. Unha nota amosa a escala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Máis tarde aparece ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Cal é o valor correspondente en ${o.gRow==='top'?o.u2:o.u1}?`,
+  Estonian: (o)=>`${o.name} töötab koos ${o.place} ${o.why}. Märkusel on skaala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Hiljem mainitakse ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Mis on vastav väärtus ${o.gRow==='top'?o.u2:o.u1}-s?`,
+  Latvian: (o)=>`${o.name} strādā ar ${o.place} ${o.why}. Piezīmē redzams mērogs: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Vēlāk minēts ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Kāda ir atbilstošā vērtība ${o.gRow==='top'?o.u2:o.u1}?`,
+  Lithuanian: (o)=>`${o.name} dirba su ${o.place} ${o.why}. Pastaboje pateikta skalė: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Vėliau minima ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Kokia atitinkama reikšmė ${o.gRow==='top'?o.u2:o.u1}?`,
+  Indonesian: (o)=>`${o.name} sedang bekerja dengan ${o.place} ${o.why}. Tercantum skala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Kemudian ada ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Berapa nilai padanan dalam ${o.gRow==='top'?o.u2:o.u1}?`,
+  Filipino: (o)=>`${o.name} ay nagtatrabaho sa ${o.place} ${o.why}. May tala na nagpapakita ng iskala: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Paglaon, may ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Ano ang katumbas na halaga sa ${o.gRow==='top'?o.u2:o.u1}?`,
+  Vietnamese: (o)=>`${o.name} đang làm việc với ${o.place} ${o.why}. Có tỉ lệ: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Sau đó có ${o.g} ${o.gRow==='top'?o.u1:o.u2}. Giá trị tương ứng theo ${o.gRow==='top'?o.u2:o.u1} là bao nhiêu?`,
+  'Hindi (Latin)': (o)=>`${o.name} ${o.place} ke saath ${o.why}. Ek note me scale diya hai: ${o.a} ${o.u1} = ${o.b} ${o.u2}. Baad me ${o.g} ${o.gRow==='top'?o.u1:o.u2} diya gaya hai. ${o.gRow==='top'?o.u2:o.u1} me samanupat man kya hoga?`
 }
-
-// Parallel templates for many languages (Latin alphabet only to keep it simple)
-const LANGS = {
-  Spanish: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} ayuda en ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Luego se mencionan ${givenRowTop?g+' '+u1:g+' '+u2}. ¿Cuál es el valor correspondiente en ${givenRowTop?u2:u1}?`,
-  French: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} travaille à ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Plus tard, on parle de ${givenRowTop?g+' '+u1:g+' '+u2}. Quelle est la valeur correspondante en ${givenRowTop?u2:u1} ?`,
-  German: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} hilft bei ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Später wird ${givenRowTop?g+' '+u1:g+' '+u2} erwähnt. Wie groß ist der entsprechende Wert in ${givenRowTop?u2:u1}?`,
-  Italian: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} sta aiutando a ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Più tardi si citano ${givenRowTop?g+' '+u1:g+' '+u2}. Qual è il valore corrispondente in ${givenRowTop?u2:u1}?`,
-  Swedish: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} hjälper till på ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Senare nämns ${givenRowTop?g+' '+u1:g+' '+u2}. Vad är motsvarande värde i ${givenRowTop?u2:u1}?`,
-  Malay:   ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} membantu di ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Kemudian disebut ${givenRowTop?g+' '+u1:g+' '+u2}. Apakah nilai sepadan dalam ${givenRowTop?u2:u1}?`,
-  Swahili: ({name,place,a,u1,b,u2,g,givenRowTop}) =>
-    `${name} anasaidia katika ${place}. <span class="token-inline">${a} ${u1} = ${b} ${u2}</span>. Baadaye yanatajwa ${givenRowTop?g+' '+u1:g+' '+u2}. Thamani inayolingana katika ${givenRowTop?u2:u1} ni ipi?`,
-  Portuguese: p => `${p.name} está ajudando em ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Depois menciona ${p.g} ${p.givenRowTop?p.u1:p.u2}. Qual é o valor correspondente em ${p.givenRowTop?p.u2:p.u1}?`,
-  Dutch: p => `${p.name} helpt bij ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Later wordt ${p.g} ${p.givenRowTop?p.u1:p.u2} genoemd. Wat is de overeenkomstige waarde in ${p.givenRowTop?p.u2:p.u1}?`,
-  Danish: p => `${p.name} hjælper ved ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Senere nævnes ${p.g} ${p.givenRowTop?p.u1:p.u2}. Hvad er den tilsvarende værdi i ${p.givenRowTop?p.u2:p.u1}?`,
-  Norwegian: p => `${p.name} hjelper til ved ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Senere nevnes ${p.g} ${p.givenRowTop?p.u1:p.u2}. Hva er tilsvarende verdi i ${p.givenRowTop?p.u2:p.u1}?`,
-  Finnish: p => `${p.name} auttaa paikassa ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Myöhemmin mainitaan ${p.g} ${p.givenRowTop?p.u1:p.u2}. Mikä on vastaava arvo yksikössä ${p.givenRowTop?p.u2:p.u1}?`,
-  Polish: p => `${p.name} pomaga w ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Później wspomina się ${p.g} ${p.givenRowTop?p.u1:p.u2}. Jaka jest wartość odpowiadająca w ${p.givenRowTop?p.u2:p.u1}?`,
-  Romanian: p => `${p.name} ajută la ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Mai târziu se menționează ${p.g} ${p.givenRowTop?p.u1:p.u2}. Care este valoarea corespunzătoare în ${p.givenRowTop?p.u2:p.u1}?`,
-  Turkish: p => `${p.name} ${p.place} yerinde yardımcı oluyor. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Daha sonra ${p.g} ${p.givenRowTop?p.u1:p.u2} geçiyor. ${p.givenRowTop?p.u2:p.u1} cinsinden karşılık gelen değer nedir?`,
-  Indonesian: p => `${p.name} membantu di ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Kemudian disebut ${p.g} ${p.givenRowTop?p.u1:p.u2}. Berapa nilai yang setara dalam ${p.givenRowTop?p.u2:p.u1}?`,
-  Filipino: p => `${p.name} ay tumutulong sa ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Paglaon ay binanggit ang ${p.g} ${p.givenRowTop?p.u1:p.u2}. Ano ang katumbas na halaga sa ${p.givenRowTop?p.u2:p.u1}?`,
-  Afrikaans: p => `${p.name} help by ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Later word ${p.g} ${p.givenRowTop?p.u1:p.u2} genoem. Wat is die ooreenstemmende waarde in ${p.givenRowTop?p.u2:p.u1}?`,
-  Catalan: p => `${p.name} ajuda a ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Més tard es menciona ${p.g} ${p.givenRowTop?p.u1:p.u2}. Quin és el valor corresponent en ${p.givenRowTop?p.u2:p.u1}?`,
-  Croatian: p => `${p.name} pomaže na ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Kasnije se spominje ${p.g} ${p.givenRowTop?p.u1:p.u2}. Koja je odgovarajuća vrijednost u ${p.givenRowTop?p.u2:p.u1}?`,
-  Slovak: p => `${p.name} pomáha na ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Neskôr sa spomenie ${p.g} ${p.givenRowTop?p.u1:p.u2}. Aká je zodpovedajúca hodnota v ${p.givenRowTop?p.u2:p.u1}?`,
-  Slovenian: p => `${p.name} pomaga pri ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Kasneje je omenjeno ${p.g} ${p.givenRowTop?p.u1:p.u2}. Kakšna je ustrezna vrednost v ${p.givenRowTop?p.u2:p.u1}?`,
-  Czech: p => `${p.name} pomáhá na ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Později se zmiňuje ${p.g} ${p.givenRowTop?p.u1:p.u2}. Jaká je odpovídající hodnota v ${p.givenRowTop?p.u2:p.u1}?`,
-  Hungarian: p => `${p.name} segít a(z) ${p.place} helyszínen. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Később megemlítik: ${p.g} ${p.givenRowTop?p.u1:p.u2}. Mennyi a megfelelő érték ${p.givenRowTop?p.u2:p.u1} egységben?`,
-  Albanian: p => `${p.name} po ndihmon në ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Më vonë përmenden ${p.g} ${p.givenRowTop?p.u1:p.u2}. Cili është vlera përkatëse në ${p.givenRowTop?p.u2:p.u1}?`,
-  Estonian: p => `${p.name} aitab kohas ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Hiljem mainitakse ${p.g} ${p.givenRowTop?p.u1:p.u2}. Mis on vastav väärtus ühikus ${p.givenRowTop?p.u2:p.u1}?`,
-  Latvian: p => `${p.name} palīdz ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Vēlāk tiek minēts ${p.g} ${p.givenRowTop?p.u1:p.u2}. Kāda ir atbilstošā vērtība ${p.givenRowTop?p.u2:p.u1}?`,
-  Lithuanian: p => `${p.name} padeda ${p.place}. <span class="token-inline">${p.a} ${p.u1} = ${p.b} ${p.u2}</span>. Vėliau paminima ${p.g} ${p.givenRowTop?p.u1:p.u2}. Kokia atitinkama vertė ${p.givenRowTop?p.u2:p.u1}?`,
-}
-
-const ALT_ORDER = Object.keys(LANGS).concat(['FadeOut','BlackOut'])
 
 export function genHProblem(){
-  const [u1, u2] = choice(UNIT_PAIRS)
+  const [uTop,uBottom] = choice(UNIT_PAIRS)
   const a = rand(1,20), b = rand(1,20)
   const g = rand(1,20)
-  const name = choice(NAMES)
+  const gRow = Math.random()<0.5 ? 'bottom' : 'top' // 50/50 as requested
+  const name = choice(FIRST)
   const place = choice(PLACES)
-  const givenRowTop = Math.random() < 0.5  // 50/50 as requested
+  const why = choice(MOTIVATIONS)
 
-  const base = {name, place, a, u1, b, u2, g, givenRowTop}
+  const payload = { name, place, why, a, u1: uTop, b, u2: uBottom, g, gRow }
 
-  const english = buildEnglishStory(base)
+  const english = L.English(payload)
   const alts = {}
-  for(const k of Object.keys(LANGS)){
-    alts[k] = LANGS[k](base)
-  }
+  for (const lang of LANGS) alts[lang] = (L[lang]||L.English)(payload)
+  alts.FadeOut = ' '
+  alts.BlackOut = ' '
 
   return {
     id: crypto.randomUUID?.() || String(Math.random()),
     text: { english, alts },
-    units: [u1, u2],
-    scale: [a, b],         // a u1 = b u2
-    given: { top: givenRowTop, value: givenRowTop ? g : g }, // store value and top/bottom flag
+    units: [uTop, uBottom],
+    scale: [a, b],
+    given: { row: gRow, value: g },
     altOrder: ALT_ORDER
   }
 }
