@@ -292,48 +292,91 @@ export default function HTableModule() {
                 </div>
                 <div className="hhead"></div>
 
-                {/* row 1 */}
-                <div className="hcell">
-                  <Slot className="flat" test={acceptUnit} onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}>
-                    <span>{table.uTop || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={acceptScaleNum} onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}>
-                    {ovalIf('sTop', <span>{table.sTop ?? ''}</span>)}
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={acceptGivenNum} onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}>
-                    {ovalIf('vTop', <span>{table.vTop ?? ''}</span>)}
-                  </Slot>
-                </div>
+{/* row 1 */}
+<div className="hcell">{/* col 1 */}
+  <Slot
+    className={`slot ${table.uTop ? 'filled' : ''}`}
+    test={acceptUnit}
+    onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
+  >
+    <span>{table.uTop || 'drop unit here'}</span>
+  </Slot>
+</div>
 
-                {/* row 2 */}
-                <div className="hcell">
-                  <Slot className="flat" test={acceptUnit} onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}>
-                    <span>{table.uBottom || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={acceptScaleNum} onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}>
-                    {ovalIf('sBottom', <span>{table.sBottom ?? ''}</span>)}
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className="flat" test={acceptGivenNum} onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}>
-                    {ovalIf('vBottom', <span>{table.vBottom ?? ''}</span>)}
-                  </Slot>
-                </div>
+<div className="hcell vline">{/* col 2 */}
+  <Slot
+    className={`slot ${table.sTop!=null ? 'filled' : ''}`}
+    test={acceptScaleNum}
+    onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
+  >
+    <span
+      className={table.multPick.includes('sTop') ? 'red-oval' : ''}
+      role="button"
+      onClick={()=>clickCell('sTop')}
+    >
+      {table.sTop ?? 'drop scale #'}
+    </span>
+  </Slot>
+</div>
 
-                {/* strokes to draw the H */}
-                <div className="hstroke horiz"></div>
-                <div className="hstroke vert-left"></div>
-                <div className="hstroke vert-right"></div>
-              </div>
-            </div>
-          ) : null}
-        </div>
+<div className="hcell vline">{/* col 3 */}
+  <Slot
+    className={`slot ${table.vTop!=null ? 'filled' : ''}`}
+    test={acceptGivenNum}
+    onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
+  >
+    <span
+      className={table.multPick.includes('vTop') ? 'red-oval' : ''}
+      role="button"
+      onClick={()=>clickCell('vTop')}
+    >
+      {table.vTop ?? 'drop given # (if top)'}
+    </span>
+  </Slot>
+</div>
+
+{/* row 2 */}
+<div className="hcell rowline">{/* col 1 */}
+  <Slot
+    className={`slot ${table.uBottom ? 'filled' : ''}`}
+    test={acceptUnit}
+    onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
+  >
+    <span>{table.uBottom || 'drop unit here'}</span>
+  </Slot>
+</div>
+
+<div className="hcell vline rowline">{/* col 2 */}
+  <Slot
+    className={`slot ${table.sBottom!=null ? 'filled' : ''}`}
+    test={acceptScaleNum}
+    onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
+  >
+    <span
+      className={table.multPick.includes('sBottom') ? 'red-oval' : ''}
+      role="button"
+      onClick={()=>clickCell('sBottom')}
+    >
+      {table.sBottom ?? 'drop scale #'}
+    </span>
+  </Slot>
+</div>
+
+<div className="hcell vline rowline">{/* col 3 */}
+  <Slot
+    className={`slot ${table.vBottom!=null ? 'filled' : ''}`}
+    test={acceptGivenNum}
+    onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
+  >
+    <span
+      className={table.multPick.includes('vBottom') ? 'red-oval' : ''}
+      role="button"
+      onClick={()=>clickCell('vBottom')}
+    >
+      {table.vBottom ?? 'drop given # (if bottom)'}
+    </span>
+  </Slot>
+</div>
 
         {/* RIGHT: steps & chips */}
         <div className="card right-steps">
