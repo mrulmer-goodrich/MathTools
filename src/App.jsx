@@ -19,19 +19,27 @@ export default function App() {
   return (
     <div>
       <Nav />
-      {route === 'home' && (
+      {/* Keep components mounted so state persists across nav */}
+      <div style={{ display: route === 'home' ? 'block' : 'none' }}>
         <div className="container">
-          <div className="header">
-            <div className="brand">UG Math Tools</div>
+          <div className="lp-hero">
+            <div className="lp-title">UG Math Tools</div>
+            <div className="lp-sub">Practice tools for proportions, scale factor, & tables</div>
           </div>
-          <div className="row">
-            <BigButton onClick={() => setRoute('scale')}>Scale Factor</BigButton>
-            <BigButton onClick={() => setRoute('htable')}>H-Table</BigButton>
+          <div className="lp-grid">
+            <button className="lp-tile" onClick={() => setRoute('scale')}>Scale Factor</button>
+            <button className="lp-tile" onClick={() => setRoute('htable')}>H-Table</button>
           </div>
         </div>
-      )}
-      {route === 'scale' && <ScaleFactorModule openHTable={() => setRoute('htable')} />}
-      {route === 'htable' && <HTableModule openScale={() => setRoute('scale')} />}
+      </div>
+
+      <div style={{ display: route === 'scale' ? 'block' : 'none' }}>
+        <ScaleFactorModule />
+      </div>
+
+      <div style={{ display: route === 'htable' ? 'block' : 'none' }}>
+        <HTableModule />
+      </div>
     </div>
   )
 }
