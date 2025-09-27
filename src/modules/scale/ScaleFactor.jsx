@@ -1,15 +1,10 @@
-// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.6.0)
-// Deltas vs 3.5.x:
-// - Step 1: pills or side strips both clickable (kept).
-// - Step 4: Single visual row: [orig fraction] [÷ g] [= simplified] [= whole number if b==1].
-//           Each appears after 3s (staged). "I understand" enables only after the last stage.
-// - Step 5: "Now we can compute the length of the missing side" with formula-building:
-//           Drag words (Original × Scale Factor = Copy). After correct order, auto-fade in
-//           the scale factor chip next to the Original numeric slot. Learner drags the Original
-//           value from the shape. The equals sign is a flashing "Compute" button; on click it
-//           becomes "=", shows result, updates the '?' pill, and triggers continuous confetti.
-// - Continuous confetti (infinite) that covers the whole viewport.
-// - Presets (Small/Large), pill offsets, persistence maintained.
+// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.6.2)
+// Improvements from 3.6.0:
+// - Step 4 aligns as a single row: [num/den] [stacked ÷g] [= a/b] [= a if b==1].
+//   'I understand' stays disabled (grayed) until final reveal.
+// - Step 5: clearer layout using a compute grid: Original × Scale Factor = Copy,
+//   with a dedicated 'Compute' button below (no longer the equals sign).
+//   Result fills the Copy cell and updates the '?' pill. Continuous confetti kept.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -18,7 +13,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 16
+const SNAP_VERSION = 17
 
 const STEP_HEADS = [
   'Label the rectangles',
@@ -32,11 +27,11 @@ const STEP_HEADS = [
 /* --- continuous confetti --- */
 function Confetti({show}){
   if(!show) return null
-  const COUNT = 80
+  const COUNT = 90
   const pieces = Array.from({length:COUNT}).map((_,i)=>{
     const left = Math.random()*100
     const delay = Math.random()*2
-    const duration = 3.5 + Math.random()*2
+    const duration = 3.8 + Math.random()*2.2
     const size = 6 + Math.floor(Math.random()*8)
     const rot = Math.floor(Math.random()*360)
     const colors = ['#16a34a','#06b6d4','#f59e0b','#ef4444','#8b5cf6','#0ea5e9']
@@ -236,7 +231,7 @@ export default function ScaleFactorModule() {
     timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[]
     // stage 2 after 3s: simplified fraction
     timersRef.current.push(setTimeout(()=>setCalcStage(2), 3000))
-    // stage 3 after 6s: whole number if b==1, else mark finished
+    // stage 3 (whole) and 4 (done)
     if(b===1){
       timersRef.current.push(setTimeout(()=>setCalcStage(3), 6000))
       timersRef.current.push(setTimeout(()=>setCalcStage(4), 9000))
@@ -264,11 +259,7 @@ export default function ScaleFactorModule() {
   /* ---------- Step 5 helpers ---------- */
   const onDropS5Word = (slotKey, want) => (d) => {
     if (!testWord(want)(d)) { again(5); return }
-    setS5(prev => {
-      const nextS5 = { ...prev, [slotKey]: d }
-      const ok = nextS5.f1?.label==='Original' && nextS5.f2?.label==='Scale Factor' && nextS5.f3?.label==='Copy'
-      return nextS5
-    })
+    setS5(prev => ({ ...prev, [slotKey]: d }))
   }
 
   const onDropS5OrigVal = (d) => {
@@ -278,8 +269,8 @@ export default function ScaleFactorModule() {
     setS5(prev => ({ ...prev, origVal: d.value }))
   }
 
+  const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
   const canArmCompute = () => {
-    const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
     const haveOrig = s5.origVal != null
     return wordsOK && haveOrig && (calc || (num!=null && den!=null))
   }
@@ -368,22 +359,26 @@ export default function ScaleFactorModule() {
   /* ---------- Render ---------- */
   const newBtnClass = "button primary big-under" + (missingResult!=null ? " flash" : "")
 
-  // helper to render a small fraction with a fixed width so the row fits comfortably
   const MiniFraction = ({top, bottom}) => (
-    <div className="fraction" style={{width: 120}}>
+    <div className="fraction mini-frac">
       <div><span className="chip">{top}</span></div>
       <div className="frac-bar"></div>
       <div><span className="chip">{bottom}</span></div>
     </div>
   )
 
-  // Stage checks
+  const StackedDivide = ({g, visible}) => (
+    <div className={visible ? 'stack-op sf-fade' : 'stack-op sf-hidden'} aria-hidden={!visible}>
+      <span className="chip">÷ {g}</span>
+      <span className="chip">÷ {g}</span>
+    </div>
+  )
+
   const stage1 = calcStage>=1
   const stage2 = calcStage>=2
   const stage3 = calcStage>=3 && calc?.b===1
   const stageDone = calcStage>=4 || (calcStage>=3 && calc && calc.b!==1)
 
-  const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
   const sfString = calc ? `${calc.a}/${calc.b}` : (num && den ? `${num}/${den}` : '—')
 
   return (
@@ -461,7 +456,11 @@ export default function ScaleFactorModule() {
                   <div className="fraction-row">
                     <span className="chip static">Scale Factor</span>
                     <span>=</span>
-                    <MiniFraction top="Copy" bottom="Original" />
+                    <div className="fraction ml-6">
+                      <div><span className="chip static">Copy</span></div>
+                      <div className="frac-bar"></div>
+                      <div><span className="chip static">Original</span></div>
+                    </div>
                   </div>
                   <div className="fraction ml-12">
                     <div>
@@ -480,30 +479,17 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {/* Step 4: calculate & simplify (row + confirm) */}
+            {/* Step 4: calculate & simplify (single-row + confirm) */}
             {step===4 && (
               <div className="section">
                 <div className="muted bigger">Tap Calculate, watch the simplification appear from left to right, then confirm.</div>
-                <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:14}}>
-                  {/* Original fraction (always visible) */}
+                <div className="calc-row mt-8">
                   <MiniFraction top={num} bottom={den} />
-
-                  {/* ÷ g (stage 1) */}
-                  <div className={stage1 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage1}>
-                    <div className="row" style={{gap:6, alignItems:'center'}}>
-                      <span>÷</span><span className="chip">{calc?.g ?? 'g'}</span>
-                      <span style={{margin:'0 6px'}}/>
-                      <span>÷</span><span className="chip">{calc?.g ?? 'g'}</span>
-                    </div>
-                  </div>
-
-                  {/* = simplified (stage 2) */}
+                  <StackedDivide g={calc?.g ?? 'g'} visible={stage1} />
                   <span className={stage2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage2}>=</span>
                   <div className={stage2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage2}>
                     <MiniFraction top={calc?.a ?? '—'} bottom={calc?.b ?? '—'} />
                   </div>
-
-                  {/* = whole number if denom = 1 (stage 3) */}
                   {calc?.b===1 && (
                     <>
                       <span className={stage3 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage3}>=</span>
@@ -512,8 +498,6 @@ export default function ScaleFactorModule() {
                       </div>
                     </>
                   )}
-
-                  {/* Controls */}
                   {!calc && <button className="button primary" onClick={startCalcAnimation}>Calculate</button>}
                   {calc && (
                     <button className="button primary" disabled={!stageDone} onClick={()=>{ done(4); next(); }}>
@@ -524,7 +508,7 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {/* Step 5: compute missing side with formula build */}
+            {/* Step 5: compute missing side (clear grid) */}
             {step===5 && (
               <div className="section">
                 <div className="muted bigger">What formula do we use?</div>
@@ -557,44 +541,38 @@ export default function ScaleFactorModule() {
                   ))}
                 </div>
 
-                {/* Numeric row */}
-                <div className="row mt-10" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-                  <div style={{display:'grid', gridTemplateRows: 'auto auto', justifyItems:'center'}}>
-                    <span className="muted">Original</span>
+                {/* Plug in numbers */}
+                <div className="muted bigger mt-10">Plug in the numbers:</div>
+                <div className="compute-grid mt-8">
+                  <div className="col">
+                    <div className="muted small">Original</div>
                     <Slot test={testNum} onDropContent={onDropS5OrigVal}>
                       {s5.origVal == null ? '—' : <span className="chip">{s5.origVal}</span>}
                     </Slot>
                   </div>
-
-                  <span>×</span>
-
-                  <div style={{display:'grid', gridTemplateRows: 'auto auto', justifyItems:'center'}}>
-                    <span className="muted">Scale Factor</span>
+                  <div className="op">×</div>
+                  <div className="col">
+                    <div className="muted small">Scale Factor</div>
                     <div className={wordsOK ? 'sf-fade' : 'sf-hidden'}>
                       <span className="chip">{sfString}</span>
                     </div>
                   </div>
-
-                  {/* Compute as the equals */}
-                  {(!s5.computed) ? (
-                    <button
-                      className={"button success " + (canArmCompute() ? "flash" : "")}
-                      disabled={!canArmCompute()}
-                      onClick={doComputeMissing}
-                      title={canArmCompute() ? "Compute" : "Fill the formula and Original value first"}
-                    >
-                      Compute
-                    </button>
-                  ) : (
-                    <span className="chip">=</span>
-                  )}
-
-                  <div style={{display:'grid', gridTemplateRows: 'auto auto', justifyItems:'center'}}>
-                    <span className="muted">Copy</span>
+                  <div className="op">=</div>
+                  <div className="col">
+                    <div className="muted small">Copy</div>
                     <div>
-                      {missingResult==null ? '—' : <span className="chip" style={{fontSize:'22px'}}>{Number.isInteger(missingResult) ? missingResult : missingResult.toFixed(1)}</span>}
+                      {s5.computed && missingResult!=null ? <span className="chip" style={{fontSize:'22px'}}>{Number.isInteger(missingResult) ? missingResult : missingResult.toFixed(1)}</span> : '—'}
                     </div>
                   </div>
+                </div>
+                <div className="center mt-10">
+                  <button
+                    className={"button success " + (canArmCompute() ? "flash" : "")}
+                    disabled={!canArmCompute()}
+                    onClick={doComputeMissing}
+                  >
+                    Compute
+                  </button>
                 </div>
               </div>
             )}
