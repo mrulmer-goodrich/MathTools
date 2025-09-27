@@ -1,11 +1,18 @@
+// src/components/DraggableChip.jsx
 import React from 'react'
 
-export default function Draggable({ id, label, data, inline=false }) {
+export default function Draggable({
+  id,
+  label,
+  data,
+  inline = false,
+  className = 'chip',
+  style
+}) {
   const payload = data || { id, label, kind: 'chip' }
 
   const onDragStart = (e) => {
     const json = JSON.stringify(payload)
-    // Set both MIME types so all browsers provide something on drop
     e.dataTransfer.setData('application/json', json)
     e.dataTransfer.setData('text/plain', json)
     e.dataTransfer.effectAllowed = 'copy'
@@ -15,7 +22,8 @@ export default function Draggable({ id, label, data, inline=false }) {
     <span
       draggable
       onDragStart={onDragStart}
-      className={'chip' + (inline ? ' inline' : '')}
+      className={className + (inline ? ' inline' : '')}
+      style={style}
       aria-label={label}
       title={label}
     >
