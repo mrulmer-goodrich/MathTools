@@ -240,3 +240,28 @@ body{
   background: rgba(0,0,0,0);
   z-index: 20;
 }
+
+/* Base chip pill style (applies everywhere, including inside slots) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+  line-height: 1;
+}
+.chip:active { cursor: grabbing; }
+
+/* When a chip is rendered *inside a Slot*, keep the same pill look but with stronger contrast */
+.slot .chip {
+  border-color: #333;
+  border-radius: 12px;   /* ensure rounded in slots too */
+  background: #fff;
+  font-weight: 800;
+}
