@@ -240,19 +240,60 @@ export default function ScaleFactorModule() {
           <Tag id={(isLeft?'o':'c')+"num_v"} value={isLeft?oh:ch} side="left" orient="vertical" shape={isLeft?'orig':'copy'} />
         )}
 
-        {/* Perpendicular original ghost (never blocks clicks) */}
-        {isLeft && missingPair==='horizontal' && (<span className="side-tag ghost top" style={sharedBadgeMetrics}>{ow}</span>)}
-        {isLeft && missingPair==='vertical'   && (<span className="side-tag ghost left" style={sharedBadgeMetrics}>{oh}</span>)}
+        {/* Ghost BEFORE side-hit, lower z-index */}
+        {isLeft && missingPair==='horizontal' && (
+          <span className="side-tag ghost top" style={{...sharedBadgeMetrics, zIndex:5}}>{ow}</span>
+        )}
+        {isLeft && missingPair==='vertical' && (
+          <span className="side-tag ghost left" style={{...sharedBadgeMetrics, zIndex:5}}>{oh}</span>
+        )}
 
-        {/* Wide click zones */}
-        <div className={"side-hit top "+(isChosen(isLeft?'orig':'copy','top')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','top')?'good':'')}
-             onClick={()=> (step===1? clickSide(isLeft?'orig':'copy','top','horizontal') : step===7? handleMissingClick(isLeft?'orig':'copy','top','horizontal'):null) }/>
-        <div className={"side-hit bottom "+(isChosen(isLeft?'orig':'copy','bottom')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','bottom')?'good':'')}
-             onClick={()=> (step===1? clickSide(isLeft?'orig':'copy','bottom','horizontal') : step===7? handleMissingClick(isLeft?'orig':'copy','bottom','horizontal'):null) }/>
-        <div className={"side-hit left "+(isChosen(isLeft?'orig':'copy','left')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','left')?'good':'')}
-             onClick={()=> (step===1? clickSide(isLeft?'orig':'copy','left','vertical') : step===7? handleMissingClick(isLeft?'orig':'copy','left','vertical'):null) }/>
-        <div className={"side-hit right "+(isChosen(isLeft?'orig':'copy','right')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','right')?'good':'')}
-             onClick={()=> (step===1? clickSide(isLeft?'orig':'copy','right','vertical') : step===7? handleMissingClick(isLeft?'orig':'copy','right','vertical'):null) }/>
+        {/* Side-hit zones AFTER ghost, higher z-index */}
+        <div
+          className={"side-hit top " + (isChosen(isLeft?'orig':'copy','top')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','top')?'good':'')}
+          style={{zIndex:20}}
+          onClick={() =>
+            (step===1
+              ? clickSide(isLeft?'orig':'copy','top','horizontal')
+              : step===7
+                ? handleMissingClick(isLeft?'orig':'copy','top','horizontal')
+                : null)
+          }
+        />
+        <div
+          className={"side-hit bottom " + (isChosen(isLeft?'orig':'copy','bottom')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','bottom')?'good':'')}
+          style={{zIndex:20}}
+          onClick={() =>
+            (step===1
+              ? clickSide(isLeft?'orig':'copy','bottom','horizontal')
+              : step===7
+                ? handleMissingClick(isLeft?'orig':'copy','bottom','horizontal')
+                : null)
+          }
+        />
+        <div
+          className={"side-hit left " + (isChosen(isLeft?'orig':'copy','left')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','left')?'good':'')}
+          style={{zIndex:20}}
+          onClick={() =>
+            (step===1
+              ? clickSide(isLeft?'orig':'copy','left','vertical')
+              : step===7
+                ? handleMissingClick(isLeft?'orig':'copy','left','vertical')
+                : null)
+          }
+        />
+        <div
+          className={"side-hit right " + (isChosen(isLeft?'orig':'copy','right')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','right')?'good':'')}
+          style={{zIndex:20}}
+          onClick={() =>
+            (step===1
+              ? clickSide(isLeft?'orig':'copy','right','vertical')
+              : step===7
+                ? handleMissingClick(isLeft?'orig':'copy','right','vertical')
+                : null)
+          }
+        />
+
       </div>
     )
 
