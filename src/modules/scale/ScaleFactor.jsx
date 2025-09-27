@@ -403,19 +403,23 @@ const onDropFormula = (slotKey, want) => (d) => {
               <div className="section">
                 <div className="muted bigger">Drag values from the shapes into the formula (numerator).</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
+              
+
                   <div className="fraction-row">
-                    <span>Scale Factor =</span>
-                    <div className="fraction ml-6">
-                      <div>Copy</div>
-                      <div className="frac-bar"></div>
-                      <div>Original</div>
-                    </div>
-                  </div>
+  <span className="chip static">Scale Factor</span>
+  <span>=</span>
+  <div className="fraction ml-6">
+    <div><span className="chip static">Copy</span></div>
+    <div className="frac-bar"></div>
+    <div><span className="chip static">Original</span></div>
+  </div>
+</div>
                   <div className="fraction ml-12">
                     <div>
-                      <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>
-                        {num ?? '—'}
-                      </Slot>
+                    <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>
+  {num == null ? '—' : <span className="chip">{num}</span>}
+</Slot>
+
                     </div>
                     <div className="frac-bar"></div>
                     <div>{den ?? '—'}</div>
@@ -428,21 +432,24 @@ const onDropFormula = (slotKey, want) => (d) => {
               <div className="section">
                 <div className="muted bigger">Drag values from the shapes into the formula (denominator).</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-                  <div className="fraction-row">
-                    <span>Scale Factor =</span>
-                    <div className="fraction ml-6">
-                      <div>Copy</div>
-                      <div className="frac-bar"></div>
-                      <div>Original</div>
-                    </div>
-                  </div>
+                 <div className="fraction-row">
+  <span className="chip static">Scale Factor</span>
+  <span>=</span>
+  <div className="fraction ml-6">
+    <div><span className="chip static">Copy</span></div>
+    <div className="frac-bar"></div>
+    <div><span className="chip static">Original</span></div>
+  </div>
+</div>
+
                   <div className="fraction ml-12">
                     <div>{num ?? '—'}</div>
                     <div className="frac-bar"></div>
                     <div>
                       <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('den',d)}>
-                        {den ?? '—'}
-                      </Slot>
+  {den == null ? '—' : <span className="chip">{den}</span>}
+</Slot>
+
                     </div>
                   </div>
                 </div>
