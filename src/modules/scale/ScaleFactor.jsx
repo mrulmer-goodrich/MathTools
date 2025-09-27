@@ -341,45 +341,57 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {step===2 && (
-              <div className="section">
-                <div className="muted bigger">Drag the words to build the formula.</div>
-                <div className="fraction-row mt-8">
-                 <Slot
-  test={testWord('Scale Factor')}
-  onDropContent={onDropFormula('sSF','Scale Factor')}
->
-  {slots.sSF
-    ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
-    : '_____'}
-</Slot>
+{step===2 && (
+  <div className="section">
+    <div className="muted bigger">Drag the words to build the formula.</div>
 
-<Slot
-  test={testWord('Copy')}
-  onDropContent={onDropFormula('sNUM','Copy')}
->
-  {slots.sNUM
-    ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
-    : '_____'}
-</Slot>
+    <div className="fraction-row mt-8 big-fraction">
+      {/* [ Scale Factor ] slot */}
+      <Slot
+        test={testWord('Scale Factor')}
+        onDropContent={onDropFormula('sSF','Scale Factor')}
+      >
+        {slots.sSF
+          ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
+          : '_____'}
+      </Slot>
 
-<Slot
-  test={testWord('Original')}
-  onDropContent={onDropFormula('sDEN','Original')}
->
-  {slots.sDEN
-    ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
-    : '_____'}
-</Slot>
+      <span>=</span>
 
-                    </div>
-                  </div>
-                </div>
-                <div className="chips chips-lg with-borders">
-                  {wordBank.map(w=><Draggable key={w.id} id={w.id} label={w.label} data={w} />)}
-                </div>
-              </div>
-            )}
+      {/* [ Copy / Original ] fraction slots */}
+      <div className="fraction ml-6">
+        <div>
+          <Slot
+            test={testWord('Copy')}
+            onDropContent={onDropFormula('sNUM','Copy')}
+          >
+            {slots.sNUM
+              ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
+              : '_____'}
+          </Slot>
+        </div>
+        <div className="frac-bar thick"></div>
+        <div>
+          <Slot
+            test={testWord('Original')}
+            onDropContent={onDropFormula('sDEN','Original')}
+          >
+            {slots.sDEN
+              ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
+              : '_____'}
+          </Slot>
+        </div>
+      </div>
+    </div>
+
+    <div className="chips chips-lg with-borders">
+      {wordBank.map(w => (
+        <Draggable key={w.id} id={w.id} label={w.label} data={w} />
+      ))}
+    </div>
+  </div>
+)}
+
 
             {step===3 && (
               <div className="section">
