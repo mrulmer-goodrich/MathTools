@@ -230,10 +230,46 @@ export default function ScaleFactorModule() {
   }
 
   /* ---------- Pill / Tag (wrapper carries absolute positioning) ---------- */
-  const Tag = ({id, value, side, orient, shape}) => {
-    const cls = 'side-tag ' + side
-    const isShown = (orient===shown)
-    const isPerp  = (orient===missingPair)
+/* ---------- Pill / Tag (wrapper carries absolute positioning + highlight) ---------- */
+const Tag = ({id, value, side, orient, shape}) => {
+  // highlight state (replaces old .side-hit* visuals)
+  const pickedSelf = step===1 && isChosen(shape, side)
+  const goodSelf   = isGood(shape, side)
+
+  const cls =
+    'side-tag ' +
+    side +
+    (pickedSelf ? ' chosen' : '') +
+    (goodSelf   ? ' good'   : '')
+
+  const isShown = (orient===shown)
+  const isNumeric = (value!== '?' && value!=null && value!=='')
+
+  // Draggable: numbers on Original are draggable; on Copy only the shown orientation number is draggable.
+  const draggableNow = (step>=3) && (
+    (shape==='orig' && isNumeric) ||
+    (shape==='copy' && isShown && isNumeric)
+  )
+
+  const handleClick = ()=>{
+    if(step===1){ clickSide(shape, side, orient) }
+    if(step===6){ handleMissingClick(shape, side, orient) }
+  }
+
+  if (draggableNow) {
+    return (
+      <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
+        <Draggable id={id} label={String(value)} data={{kind:'num', value}} />
+      </span>
+    )
+  }
+  return (
+    <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
+      {value}
+    </span>
+  )
+}
+
 
     // Draggable logic:
     // - All numeric badges on the Original are draggable during value steps
