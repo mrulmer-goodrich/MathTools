@@ -345,21 +345,33 @@ export default function ScaleFactorModule() {
               <div className="section">
                 <div className="muted bigger">Drag the words to build the formula.</div>
                 <div className="fraction-row mt-8">
-                  <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
-                    {slots.sSF || '_____'} 
-                  </Slot>
-                  <span>=</span>
-                  <div className="fraction ml-6">
-                    <div>
-                      <Slot test={testWord('Copy')} onDropContent={onDropFormula('sNUM','Copy')}>
-                        {slots.sNUM || '_____'}
-                      </Slot>
-                    </div>
-                    <div className="frac-bar"></div>
-                    <div>
-                      <Slot test={testWord('Original')} onDropContent={onDropFormula('sDEN','Original')}>
-                        {slots.sDEN || '_____'}
-                      </Slot>
+                 <Slot
+  test={testWord('Scale Factor')}
+  onDropContent={onDropFormula('sSF','Scale Factor')}
+>
+  {slots.sSF
+    ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
+    : '_____'}
+</Slot>
+
+<Slot
+  test={testWord('Copy')}
+  onDropContent={onDropFormula('sNUM','Copy')}
+>
+  {slots.sNUM
+    ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
+    : '_____'}
+</Slot>
+
+<Slot
+  test={testWord('Original')}
+  onDropContent={onDropFormula('sDEN','Original')}
+>
+  {slots.sDEN
+    ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
+    : '_____'}
+</Slot>
+
                     </div>
                   </div>
                 </div>
