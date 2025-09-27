@@ -1,4 +1,4 @@
-/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.1) */
+/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.2) */
 
 /* -------- Brand color tokens (FINAL) -------- */
 :root{
@@ -115,8 +115,8 @@ body{
 /* ---------- Scale Factor visuals ---------- */
 .shape-area{ position:relative; }
 .rects{ display:flex; gap:20px; align-items:flex-start; justify-content:center; margin-bottom:12px; }
-.rect{ position:relative; background:#fff; border:2px solid #111827; border-radius:10px; }
-.rect.copy{ background:#f3f7fb; }
+.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; }
+.rect.copy{ background:#F5FAFF; } /* stronger contrast from white */
 .shape-label{ position:absolute; top:6px; left:6px; font-weight:800; background:#fff; padding:2px 8px; border-radius:8px; border:1px solid var(--border-2); }
 .shape-label.hidden{ visibility:hidden; }
 
@@ -135,17 +135,27 @@ body{
 }
 
 /* Side number tags — shared pill style; placement per side */
-.side-tag{ position:absolute; font-weight:900; background:#fff; border-radius:999px; border:2px solid var(--border); box-shadow: 0 2px 0 rgba(0,0,0,.06); z-index:40; user-select:none; }
+.side-tag{
+  position:absolute;
+  font-weight:900;
+  background:#fff;
+  border-radius:999px;
+  border:2px solid #111827; /* stronger outline for contrast */
+  box-shadow: 0 2px 0 rgba(0,0,0,.10);
+  z-index:40;
+  user-select:none;
+  color:#0b1220;
+}
 .side-tag.top{    top:-24px;    left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.left{   left:-24px;   top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.right{  right:-24px;  top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 
-/* Click targets around sides (wide, under tags) */
+/* Wide click targets (under tags) */
 .rect .side-hit{
   position:absolute;
   background: transparent;
-  z-index: 20; /* below tags */
+  z-index: 20; /* below tags so tags remain draggable in steps 3–5 */
 }
 .rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
 .rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
@@ -153,7 +163,7 @@ body{
 .rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
 
 /* First pick is GREEN immediately (spec) */
-.rect .side-hit.chosen{ background: rgba(16,185,129,.18); } /* same hue as good */
+.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
 .rect .side-hit.good{   background: rgba(16,185,129,.18); }
 
 /* Ghost (perpendicular original) */
@@ -165,6 +175,8 @@ body{
   border-radius:999px;
   padding:4px 8px;
   font-weight:700;
+  z-index: 5;               /* below side-hit so clicks pass */
+  pointer-events: none;     /* never block clicks */
 }
 
 /* ---------- Fractions, chips, etc. ---------- */
@@ -195,7 +207,7 @@ body{
 .right-steps .muted.bigger{ font-size: 1.08rem; }
 .section{ margin-bottom: 20px; }
 
-/* Chips with borders */
+/* Chips with borders (consistent) */
 .chips.with-borders > *{
   border: 2px solid var(--border) !important;
   background: #fff !important;
@@ -204,6 +216,6 @@ body{
   font-weight: 800;
   cursor: grab;
   user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.04);
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
