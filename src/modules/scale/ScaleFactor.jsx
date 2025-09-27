@@ -1,389 +1,529 @@
-// src/modules/scalefactor/ScaleFactorModule.jsx
-import React, { useMemo, useState } from 'react'
+// src/modules/htable/HTableModule.jsx
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
 import SummaryOverlay from '../../components/SummaryOverlay.jsx'
-import { genScaleProblem } from '../../lib/generator.js'
+import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
+/** ---------- Step headings (10 boxes in Summary) ---------- */
 const STEP_HEADS = [
-  'Label shapes',
-  'Pick the corresponding sides',
-  'Build the formula',
-  'Copy → Numerator',
-  'Original → Denominator',
-  'Calculate Scale',
-  'Build missing-side equation',
-  'Identify missing side',
-  'Compute missing side'
+  'What do we do first?',
+  'Column 1 header',
+  'Place the units (drag onto left cells)',
+  'Column 2 header',
+  'Place the scale numbers',
+  'Place the given number',
+  'What’s next?',
+  'Which numbers multiply? (click the two cells)',
+  'What’s next?',
+  'Which number do we divide by? (click one cell)'
 ]
 
-export default function ScaleFactorModule() {
-  const [session, setSession] = useState(loadSession())
-  const [problem, setProblem] = useState(()=>session.scaleSnap?.problem || genScaleProblem())
-  const [step, setStep] = useState(session.scaleSnap?.step ?? 0)
-  const [steps, setSteps] = useState(session.scaleSnap?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
+/** Utility: deep clone helper to avoid accidental mutations */
+const clone = (x) => JSON.parse(JSON.stringify(x))
+
+// Helper to detect if a string is mostly English letters (to avoid fragmented translations)
+const mostlyEnglish = (s) => {
+  if (!s) return true
+  const letters = s.match(/[A-Za-z]/g) || []
+  const nonLetters = s.match(/[^A-Za-z\s]/g) || []
+  // If >60% of characters are A–Z AND there are clear English function words, treat as English
+  const englishWords = /(the|and|is|are|of|to|in|on|with|for|at|by|from)\b/i.test(s)
+  return (letters.length > nonLetters.length) && englishWords
+}
+
+export default function HTableModule() {
+  /** ---------- persisted session ----------- */
+  const persisted = loadSession()
+  const [session, setSession] = useState(persisted)
+
+  /** ---------- problem + table state ----------- */
+  const [problem, setProblem] = useState(() => session.hSnap?.problem || genHProblem())
+  const [step, setStep] = useState(session.hSnap?.step ?? 0)
+  const [steps, setSteps] = useState(session.hSnap?.steps || STEP_HEADS.map(() => ({ misses: 0, done: false })))
   const [openSum, setOpenSum] = useState(false)
 
-  const miss = (i)=>setSteps(s=>{const c=[...s];c[i].misses++;return c})
-  const done = (i)=>setSteps(s=>{const c=[...s];c[i].done=true;return c})
-  const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
-
-  // Persist snapshot
-  const saveSnap = (extra={})=>{
-    const snap = { problem, step, steps, ...extra }
-    const nextSession = { ...session, scaleSnap: snap }
-    saveSession(nextSession); setSession(nextSession)
+  /** H-grid state */
+  const initialTable = {
+    head1: '', head2: '',
+    uTop: '', uBottom: '',
+    sTop: null, sBottom: null,
+    vTop: null, vBottom: null,
+    // interaction highlights
+    multPick: [],   // e.g. ['vTop','sBottom']
+    divisor: null,  // 'sTop' | 'sBottom'
+    product: null,
+    result: null
   }
+  const [table, setTable] = useState(() => session.hSnap?.table || initialTable)
 
-  // labels
-  const [labels, setLabels] = useState(()=>session.scaleSnap?.labels || { left:null, right:null })
+  /** helpers: miss/done/next */
+  const markMiss = (i) => setSteps(s => { const c = clone(s); c[i].misses++; return c })
+  const markDone = (i) => setSteps(s => { const c = clone(s); c[i].done = true; return c })
+  const goNext = () => setStep(s => Math.min(s + 1, STEP_HEADS.length - 1))
+
+  /** persist snapshot anytime key state changes */
+  useEffect(() => {
+    const next = { ...session, hSnap: { problem, table, step, steps } }
+    saveSession(next); setSession(next)
+    // eslint-disable-next-line
+  }, [problem, table, step, steps])
+
+  /** ---------- Story + mode scheduler ---------- */
+  const [showEnglish, setShowEnglish] = useState(true)
+  const [mode, setMode] = useState('Spanish')  // starting alt (we’ll randomize subsequently)
   const [errorMsg, setErrorMsg] = useState('')
+  const timerRef = useRef(null)
+  const holdRef  = useRef(false)
 
-  // sizes from generator (copy is p/q times original)
-  const ow = problem.original.w, oh = problem.original.h
-  const cw = problem.copy.w, ch = problem.copy.h
-  const shown = problem.shownPair      // 'horizontal' | 'vertical'
-  const missingPair = problem.missingPair
+  // Only allow curated languages + MaskLetters; strip legacy modes from altOrder at runtime
+  const allowedModes = useMemo(()=>{
+    const allowed = new Set(['Spanish','French','German','Italian','Portuguese','Swedish','Polish','Turkish','MaskLetters','English'])
+    return (problem.altOrder || []).map(m => (m==='FadeOut'||m==='BlackOut') ? 'MaskLetters' : m).filter(m => allowed.has(m))
+  }, [problem.altOrder])
 
-  const rectStyle = (w,h)=>({
-    width: Math.max(120, w*6)+'px',
-    height: Math.max(90, h*6)+'px'
-  })
+  const randomAlt = (list) => list[Math.floor(Math.random()*list.length)] || 'MaskLetters'
 
-  // cross-rectangle pairing
-  const [picked, setPicked] = useState(()=>session.scaleSnap?.picked || false)
-  const [firstPick, setFirstPick] = useState(null) // { shape:'orig'|'copy', orient:'horizontal'|'vertical' }
-
-  // fraction word slots
-  const [slots, setSlots] = useState(()=>session.scaleSnap?.slots || { sSF:null, sEQ:'=', sNUM:null, sDIV:'/', sDEN:null })
-  const formulaReady = slots.sSF && slots.sNUM && slots.sDEN
-
-  // numbers from shapes
-  const copyVals = { horizontal: cw, vertical: ch }
-  const origVals = { horizontal: ow, vertical: oh }
-  const [num, setNum] = useState(()=>session.scaleSnap?.num ?? null)
-  const [den, setDen] = useState(()=>session.scaleSnap?.den ?? null)
-
-  // part 2
-  const [missSide, setMissSide] = useState(()=>session.scaleSnap?.missSide || (missingPair)) // which side is missing on copy
-  const [mSlots, setMSlots] = useState(()=>session.scaleSnap?.mSlots || { left:'Original', op:'×', right:'Scale Factor', eq:'=', out:null })
-  const [missingResult, setMissingResult] = useState(()=>session.scaleSnap?.missingResult ?? null)
-
-  // word bank (≤10 proportion-related)
-  const wordBank = useMemo(()=>{
-    const words = ['Scale Factor','Copy','Original','Proportion','Ratio','Corresponding','Similar','Figure','Image','Equivalent']
-    return words.map((w,i)=>({ id:'w'+i, label:w, kind:'word' }))
-  },[])
-
-  const testWord = want => d => d?.kind==='word' && d.label===want
-  const testNum = d => d?.kind==='num'
-  const tryAgain = (i, msg='Try Again!') => { miss(i); setErrorMsg(msg); setTimeout(()=>setErrorMsg(''), 1200) }
-
-  const onDropFormula = (slotKey, want) => d => {
-    if (!testWord(want)(d)) { tryAgain(2); return }
-    const after = { ...slots, [slotKey]: want }
-    setSlots(after)
-    const ok = after.sSF==='Scale Factor' && after.sNUM==='Copy' && after.sDEN==='Original'
-    if(ok){ done(2); next(); saveSnap({slots:after}) }
+  const applyMode = (m) => {
+    setShowEnglish(false)
+    const filtered = (m === 'FadeOut' || m === 'BlackOut') ? 'MaskLetters' : m
+    setMode(filtered)
   }
 
-  const dropLabel = (side,d)=>{
-    if(!testWord('Original')(d) && !testWord('Copy')(d)){ tryAgain(0); return }
-    const after = { ...labels, [side]: d.label }
-    setLabels(after)
-    if(after.left && after.right && after.left!==after.right){ done(0); next(); saveSnap({labels:after}) }
+  const startTicker = () => {
+    stopTicker()
+    timerRef.current = setInterval(() => {
+      if (holdRef.current) return // paused while holding English
+      const pool = allowedModes.length ? allowedModes : ['MaskLetters']
+      const choices = pool.filter(m => m !== mode && m !== 'English')
+      const m = randomAlt(choices.length ? choices : pool)
+      applyMode(m)
+    }, 15000) // 15s per spec
   }
+  const stopTicker = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
 
-  const clickSide = (shape, orient)=>{
-    if(!labels.left || !labels.right){ tryAgain(1); return }
-    if(!firstPick){
-      setFirstPick({shape, orient})
-      return
+  // start with English for 15s, then first random mode
+  useEffect(() => {
+    stopTicker()
+    holdRef.current = false
+    setShowEnglish(true); setMode('English')
+    const first = setTimeout(() => applyMode(randomAlt(allowedModes)), 15000)
+    startTicker()
+    return () => { clearTimeout(first); stopTicker() }
+    // eslint-disable-next-line
+  }, [problem.id, allowedModes.join('|')])
+
+  /** ---------- Choices (units & numbers) ---------- */
+  const unitChoices = useMemo(() => {
+    // 6 unique including the two correct units
+    const pool = ['in','cm','km','m','yd','miles','seconds','hours','minutes','liters','cups','tablespoons','pages','points','dollars','items','meters','yards']
+    const need = new Set(problem.units)
+    while (need.size < 6) need.add(pool[Math.floor(Math.random()*pool.length)])
+    return Array.from(need).map((u, i) => ({ id: 'u'+i, label: u, kind: 'unit' }))
+  }, [problem])
+
+  const numberChoices = useMemo(() => {
+    const nums = new Set([problem.scale[0], problem.scale[1], problem.given.value])
+    while (nums.size < 6) nums.add(Math.floor(Math.random()*20)+1)
+    return Array.from(nums).map((n, i) => ({ id: 'n'+i, label: String(n), kind: 'num', value: n }))
+  }, [problem])
+
+  /** ---------- Accept tests for drop slots ---------- */
+  const acceptHeader1 = (d) => step===1 && d.kind==='col'
+  const acceptHeader2 = (d) => step===3 && d.kind==='col'
+  const acceptUnit     = (d) => step===2 && d.kind==='unit'
+  const acceptScaleNum = (d) => step===4 && d.kind==='num'
+  const acceptGivenNum = (d) => step===5 && d.kind==='num'
+
+  /** ---------- Validation helpers (alignment-sensitive) ---------- */
+  const unitTop = table.uTop, unitBottom = table.uBottom
+  const [u1,u2] = problem.units
+  const [a,b]   = problem.scale
+
+  // Which number should align to a unit?
+  const scaleForUnit = (u) => (u===u1 ? a : (u===u2 ? b : null))
+
+  // Given's unit (relative to original units)
+  const givenUnit = problem.given.row === 'top' ? u1 : u2
+
+  // Which row (top/bottom) now holds that unit?
+  const rowOfUnit = (u) => (u && u===unitTop ? 'top' : (u && u===unitBottom ? 'bottom' : null))
+  const expectedGivenRow = rowOfUnit(givenUnit)
+
+  /** ---------- Clickable multiply/divide selection ---------- */
+  const clickCell = (key) => {
+    if (step===7) {
+      // pick two cells to multiply (must be given + opposite-row scale)
+      setTable(t => {
+        const picks = new Set(t.multPick)
+        if (picks.has(key)) picks.delete(key); else if (picks.size<2) picks.add(key)
+        return { ...t, multPick: Array.from(picks) }
+      })
+    } else if (step===9) {
+      // pick divisor (must be scale from same row as given)
+      if (key==='sTop' || key==='sBottom') setTable(t => ({ ...t, divisor: key }))
     }
-    // Must be the other shape, same orientation as the visible-number pair
-    const otherShape = firstPick.shape==='orig' ? 'copy' : 'orig'
-    const okOther   = (shape===otherShape) && (orient===shown)
-    const okFirst   = (firstPick.orient===shown)
-    if(okFirst && okOther){
-      setPicked(true); setFirstPick(null); done(1); next(); saveSnap({picked:true})
-    } else {
-      setFirstPick(null); tryAgain(1)
+  }
+
+  const tryAgain = (i, msg='Try Again!') => {
+    markMiss(i)
+    setErrorMsg(msg)
+    setTimeout(()=>setErrorMsg(''), 1400)
+  }
+
+  /** ---------- Auto-advance hooks ---------- */
+  // Units auto-advance
+  useEffect(() => {
+    if (step===2) {
+      const placed = new Set([unitTop, unitBottom].filter(Boolean))
+      if (placed.size===2) { markDone(2); goNext() }
     }
-  }
+    // eslint-disable-next-line
+  }, [step, unitTop, unitBottom])
 
-  const dropNum = (where,d)=>{
-    if(!testNum(d)) { tryAgain(where==='num'?3:4); return }
-    const correctCopy = copyVals[shown], correctOrig = origVals[shown]
-    if(where==='num'){
-      if(d.value===correctCopy){ setNum(d.value); done(3); next(); saveSnap({num:d.value}) } else tryAgain(3)
-    } else {
-      if(d.value===correctOrig){ setDen(d.value); done(4); next(); saveSnap({den:d.value}) } else tryAgain(4)
+  // Scale numbers alignment auto-advance
+  useEffect(() => {
+    if (step===4) {
+      const shouldTop    = scaleForUnit(unitTop)
+      const shouldBottom = scaleForUnit(unitBottom)
+      const ok = (table.sTop===shouldTop && table.sBottom===shouldBottom)
+      if (table.sTop!=null || table.sBottom!=null) {
+        if (!ok && table.sTop!=null && table.sBottom!=null) tryAgain(4)
+        if (ok) { markDone(4); goNext() }
+      }
     }
+    // eslint-disable-next-line
+  }, [step, table.sTop, table.sBottom, unitTop, unitBottom])
+
+  // Given auto-advance
+  useEffect(() => {
+    if (step===5) {
+      const placedTop = table.vTop!=null
+      const placedBottom = table.vBottom!=null
+      const correctValue = (table.vTop===problem.given.value || table.vBottom===problem.given.value)
+      const correctRow = (placedTop && expectedGivenRow==='top') || (placedBottom && expectedGivenRow==='bottom')
+      if (placedTop || placedBottom) {
+        if ((placedTop ^ placedBottom) && correctValue && correctRow) { markDone(5); goNext() }
+        else if ((placedTop ^ placedBottom)) tryAgain(5)
+      }
+    }
+    // eslint-disable-next-line
+  }, [step, table.vTop, table.vBottom, expectedGivenRow, problem.given.value])
+
+  /** ---------- Step helpers ---------- */
+  const confirmStep1 = (d) => { // Draw an H Table
+    if (d.v === 'ok') { markDone(0); goNext() } else markMiss(0)
   }
 
-  const doCalculate = ()=>{
-    if(num==null || den==null){ tryAgain(5); return }
-    done(5); next(); saveSnap()
+  const confirmNext = (want) => (d) => { if (d.v===want) { markDone(step); goNext() } else markMiss(step) }
+
+  const confirmMultiply = () => {
+    // Must have picked exactly [givenCell, oppositeScaleCell]
+    const picks = table.multPick.slice().sort().join(',')
+    const givenCell = expectedGivenRow==='top' ? 'vTop' : 'vBottom'
+    const oppScale  = expectedGivenRow==='top' ? 'sBottom' : 'sTop'
+    const want = [givenCell, oppScale].sort().join(',')
+    if (picks!==want) { tryAgain(7); return }
+    const givenVal = table[givenCell]
+    const oppVal   = table[oppScale]
+    if (givenVal==null || oppVal==null) { tryAgain(7); return }
+    setTable(t => ({ ...t, product: givenVal * oppVal }))
+    markDone(7); goNext()
   }
 
-  const computeMissing = ()=>{
-    const sf = num/den
-    const origSide = origVals[missingPair]
-    const result = origSide * sf
-    setMissingResult(result); done(8)
+  const submitDivide = () => {
+    // Must click divisor = scale in same row as given
+    const need = expectedGivenRow==='top' ? 'sTop' : 'sBottom'
+    if (table.divisor !== need) { tryAgain(9); return }
+    const product = table.product
+    const divisor = table[need]
+    if (product==null || divisor==null) { tryAgain(9); return }
+    const result = product / divisor
+    setTable(t => ({ ...t, result }))
+
+    // log attempt
     const missCount = steps.reduce((t,s)=>t+s.misses,0)
-    const scoreColor = missCount===0?'green':(missCount===1?'yellow':'red')
-    const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
-    const nextSession = { ...session, attempts:[...session.attempts, attempt] }
+    const scoreColor = missCount===0 ? 'green' : missCount===1 ? 'yellow' : 'red'
+    const attempt = { scoreColor, stepResults: clone(steps), stepHeads: STEP_HEADS }
+    const nextSession = { ...session, attempts: [...session.attempts, attempt] }
     saveSession(nextSession); setSession(nextSession)
   }
 
-  const newProblem = ()=>{
-    const p = genScaleProblem()
-    setProblem(p); setStep(0); setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
-    setLabels({left:null,right:null}); setPicked(false)
-    setFirstPick(null)
-    setSlots({sSF:null,sEQ:'=',sNUM:null,sDIV:'/',sDEN:null})
-    setNum(null); setDen(null)
-    setMissSide(p.missingPair); setMSlots({ left:'Original', op:'×', right:'Scale Factor', eq:'=', out:null })
-    setMissingResult(null)
-    saveSnap({ problem:p, step:0 })
+  const resetProblem = () => {
+    setProblem(genHProblem())
+    setTable(initialTable)
+    setStep(0)
+    setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
+    // reset rotation
+    stopTicker(); holdRef.current=false; setShowEnglish(true); setMode('English')
+    setTimeout(()=>applyMode(randomAlt(allowedModes)), 10) // replaced by effect
   }
 
-  // number chips come from shapes only; revealed after pair is picked
-  const shapeNumChips = useMemo(()=>{
-    const arr = []
-    if(shown==='horizontal'){ arr.push({id:'cn', label:String(cw), kind:'num', value:cw}); arr.push({id:'on', label:String(ow), kind:'num', value:ow}) }
-    else { arr.push({id:'cn', label:String(ch), kind:'num', value:ch}); arr.push({id:'on', label:String(oh), kind:'num', value:oh}) }
-    return arr
-  },[shown, cw,ch, ow,oh])
+  /** ---------- Story rendering ---------- */
+  const Story = () => {
+    const lang = showEnglish ? 'English' : mode
+    let raw  = showEnglish ? problem.text.english : (problem.text.alts[lang] || problem.text.english)
+    // If non-English mode yields mixed/fragmented English, switch to MaskLetters as a fallback
+    if (!showEnglish && lang !== 'MaskLetters' && mostlyEnglish(raw)) {
+      raw = problem.text.english
+      // force mask-style rendering for this tick
+      return (
+        <>
+          <div className="problem">{raw.replace(/[A-Za-z]/g,'X')}</div>
+          <div className="lang-badge">Mode: MaskLetters</div>
+          <div className="toolbar center mt-10">
+            <button
+              className="button lg"
+              onMouseDown={()=>{ holdRef.current=true; setShowEnglish(true) }}
+              onMouseUp={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+              onTouchStart={()=>{ holdRef.current=true; setShowEnglish(true) }}
+              onTouchEnd={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+              aria-pressed={holdRef.current ? 'true':'false'}
+            >Hold: English</button>
+            {errorMsg && <div className="error big-red ml-12">{errorMsg}</div>}
+          </div>
+        </>
+      )
+    }
+    const txt = (!showEnglish && lang==='MaskLetters')
+      ? raw.replace(/[A-Za-z]/g, 'X')
+      : raw
+    return (
+      <>
+        <div className="problem">{txt}</div>
+        <div className="lang-badge">Mode: {showEnglish ? 'English' : lang}</div>
+        <div className="toolbar center mt-10">
+          <button
+            className="button lg"
+            onMouseDown={()=>{ holdRef.current=true; setShowEnglish(true) }}
+            onMouseUp={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+            onTouchStart={()=>{ holdRef.current=true; setShowEnglish(true) }}
+            onTouchEnd={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+            aria-pressed={holdRef.current ? 'true':'false'}
+          >Hold: English</button>
+          {errorMsg && <div className="error big-red ml-12">{errorMsg}</div>}
+        </div>
+      </>
+    )
+  }
 
+  /** ---------- Cell helpers for click selection UI ---------- */
+  const picked = (key) => table.multPick.includes(key)
+  const ovalIf = (key, children) => (
+    <span className={picked(key) ? 'red-oval' : ''} onClick={()=>clickCell(key)} role="button">{children}</span>
+  )
+
+  /** ---------- Render ---------- */
   return (
     <div className="container">
-      <div className="panes">
-        {/* LEFT: shapes */}
-        <div className="card shape-area">
-          <div className="rects">
-            {/* Original */}
-            <div className="rect" style={rectStyle(ow,oh)}>
-              <div className={"shape-label "+(!labels.left?'hidden':'')}>{labels.left || 'Label me'}</div>
-              {/* Perpendicular tagging on Original */}
-              <div className="side-tag top">{ow}</div>
-              <div className="side-tag left">{oh}</div>
-              {/* Hits */}
-              <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('orig','horizontal')}/>
-              <div className={"side-hit bottom"} onClick={()=>clickSide('orig','horizontal')}/>
-              <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('orig','vertical')}/>
-              <div className={"side-hit right"} onClick={()=>clickSide('orig','vertical')}/>
-            </div>
+      <div className="panes equal">
+        {/* LEFT: Story + New Problem + H-grid */}
+        <div className="card">
+          <Story />
+          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
 
-            {/* Copy */}
-            <div className="rect copy" style={rectStyle(cw,ch)}>
-              <div className={"shape-label "+(!labels.right?'hidden':'')}>{labels.right || 'Label me'}</div>
-              {/* Copy shows only the corresponding value for shown orientation */}
-              {shown==='horizontal' && (<div className="side-tag top">{cw}</div>)}
-              {shown==='vertical' && (<div className="side-tag left">{ch}</div>)}
-              {/* hits */}
-              <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('copy','horizontal')}/>
-              <div className={"side-hit bottom"} onClick={()=>clickSide('copy','horizontal')}/>
-              <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('copy','vertical')}/>
-              <div className={"side-hit right"} onClick={()=>clickSide('copy','vertical')}/>
-            </div>
-          </div>
+          {/* H-table appears only after Step 1 */}
+          {step >= 1 && (
+            <div className="hwrap">
+              <div className="hgrid">
+                {/* headers row (1st + 2nd col only; 3rd column has no label) */}
+                <div className="hhead">
+                  <Slot
+                    test={acceptHeader1}
+                    onDropContent={(d)=>{
+                      if (d.v==='Units') { setTable(t=>({...t, head1:'Units'})); markDone(1); goNext() }
+                      else markMiss(1)
+                    }}
+                  >
+                    <span>{table.head1 || ''}</span>
+                  </Slot>
+                </div>
+                <div className="hhead">
+                  <Slot
+                    test={acceptHeader2}
+                    onDropContent={(d)=>{
+                      if (d.v==='Scale Numbers') { setTable(t=>({...t, head2:'Scale Numbers'})); markDone(3); goNext() }
+                      else markMiss(3)
+                    }}
+                  >
+                    <span>{table.head2 || ''}</span>
+                  </Slot>
+                </div>
+                <div className="hhead"></div>
 
-          {/* Show number chips after pair is picked */}
-          {picked && (
-            <div className="chips" style={{justifyContent:'center', marginTop:10}}>
-              {shapeNumChips.map(c=><Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                {/* row 1 — no horizontal bar here */}
+                <div className="hcell">
+                  <Slot
+                    className={`${table.uTop ? 'filled' : ''}`}
+                    test={acceptUnit}
+                    onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
+                  >
+                    <span>{table.uTop || ''}</span>
+                  </Slot>
+                </div>
+
+                <div className="hcell vline">
+                  <Slot
+                    className={`${table.sTop!=null ? 'filled' : ''}`}
+                    test={acceptScaleNum}
+                    onDropContent={(d)=>{
+                      const want = scaleForUnit(unitTop)
+                      if (d.value===want) setTable(t=>({...t,sTop:d.value}))
+                      else tryAgain(4)
+                    }}
+                  >
+                    {ovalIf('sTop', <span>{table.sTop ?? ''}</span>)}
+                  </Slot>
+                </div>
+
+                <div className="hcell vline">
+                  <Slot
+                    className={`${table.vTop!=null ? 'filled' : ''}`}
+                    test={acceptGivenNum}
+                    onDropContent={(d)=>{
+                      if (expectedGivenRow==='top' && d.value===problem.given.value && table.vBottom==null)
+                        setTable(t=>({...t,vTop:d.value}))
+                      else tryAgain(5)
+                    }}
+                  >
+                    {ovalIf('vTop', <span>{table.vTop ?? ''}</span>)}
+                  </Slot>
+                </div>
+
+                {/* row 2 — bottom half; H horizontal bar BETWEEN data rows */}
+                <div className="hcell rowline">
+                  <Slot
+                    className={`${table.uBottom ? 'filled' : ''}`}
+                    test={acceptUnit}
+                    onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
+                  >
+                    <span>{table.uBottom || ''}</span>
+                  </Slot>
+                </div>
+
+                <div className="hcell vline rowline">
+                  <Slot
+                    className={`${table.sBottom!=null ? 'filled' : ''}`}
+                    test={acceptScaleNum}
+                    onDropContent={(d)=>{
+                      const want = scaleForUnit(unitBottom)
+                      if (d.value===want) setTable(t=>({...t,sBottom:d.value}))
+                      else tryAgain(4)
+                    }}
+                  >
+                    {ovalIf('sBottom', <span>{table.sBottom ?? ''}</span>)}
+                  </Slot>
+                </div>
+
+                <div className="hcell vline rowline">
+                  <Slot
+                    className={`${table.vBottom!=null ? 'filled' : ''}`}
+                    test={acceptGivenNum}
+                    onDropContent={(d)=>{
+                      if (expectedGivenRow==='bottom' && d.value===problem.given.value && table.vTop==null)
+                        setTable(t=>({...t,vBottom:d.value}))
+                      else tryAgain(5)
+                    }}
+                  >
+                    {ovalIf('vBottom', <span>{table.vBottom ?? ''}</span>)}
+                  </Slot>
+                </div>
+              </div>
             </div>
           )}
-
-          <button className="button primary big-under" onClick={newProblem}>New Problem</button>
         </div>
 
-        {/* RIGHT: steps */}
+        {/* RIGHT: steps & chips */}
         <div className="card right-steps">
           <div className="step-panel">
             <div className="step-title">{STEP_HEADS[step]}</div>
 
-            {/* Step 1: labels */}
+            {/* Step 1 */}
             {step===0 && (
               <>
-                <div className="muted">Which rectangle is the <b>Original</b>? Which is the <b>Copy</b>? Drag the labels onto the shapes.</div>
-                <div className="row" style={{display:'flex',gap:8,marginTop:8}}>
-                  <Slot test={testWord('Original')} onDropContent={(d)=>dropLabel('left',d)}>
-                    <span className="slot">Left label</span>
-                  </Slot>
-                  <Slot test={testWord('Copy')} onDropContent={(d)=>dropLabel('right',d)}>
-                    <span className="slot">Right label</span>
-                  </Slot>
-                </div>
-                <div className="chips" style={{marginTop:10}}>
-                  <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
-                  <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
-                </div>
-              </>
-            )}
-
-            {/* Step 2: pick pair by cross-rectangle clicks */}
-            {step===1 && (
-              <div className="muted">Pick a side on one rectangle, then the matching side on the other. Which sides go together?</div>
-            )}
-
-            {/* Step 3: formula words only */}
-            {step===2 && (
-              <>
-                <div className="muted">Let’s build it: <b>Scale Factor = Copy / Original</b>. Drag words only.</div>
-                <div className="fraction-row" style={{marginTop:8}}>
-                  {/* "Scale Factor" = [Copy]/[Original] */}
-                  <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
-                    {slots.sSF || '____'}
-                  </Slot>
-                  <span>=</span>
-                  <div className="fraction" style={{marginLeft:6}}>
-                    <div>
-                      <Slot test={testWord('Copy')} onDropContent={onDropFormula('sNUM','Copy')}>
-                        {slots.sNUM || '____'}
-                      </Slot>
-                    </div>
-                    <div className="frac-bar"></div>
-                    <div>
-                      <Slot test={testWord('Original')} onDropContent={onDropFormula('sDEN','Original')}>
-                        {slots.sDEN || '____'}
-                      </Slot>
-                    </div>
-                  </div>
-                </div>
                 <div className="chips">
-                  {wordBank.map(w=><Draggable key={w.id} id={w.id} label={w.label} data={w} />)}
+                  <Draggable id="a1" label="Draw an H Table" data={{kind:'act', v:'ok'}} />
+                  <Draggable id="a2" label="Circle the Biggest Number" data={{kind:'act', v:'x'}} />
+                  <Draggable id="a3" label="Multiply and Divide the Numbers" data={{kind:'act', v:'x'}} />
+                  <Draggable id="a4" label="Draw an O Table" data={{kind:'act', v:'x'}} />
+                  <Draggable id="a5" label="Scream into the Void" data={{kind:'act', v:'x'}} />
                 </div>
+                <Slot test={(d)=>d.kind==='act'} onDropContent={confirmStep1}>
+                  <span className="slot">Drop answer here</span>
+                </Slot>
               </>
             )}
 
-            {/* Step 4: Copy → numerator */}
-            {step===3 && (
-              <>
-                <div className="muted">Drag the number for the <b>Copy</b> into the numerator.</div>
-                {/* Persistent formula banner from here on */}
-                {formulaReady && (
-                  <div className="fraction-row muted" style={{marginTop:8}}>
-                    <span>Scale Factor = </span>
-                    <div className="fraction" style={{marginLeft:6}}>
-                      <div>{num ?? '—'}</div>
-                      <div className="frac-bar"></div>
-                      <div>{den ?? '—'}</div>
-                    </div>
-                  </div>
-                )}
-                <div className="fraction" style={{marginTop:8}}>
-                  <div>
-                    <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>
-                      {num ?? '—'}
-                    </Slot>
-                  </div>
-                  <div className="frac-bar"></div>
-                  <div>{den ?? '—'}</div>
-                </div>
-              </>
+            {/* Step 2 & 4: headers */}
+            {(step===1 || step===3) && (
+              <div className="chips">
+                <Draggable id="c1" label="Units" data={{kind:'col', v:'Units'}} />
+                <Draggable id="c2" label="Scale Numbers" data={{kind:'col', v:'Scale Numbers'}} />
+                <Draggable id="c3" label="Random Numbers" data={{kind:'col', v:'x'}} />
+                <Draggable id="c4" label="Answer" data={{kind:'col', v:'x'}} />
+                <Draggable id="c5" label="Multiply" data={{kind:'col', v:'x'}} />
+              </div>
             )}
 
-            {/* Step 5: Original → denominator */}
+            {/* Step 3: units */}
+            {step===2 && (
+              <div className="chips">
+                {unitChoices.map(u => <Draggable key={u.id} id={u.id} label={u.label} data={u} />)}
+              </div>
+            )}
+
+            {/* Step 5: scale numbers (alignment sensitive) */}
             {step===4 && (
-              <>
-                <div className="muted">Drag the number for the <b>Original</b> into the denominator.</div>
-                {formulaReady && (
-                  <div className="fraction-row muted" style={{marginTop:8}}>
-                    <span>Scale Factor = </span>
-                    <div className="fraction" style={{marginLeft:6}}>
-                      <div>{num ?? '—'}</div>
-                      <div className="frac-bar"></div>
-                      <div>{den ?? '—'}</div>
-                    </div>
-                  </div>
-                )}
-                <div className="fraction" style={{marginTop:8}}>
-                  <div>{num ?? '—'}</div>
-                  <div className="frac-bar"></div>
-                  <div>
-                    <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('den',d)}>
-                      {den ?? '—'}
-                    </Slot>
-                  </div>
-                </div>
-              </>
+              <div className="chips">
+                {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
+              </div>
             )}
 
-            {/* Step 6: calculate scale */}
+            {/* Step 6: given number */}
             {step===5 && (
+              <div className="chips">
+                {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
+              </div>
+            )}
+
+            {/* Step 7 & 9: next actions */}
+            {(step===6 || step===8) && (
               <>
-                <div className="muted">We’ll compute and simplify if needed.</div>
-                <div className="fraction" style={{marginTop:8}}>
-                  <div>{num ?? '—'}</div>
-                  <div className="frac-bar"></div>
-                  <div>{den ?? '—'}</div>
+                <div className="chips">
+                  <Draggable id="n1" label="Divide then Multiply" data={{kind:'nx', v:'x'}} />
+                  <Draggable id="n2" label="Cross Multiply" data={{kind:'nx', v: step===6 ? 'ok' : 'x'}} />
+                  <Draggable id="n3" label="Divide" data={{kind:'nx', v: step===8 ? 'ok' : 'x'}} />
+                  <Draggable id="n4" label="Multiply Across" data={{kind:'nx', v:'x'}} />
+                  <Draggable id="n5" label="Add the Numbers" data={{kind:'nx', v:'x'}} />
                 </div>
-                <div className="chips" style={{marginTop:8}}>
-                  <button className="button primary" onClick={doCalculate}>Calculate Scale</button>
-                </div>
+                <Slot test={(d)=>d.kind==='nx'} onDropContent={confirmNext(step===6 ? 'ok' : 'ok')}>
+                  <span className="slot">Drop answer here</span>
+                </Slot>
               </>
             )}
 
-            {/* Step 7: build missing-side equation */}
-            {step===6 && (
-              <>
-                <div className="muted">Drag words to build: Original × Scale Factor = Copy</div>
-                <div className="chips" style={{marginTop:8}}>
-                  <Slot className="flat" test={testWord('Original')} onDropContent={()=>done(6)}>
-                    <span className="slot">Original</span>
-                  </Slot>
-                  <span>×</span>
-                  <Slot className="flat" test={testWord('Scale Factor')} onDropContent={()=>{}}>
-                    <span className="slot">Scale Factor</span>
-                  </Slot>
-                  <span>=</span>
-                  <Slot className="flat" test={testWord('Copy')} onDropContent={()=>{}}>
-                    <span className="slot">Copy</span>
-                  </Slot>
-                </div>
-                <div className="chips" style={{marginTop:8}}>
-                  <Draggable id="wO2" label="Original" data={{kind:'word',label:'Original'}} />
-                  <Draggable id="wSF2" label="Scale Factor" data={{kind:'word',label:'Scale Factor'}} />
-                  <Draggable id="wC2" label="Copy" data={{kind:'word',label:'Copy'}} />
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={()=>{ done(6); next() }}>Confirm</button>
-                </div>
-              </>
-            )}
-
-            {/* Step 8: identify missing side (click) */}
+            {/* Step 8: click multiply pair */}
             {step===7 && (
               <>
-                <div className="muted">Click the side on the Copy that is missing (the other orientation).</div>
+                <div className="muted">Click the <b>given</b> and the <b>opposite-row scale</b> in the H-table. Then confirm.</div>
                 <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={()=>{ done(7); next() }}>I found it</button>
+                  <button className="button primary" onClick={confirmMultiply}>Confirm Multiply</button>
                 </div>
+                {table.product!=null && <div className="muted" style={{marginTop:8}}>Product: {table.product}</div>}
               </>
             )}
 
-            {/* Step 9: compute missing side */}
-            {step===8 && (
+            {/* Step 10: click divisor & submit */}
+            {step===9 && (
               <>
-                <div className="muted">We’ll use Original × (Copy/Original) to find the Copy’s missing side.</div>
+                <div className="muted">Click the divisor (scale on the <b>same row</b> as the given), then Submit.</div>
                 <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button success" onClick={computeMissing}>
-                    Compute Missing Side
-                  </button>
+                  <button className="button success" onClick={submitDivide}>Submit</button>
                 </div>
-                {missingResult!=null && (
-                  <div className="chips" style={{marginTop:10}}>
-                    <span className="badge">Result: {missingResult}</span>
-                  </div>
-                )}
+                {table.result!=null && <div className="muted" style={{marginTop:8}}>Answer: {table.result}</div>}
               </>
             )}
-
             {errorMsg && <div className="error big-red" style={{marginTop:8}}>{errorMsg}</div>}
           </div>
         </div>
