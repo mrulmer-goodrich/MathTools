@@ -202,3 +202,36 @@ body{
   font-weight: 900; color:#b91c1c; font-size: clamp(22px, 3.8vw, 36px);
 }
 
+/* ---- Bigger formula, tidy sections, draggable numbers on shapes ---- */
+.section{ margin-bottom: 20px; }
+.right-steps .step-title.question-xl{ font-size: 1.4rem; }
+.right-steps .muted.bigger{ font-size: 1.08rem; }
+
+/* Inline row for words-formula on left and numbers on right */
+.row.formula-row{ display:flex; align-items:center; flex-wrap:wrap; }
+.big-fraction{ font-size: 1.22rem; }
+.big-fraction .slot{ min-width: 88px; padding: 8px 12px; }
+
+/* Draggable side tags should keep the pill look */
+.side-tag{ position:absolute; font-weight:800; background:#fff; padding:2px 8px; border-radius:999px; border:1px solid #e5e7eb; }
+.side-tag.top{ top:-12px; left:50%; transform:translateX(-50%); }
+.side-tag.bottom{ bottom:-12px; left:50%; transform:translateX(-50%); }
+.side-tag.left{ left:-12px; top:50%; transform:translateY(-50%); }
+.side-tag.right{ right:-12px; top:50%; transform:translateY(-50%); }
+
+/* First clicked edge highlight */
+.side-hit.chosen{ background: rgba(34,197,94,.18); }
+.side-hit.good{ background: rgba(16,185,129,.18); }
+
+/* Chip style improvements retained */
+.chips.with-borders > *{
+  border: 2px solid #cbd5e1 !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.04);
+}
+.chips.with-borders > *:active{ cursor: grabbing; }
