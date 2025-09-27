@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Draggable from './DraggableChip.jsx'
 
 function safeParse(dt) {
   try {
@@ -20,16 +21,15 @@ export default function DropSlot({
   className = ''
 }) {
   const [glow, setGlow] = useState(false)
+  const [dropped, setDropped] = useState(null)
 
   const onEnter = (e) => {
-    // Some browsers don’t expose data until drop — ALWAYS allow drop here
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
     setGlow(true)
   }
 
   const onOver = (e) => {
-    // Keep allowing the drop so the drop event will fire
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
   }
@@ -44,6 +44,7 @@ export default function DropSlot({
     try { ok = !!test(data) } catch { ok = false }
     if (ok) {
       try { onDropContent(data) } catch { /* never crash */ }
+      setDropped(data)
     }
   }
 
@@ -55,7 +56,11 @@ export default function DropSlot({
       onDrop={onDrop}
       className={`slot ${glow ? 'glow' : ''} ${className}`}
     >
-      {children}
+      {dropped
+        ? <Draggable id={`reslot-${dropped.id || dropped.label || dropped.value}`}
+            label={String(dropped.label || dropped.value || '')}
+            data={dropped} />
+        : children}
     </div>
   )
 }
