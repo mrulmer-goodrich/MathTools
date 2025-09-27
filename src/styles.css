@@ -1,10 +1,7 @@
-/* styles.css — UG Math Tools (v3.4.1 SAFE)
-   - Restores full landing/header styles from earlier builds.
-   - Keeps all general UI tokens & big buttons.
-   - Minimal, scoped changes for Scale Factor module only:
-     • dynamic --badge-offset for pill positions (no hardcoded -24px)
-     • ensure pills never clip (visible overflow + inline padding from JS)
-     • wide side-hit overlays for Step 1 clicks
+/* styles.css — UG Math Tools (v3.5.0 SAFE)
+   - Preserves landing/header styles.
+   - Adds scoped fade-in helpers and confetti for the Scale Factor module.
+   - Keeps dynamic --badge-offset + wide side-hit overlays (Step 1 only).
 */
 
 /* -------- Brand color tokens -------- */
@@ -37,7 +34,7 @@ body{
   background: #f7fafc;
 }
 
-/* ---------- Header & Landing (restored) ---------- */
+/* ---------- Header & Landing ---------- */
 .container{ max-width:1100px; margin: 24px auto; padding: 0 16px; }
 .header{
   background: linear-gradient(90deg, var(--eastway-blue), var(--eastway-green));
@@ -139,35 +136,24 @@ body{
   font-size: clamp(22px, 3.8vw, 36px);
 }
 
-/* Side number tags — shared pill style; placement per side w/ dynamic offset */
+/* Side number tags — dynamic offset */
 .side-tag{
-  position:absolute;
-  font-weight:900;
-  background:#fff;
-  border-radius:999px;
-  border:2px solid #111827; /* stronger outline for contrast */
-  box-shadow: 0 2px 0 rgba(0,0,0,.10);
-  z-index:40;
-  user-select:none;
-  color:#0b1220;
+  position:absolute; font-weight:900; background:#fff; border-radius:999px;
+  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
 }
 .side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 .side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 
-/* Wide click targets (under tags; used in Step 1 only) */
+/* Wide click targets (Step 1 only) */
 .rect .side-hit{
-  position:absolute;
-  background: transparent;
-  z-index: 20; /* below tags so tags remain draggable in later steps */
+  position:absolute; background: transparent; z-index: 20;
 }
 .rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
 .rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.chosen,
-.rect .side-hit.good{ background: rgba(16,185,129,.18); }
+.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
+.rect .side-hit.good{   background: rgba(16,185,129,.18); }
 
 /* ---------- Fractions, chips, etc. ---------- */
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
@@ -253,31 +239,10 @@ body{
 .fraction-row.no-wrap{ flex-wrap: nowrap; }
 
 /* === v3.0.5 UI tune-ups === */
-
-/* give shapes a bit more room between Original and Copy */
 .rects{ gap: 32px; }
-
-/* right pane + fractions bigger during steps 2–5 */
-.panes.big-ui .right-steps.big-ui { font-size: 1.06rem; }
-.right-steps.big-ui .chip,
-.right-steps.big-ui .slot .chip{
-  font-size: 1.05rem;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: #ffffff;
-  border-color: #97b7d6;
-  box-shadow: 0 2px 0 rgba(15,42,67,.08);
-}
-
-/* bigger fraction UI */
-.big-fraction .slot{ min-width: 90px; padding: 8px 12px; }
-.fraction .frac-bar.thick{ height:4px; }
 
 /* keep dropped numbers styled like chips */
 .slot .chip { font-weight: 800; border-width: 2px; }
-
-/* widen generic slots for easier dropping */
-.slot{ min-width: 80px; padding: 8px 12px; }
 
 /* concept check slot */
 .slot.wide{ min-width: 260px; }
@@ -310,12 +275,22 @@ body{
 /* Let the left shapes area shrink instead of forcing the grid wider */
 .shape-area .rects { max-width: 100%; }
 
-/* Hit zones must sit above ghost tags (legacy safety) */
-.side-hit { position: absolute; background: rgba(0,0,0,0); z-index: 20; }
-
 /* Flashing new problem button */
-.flash { animation: flashBtn 1s infinite; }
-@keyframes flashBtn {
+.flash { animation: sfFlashBtn 1s infinite; }
+@keyframes sfFlashBtn {
   0%,100%{ background:var(--cms-light); }
   50%{ background:var(--t-yellow); }
 }
+
+/* --- scoped fade-in helpers for Step 4 --- */
+.sf-hidden{ opacity:0; pointer-events:none; }
+.sf-fade{ animation: sfFadeIn .6s ease-out both; }
+@keyframes sfFadeIn{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform:none; } }
+
+/* --- simple confetti --- */
+.sf-confetti{ position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
+.sf-confetti-piece{
+  position:absolute; top:-10vh; border-radius:2px; opacity:.95;
+  animation-name: sfConfettiFall; animation-timing-function: linear; animation-fill-mode: forwards;
+}
+@keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
