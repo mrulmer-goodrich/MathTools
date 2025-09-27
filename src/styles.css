@@ -219,3 +219,24 @@ body{
   box-shadow: 0 2px 0 rgba(0,0,0,.06);
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
+
+/* Ensure chips stay styled when inside slots */
+.slot .chip {
+  font-weight: bold;
+  background: #fff;
+  border: 2px solid #333;
+}
+
+/* Ghost tags should never block clicks */
+.side-tag.ghost {
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Hit zones must sit above ghost tags */
+.side-hit {
+  position: absolute;
+  background: rgba(0,0,0,0);
+  z-index: 20;
+}
