@@ -265,3 +265,25 @@ body{
   background: #fff;
   font-weight: 800;
 }
+
+/* Base chip pill (used everywhere, including inside slots) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+  line-height: 1;
+}
+.chip:active { cursor: grabbing; }
+
+/* Stronger contrast when a chip is rendered inside a Slot */
+.slot .chip {
+  border-color: #333;
+}
