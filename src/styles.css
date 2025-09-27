@@ -303,3 +303,24 @@ body{
 .side-tag.big.left{ left:-24px; top:50%; transform:translateY(-50%); }
 .side-tag.big.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); }
 .side-tag.big.right{ right:-24px; top:50%; transform:translateY(-50%); }
+
+/* Make Slot used for rectangles auto-size to contents */
+.rect-slot.auto { display:inline-block; width:auto; height:auto; }
+
+/* Stronger visual feedback */
+.rect .side-hit.chosen{ background: rgba(59,130,246,.12); } /* teal-ish */
+.rect .side-hit.good{ background: rgba(16,185,129,.18); }   /* green after correct pair */
+
+/* Ghost tag for perpendicular original number (reference only) */
+.side-tag.ghost{
+  position:absolute;
+  opacity:.25;
+  background:#fff;
+  border:2px dashed #cbd5e1;
+  border-radius:999px;
+  padding:4px 8px;
+  font-weight:700;
+}
+.side-tag.ghost.top{ top:-20px; left:50%; transform:translateX(-50%); }
+.side-tag.ghost.left{ left:-20px; top:50%; transform:translateY(-50%); }
+
