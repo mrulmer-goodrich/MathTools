@@ -1,6 +1,10 @@
-// src/modules/scale/ScaleFactor.jsx (v3.0.2)
-// Fixes: ghost pill no-block, same-size badges, green-first-pick, Step 7/8 enforcement,
-// improved instructions, disabled label slots after Step 0.
+// src/modules/scale/ScaleFactor.jsx (v3.1.0)
+// Complete replacement implementing:
+// - Order-agnostic value filling across steps 3 & 4 (either slot can be filled first)
+// - Chips keep bold pill styling when dropped (words and numbers)
+// - Directions updated ("Fill the formula with values from the shapes")
+// - Ghost badge never blocks clicks; clear contrast for rect vs chips
+// - Calculation step: "Divide numerator and denominator by [GCD]" + 1-decimal display (no .0 for integers)
 
 import React, { useEffect, useMemo, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -9,14 +13,14 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 10
+const SNAP_VERSION = 11
 
 const STEP_HEADS = [
   'Label the rectangles',
   'Pick the corresponding sides',
   'Build the scale factor formula (words)',
-  'Fill the formula (numerator)',
-  'Fill the formula (denominator)',
+  'Fill the formula with values',
+  'Fill the formula with values',
   'Calculate & Simplify',
   'Build: Original × Scale Factor = Copy',
   'Identify the missing side on the Copy',
@@ -36,12 +40,13 @@ export default function ScaleFactorModule() {
     firstPick: null,            // {shape, edge, orient}
     chosen: { orig:null, copy:null },
     picked: false,
-    // scale factor slots
+    // numeric values filled into fraction
     num: null, den: null,
+    // word slots (store full chip objects so styling persists)
     slots: { sSF:null, sNUM:null, sDEN:null },
-    // step 7 equation words placed?
+    // equation words
     eqPlaced: { O:false, SF:false, C:false },
-    // step 8 click
+    // missing side click
     missingClicked: false,
     // final
     missingResult: null
@@ -107,7 +112,6 @@ export default function ScaleFactorModule() {
     return { '--badge-font': `${font}px`, '--badge-pad-v': `${padV}px`, '--badge-pad-h': `${padH}px` }
   }, [ow,oh,cw,ch,shown])
 
-  const formulaReady = slots.sSF && slots.sNUM && slots.sDEN
   const copyVals = { horizontal: cw, vertical: ch }
   const origVals = { horizontal: ow, vertical: oh }
 
@@ -153,37 +157,59 @@ export default function ScaleFactorModule() {
   const isGood  =(s,e)=> step>=2 && picked && ((s==='orig' && chosen.orig===e) || (s==='copy' && chosen.copy===e))
 
   /* ---------- Step 3 (words) ---------- */
-// stores the FULL draggable object (id,label,kind), not just a string
-const onDropFormula = (slotKey, want) => (d) => {
-  if (!testWord(want)(d)) { again(2); return }
-  setSlots(prev => {
-    const nextSlots = { ...prev, [slotKey]: d }
-    const ok =
-      nextSlots.sSF?.label === 'Scale Factor' &&
-      nextSlots.sNUM?.label === 'Copy' &&
-      nextSlots.sDEN?.label === 'Original'
-    if (ok) { done(2); next() }
-    return nextSlots
-  })
-}
-
-  /* ---------- Step 4/5 numbers ---------- */
-  const dropNum = (where,d)=>{
-    if(!testNum(d)) { again(where==='num'?3:4); return }
-    const correctCopy = copyVals[shown], correctOrig = origVals[shown]
-    if(where==='num'){
-      if(d.value===correctCopy){ setNum(d.value); done(3); next() } else again(3)
-    } else {
-      if(d.value===correctOrig){ setDen(d.value); done(4); next() } else again(4)
-    }
+  // stores the FULL draggable object (id,label,kind), not just a string
+  const onDropFormula = (slotKey, want) => (d) => {
+    if (!testWord(want)(d)) { again(2); return }
+    setSlots(prev => {
+      const nextSlots = { ...prev, [slotKey]: d }
+      const ok =
+        nextSlots.sSF?.label === 'Scale Factor' &&
+        nextSlots.sNUM?.label === 'Copy' &&
+        nextSlots.sDEN?.label === 'Original'
+      if (ok) { done(2); next() }
+      return nextSlots
+    })
   }
+
+  /* ---------- Step 4/5 numbers (order-agnostic, both slots live on both steps) ---------- */
+  const correctCopy = copyVals[shown]
+  const correctOrig = origVals[shown]
+
+  const dropIntoNumerator = (d) => {
+    if (!testNum(d)) { again(step, 'Try Again!'); return }
+    if (d.value !== correctCopy) { again(step, 'Try Again!'); return }
+    setNum(d.value)
+  }
+  const dropIntoDenominator = (d) => {
+    if (!testNum(d)) { again(step, 'Try Again!'); return }
+    if (d.value !== correctOrig) { again(step, 'Try Again!'); return }
+    setDen(d.value)
+  }
+
+  // Whenever num/den become both present, advance appropriately
+  useEffect(()=>{
+    if (num!=null && den!=null) {
+      if (step===3) { done(3); done(4); setStep(5) }
+      else if (step===4) { done(4); next() }
+    } else if (num!=null && step===3) {
+      // mark progress on step 3 when first correct drop happens
+      done(3)
+    }
+    // eslint-disable-next-line
+  }, [num, den])
 
   /* ---------- Step 6 calculate ---------- */
   const gcd=(x,y)=>{x=Math.abs(x);y=Math.abs(y);while(y){[x,y]=[y,x%y]}return x||1}
+  const fmt1 = (v)=>{
+    if (v==null || Number.isNaN(v)) return '—'
+    const rounded = Math.round(v*10)/10
+    if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded))
+    return rounded.toFixed(1)
+  }
   const doCalculate=()=>{
     if(num==null||den==null){ again(5); return }
     const g=gcd(num,den), a=num/g, b=den/g, dec=(den!==0)?(num/den):null
-    setCalc({num,den,a,b,dec}); done(5)
+    setCalc({num,den,a,b,g,dec}); done(5)
   }
   const proceedAfterCalc=()=>{ if(calc) next() }
 
@@ -236,7 +262,7 @@ const onDropFormula = (slotKey, want) => (d) => {
     const w = isLeft ? ow : cw
     const h = isLeft ? oh : ch
     const baseRect = (
-      <div className={`rect ${!isLeft ? 'copy' : ''}`} style={rectStyle(w,h)}>
+      <div className={"rect "+(!isLeft ? 'copy' : '')} style={rectStyle(w,h)}>
         <div className={"shape-label-center "+(!labels[isLeft?'left':'right']?'hidden':'')}>{labels[isLeft?'left':'right'] || ''}</div>
 
         {shown==='horizontal' && (
@@ -246,7 +272,7 @@ const onDropFormula = (slotKey, want) => (d) => {
           <Tag id={(isLeft?'o':'c')+"num_v"} value={isLeft?oh:ch} side="left" orient="vertical" shape={isLeft?'orig':'copy'} />
         )}
 
-        {/* Ghost BEFORE side-hit, lower z-index */}
+        {/* Ghost BEFORE side-hit, lower z-index; never draggable */}
         {isLeft && missingPair==='horizontal' && (
           <span className="side-tag ghost top" style={{...sharedBadgeMetrics, zIndex:5}}>{ow}</span>
         )}
@@ -256,7 +282,7 @@ const onDropFormula = (slotKey, want) => (d) => {
 
         {/* Side-hit zones AFTER ghost, higher z-index */}
         <div
-          className={"side-hit top " + (isChosen(isLeft?'orig':'copy','top')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','top')?'good':'')}
+          className={"side-hit top "+(isChosen(isLeft?'orig':'copy','top')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','top')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -267,7 +293,7 @@ const onDropFormula = (slotKey, want) => (d) => {
           }
         />
         <div
-          className={"side-hit bottom " + (isChosen(isLeft?'orig':'copy','bottom')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','bottom')?'good':'')}
+          className={"side-hit bottom "+(isChosen(isLeft?'orig':'copy','bottom')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','bottom')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -278,7 +304,7 @@ const onDropFormula = (slotKey, want) => (d) => {
           }
         />
         <div
-          className={"side-hit left " + (isChosen(isLeft?'orig':'copy','left')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','left')?'good':'')}
+          className={"side-hit left "+(isChosen(isLeft?'orig':'copy','left')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','left')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -289,7 +315,7 @@ const onDropFormula = (slotKey, want) => (d) => {
           }
         />
         <div
-          className={"side-hit right " + (isChosen(isLeft?'orig':'copy','right')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','right')?'good':'')}
+          className={"side-hit right "+(isChosen(isLeft?'orig':'copy','right')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','right')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -299,7 +325,6 @@ const onDropFormula = (slotKey, want) => (d) => {
                 : null)
           }
         />
-
       </div>
     )
 
@@ -347,112 +372,84 @@ const onDropFormula = (slotKey, want) => (d) => {
               </div>
             )}
 
-{step===2 && (
-  <div className="section">
-    <div className="muted bigger">Drag the words to build the formula.</div>
-
-    <div className="fraction-row mt-8 big-fraction">
-      {/* [ Scale Factor ] slot */}
-      <Slot
-        test={testWord('Scale Factor')}
-        onDropContent={onDropFormula('sSF','Scale Factor')}
-      >
-        {slots.sSF
-          ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
-          : '_____'}
-      </Slot>
-
-      <span>=</span>
-
-      {/* [ Copy / Original ] fraction slots */}
-      <div className="fraction ml-6">
-        <div>
-          <Slot
-            test={testWord('Copy')}
-            onDropContent={onDropFormula('sNUM','Copy')}
-          >
-            {slots.sNUM
-              ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
-              : '_____'}
-          </Slot>
-        </div>
-        <div className="frac-bar thick"></div>
-        <div>
-          <Slot
-            test={testWord('Original')}
-            onDropContent={onDropFormula('sDEN','Original')}
-          >
-            {slots.sDEN
-              ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
-              : '_____'}
-          </Slot>
-        </div>
-      </div>
-    </div>
-
-    <div className="chips chips-lg with-borders">
-      {wordBank.map(w => (
-        <Draggable key={w.id} id={w.id} label={w.label} data={w} />
-      ))}
-    </div>
-  </div>
-)}
-
-
-            {step===3 && (
+            {step===2 && (
               <div className="section">
-                <div className="muted bigger">Drag values from the shapes into the formula (numerator).</div>
-                <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-              
+                <div className="muted bigger">Drag the words to build the formula.</div>
 
-                  <div className="fraction-row">
-  <span className="chip static">Scale Factor</span>
-  <span>=</span>
-  <div className="fraction ml-6">
-    <div><span className="chip static">Copy</span></div>
-    <div className="frac-bar"></div>
-    <div><span className="chip static">Original</span></div>
-  </div>
-</div>
-                  <div className="fraction ml-12">
+                <div className="fraction-row mt-8 big-fraction">
+                  {/* [ Scale Factor ] slot */}
+                  <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
+                    {slots.sSF
+                      ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
+                      : '_____'
+                    }
+                  </Slot>
+
+                  <span>=</span>
+
+                  {/* [ Copy / Original ] fraction slots */}
+                  <div className="fraction ml-6">
                     <div>
-                    <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>
-  {num == null ? '—' : <span className="chip">{num}</span>}
-</Slot>
-
+                      <Slot test={testWord('Copy')} onDropContent={onDropFormula('sNUM','Copy')}>
+                        {slots.sNUM
+                          ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
+                          : '_____'
+                        }
+                      </Slot>
                     </div>
-                    <div className="frac-bar"></div>
-                    <div>{den ?? '—'}</div>
+                    <div className="frac-bar thick"></div>
+                    <div>
+                      <Slot test={testWord('Original')} onDropContent={onDropFormula('sDEN','Original')}>
+                        {slots.sDEN
+                          ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
+                          : '_____'
+                        }
+                      </Slot>
+                    </div>
                   </div>
+                </div>
+
+                <div className="chips chips-lg with-borders">
+                  {wordBank.map(w => (
+                    <Draggable key={w.id} id={w.id} label={w.label} data={w} />
+                  ))}
                 </div>
               </div>
             )}
 
-            {step===4 && (
+            {(step===3 || step===4) && (
               <div className="section">
-                <div className="muted bigger">Drag values from the shapes into the formula (denominator).</div>
-                <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-                 <div className="fraction-row">
-  <span className="chip static">Scale Factor</span>
-  <span>=</span>
-  <div className="fraction ml-6">
-    <div><span className="chip static">Copy</span></div>
-    <div className="frac-bar"></div>
-    <div><span className="chip static">Original</span></div>
-  </div>
-</div>
+                <div className="muted bigger">Drag values from the shapes into the formula.</div>
 
+                <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
+                  {/* Static words stay styled as chips */}
+                  <div className="fraction-row">
+                    <span className="chip static">Scale Factor</span>
+                    <span>=</span>
+                    <div className="fraction ml-6">
+                      <div><span className="chip static">Copy</span></div>
+                      <div className="frac-bar"></div>
+                      <div><span className="chip static">Original</span></div>
+                    </div>
+                  </div>
+
+                  {/* Live numeric fraction (both slots active on both steps) */}
                   <div className="fraction ml-12">
-                    <div>{num ?? '—'}</div>
+                    <div>
+                      <Slot test={d=>d?.kind==='num'} onDropContent={dropIntoNumerator}>
+                        {num==null ? '—' : <span className="chip">{num}</span>}
+                      </Slot>
+                    </div>
                     <div className="frac-bar"></div>
                     <div>
-                      <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('den',d)}>
-  {den == null ? '—' : <span className="chip">{den}</span>}
-</Slot>
-
+                      <Slot test={d=>d?.kind==='num'} onDropContent={dropIntoDenominator}>
+                        {den==null ? '—' : <span className="chip">{den}</span>}
+                      </Slot>
                     </div>
                   </div>
                 </div>
+
+                {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
               </div>
             )}
 
@@ -461,17 +458,18 @@ const onDropFormula = (slotKey, want) => (d) => {
                 <div className="muted bigger">Tap Calculate to show the math, then Next.</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
                   <div className="fraction-row">
-                    <span>Scale Factor =</span>
+                    <span className="chip static">Scale Factor</span>
+                    <span>=</span>
                     <div className="fraction ml-6">
-                      <div>Copy</div>
+                      <div><span className="chip static">Copy</span></div>
                       <div className="frac-bar"></div>
-                      <div>Original</div>
+                      <div><span className="chip static">Original</span></div>
                     </div>
                   </div>
                   <div className="fraction ml-12">
-                    <div>{num ?? '—'}</div>
+                    <div><span className="chip">{num ?? '—'}</span></div>
                     <div className="frac-bar"></div>
-                    <div>{den ?? '—'}</div>
+                    <div><span className="chip">{den ?? '—'}</span></div>
                   </div>
                 </div>
                 <div className="chips mt-8">
@@ -479,8 +477,9 @@ const onDropFormula = (slotKey, want) => (d) => {
                   {calc && (
                     <div className="calc-steps">
                       <div>= <b>{calc.num}</b> / <b>{calc.den}</b></div>
-                      <div>= simplify by GCD → <b>{calc.a}</b> / <b>{calc.b}</b></div>
-                      {calc.dec!=null && <div>= decimal ≈ <b>{(calc.dec).toFixed(3)}</b></div>}
+                      <div>= divide numerator and denominator by <b>{calc.g}</b></div>
+                      <div>= <b>{calc.a}</b> / <b>{calc.b}</b></div>
+                      {calc.dec!=null && <div>= decimal ≈ <b>{fmt1(calc.dec)}</b></div>}
                       <div className="toolbar mt-8">
                         <button className="button primary" onClick={proceedAfterCalc}>Next</button>
                       </div>
@@ -544,7 +543,7 @@ const onDropFormula = (slotKey, want) => (d) => {
                 </div>
                 {missingResult!=null && (
                   <div className="chips mt-10">
-                    <span className="badge">Result: {missingResult}</span>
+                    <span className="badge">Result: {fmt1(missingResult)}</span>
                   </div>
                 )}
               </div>
