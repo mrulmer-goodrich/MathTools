@@ -1,4 +1,4 @@
-// src/modules/scalefactor/ScaleFactorModule.jsx
+// src/modules/scale/ScaleFactor.jsx
 import React, { useMemo, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -7,9 +7,9 @@ import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 const STEP_HEADS = [
-  'Label shapes',
+  'Label Shapes',
   'Pick the corresponding sides',
-  'Build the formula',
+  'What is the scale factor formula?',
   'Copy → Numerator',
   'Original → Denominator',
   'Calculate Scale',
@@ -51,7 +51,7 @@ export default function ScaleFactorModule() {
     height: Math.max(90, h*6)+'px'
   })
 
-  // cross-rectangle pairing
+  // cross-rectangle pairing: student must click a side on one rect, then the matching side on the other
   const [picked, setPicked] = useState(()=>session.scaleSnap?.picked || false)
   const [firstPick, setFirstPick] = useState(null) // { shape:'orig'|'copy', orient:'horizontal'|'vertical' }
 
@@ -78,30 +78,29 @@ export default function ScaleFactorModule() {
 
   const testWord = want => d => d?.kind==='word' && d.label===want
   const testNum = d => d?.kind==='num'
-  const tryAgain = (i, msg='Try Again!') => { miss(i); setErrorMsg(msg); setTimeout(()=>setErrorMsg(''), 1400) }
+  const tryAgain = (i, msg='Try Again!') => { miss(i); setErrorMsg(msg); setTimeout(()=>setErrorMsg(''), 1200) }
 
-  const onDropFormula = (slotKey, want) => d => {
-    if (!testWord(want)(d)) { tryAgain(2); return }
-    const after = { ...slots, [slotKey]: want }
-    setSlots(after)
-    const ok = after.sSF==='Scale Factor' && after.sNUM==='Copy' && after.sDEN==='Original'
-    if(ok){ done(2); next(); saveSnap({slots:after}) }
+  // ----- Label drag & drop directly onto shapes (left pane full-rect slots) -----
+  const dropLabelOnRect = (side) => (d) => {
+    if (side==='left' && testWord('Original')(d)) {
+      const after = { ...labels, left: 'Original' }
+      setLabels(after); done(0); next(); saveSnap({labels:after})
+    } else if (side==='right' && testWord('Copy')(d)) {
+      const after = { ...labels, right: 'Copy' }
+      setLabels(after); done(0); next(); saveSnap({labels:after})
+    } else {
+      tryAgain(0)
+    }
   }
 
-  const dropLabel = (side,d)=>{
-    if(!testWord('Original')(d) && !testWord('Copy')(d)){ tryAgain(0); return }
-    const after = { ...labels, [side]: d.label }
-    setLabels(after)
-    if(after.left && after.right && after.left!==after.right){ done(0); next(); saveSnap({labels:after}) }
-  }
-
+  // ----- Corresponding sides: require two clicks across rectangles -----
   const clickSide = (shape, orient)=>{
     if(!labels.left || !labels.right){ tryAgain(1); return }
     if(!firstPick){
       setFirstPick({shape, orient})
       return
     }
-    // Must be the other shape, same orientation as the visible-number pair
+    // second click must be the OTHER rectangle and same orient as shown
     const otherShape = firstPick.shape==='orig' ? 'copy' : 'orig'
     const okOther   = (shape===otherShape) && (orient===shown)
     const okFirst   = (firstPick.orient===shown)
@@ -112,6 +111,16 @@ export default function ScaleFactorModule() {
     }
   }
 
+  // ----- Formula building (words only) -----
+  const onDropFormula = (slotKey, want) => d => {
+    if (!testWord(want)(d)) { tryAgain(2); return }
+    const after = { ...slots, [slotKey]: want }
+    setSlots(after)
+    const ok = after.sSF==='Scale Factor' && after.sNUM==='Copy' && after.sDEN==='Original'
+    if(ok){ done(2); next(); saveSnap({slots:after}) }
+  }
+
+  // ----- Drag numbers from shapes into fraction -----
   const dropNum = (where,d)=>{
     if(!testNum(d)) { tryAgain(where==='num'?3:4); return }
     const correctCopy = copyVals[shown], correctOrig = origVals[shown]
@@ -162,34 +171,38 @@ export default function ScaleFactorModule() {
   return (
     <div className="container">
       <div className="panes equal">
-        {/* LEFT: shapes */}
+        {/* LEFT: shapes with full-rect drop zones for labels */}
         <div className="card shape-area">
           <div className="rects">
-            {/* Original */}
-            <div className="rect" style={rectStyle(ow,oh)}>
-              <div className={"shape-label "+(!labels.left?'hidden':'')}>{labels.left || 'Label me'}</div>
-              {/* Perpendicular tagging on Original */}
-              <div className="side-tag top">{ow}</div>
-              <div className="side-tag left">{oh}</div>
-              {/* Hits */}
-              <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('orig','horizontal')}/>
-              <div className={"side-hit bottom"} onClick={()=>clickSide('orig','horizontal')}/>
-              <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('orig','vertical')}/>
-              <div className={"side-hit right"} onClick={()=>clickSide('orig','vertical')}/>
-            </div>
+            {/* Original (left rect) */}
+            <Slot className="rect-slot" test={testWord('Original')} onDropContent={dropLabelOnRect('left')}>
+              <div className="rect" style={rectStyle(ow,oh)}>
+                <div className={"shape-label-center "+(!labels.left?'hidden':'')}>{labels.left || ''}</div>
+                {/* Perpendicular tagging on Original */}
+                <div className="side-tag top">{ow}</div>
+                <div className="side-tag left">{oh}</div>
+                {/* Click zones */}
+                <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('orig','horizontal')}/>
+                <div className={"side-hit bottom"} onClick={()=>clickSide('orig','horizontal')}/>
+                <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('orig','vertical')}/>
+                <div className={"side-hit right"} onClick={()=>clickSide('orig','vertical')}/>
+              </div>
+            </Slot>
 
-            {/* Copy */}
-            <div className="rect copy" style={rectStyle(cw,ch)}>
-              <div className={"shape-label "+(!labels.right?'hidden':'')}>{labels.right || 'Label me'}</div>
-              {/* Copy shows only the corresponding value for shown orientation */}
-              {shown==='horizontal' && (<div className="side-tag top">{cw}</div>)}
-              {shown==='vertical' && (<div className="side-tag left">{ch}</div>)}
-              {/* hits */}
-              <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('copy','horizontal')}/>
-              <div className={"side-hit bottom"} onClick={()=>clickSide('copy','horizontal')}/>
-              <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('copy','vertical')}/>
-              <div className={"side-hit right"} onClick={()=>clickSide('copy','vertical')}/>
-            </div>
+            {/* Copy (right rect) */}
+            <Slot className="rect-slot" test={testWord('Copy')} onDropContent={dropLabelOnRect('right')}>
+              <div className="rect copy" style={rectStyle(cw,ch)}>
+                <div className={"shape-label-center "+(!labels.right?'hidden':'')}>{labels.right || ''}</div>
+                {/* Copy shows only the corresponding value for shown orientation */}
+                {shown==='horizontal' && (<div className="side-tag top">{cw}</div>)}
+                {shown==='vertical' && (<div className="side-tag left">{ch}</div>)}
+                {/* Click zones */}
+                <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('copy','horizontal')}/>
+                <div className={"side-hit bottom"} onClick={()=>clickSide('copy','horizontal')}/>
+                <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('copy','vertical')}/>
+                <div className={"side-hit right"} onClick={()=>clickSide('copy','vertical')}/>
+              </div>
+            </Slot>
           </div>
 
           {/* Show number chips after pair is picked */}
@@ -205,52 +218,42 @@ export default function ScaleFactorModule() {
         {/* RIGHT: steps */}
         <div className="card right-steps">
           <div className="step-panel">
-            <div className="step-title">{STEP_HEADS[step]}</div>
+            <div className="step-title question-lg">{STEP_HEADS[step]}</div>
 
-            {/* Step 1: labels */}
+            {/* Step 1: label shapes — chips only; drag onto LEFT PANE */}
             {step===0 && (
-              <>
-                <div className="muted">Which rectangle is the <b>Original</b>? Which is the <b>Copy</b>? Drag the labels onto the shapes.</div>
-                <div className="row" style={{display:'flex',gap:8,marginTop:8}}>
-                  <Slot test={testWord('Original')} onDropContent={(d)=>dropLabel('left',d)}>
-                    <span className="slot">Left label</span>
-                  </Slot>
-                  <Slot test={testWord('Copy')} onDropContent={(d)=>dropLabel('right',d)}>
-                    <span className="slot">Right label</span>
-                  </Slot>
-                </div>
-                <div className="chips mt-10">
-                  <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
-                  <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
-                </div>
-              </>
+              <div className="chips mt-10">
+                <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
+                <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
+                {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
+              </div>
             )}
 
             {/* Step 2: pick pair by cross-rectangle clicks */}
             {step===1 && (
-              <div className="muted">Pick a side on one rectangle, then the matching side on the other. Which sides go together?</div>
+              <div className="muted">Pick one side on a rectangle, then click the corresponding side on the other rectangle.</div>
             )}
 
-            {/* Step 3: formula words only */}
+            {/* Step 3: formula words only — neutral prompt text and big divisor */}
             {step===2 && (
               <>
-                <div className="muted">Let’s build it: <b>Scale Factor = Copy / Original</b>. Drag words only.</div>
+                <div className="muted">What is the scale factor formula?</div>
                 <div className="fraction-row mt-8">
-                  {/* "Scale Factor" = [Copy]/[Original] */}
+                  {/* [Scale Factor] = [Copy] / [Original] */}
                   <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
-                    {slots.sSF || '____'}
+                    {slots.sSF || '_____'} 
                   </Slot>
                   <span>=</span>
-                  <div className="fraction ml-6">
+                  <div className="fraction thick ml-6">
                     <div>
                       <Slot test={testWord('Copy')} onDropContent={onDropFormula('sNUM','Copy')}>
-                        {slots.sNUM || '____'}
+                        {slots.sNUM || '_____'}
                       </Slot>
                     </div>
-                    <div className="frac-bar"></div>
+                    <div className="frac-bar thick"></div>
                     <div>
                       <Slot test={testWord('Original')} onDropContent={onDropFormula('sDEN','Original')}>
-                        {slots.sDEN || '____'}
+                        {slots.sDEN || '_____'}
                       </Slot>
                     </div>
                   </div>
@@ -265,13 +268,13 @@ export default function ScaleFactorModule() {
             {step===3 && (
               <>
                 <div className="muted">Drag the number for the <b>Copy</b> into the numerator.</div>
-                {/* Persistent formula banner from here on */}
+                {/* Persistent formula alongside number-drag steps */}
                 {formulaReady && (
                   <div className="fraction-row muted mt-8">
                     <span>Scale Factor = </span>
                     <div className="fraction ml-6">
                       <div>{num ?? '—'}</div>
-                      <div className="frac-bar"></div>
+                      <div className="frac-bar thick"></div>
                       <div>{den ?? '—'}</div>
                     </div>
                   </div>
@@ -282,7 +285,7 @@ export default function ScaleFactorModule() {
                       {num ?? '—'}
                     </Slot>
                   </div>
-                  <div className="frac-bar"></div>
+                  <div className="frac-bar thick"></div>
                   <div>{den ?? '—'}</div>
                 </div>
               </>
@@ -297,14 +300,14 @@ export default function ScaleFactorModule() {
                     <span>Scale Factor = </span>
                     <div className="fraction ml-6">
                       <div>{num ?? '—'}</div>
-                      <div className="frac-bar"></div>
+                      <div className="frac-bar thick"></div>
                       <div>{den ?? '—'}</div>
                     </div>
                   </div>
                 )}
                 <div className="fraction mt-8">
                   <div>{num ?? '—'}</div>
-                  <div className="frac-bar"></div>
+                  <div className="frac-bar thick"></div>
                   <div>
                     <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('den',d)}>
                       {den ?? '—'}
@@ -320,7 +323,7 @@ export default function ScaleFactorModule() {
                 <div className="muted">We’ll compute and simplify if needed.</div>
                 <div className="fraction mt-8">
                   <div>{num ?? '—'}</div>
-                  <div className="frac-bar"></div>
+                  <div className="frac-bar thick"></div>
                   <div>{den ?? '—'}</div>
                 </div>
                 <div className="chips mt-8">
