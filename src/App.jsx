@@ -1,31 +1,49 @@
 // src/App.jsx
-import React from 'react'
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
-import ScaleFactorModule from './modules/scalefactor/ScaleFactorModule.jsx'
+import React, { useState } from 'react'
+import BigButton from './components/BigButton.jsx'
+import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
-import Landing from './modules/landing/Landing.jsx'
 
-export default function App(){
+export default function App() {
+  const [route, setRoute] = useState('home')
+
+  const Header = () => (
+    <div className="header">
+      <div className="brand">UG Math Tools</div>
+      <div className="subtitle">Scale Factor + H-Table trainer (drag-and-drop)</div>
+    </div>
+  )
+
   return (
-    <div className="app-shell">
-      {/* Top header shared on all pages */}
-      <header className="header">
-        <nav className="nav">
-          <span className="brand">UG Math Tools</span>
-          <div className="spacer" />
-          <Link to="/">Home</Link>
-          <Link to="/scale">Scale Factor</Link>
-          <Link to="/htable">H-Table</Link>
-        </nav>
-      </header>
+    <div className="container">
+      <Header />
 
-      <Routes>
-        <Route path="/" element={<Landing/>} />
-        <Route path="/scale" element={<ScaleFactorModule/>} />
-        <Route path="/htable" element={<HTableModule/>} />
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {route === 'home' && (
+        <>
+          <div className="row" style={{ justifyContent: 'center', gap: 16 }}>
+            <BigButton onClick={() => setRoute('scale')}>Scale Factor</BigButton>
+            <BigButton onClick={() => setRoute('htable')}>H-Table</BigButton>
+          </div>
+        </>
+      )}
+
+      {route === 'scale' && (
+        <>
+          <div className="row" style={{ justifyContent: 'center', marginBottom: 12 }}>
+            <BigButton onClick={() => setRoute('home')}>Home</BigButton>
+          </div>
+          <ScaleFactorModule />
+        </>
+      )}
+
+      {route === 'htable' && (
+        <>
+          <div className="row" style={{ justifyContent: 'center', marginBottom: 12 }}>
+            <BigButton onClick={() => setRoute('home')}>Home</BigButton>
+          </div>
+          <HTableModule />
+        </>
+      )}
     </div>
   )
 }
