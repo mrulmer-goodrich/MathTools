@@ -1,10 +1,14 @@
-/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.2 FULL) */
-
-/* -------- Brand color tokens (FINAL) -------- */
+/* styles.css — UG Math Tools (v3.4.0) */
+/* Deltas vs 3.3.x:
+   - Symmetric padding on .rects from JS via style to prevent pill clipping in all directions
+   - Dynamic --badge-offset drives all pill edge positions (no -24px constants)
+   - Wide side-hit overlays used only in Step 1 (per user choice)
+   - No ghost styling anywhere
+*/
 :root{
-  --eastway-blue: #0B4B8C;    /* header, primary actions */
-  --eastway-green:#0C6B4D;    /* success/accents */
-  --cms-light:    #DAE9F6;    /* info accents, chip fills */
+  --eastway-blue: #0B4B8C;
+  --eastway-green:#0C6B4D;
+  --cms-light:    #DAE9F6;
 
   --ink:          #0F172A;
   --ink-2:        #334155;
@@ -14,7 +18,6 @@
   --bg-subtle:    #F1F5F9;
   --card:         #FFFFFF;
 
-  /* traffic light */
   --t-green:  #10B981;
   --t-yellow: #F59E0B;
   --t-red:    #EF4444;
@@ -30,184 +33,82 @@ body{
   background: #f7fafc;
 }
 
-/* ---------- Header & Landing ---------- */
+/* ---------- Layout ---------- */
 .container{ max-width:1100px; margin: 24px auto; padding: 0 16px; }
-.header{
-  background: linear-gradient(90deg, var(--eastway-blue), var(--eastway-green));
-  color:white;
-  padding: 18px 20px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15,42,67,.12);
-  margin-bottom: 18px;
-}
-.brand{ font-weight: 900; font-size: 28px; }
-.subtitle{ font-weight: 700; opacity: .9; margin-top: 4px; }
-
-.row{ display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap: wrap; }
-
-/* ---------- Big Buttons (for landing/home) ---------- */
-.big-button,
-.row > button,
-.row > .button{
-  font-size: 18px;
-  font-weight: 900;
-  padding: 16px 22px;
-  border-radius: 14px;
-  border: none;
-  background: var(--cms-light);
-  color: #05223c;
-  cursor: pointer;
-  box-shadow: 0 10px 20px rgba(15,42,67,.10);
-}
-.big-button:hover,
-.row > button:hover,
-.row > .button:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(15,42,67,.15);
-}
-.BigButton, .bigBtn, .big-button{ display:inline-flex; align-items:center; justify-content:center; }
-
-/* ---------- Cards & Panes ---------- */
-.panes{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; }
+.panes{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; }
 .card{
   background: var(--card);
   border: 1px solid var(--border-2);
   border-radius: 14px;
   padding: 16px;
   box-shadow: 0 2px 10px rgba(0,0,0,.04);
+  min-width: 0;
 }
 
-/* ---------- General Buttons ---------- */
+/* ---------- Buttons ---------- */
 .button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
 .button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
 .button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
 .button.big-under{ margin-top:12px; }
 .floating-summary{ position:fixed; right:16px; bottom:16px; }
 
-/* ---------- Text helpers ---------- */
+/* ---------- Helpers ---------- */
 .muted{ color: var(--ink-3); }
 .mt-8{ margin-top:8px; } .mt-10{ margin-top:10px; } .ml-6{ margin-left:6px; } .ml-12{ margin-left:12px; }
 .center{ justify-content:center; display:flex; }
 .chips{ display:flex; flex-wrap:wrap; gap:10px; }
-.chips.center{ justify-content:center; }
-
-/* ---------- H-Table visuals ---------- */
-.hwrap{ margin-top:12px; }
-.hgrid{
-  display:grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: auto repeat(2, 72px);
-  gap:0;
-  border:2px solid #111827;
-  border-radius:12px;
-  overflow:hidden;
-  background:#fff;
-}
-.hhead, .hcell{ padding:10px; }
-.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #111827; }
-.hcell{ position:relative; display:flex; align-items:center; justify-content:center; border-right:2px solid #111827; }
-.hcell:nth-child(3n){ border-right:none; }
-.vline{ box-shadow: inset 6px 0 0 0 #111827; }
-.rowline{ box-shadow: inset 0 6px 0 0 #111827; }
-.filled{ border:none !important; }
-.red-oval{ outline:3px solid var(--t-red); padding:4px 6px; border-radius:999px; }
 
 /* ---------- Scale Factor visuals ---------- */
 .shape-area{ position:relative; }
-.rects{ display:flex; gap:20px; align-items:flex-start; justify-content:center; margin-bottom:12px; }
-.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; }
-.rect.copy{ background:#F5FAFF; } /* stronger contrast from white */
-.shape-label{ position:absolute; top:6px; left:6px; font-weight:800; background:#fff; padding:2px 8px; border-radius:8px; border:1px solid var(--border-2); }
-.shape-label.hidden{ visibility:hidden; }
+.rects{
+  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
+  max-width: 100%;
+  overflow: visible; /* ensure pills never clip */
+}
+.rect{
+  position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px;
+  overflow: visible;
+}
+.rect.copy{ background:#F5FAFF; }
 
-.rect-slot{ display:flex; align-items:center; justify-content:center; }
-
-/* Centered big label inside rectangle */
 .shape-label-center{
-  position:absolute;
-  top:50%; left:50%;
-  transform: translate(-50%, -50%);
-  font-weight: 900;
-  color: #b91c1c;
-  font-size: clamp(22px, 3.8vw, 36px);
-  text-transform: none;
-  background: transparent;
+  position:absolute; top:50%; left:50%; transform: translate(-50%, -50%);
+  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
 }
 
-/* Side number tags — shared pill style; placement per side */
+/* Side number tags — dynamic offset (no hard-coded -24) */
 .side-tag{
-  position:absolute;
-  font-weight:900;
-  background:#fff;
-  border-radius:999px;
-  border:2px solid #111827; /* stronger outline for contrast */
-  box-shadow: 0 2px 0 rgba(0,0,0,.10);
-  z-index:40;
-  user-select:none;
-  color:#0b1220;
+  position:absolute; font-weight:900; background:#fff; border-radius:999px;
+  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
 }
-.side-tag.top{    top:-24px;    left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.left{   left:-24px;   top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.right{  right:-24px;  top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); }
+.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); }
+.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
+.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
 
-/* Wide click targets (under tags) */
+/* Wide click targets (Step 1 only) */
 .rect .side-hit{
-  position:absolute;
-  background: transparent;
-  z-index: 20; /* below tags so tags remain draggable in steps 3–5 */
+  position:absolute; background: transparent; z-index: 20;
 }
 .rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
 .rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-
-/* First pick is GREEN immediately (spec) */
 .rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
 .rect .side-hit.good{   background: rgba(16,185,129,.18); }
 
-/* Ghost (perpendicular original) */
-.side-tag.ghost{
-  position:absolute;
-  opacity:.35;              /* slightly stronger to be noticeable but clearly ghosted */
-  background:#fff;
-  border:2px dashed var(--border);
-  border-radius:999px;
-  padding:4px 8px;
-  font-weight:700;
-  z-index: 5;               /* below side-hit so clicks pass */
-  pointer-events: none;     /* never block clicks */
-}
-
 /* ---------- Fractions, chips, etc. ---------- */
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
-
-.landing-header{ text-align:center; }
-.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
-.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
-
-.home-buttons > *{
-  font-size: 22px !important;
-  padding: 20px 28px !important;
-  border-radius: 16px !important;
-  min-width: 240px;
-  justify-content:center;
-  text-align:center;
-}
-
-/* Fraction layout */
 .fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 140px; }
 .fraction > div:first-child{ grid-row:1; }
 .fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
 .fraction > div:last-child{ grid-row:3; }
-.slot{ display:inline-flex; min-width:60px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:4px 8px; }
+.slot{ display:inline-flex; min-width: 80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
 
 .right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
 .right-steps .muted.bigger{ font-size: 1.08rem; }
 .section{ margin-bottom: 20px; }
 
-/* Chips with borders (consistent) */
+/* Chips with borders */
 .chips.with-borders > *{
   border: 2px solid var(--border) !important;
   background: #fff !important;
@@ -220,138 +121,22 @@ body{
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
 
-/* Base chip pill style (applies everywhere, including inside slots) */
 .chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-  line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 12px; border: 2px solid var(--border); border-radius: 12px;
+  background: #fff; font-weight: 800; cursor: grab; user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06); line-height: 1;
 }
 .chip:active { cursor: grabbing; }
 
-/* When a chip is rendered *inside a Slot*, keep the same pill look but with stronger contrast */
-.slot .chip {
-  border-color: #333;
-  border-radius: 12px;   /* ensure rounded in slots too */
-  background: #fff;
-  font-weight: 800;
-}
+.slot .chip { border-color: #333; border-radius: 12px; background: #fff; font-weight: 800; }
 
-/* Hit zones must sit above ghost tags (safety belt for any overrides) */
-.side-hit {
-  position: absolute;
-  background: rgba(0,0,0,0);
-  z-index: 20;
-}
-/* keep formula rows on one line */
-.fraction-row.nowrap { flex-wrap: nowrap; }
-
-/* optional: larger, friendlier fraction when needed */
+/* Misc */
+.fraction-row.nowrap { flex-wrap:nowrap; }
 .big-fraction .frac-bar { height: 3px; }
+.result-big{ font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
+  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px; }
 
-/* success badge (uses your existing badge styles if present) */
-.badge { 
-  display:inline-flex; align-items:center; 
-  padding:6px 10px; border-radius:10px; 
-  background:#F1F5F9; font-weight:800; 
-  border:1px solid var(--border-2);
-}
-
-/* --- additions for v3.0.3 --- */
-.fraction-row.no-wrap{ flex-wrap: nowrap; }
-
-/* === v3.0.5 UI tune-ups === */
-
-/* give shapes a bit more room between Original and Copy */
-.rects{ gap: 32px; }
-
-/* right pane + fractions bigger during steps 2–5 */
-.panes.big-ui .right-steps.big-ui { font-size: 1.06rem; }
-.right-steps.big-ui .chip,
-.right-steps.big-ui .slot .chip{
-  font-size: 1.05rem;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: #ffffff;
-  border-color: #97b7d6;
-  box-shadow: 0 2px 0 rgba(15,42,67,.08);
-}
-
-/* bigger fraction UI */
-.big-fraction .slot{ min-width: 90px; padding: 8px 12px; }
-.fraction .frac-bar.thick{ height:4px; }
-
-/* keep dropped numbers styled like chips */
-.slot .chip { font-weight: 800; border-width: 2px; }
-
-/* widen generic slots for easier dropping */
-.slot{ min-width: 80px; padding: 8px 12px; }
-
-/* concept check slot */
-.slot.wide{ min-width: 260px; }
-
-/* large result badge */
-.result-big{
-  font-weight: 900;
-  font-size: 1.35rem;
-  background: #fff4d6;
-  border: 2px solid #f2c14e;
-  border-radius: 12px;
-  padding: 10px 14px;
-}
-
-/* make panes breathe a bit more on narrow widths */
 @media (max-width: 980px){
   .panes{ grid-template-columns: 1fr; }
 }
-
-/* ---- v3.0.6 patch ---- */
-.fraction-row.nowrap { flex-wrap:nowrap; }
-.big-fraction { font-size:1.3rem; }
-.calc-inline { font-size:1.2rem; font-weight:800; }
-.result-big { font-size:1.6rem; font-weight:900; color:var(--eastway-green); }
-
-/* Flashing new problem button */
-.flash { animation: flashBtn 1s infinite; }
-@keyframes flashBtn {
-  0%,100%{ background:var(--cms-light); }
-  50%{ background:var(--t-yellow); }
-}
-/* Make both panes truly flexible; allow shrinking */
-.panes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.card { min-width: 0; }
-
-/* Let the left shapes area shrink instead of forcing the grid wider */
-.shape-area .rects { max-width: 100%; overflow: hidden; }
-
-/* Re-introduce highlight color now that it lives on the badge wrapper */
-.side-tag.chosen,
-.side-tag.good {
-  background: rgba(16,185,129,.18);   /* same green tint as before */
-  box-shadow: inset 0 0 0 2px rgba(16,185,129,.35);
-}
-
-/* prevent number pills from getting clipped anywhere */
-.shape-area, .rects, .rect { overflow: visible; }
-
-/* wide side-hit areas (restore full-side highlight) */
-.rect .side-hit{
-  position:absolute;
-  background: transparent;
-  z-index: 20; /* below pills */
-}
-.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.chosen,
-.rect .side-hit.good{ background: rgba(16,185,129,.18); }
-
