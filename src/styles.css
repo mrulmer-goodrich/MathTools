@@ -126,3 +126,19 @@ body{
 
 /* ---------- Misc ---------- */
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
+
+
+/* --- Landing page refinements --- */
+.landing-header{ text-align:center; }
+.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
+.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
+
+.home-buttons > *{
+  /* Make Scale Factor / H‑Table buttons bigger */
+  font-size: 22px !important;
+  padding: 20px 28px !important;
+  border-radius: 16px !important;
+  min-width: 240px;
+  justify-content:center;
+  text-align:center;
+}
