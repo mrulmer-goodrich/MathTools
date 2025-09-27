@@ -1,10 +1,12 @@
 // src/modules/scale/ScaleFactor.jsx (v3.1.0)
-// Complete replacement implementing:
-// - Order-agnostic value filling across steps 3 & 4 (either slot can be filled first)
-// - Chips keep bold pill styling when dropped (words and numbers)
-// - Directions updated ("Fill the formula with values from the shapes")
-// - Ghost badge never blocks clicks; clear contrast for rect vs chips
-// - Calculation step: "Divide numerator and denominator by [GCD]" + 1-decimal display (no .0 for integers)
+// Changes in this version:
+// - Ghost perpendicular tag only appears starting at Step 3 (no more gray tag from the beginning).
+// - Step 2 formula row is non-wrapping to avoid splitting across lines on narrow screens.
+// - Step 3 now lets students drop BOTH values (numerator/denominator) in any order, with bold chips preserved. Step 4 is skipped automatically once both are placed.
+// - Calculation copy updated: shows "divide numerator and denominator by <GCD>" and decimal to 1 place (no .0 when whole).
+// - Step 6 converted to a concept check (with distractors including ÷). No more "place all three" wording/slots.
+// - Step 8 copy adjusted to show "Original × Scale Factor = Copy" and highlights the scale factor computed in Step 5.
+// - After computing the missing side, show a success banner and auto-load a new problem with simple confetti.
 
 import React, { useEffect, useMemo, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -20,9 +22,9 @@ const STEP_HEADS = [
   'Pick the corresponding sides',
   'Build the scale factor formula (words)',
   'Fill the formula with values',
-  'Fill the formula with values',
+  '—', // (skipped when both values placed)
   'Calculate & Simplify',
-  'Build: Original × Scale Factor = Copy',
+  'How do we find the Copy’s missing side?',
   'Identify the missing side on the Copy',
   'Compute missing side'
 ]
@@ -36,18 +38,22 @@ export default function ScaleFactorModule() {
     step: 0,
     steps: STEP_HEADS.map(()=>({misses:0,done:false})),
     labels: { left:null, right:null },
+
     // step 2 correspondence
     firstPick: null,            // {shape, edge, orient}
     chosen: { orig:null, copy:null },
     picked: false,
-    // numeric values filled into fraction
+
+    // scale factor values
     num: null, den: null,
-    // word slots (store full chip objects so styling persists)
-    slots: { sSF:null, sNUM:null, sDEN:null },
-    // equation words
-    eqPlaced: { O:false, SF:false, C:false },
-    // missing side click
+    slots: { sSF:null, sNUM:null, sDEN:null }, // words step
+
+    // concept check (step 6)
+    conceptOK: false,
+
+    // identify missing
     missingClicked: false,
+
     // final
     missingResult: null
   }
@@ -67,25 +73,26 @@ export default function ScaleFactorModule() {
   const [den, setDen] = useState(persisted.den)
   const [slots, setSlots] = useState(persisted.slots)
 
-  const [eqPlaced, setEqPlaced] = useState(persisted.eqPlaced)
+  const [conceptOK, setConceptOK] = useState(persisted.conceptOK)
   const [missingClicked, setMissingClicked] = useState(persisted.missingClicked)
-
   const [missingResult, setMissingResult] = useState(persisted.missingResult)
 
   const [openSum, setOpenSum] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [calc, setCalc] = useState(null)
+  const [confetti, setConfetti] = useState(false)
 
   const saveSnap = ()=>{
-    const snap = { version: SNAP_VERSION, problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, eqPlaced, missingClicked, missingResult }
+    const snap = { version: SNAP_VERSION, problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, conceptOK, missingClicked, missingResult }
     const next = { ...session, scaleSnap: snap }
     saveSession(next); setSession(next)
   }
-  useEffect(saveSnap, [problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, eqPlaced, missingClicked, missingResult]) // eslint-disable-line
+  useEffect(saveSnap, [problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, conceptOK, missingClicked, missingResult]) // eslint-disable-line
 
   const miss  = (i)=>setSteps(s=>{const c=[...s];c[i].misses++;return c})
   const done  = (i)=>setSteps(s=>{const c=[...s];c[i].done=true;return c})
   const next  = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
+  const goto  = (i)=>setStep(()=>Math.min(i, STEP_HEADS.length-1))
   const again = (i,msg='Try Again!')=>{ miss(i); setErrorMsg(msg); setTimeout(()=>setErrorMsg(''), 1200) }
 
   const ow = problem.original.w, oh = problem.original.h
@@ -135,7 +142,7 @@ export default function ScaleFactorModule() {
     } else { again(0) }
   }
 
-  /* ---------- Step 2: corresponding sides ---------- */
+  /* ---------- Step 1: corresponding sides ---------- */
   const clickSide = (shape, edge, orient)=>{
     if(step!==1){ return }
     if(!labels.left || !labels.right){ again(1); return }
@@ -156,8 +163,7 @@ export default function ScaleFactorModule() {
   const isChosen=(s,e)=> step===1 && firstPick && firstPick.shape===s && firstPick.edge===e
   const isGood  =(s,e)=> step>=2 && picked && ((s==='orig' && chosen.orig===e) || (s==='copy' && chosen.copy===e))
 
-  /* ---------- Step 3 (words) ---------- */
-  // stores the FULL draggable object (id,label,kind), not just a string
+  /* ---------- Step 2 (words) ---------- */
   const onDropFormula = (slotKey, want) => (d) => {
     if (!testWord(want)(d)) { again(2); return }
     setSlots(prev => {
@@ -171,41 +177,27 @@ export default function ScaleFactorModule() {
     })
   }
 
-  /* ---------- Step 4/5 numbers (order-agnostic, both slots live on both steps) ---------- */
-  const correctCopy = copyVals[shown]
-  const correctOrig = origVals[shown]
-
-  const dropIntoNumerator = (d) => {
-    if (!testNum(d)) { again(step, 'Try Again!'); return }
-    if (d.value !== correctCopy) { again(step, 'Try Again!'); return }
-    setNum(d.value)
-  }
-  const dropIntoDenominator = (d) => {
-    if (!testNum(d)) { again(step, 'Try Again!'); return }
-    if (d.value !== correctOrig) { again(step, 'Try Again!'); return }
-    setDen(d.value)
-  }
-
-  // Whenever num/den become both present, advance appropriately
-  useEffect(()=>{
-    if (num!=null && den!=null) {
-      if (step===3) { done(3); done(4); setStep(5) }
-      else if (step===4) { done(4); next() }
-    } else if (num!=null && step===3) {
-      // mark progress on step 3 when first correct drop happens
-      done(3)
+  /* ---------- Step 3: drop numbers in any order (both slots visible) ---------- */
+  const dropNumFlex = (where, d) => {
+    if(!testNum(d)) { again(3); return }
+    const correctCopy = copyVals[shown]
+    const correctOrig = origVals[shown]
+    if (where==='num') {
+      if (d.value===correctCopy) setNum(d.value); else { again(3); return }
+    } else if (where==='den') {
+      if (d.value===correctOrig) setDen(d.value); else { again(3); return }
     }
-    // eslint-disable-next-line
-  }, [num, den])
-
-  /* ---------- Step 6 calculate ---------- */
-  const gcd=(x,y)=>{x=Math.abs(x);y=Math.abs(y);while(y){[x,y]=[y,x%y]}return x||1}
-  const fmt1 = (v)=>{
-    if (v==null || Number.isNaN(v)) return '—'
-    const rounded = Math.round(v*10)/10
-    if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded))
-    return rounded.toFixed(1)
+    // when both filled, mark steps 3 & 4 done and jump to 5
+    setTimeout(()=>{
+      if (num!=null && den!=null) {
+        done(3); done(4); goto(5)
+      }
+    }, 0)
   }
+
+  /* ---------- Step 5 calculate ---------- */
+  const gcd=(x,y)=>{x=Math.abs(x);y=Math.abs(y);while(y){[x,y]=[y,x%y]}return x||1}
+  const fmt1=(x)=> (Math.round(x*10)/10).toString().replace(/\.0$/,'')
   const doCalculate=()=>{
     if(num==null||den==null){ again(5); return }
     const g=gcd(num,den), a=num/g, b=den/g, dec=(den!==0)?(num/den):null
@@ -213,14 +205,14 @@ export default function ScaleFactorModule() {
   }
   const proceedAfterCalc=()=>{ if(calc) next() }
 
-  /* ---------- Step 7 equation (words) ---------- */
-  const dropEq = (target, want) => d => {
-    if (!testWord(want)(d)) { again(6); return }
-    setEqPlaced(prev=>({ ...prev, [target]: true }))
+  /* ---------- Concept check (Step 6) ---------- */
+  const tryConcept = (d)=>{
+    const v = d?.v
+    if (v==='ok'){ setConceptOK(true); done(6); next() }
+    else again(6)
   }
-  const eqReady = eqPlaced.O && eqPlaced.SF && eqPlaced.C
 
-  /* ---------- Step 8: must click missing side on the COPY ---------- */
+  /* ---------- Step 7: must click missing side on the COPY ---------- */
   const handleMissingClick = (shape, edge, orient) => {
     if(step!==7) return
     if(shape!=='copy'){ again(7); return }
@@ -236,9 +228,10 @@ export default function ScaleFactorModule() {
     setFirstPick(null); setChosen({orig:null,copy:null}); setPicked(false)
     setSlots({sSF:null,sNUM:null,sDEN:null})
     setNum(null); setDen(null); setCalc(null)
-    setEqPlaced({O:false,SF:false,C:false})
+    setConceptOK(false)
     setMissingClicked(false)
     setMissingResult(null)
+    setConfetti(false)
   }
 
   /* ---------- Tag (number badge) ---------- */
@@ -256,13 +249,13 @@ export default function ScaleFactorModule() {
     return <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>{value}</span>
   }
 
-  /* ---------- Rect (labels only at step 0) ---------- */
+  /* ---------- Rect (labels only at step 0; ghost appears from step >=3) ---------- */
   const RectWithLabel = ({which})=>{
     const isLeft = which==='orig'
     const w = isLeft ? ow : cw
     const h = isLeft ? oh : ch
     const baseRect = (
-      <div className={"rect "+(!isLeft ? 'copy' : '')} style={rectStyle(w,h)}>
+      <div className={`rect ${!isLeft ? 'copy' : ''}`} style={rectStyle(w,h)}>
         <div className={"shape-label-center "+(!labels[isLeft?'left':'right']?'hidden':'')}>{labels[isLeft?'left':'right'] || ''}</div>
 
         {shown==='horizontal' && (
@@ -272,17 +265,17 @@ export default function ScaleFactorModule() {
           <Tag id={(isLeft?'o':'c')+"num_v"} value={isLeft?oh:ch} side="left" orient="vertical" shape={isLeft?'orig':'copy'} />
         )}
 
-        {/* Ghost BEFORE side-hit, lower z-index; never draggable */}
-        {isLeft && missingPair==='horizontal' && (
+        {/* Ghost perpendicular original — only from Step 3 onward */}
+        {isLeft && step>=3 && missingPair==='horizontal' && (
           <span className="side-tag ghost top" style={{...sharedBadgeMetrics, zIndex:5}}>{ow}</span>
         )}
-        {isLeft && missingPair==='vertical' && (
+        {isLeft && step>=3 && missingPair==='vertical' && (
           <span className="side-tag ghost left" style={{...sharedBadgeMetrics, zIndex:5}}>{oh}</span>
         )}
 
-        {/* Side-hit zones AFTER ghost, higher z-index */}
+        {/* Side-hit zones */}
         <div
-          className={"side-hit top "+(isChosen(isLeft?'orig':'copy','top')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','top')?'good':'')}
+          className={"side-hit top " + (isChosen(isLeft?'orig':'copy','top')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','top')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -293,7 +286,7 @@ export default function ScaleFactorModule() {
           }
         />
         <div
-          className={"side-hit bottom "+(isChosen(isLeft?'orig':'copy','bottom')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','bottom')?'good':'')}
+          className={"side-hit bottom " + (isChosen(isLeft?'orig':'copy','bottom')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','bottom')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -304,7 +297,7 @@ export default function ScaleFactorModule() {
           }
         />
         <div
-          className={"side-hit left "+(isChosen(isLeft?'orig':'copy','left')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','left')?'good':'')}
+          className={"side-hit left " + (isChosen(isLeft?'orig':'copy','left')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','left')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -315,7 +308,7 @@ export default function ScaleFactorModule() {
           }
         />
         <div
-          className={"side-hit right "+(isChosen(isLeft?'orig':'copy','right')?'chosen':'')+" "+(isGood(isLeft?'orig':'copy','right')?'good':'')}
+          className={"side-hit right " + (isChosen(isLeft?'orig':'copy','right')?'chosen':'') + " " + (isGood(isLeft?'orig':'copy','right')?'good':'')}
           style={{zIndex:20}}
           onClick={() =>
             (step===1
@@ -325,6 +318,7 @@ export default function ScaleFactorModule() {
                 : null)
           }
         />
+
       </div>
     )
 
@@ -376,13 +370,15 @@ export default function ScaleFactorModule() {
               <div className="section">
                 <div className="muted bigger">Drag the words to build the formula.</div>
 
-                <div className="fraction-row mt-8 big-fraction">
+                <div className="fraction-row mt-8 nowrap">
                   {/* [ Scale Factor ] slot */}
-                  <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
+                  <Slot
+                    test={testWord('Scale Factor')}
+                    onDropContent={onDropFormula('sSF','Scale Factor')}
+                  >
                     {slots.sSF
                       ? <Draggable id={slots.sSF.id} label={slots.sSF.label} data={slots.sSF} />
-                      : '_____'
-                    }
+                      : '_____'}
                   </Slot>
 
                   <span>=</span>
@@ -390,20 +386,24 @@ export default function ScaleFactorModule() {
                   {/* [ Copy / Original ] fraction slots */}
                   <div className="fraction ml-6">
                     <div>
-                      <Slot test={testWord('Copy')} onDropContent={onDropFormula('sNUM','Copy')}>
+                      <Slot
+                        test={testWord('Copy')}
+                        onDropContent={onDropFormula('sNUM','Copy')}
+                      >
                         {slots.sNUM
                           ? <Draggable id={slots.sNUM.id} label={slots.sNUM.label} data={slots.sNUM} />
-                          : '_____'
-                        }
+                          : '_____'}
                       </Slot>
                     </div>
-                    <div className="frac-bar thick"></div>
+                    <div className="frac-bar"></div>
                     <div>
-                      <Slot test={testWord('Original')} onDropContent={onDropFormula('sDEN','Original')}>
+                      <Slot
+                        test={testWord('Original')}
+                        onDropContent={onDropFormula('sDEN','Original')}
+                      >
                         {slots.sDEN
                           ? <Draggable id={slots.sDEN.id} label={slots.sDEN.label} data={slots.sDEN} />
-                          : '_____'
-                        }
+                          : '_____'}
                       </Slot>
                     </div>
                   </div>
@@ -417,13 +417,12 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {(step===3 || step===4) && (
+            {step===3 && (
               <div className="section">
-                <div className="muted bigger">Drag values from the shapes into the formula.</div>
-
+                <div className="muted bigger">Drag the values from the shapes into the formula.</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-                  {/* Static words stay styled as chips */}
-                  <div className="fraction-row">
+
+                  <div className="fraction-row nowrap">
                     <span className="chip static">Scale Factor</span>
                     <span>=</span>
                     <div className="fraction ml-6">
@@ -433,31 +432,30 @@ export default function ScaleFactorModule() {
                     </div>
                   </div>
 
-                  {/* Live numeric fraction (both slots active on both steps) */}
                   <div className="fraction ml-12">
                     <div>
-                      <Slot test={d=>d?.kind==='num'} onDropContent={dropIntoNumerator}>
-                        {num==null ? '—' : <span className="chip">{num}</span>}
+                      <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNumFlex('num',d)}>
+                        {num == null ? '—' : <span className="chip">{num}</span>}
                       </Slot>
                     </div>
                     <div className="frac-bar"></div>
                     <div>
-                      <Slot test={d=>d?.kind==='num'} onDropContent={dropIntoDenominator}>
-                        {den==null ? '—' : <span className="chip">{den}</span>}
+                      <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNumFlex('den',d)}>
+                        {den == null ? '—' : <span className="chip">{den}</span>}
                       </Slot>
                     </div>
                   </div>
                 </div>
-
-                {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
               </div>
             )}
+
+            {/* Step 4 is auto-skipped once both values are placed */}
 
             {step===5 && (
               <div className="section">
                 <div className="muted bigger">Tap Calculate to show the math, then Next.</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:12}}>
-                  <div className="fraction-row">
+                  <div className="fraction-row nowrap">
                     <span className="chip static">Scale Factor</span>
                     <span>=</span>
                     <div className="fraction ml-6">
@@ -467,9 +465,9 @@ export default function ScaleFactorModule() {
                     </div>
                   </div>
                   <div className="fraction ml-12">
-                    <div><span className="chip">{num ?? '—'}</span></div>
+                    <div>{num == null ? '—' : <span className="chip">{num}</span>}</div>
                     <div className="frac-bar"></div>
-                    <div><span className="chip">{den ?? '—'}</span></div>
+                    <div>{den == null ? '—' : <span className="chip">{den}</span>}</div>
                   </div>
                 </div>
                 <div className="chips mt-8">
@@ -477,8 +475,7 @@ export default function ScaleFactorModule() {
                   {calc && (
                     <div className="calc-steps">
                       <div>= <b>{calc.num}</b> / <b>{calc.den}</b></div>
-                      <div>= divide numerator and denominator by <b>{calc.g}</b></div>
-                      <div>= <b>{calc.a}</b> / <b>{calc.b}</b></div>
+                      <div>= divide numerator and denominator by <b>{calc.g}</b> → <b>{calc.a}</b> / <b>{calc.b}</b></div>
                       {calc.dec!=null && <div>= decimal ≈ <b>{fmt1(calc.dec)}</b></div>}
                       <div className="toolbar mt-8">
                         <button className="button primary" onClick={proceedAfterCalc}>Next</button>
@@ -491,31 +488,17 @@ export default function ScaleFactorModule() {
 
             {step===6 && (
               <div className="section">
-                <div className="muted bigger">Drag words to build: Original × Scale Factor = Copy</div>
-                <div className="chips mt-8 chips-lg with-borders" style={{alignItems:'center', gap:8}}>
-                  <Slot className="flat" test={testWord('Original')} onDropContent={dropEq('O','Original')}>
-                    <span className="slot">Original</span>
-                  </Slot>
-                  <span>×</span>
-                  <Slot className="flat" test={testWord('Scale Factor')} onDropContent={dropEq('SF','Scale Factor')}>
-                    <span className="slot">Scale Factor</span>
-                  </Slot>
-                  <span>=</span>
-                  <Slot className="flat" test={testWord('Copy')} onDropContent={dropEq('C','Copy')}>
-                    <span className="slot">Copy</span>
-                  </Slot>
-                </div>
+                <div className="muted bigger">How do you calculate the Copy’s missing side?</div>
                 <div className="chips mt-8 chips-lg with-borders">
-                  <Draggable id="wO2"  label="Original"     data={{kind:'word',label:'Original'}} />
-                  <Draggable id="wSF2" label="Scale Factor" data={{kind:'word',label:'Scale Factor'}} />
-                  <Draggable id="wC2"  label="Copy"         data={{kind:'word',label:'Copy'}} />
+                  <Draggable id="c-ok"  label="Original × Scale Factor = Copy" data={{kind:'concept', v:'ok'}} />
+                  <Draggable id="c-1"   label="Original ÷ Scale Factor = Copy" data={{kind:'concept', v:'x'}} />
+                  <Draggable id="c-2"   label="Copy × Scale Factor = Original" data={{kind:'concept', v:'x'}} />
+                  <Draggable id="c-3"   label="Copy ÷ Original = Scale Factor" data={{kind:'concept', v:'x'}} />
+                  <Draggable id="c-4"   label="Original ÷ Copy = Scale Factor" data={{kind:'concept', v:'x'}} />
                 </div>
-                <div className="toolbar mt-8">
-                  <button className="button primary" disabled={!eqReady} onClick={()=>{ if(eqReady){ done(6); next() } }}>
-                    Next
-                  </button>
-                  {!eqReady && <span className="ml-12 muted">Place all three in order first.</span>}
-                </div>
+                <Slot test={(d)=>d?.kind==='concept'} onDropContent={tryConcept}>
+                  <span className="slot">Drop your choice here</span>
+                </Slot>
                 {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
               </div>
             )}
@@ -530,13 +513,21 @@ export default function ScaleFactorModule() {
 
             {step===8 && (
               <div className="section">
-                <div className="muted bigger">We’ll use Original × (Copy/Original) to find the Copy’s missing side.</div>
+                <div className="muted bigger">Original × Scale Factor = Copy</div>
+                {calc && (
+                  <div className="mt-8 muted">
+                    Scale Factor = <b>{calc.a}</b>/<b>{calc.b}</b>{calc.dec!=null ? ` ≈ ${fmt1(calc.dec)}`:''}
+                  </div>
+                )}
                 <div className="toolbar mt-8">
                   <button className="button success" onClick={()=>{
                     const sf = num/den
                     const origSide = origVals[missingPair]
                     const result = origSide * sf
-                    setMissingResult(result); done(8)
+                    setMissingResult(result)
+                    setConfetti(true)
+                    done(8)
+                    setTimeout(()=>{ newProblem() }, 1400)
                   }}>
                     Compute Missing Side
                   </button>
@@ -544,6 +535,11 @@ export default function ScaleFactorModule() {
                 {missingResult!=null && (
                   <div className="chips mt-10">
                     <span className="badge">Result: {fmt1(missingResult)}</span>
+                  </div>
+                )}
+                {confetti && (
+                  <div className="mt-8" aria-live="polite" role="status">
+                    🎉🎉 Nice! New problem loading… 🎉🎉
                   </div>
                 )}
               </div>
