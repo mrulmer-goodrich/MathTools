@@ -312,3 +312,16 @@ body{
 @media (max-width: 980px){
   .panes{ grid-template-columns: 1fr; }
 }
+
+/* ---- v3.0.6 patch ---- */
+.fraction-row.nowrap { flex-wrap:nowrap; }
+.big-fraction { font-size:1.3rem; }
+.calc-inline { font-size:1.2rem; font-weight:800; }
+.result-big { font-size:1.6rem; font-weight:900; color:var(--eastway-green); }
+
+/* Flashing new problem button */
+.flash { animation: flashBtn 1s infinite; }
+@keyframes flashBtn {
+  0%,100%{ background:var(--cms-light); }
+  50%{ background:var(--t-yellow); }
+}
