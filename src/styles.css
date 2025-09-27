@@ -1,4 +1,4 @@
-/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.2) */
+/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.2 FULL) */
 
 /* -------- Brand color tokens (FINAL) -------- */
 :root{
@@ -169,7 +169,7 @@ body{
 /* Ghost (perpendicular original) */
 .side-tag.ghost{
   position:absolute;
-  opacity:.25;
+  opacity:.35;              /* slightly stronger to be noticeable but clearly ghosted */
   background:#fff;
   border:2px dashed var(--border);
   border-radius:999px;
@@ -220,27 +220,6 @@ body{
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
 
-/* Ensure chips stay styled when inside slots */
-.slot .chip {
-  font-weight: bold;
-  background: #fff;
-  border: 2px solid #333;
-}
-
-/* Ghost tags should never block clicks */
-.side-tag.ghost {
-  opacity: 0.35;
-  pointer-events: none;
-  z-index: 5;
-}
-
-/* Hit zones must sit above ghost tags */
-.side-hit {
-  position: absolute;
-  background: rgba(0,0,0,0);
-  z-index: 20;
-}
-
 /* Base chip pill style (applies everywhere, including inside slots) */
 .chip {
   display: inline-flex;
@@ -266,24 +245,9 @@ body{
   font-weight: 800;
 }
 
-/* Base chip pill (used everywhere, including inside slots) */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-  line-height: 1;
-}
-.chip:active { cursor: grabbing; }
-
-/* Stronger contrast when a chip is rendered inside a Slot */
-.slot .chip {
-  border-color: #333;
+/* Hit zones must sit above ghost tags (safety belt for any overrides) */
+.side-hit {
+  position: absolute;
+  background: rgba(0,0,0,0);
+  z-index: 20;
 }
