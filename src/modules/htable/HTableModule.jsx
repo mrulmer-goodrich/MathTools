@@ -23,6 +23,16 @@ const STEP_HEADS = [
 /** Utility: deep clone helper to avoid accidental mutations */
 const clone = (x) => JSON.parse(JSON.stringify(x))
 
+// Helper to detect if a string is mostly English letters (to avoid fragmented translations)
+const mostlyEnglish = (s) => {
+  if (!s) return true
+  const letters = s.match(/[A-Za-z]/g) || []
+  const nonLetters = s.match(/[^A-Za-z\s]/g) || []
+  // If >60% of characters are A–Z AND there are clear English function words, treat as English
+  const englishWords = /(the|and|is|are|of|to|in|on|with|for|at|by|from)\b/i.test(s)
+  return (letters.length > nonLetters.length) && englishWords
+}
+
 export default function HTableModule() {
   /** ---------- persisted session ----------- */
   const persisted = loadSession()
@@ -60,45 +70,49 @@ export default function HTableModule() {
     // eslint-disable-next-line
   }, [problem, table, step, steps])
 
-  /** ---------- Story + redaction scheduler ---------- */
+  /** ---------- Story + mode scheduler ---------- */
   const [showEnglish, setShowEnglish] = useState(true)
-  const [mode, setMode] = useState('Spanish')  // starting alt
-  const [maskClass, setMaskClass] = useState('') // '', 'mask fade', 'mask black'
+  const [mode, setMode] = useState('Spanish')  // starting alt (we’ll randomize subsequently)
+  const [errorMsg, setErrorMsg] = useState('')
   const timerRef = useRef(null)
   const holdRef  = useRef(false)
 
-  const randomAlt = (list) => list[Math.floor(Math.random()*list.length)]
+  // Only allow curated languages + MaskLetters; strip legacy modes from altOrder at runtime
+  const allowedModes = useMemo(()=>{
+    const allowed = new Set(['Spanish','French','German','Italian','Portuguese','Swedish','Polish','Turkish','MaskLetters','English'])
+    return (problem.altOrder || []).map(m => (m==='FadeOut'||m==='BlackOut') ? 'MaskLetters' : m).filter(m => allowed.has(m))
+  }, [problem.altOrder])
+
+  const randomAlt = (list) => list[Math.floor(Math.random()*list.length)] || 'MaskLetters'
 
   const applyMode = (m) => {
     setShowEnglish(false)
-    setMode(m)
-    if (m === 'FadeOut') setMaskClass('mask fade')
-    else if (m === 'BlackOut') setMaskClass('mask black')
-    else setMaskClass('')
+    const filtered = (m === 'FadeOut' || m === 'BlackOut') ? 'MaskLetters' : m
+    setMode(filtered)
   }
 
   const startTicker = () => {
     stopTicker()
     timerRef.current = setInterval(() => {
       if (holdRef.current) return // paused while holding English
-      const pool = problem.altOrder
-      const choices = pool.filter(m => m !== mode)
-      const m = choices[Math.floor(Math.random()*choices.length)]
+      const pool = allowedModes.length ? allowedModes : ['MaskLetters']
+      const choices = pool.filter(m => m !== mode && m !== 'English')
+      const m = randomAlt(choices.length ? choices : pool)
       applyMode(m)
-    }, 10000)
+    }, 15000) // 15s per spec
   }
   const stopTicker = () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
 
-  // start with English for 10s, then first random mode
+  // start with English for 15s, then first random mode
   useEffect(() => {
     stopTicker()
     holdRef.current = false
-    setShowEnglish(true); setMode('Spanish'); setMaskClass('')
-    const first = setTimeout(() => applyMode(randomAlt(problem.altOrder)), 10000)
+    setShowEnglish(true); setMode('English')
+    const first = setTimeout(() => applyMode(randomAlt(allowedModes)), 15000)
     startTicker()
     return () => { clearTimeout(first); stopTicker() }
     // eslint-disable-next-line
-  }, [problem.id])
+  }, [problem.id, allowedModes.join('|')])
 
   /** ---------- Choices (units & numbers) ---------- */
   const unitChoices = useMemo(() => {
@@ -152,32 +166,54 @@ export default function HTableModule() {
     }
   }
 
-  /** ---------- Confirm actions per step ---------- */
+  const tryAgain = (i, msg='Try Again!') => {
+    markMiss(i)
+    setErrorMsg(msg)
+    setTimeout(()=>setErrorMsg(''), 1400)
+  }
+
+  /** ---------- Auto-advance hooks ---------- */
+  // Units auto-advance
+  useEffect(() => {
+    if (step===2) {
+      const placed = new Set([unitTop, unitBottom].filter(Boolean))
+      if (placed.size===2) { markDone(2); goNext() }
+    }
+    // eslint-disable-next-line
+  }, [step, unitTop, unitBottom])
+
+  // Scale numbers alignment auto-advance
+  useEffect(() => {
+    if (step===4) {
+      const shouldTop    = scaleForUnit(unitTop)
+      const shouldBottom = scaleForUnit(unitBottom)
+      const ok = (table.sTop===shouldTop && table.sBottom===shouldBottom)
+      if (table.sTop!=null || table.sBottom!=null) {
+        if (!ok && table.sTop!=null && table.sBottom!=null) tryAgain(4)
+        if (ok) { markDone(4); goNext() }
+      }
+    }
+    // eslint-disable-next-line
+  }, [step, table.sTop, table.sBottom, unitTop, unitBottom])
+
+  // Given auto-advance
+  useEffect(() => {
+    if (step===5) {
+      const placedTop = table.vTop!=null
+      const placedBottom = table.vBottom!=null
+      const correctValue = (table.vTop===problem.given.value || table.vBottom===problem.given.value)
+      const correctRow = (placedTop && expectedGivenRow==='top') || (placedBottom && expectedGivenRow==='bottom')
+      if (placedTop || placedBottom) {
+        if ((placedTop ^ placedBottom) && correctValue && correctRow) { markDone(5); goNext() }
+        else if ((placedTop ^ placedBottom)) tryAgain(5)
+      }
+    }
+    // eslint-disable-next-line
+  }, [step, table.vTop, table.vBottom, expectedGivenRow, problem.given.value])
+
+  /** ---------- Step helpers ---------- */
   const confirmStep1 = (d) => { // Draw an H Table
     if (d.v === 'ok') { markDone(0); goNext() } else markMiss(0)
-  }
-
-  const confirmUnits = () => {
-    // HT3: Accept either arrangement as long as two distinct units are placed (and they are from choices)
-    const placed = new Set([unitTop, unitBottom].filter(Boolean))
-    if (placed.size===2) { markDone(2); goNext() } else markMiss(2)
-  }
-
-  const confirmScale = () => {
-    // Require that scale numbers align to the units placed.
-    const shouldTop    = scaleForUnit(unitTop)
-    const shouldBottom = scaleForUnit(unitBottom)
-    const ok = (table.sTop===shouldTop && table.sBottom===shouldBottom)
-    if (ok) { markDone(4); goNext() } else markMiss(4)
-  }
-
-  const confirmGiven = () => {
-    // Require exactly one given placed and in the row matching given unit (after swaps)
-    const placedTop = table.vTop!=null
-    const placedBottom = table.vBottom!=null
-    const correctValue = (table.vTop===problem.given.value || table.vBottom===problem.given.value)
-    const correctRow = (placedTop && expectedGivenRow==='top') || (placedBottom && expectedGivenRow==='bottom')
-    if ((placedTop ^ placedBottom) && correctValue && correctRow) { markDone(5); goNext() } else markMiss(5)
   }
 
   const confirmNext = (want) => (d) => { if (d.v===want) { markDone(step); goNext() } else markMiss(step) }
@@ -188,10 +224,10 @@ export default function HTableModule() {
     const givenCell = expectedGivenRow==='top' ? 'vTop' : 'vBottom'
     const oppScale  = expectedGivenRow==='top' ? 'sBottom' : 'sTop'
     const want = [givenCell, oppScale].sort().join(',')
-    if (picks!==want) { markMiss(7); return }
+    if (picks!==want) { tryAgain(7); return }
     const givenVal = table[givenCell]
     const oppVal   = table[oppScale]
-    if (givenVal==null || oppVal==null) { markMiss(7); return }
+    if (givenVal==null || oppVal==null) { tryAgain(7); return }
     setTable(t => ({ ...t, product: givenVal * oppVal }))
     markDone(7); goNext()
   }
@@ -199,10 +235,10 @@ export default function HTableModule() {
   const submitDivide = () => {
     // Must click divisor = scale in same row as given
     const need = expectedGivenRow==='top' ? 'sTop' : 'sBottom'
-    if (table.divisor !== need) { markMiss(9); return }
+    if (table.divisor !== need) { tryAgain(9); return }
     const product = table.product
     const divisor = table[need]
-    if (product==null || divisor==null) { markMiss(9); return }
+    if (product==null || divisor==null) { tryAgain(9); return }
     const result = product / divisor
     setTable(t => ({ ...t, result }))
 
@@ -219,32 +255,54 @@ export default function HTableModule() {
     setTable(initialTable)
     setStep(0)
     setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
-    // reset redaction
-    stopTicker(); holdRef.current=false; setShowEnglish(true); setMode('Spanish'); setMaskClass('')
-    setTimeout(()=>applyMode(randomAlt(problem.altOrder)), 10) // will be replaced by effect
+    // reset rotation
+    stopTicker(); holdRef.current=false; setShowEnglish(true); setMode('English')
+    setTimeout(()=>applyMode(randomAlt(allowedModes)), 10) // replaced by effect
   }
 
   /** ---------- Story rendering ---------- */
   const Story = () => {
     const lang = showEnglish ? 'English' : mode
-    const txt  = showEnglish ? problem.text.english : (problem.text.alts[lang] || problem.text.english)
+    let raw  = showEnglish ? problem.text.english : (problem.text.alts[lang] || problem.text.english)
+    // If non-English mode yields mixed/fragmented English, switch to MaskLetters as a fallback
+    if (!showEnglish && lang !== 'MaskLetters' && mostlyEnglish(raw)) {
+      raw = problem.text.english
+      // force mask-style rendering for this tick
+      return (
+        <>
+          <div className="problem">{raw.replace(/[A-Za-z]/g,'X')}</div>
+          <div className="lang-badge">Mode: MaskLetters</div>
+          <div className="toolbar center mt-10">
+            <button
+              className="button lg"
+              onMouseDown={()=>{ holdRef.current=true; setShowEnglish(true) }}
+              onMouseUp={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+              onTouchStart={()=>{ holdRef.current=true; setShowEnglish(true) }}
+              onTouchEnd={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
+              aria-pressed={holdRef.current ? 'true':'false'}
+            >Hold: English</button>
+            {errorMsg && <div className="error big-red ml-12">{errorMsg}</div>}
+          </div>
+        </>
+      )
+    }
+    const txt = (!showEnglish && lang==='MaskLetters')
+      ? raw.replace(/[A-Za-z]/g, 'X')
+      : raw
     return (
       <>
-        <div className={`problem ${!showEnglish && (mode==='FadeOut' || mode==='BlackOut') ? maskClass : ''}`}>
-          {txt}
-        </div>
-        <div className="lang-badge">Mode: {showEnglish ? 'English' : mode}</div>
-        <div className="toolbar" style={{justifyContent:'center', marginTop: 10}}>
+        <div className="problem">{txt}</div>
+        <div className="lang-badge">Mode: {showEnglish ? 'English' : lang}</div>
+        <div className="toolbar center mt-10">
           <button
-            className="button big-under"
+            className="button lg"
             onMouseDown={()=>{ holdRef.current=true; setShowEnglish(true) }}
-            onMouseUp={()=>{ holdRef.current=false; applyMode(randomAlt(problem.altOrder)) }}
+            onMouseUp={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
             onTouchStart={()=>{ holdRef.current=true; setShowEnglish(true) }}
-            onTouchEnd={()=>{ holdRef.current=false; applyMode(randomAlt(problem.altOrder)) }}
+            onTouchEnd={()=>{ holdRef.current=false; applyMode(randomAlt(allowedModes)) }}
             aria-pressed={holdRef.current ? 'true':'false'}
-          >
-            Hold: English
-          </button>
+          >Hold: English</button>
+          {errorMsg && <div className="error big-red ml-12">{errorMsg}</div>}
         </div>
       </>
     )
@@ -259,7 +317,7 @@ export default function HTableModule() {
   /** ---------- Render ---------- */
   return (
     <div className="container">
-      <div className="panes">
+      <div className="panes equal">
         {/* LEFT: Story + New Problem + H-grid */}
         <div className="card">
           <Story />
@@ -278,81 +336,97 @@ export default function HTableModule() {
                       else markMiss(1)
                     }}
                   >
-                    <span>{table.head1 || 'Header 1'}</span>
+                    <span>{table.head1 || ''}</span>
                   </Slot>
                 </div>
                 <div className="hhead">
                   <Slot
                     test={acceptHeader2}
                     onDropContent={(d)=>{
-                      if (d.v==='Scale') { setTable(t=>({...t, head2:'Scale'})); markDone(3); goNext() }
+                      if (d.v==='Scale Numbers') { setTable(t=>({...t, head2:'Scale Numbers'})); markDone(3); goNext() }
                       else markMiss(3)
                     }}
                   >
-                    <span>{table.head2 || 'Header 2'}</span>
+                    <span>{table.head2 || ''}</span>
                   </Slot>
                 </div>
                 <div className="hhead"></div>
 
-                {/* row 1 — needs the horizontal bar across all three cells */}
-                <div className="hcell rowline">
+                {/* row 1 — no horizontal bar here */}
+                <div className="hcell">
                   <Slot
                     className={`${table.uTop ? 'filled' : ''}`}
                     test={acceptUnit}
                     onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}
                   >
-                    <span>{table.uTop || 'drop unit here'}</span>
+                    <span>{table.uTop || ''}</span>
                   </Slot>
                 </div>
 
-                <div className="hcell vline rowline">
+                <div className="hcell vline">
                   <Slot
                     className={`${table.sTop!=null ? 'filled' : ''}`}
                     test={acceptScaleNum}
-                    onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}
+                    onDropContent={(d)=>{
+                      const want = scaleForUnit(unitTop)
+                      if (d.value===want) setTable(t=>({...t,sTop:d.value}))
+                      else tryAgain(4)
+                    }}
                   >
-                    {ovalIf('sTop', <span>{table.sTop ?? 'drop scale #'}</span>)}
+                    {ovalIf('sTop', <span>{table.sTop ?? ''}</span>)}
                   </Slot>
                 </div>
 
-                <div className="hcell vline rowline">
+                <div className="hcell vline">
                   <Slot
                     className={`${table.vTop!=null ? 'filled' : ''}`}
                     test={acceptGivenNum}
-                    onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}
+                    onDropContent={(d)=>{
+                      if (expectedGivenRow==='top' && d.value===problem.given.value && table.vBottom==null)
+                        setTable(t=>({...t,vTop:d.value}))
+                      else tryAgain(5)
+                    }}
                   >
-                    {ovalIf('vTop', <span>{table.vTop ?? 'drop given # (if top)'}</span>)}
+                    {ovalIf('vTop', <span>{table.vTop ?? ''}</span>)}
                   </Slot>
                 </div>
 
-                {/* row 2 — bottom half of the H; vertical bars continue in cols 2 & 3 */}
-                <div className="hcell">
+                {/* row 2 — bottom half; H horizontal bar BETWEEN data rows */}
+                <div className="hcell rowline">
                   <Slot
                     className={`${table.uBottom ? 'filled' : ''}`}
                     test={acceptUnit}
                     onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}
                   >
-                    <span>{table.uBottom || 'drop unit here'}</span>
+                    <span>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
 
-                <div className="hcell vline">
+                <div className="hcell vline rowline">
                   <Slot
                     className={`${table.sBottom!=null ? 'filled' : ''}`}
                     test={acceptScaleNum}
-                    onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}
+                    onDropContent={(d)=>{
+                      const want = scaleForUnit(unitBottom)
+                      if (d.value===want) setTable(t=>({...t,sBottom:d.value}))
+                      else tryAgain(4)
+                    }}
                   >
-                    {ovalIf('sBottom', <span>{table.sBottom ?? 'drop scale #'}</span>)}
+                    {ovalIf('sBottom', <span>{table.sBottom ?? ''}</span>)}
                   </Slot>
                 </div>
 
-                <div className="hcell vline">
+                <div className="hcell vline rowline">
                   <Slot
                     className={`${table.vBottom!=null ? 'filled' : ''}`}
                     test={acceptGivenNum}
-                    onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}
+                    onDropContent={(d)=>{
+                      if (expectedGivenRow==='bottom' && d.value===problem.given.value && table.vTop==null)
+                        setTable(t=>({...t,vBottom:d.value}))
+                      else tryAgain(5)
+                    }}
                   >
-                    {ovalIf('vBottom', <span>{table.vBottom ?? 'drop given # (if bottom)'}</span>)}
+                    {ovalIf('vBottom', <span>{table.vBottom ?? ''}</span>)}
                   </Slot>
                 </div>
               </div>
@@ -385,7 +459,7 @@ export default function HTableModule() {
             {(step===1 || step===3) && (
               <div className="chips">
                 <Draggable id="c1" label="Units" data={{kind:'col', v:'Units'}} />
-                <Draggable id="c2" label="Scale" data={{kind:'col', v:'Scale'}} />
+                <Draggable id="c2" label="Scale Numbers" data={{kind:'col', v:'Scale Numbers'}} />
                 <Draggable id="c3" label="Random Numbers" data={{kind:'col', v:'x'}} />
                 <Draggable id="c4" label="Answer" data={{kind:'col', v:'x'}} />
                 <Draggable id="c5" label="Multiply" data={{kind:'col', v:'x'}} />
@@ -394,38 +468,23 @@ export default function HTableModule() {
 
             {/* Step 3: units */}
             {step===2 && (
-              <>
-                <div className="chips">
-                  {unitChoices.map(u => <Draggable key={u.id} id={u.id} label={u.label} data={u} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={confirmUnits}>Confirm Units</button>
-                </div>
-              </>
+              <div className="chips">
+                {unitChoices.map(u => <Draggable key={u.id} id={u.id} label={u.label} data={u} />)}
+              </div>
             )}
 
             {/* Step 5: scale numbers (alignment sensitive) */}
             {step===4 && (
-              <>
-                <div className="chips">
-                  {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={confirmScale}>Confirm Scale</button>
-                </div>
-              </>
+              <div className="chips">
+                {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
+              </div>
             )}
 
             {/* Step 6: given number */}
             {step===5 && (
-              <>
-                <div className="chips">
-                  {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={confirmGiven}>Confirm Given</button>
-                </div>
-              </>
+              <div className="chips">
+                {numberChoices.map(n => <Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
+              </div>
             )}
 
             {/* Step 7 & 9: next actions */}
@@ -465,6 +524,7 @@ export default function HTableModule() {
                 {table.result!=null && <div className="muted" style={{marginTop:8}}>Answer: {table.result}</div>}
               </>
             )}
+            {errorMsg && <div className="error big-red" style={{marginTop:8}}>{errorMsg}</div>}
           </div>
         </div>
       </div>
