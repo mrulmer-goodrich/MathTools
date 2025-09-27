@@ -339,3 +339,19 @@ body{
   box-shadow: inset 0 0 0 2px rgba(16,185,129,.35);
 }
 
+/* prevent number pills from getting clipped anywhere */
+.shape-area, .rects, .rect { overflow: visible; }
+
+/* wide side-hit areas (restore full-side highlight) */
+.rect .side-hit{
+  position:absolute;
+  background: transparent;
+  z-index: 20; /* below pills */
+}
+.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.chosen,
+.rect .side-hit.good{ background: rgba(16,185,129,.18); }
+
