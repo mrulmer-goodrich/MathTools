@@ -228,12 +228,10 @@ export default function ScaleFactorModule() {
     setMissingClicked(false)
     setMissingResult(null)
   }
-
-  /* ---------- Pill / Tag (wrapper carries absolute positioning) ---------- */
 /* ---------- Pill / Tag (wrapper carries absolute positioning + highlight) ---------- */
-const Tag = ({id, value, side, orient, shape}) => {
+const Tag = ({ id, value, side, orient, shape }) => {
   // highlight state (replaces old .side-hit* visuals)
-  const pickedSelf = step===1 && isChosen(shape, side)
+  const pickedSelf = step === 1 && isChosen(shape, side)
   const goodSelf   = isGood(shape, side)
 
   const cls =
@@ -242,27 +240,30 @@ const Tag = ({id, value, side, orient, shape}) => {
     (pickedSelf ? ' chosen' : '') +
     (goodSelf   ? ' good'   : '')
 
-  const isShown = (orient===shown)
-  const isNumeric = (value!== '?' && value!=null && value!=='')
+  const isShown   = (orient === shown)
+  const isNumeric = (value !== '?' && value != null && value !== '')
 
-  // Draggable: numbers on Original are draggable; on Copy only the shown orientation number is draggable.
-  const draggableNow = (step>=3) && (
-    (shape==='orig' && isNumeric) ||
-    (shape==='copy' && isShown && isNumeric)
+  // Draggable:
+  // - Original: all numeric badges are draggable during value steps (>=3)
+  // - Copy: only the shown-orientation numeric badge is draggable
+  const draggableNow = (step >= 3) && (
+    (shape === 'orig' && isNumeric) ||
+    (shape === 'copy' && isShown && isNumeric)
   )
 
-  const handleClick = ()=>{
-    if(step===1){ clickSide(shape, side, orient) }
-    if(step===6){ handleMissingClick(shape, side, orient) }
+  const handleClick = () => {
+    if (step === 1) { clickSide(shape, side, orient) }
+    if (step === 6) { handleMissingClick(shape, side, orient) }
   }
 
   if (draggableNow) {
     return (
       <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
-        <Draggable id={id} label={String(value)} data={{kind:'num', value}} />
+        <Draggable id={id} label={String(value)} data={{ kind: 'num', value }} />
       </span>
     )
   }
+
   return (
     <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
       {value}
@@ -270,45 +271,6 @@ const Tag = ({id, value, side, orient, shape}) => {
   )
 }
 
-
-    // Draggable logic:
-    // - All numeric badges on the Original are draggable during value steps
-    // - On the Copy: shown orientation number is visible; the perpendicular shows "?" (not draggable)
-    const isNumeric = (value!== '?' && value!=null && value!=='')
-    const draggableNow = (step>=3) && (
-      (shape==='orig' && isNumeric) ||
-      (shape==='copy' && isShown && isNumeric)
-    )
-
-    const handleClick = ()=>{
-      if(step===1){ clickSide(shape, side, orient) }
-      if(step===6){ handleMissingClick(shape, side, orient) }
-    }
-
-    if (draggableNow) {
-      return (
-        <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
-          <Draggable id={id} label={String(value)} data={{kind:'num', value}} />
-        </span>
-      )
-    }
-    return (
-      <span className={cls} style={sharedBadgeMetrics} onClick={handleClick}>
-        {value}
-      </span>
-    )
-  }
-
-  // compute value for each side/orientation
-  const valueFor = (isLeft, orient) => {
-    if (orient==='horizontal') {
-      if (isLeft) return ow
-      return (missingPair==='horizontal') ? '?' : cw
-    } else {
-      if (isLeft) return oh
-      return (missingPair==='vertical') ? '?' : ch
-    }
-  }
 
   /* ---------- Rect (labels only at step 0) ---------- */
   const RectWithLabel = ({which})=>{
