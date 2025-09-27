@@ -1,3 +1,4 @@
+// src/components/DropSlot.jsx
 import React, { useState } from 'react'
 import Draggable from './DraggableChip.jsx'
 
@@ -57,9 +58,11 @@ export default function DropSlot({
       className={`slot ${glow ? 'glow' : ''} ${className}`}
     >
       {dropped
-        ? <Draggable id={`reslot-${dropped.id || dropped.label || dropped.value}`}
+        ? <Draggable
+            id={`slot-${dropped.id || dropped.label || dropped.value}`}
             label={String(dropped.label || dropped.value || '')}
-            data={dropped} />
+            data={dropped}
+          />
         : children}
     </div>
   )
