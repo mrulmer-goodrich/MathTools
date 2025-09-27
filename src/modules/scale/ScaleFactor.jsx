@@ -6,7 +6,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 6
+const SNAP_VERSION = 7
 
 const STEP_HEADS = [
   'Which rectangle is the Original? Which is the Copy?',
@@ -35,7 +35,9 @@ export default function ScaleFactorModule() {
     mSlots: { left:'Original', op:'×', right:'Scale Factor', eq:'=', out:null },
     missingResult: null
   }
-  const persisted = session.scaleSnap && session.scaleSnap.version===SNAP_VERSION ? session.scaleSnap : freshSnap
+  const persisted = (session.scaleSnap && session.scaleSnap.version===SNAP_VERSION)
+    ? session.scaleSnap
+    : freshSnap
 
   const [problem, setProblem] = useState(persisted.problem)
   const [step, setStep] = useState(persisted.step)
@@ -68,8 +70,8 @@ export default function ScaleFactorModule() {
 
   const ow = problem.original.w, oh = problem.original.h
   const cw = problem.copy.w, ch = problem.copy.h
-  const shown = problem.shownPair
-  const missingPair = problem.missingPair
+  const shown = problem.shownPair            // 'horizontal' | 'vertical'
+  const missingPair = problem.missingPair    // perpendicular orientation
 
   const rectStyle = (w,h)=>({
     width: Math.max(120, w*6)+'px',
@@ -161,13 +163,29 @@ export default function ScaleFactorModule() {
   const isChosen = (s,e)=> firstPick && firstPick.shape===s && firstPick.edge===e
   const isGood   = (s,e)=> picked && ((s==='orig' && chosen.orig===e) || (s==='copy' && chosen.copy===e))
 
-  // render helpers for side tags: center on side, large, only draggable when step >= 3
-  const Tag = ({id, value, side}) => {
+  // SIDE NUMBER TAGS
+  // - centered on side
+  // - shown orientation on both rectangles
+  // - ALSO show Original's perpendicular side (for later missing-side calc), but NOT draggable
+  // - draggable only at steps >= 3 (for shown pair values)
+  const Tag = ({id, value, side, orient, shape}) => {
     const cls = 'side-tag big ' + side
-    if (step >= 3) {
-      return <Draggable id={id} label={String(value)} data={{kind:'num',value}} className={cls} style={{zIndex:30}} />
+    const isShown = (orient === shown)
+    const isPerpOriginal = (shape==='orig' && orient === missingPair)
+    const draggableNow = (step >= 3) && isShown
+    const common = { className: cls, style: { zIndex: draggableNow ? 40 : 12 } }
+    const handleClick = () => {
+      if (step===1) {
+        // if user clicks the badge during pick step, count it as clicking that side
+        if (shape==='orig') clickSide('orig', side, orient)
+        else clickSide('copy', side, orient)
+      }
     }
-    return <span className={cls} style={{zIndex:10}}>{value}</span>
+    if (draggableNow) {
+      return <Draggable id={id} label={String(value)} data={{kind:'num', value}} {...common} />
+    }
+    // static pill
+    return <span {...common} onClick={handleClick}>{value}</span>
   }
 
   return (
@@ -180,8 +198,13 @@ export default function ScaleFactorModule() {
             <Slot className="rect-slot" test={testWord('Original')} onDropContent={dropLabelOnRect('left')}>
               <div className="rect" style={rectStyle(ow,oh)}>
                 <div className={"shape-label-center "+(!labels.left?'hidden':'')}>{labels.left || ''}</div>
-                {shown==='horizontal' && (<Tag id="onum_h" value={ow} side="top" />)}
-                {shown==='vertical' && (<Tag id="onum_v" value={oh} side="left" />)}
+                {/* SHOWN orientation number */}
+                {shown==='horizontal' && (<Tag id="onum_h" value={ow} side="top" orient="horizontal" shape="orig" />)}
+                {shown==='vertical' && (<Tag id="onum_v" value={oh} side="left" orient="vertical" shape="orig" />)}
+                {/* PERP Original number also visible (not draggable) */}
+                {missingPair==='horizontal' && (<Tag id="onum_h_perp" value={ow} side="top" orient="horizontal" shape="orig" />)}
+                {missingPair==='vertical' && (<Tag id="onum_v_perp" value={oh} side="left" orient="vertical" shape="orig" />)}
+                {/* Click zones (wide strips) */}
                 <div className={"side-hit top "+(isChosen('orig','top')?'chosen':'')+" "+(isGood('orig','top')?'good':'')} onClick={()=>clickSide('orig','top','horizontal')}/>
                 <div className={"side-hit bottom "+(isChosen('orig','bottom')?'chosen':'')+" "+(isGood('orig','bottom')?'good':'')} onClick={()=>clickSide('orig','bottom','horizontal')}/>
                 <div className={"side-hit left "+(isChosen('orig','left')?'chosen':'')+" "+(isGood('orig','left')?'good':'')} onClick={()=>clickSide('orig','left','vertical')}/>
@@ -193,8 +216,9 @@ export default function ScaleFactorModule() {
             <Slot className="rect-slot" test={testWord('Copy')} onDropContent={dropLabelOnRect('right')}>
               <div className="rect copy" style={rectStyle(cw,ch)}>
                 <div className={"shape-label-center "+(!labels.right?'hidden':'')}>{labels.right || ''}</div>
-                {shown==='horizontal' && (<Tag id="cnum_h" value={cw} side="top" />)}
-                {shown==='vertical' && (<Tag id="cnum_v" value={ch} side="left" />)}
+                {shown==='horizontal' && (<Tag id="cnum_h" value={cw} side="top" orient="horizontal" shape="copy" />)}
+                {shown==='vertical' && (<Tag id="cnum_v" value={ch} side="left" orient="vertical" shape="copy" />)}
+                {/* Copy's perpendicular side intentionally blank (missing) */}
                 <div className={"side-hit top "+(isChosen('copy','top')?'chosen':'')+" "+(isGood('copy','top')?'good':'')} onClick={()=>clickSide('copy','top','horizontal')}/>
                 <div className={"side-hit bottom "+(isChosen('copy','bottom')?'chosen':'')+" "+(isGood('copy','bottom')?'good':'')} onClick={()=>clickSide('copy','bottom','horizontal')}/>
                 <div className={"side-hit left "+(isChosen('copy','left')?'chosen':'')+" "+(isGood('copy','left')?'good':'')} onClick={()=>clickSide('copy','left','vertical')}/>
@@ -212,7 +236,7 @@ export default function ScaleFactorModule() {
 
             {step===0 && (
               <div className="section">
-                <div className="muted bigger">Drag and drop the words on the correct image.</div>
+                <div className="muted bigger">Drag && drop the words on the correct image.</div>
                 <div className="chips mt-10 chips-lg with-borders">
                   <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
                   <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
@@ -229,7 +253,7 @@ export default function ScaleFactorModule() {
 
             {step===2 && (
               <div className="section">
-                <div className="muted bigger">Drag and drop the words to build the formula.</div>
+                <div className="muted bigger">Drag && drop the words to build the formula.</div>
                 <div className="fraction-row mt-8 big-fraction">
                   <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
                     {slots.sSF || '_____'} 
