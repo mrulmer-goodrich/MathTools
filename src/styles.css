@@ -325,3 +325,17 @@ body{
   0%,100%{ background:var(--cms-light); }
   50%{ background:var(--t-yellow); }
 }
+/* Make both panes truly flexible; allow shrinking */
+.panes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.card { min-width: 0; }
+
+/* Let the left shapes area shrink instead of forcing the grid wider */
+.shape-area .rects { max-width: 100%; overflow: hidden; }
+
+/* Re-introduce highlight color now that it lives on the badge wrapper */
+.side-tag.chosen,
+.side-tag.good {
+  background: rgba(16,185,129,.18);   /* same green tint as before */
+  box-shadow: inset 0 0 0 2px rgba(16,185,129,.35);
+}
+
