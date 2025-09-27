@@ -1,43 +1,31 @@
-import React, { useState } from 'react'
-import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
+// src/App.jsx
+import React from 'react'
+import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import ScaleFactorModule from './modules/scalefactor/ScaleFactorModule.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
+import Landing from './modules/landing/Landing.jsx'
 
-export default function App() {
-  const [route, setRoute] = useState('home')
-
-  const Nav = () => (
-    <div className="topnav centered">
-      <button className={'link ' + (route === 'home' ? 'active' : '')} onClick={() => setRoute('home')}>Home</button>
-      <span className="sp">•</span>
-      <button className={'link ' + (route === 'scale' ? 'active' : '')} onClick={() => setRoute('scale')}>Scale Factor</button>
-      <span className="sp">•</span>
-      <button className={'link ' + (route === 'htable' ? 'active' : '')} onClick={() => setRoute('htable')}>H-Table</button>
-    </div>
-  )
-
+export default function App(){
   return (
-    <div>
-      <Nav />
-      {route === 'home' && (
-        <div className="container">
-          <header className="lp-header">
-            <h1 className="lp-title">UG Math Tools</h1>
-            <p className="lp-sub">Interactive practice for Scale Factors & H-Tables</p>
-          </header>
-          <section className="lp-grid">
-            <button className="lp-tile" onClick={() => setRoute('scale')}>
-              <div className="lp-tile-title">Scale Factor</div>
-              <div className="lp-tile-sub">Copy ÷ Original • drag & drop</div>
-            </button>
-            <button className="lp-tile" onClick={() => setRoute('htable')}>
-              <div className="lp-tile-title">H-Table</div>
-              <div className="lp-tile-sub">Proportions • cross-multiply</div>
-            </button>
-          </section>
-        </div>
-      )}
-      {route === 'scale' && <ScaleFactorModule />}
-      {route === 'htable' && <HTableModule />}
+    <div className="app-shell">
+      {/* Top header shared on all pages */}
+      <header className="header">
+        <nav className="nav">
+          <span className="brand">UG Math Tools</span>
+          <div className="spacer" />
+          <Link to="/">Home</Link>
+          <Link to="/scale">Scale Factor</Link>
+          <Link to="/htable">H-Table</Link>
+        </nav>
+      </header>
+
+      <Routes>
+        <Route path="/" element={<Landing/>} />
+        <Route path="/scale" element={<ScaleFactorModule/>} />
+        <Route path="/htable" element={<HTableModule/>} />
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   )
 }
