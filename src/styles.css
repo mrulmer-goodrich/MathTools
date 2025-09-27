@@ -267,3 +267,39 @@ body{
   transform: translateY(-50%);
 }
 
+/* WIDE CLICK TARGETS for side picks, keep under number tags */
+.rect .side-hit{
+  position:absolute;
+  background: transparent;
+  z-index: 20;               /* below side tags (z 40), above rect so clicks register */
+}
+.rect .side-hit.top{
+  top:-10px; left:0; right:0; height:34px;    /* wide horizontal strip */
+}
+.rect .side-hit.bottom{
+  bottom:-10px; left:0; right:0; height:34px;
+}
+.rect .side-hit.left{
+  left:-10px; top:0; bottom:0; width:34px;    /* wide vertical strip */
+}
+.rect .side-hit.right{
+  right:-10px; top:0; bottom:0; width:34px;
+}
+
+/* Bigger, centered number badges */
+.side-tag.big{
+  position:absolute;
+  font-weight:900;
+  font-size: clamp(18px, 1.8vw, 26px);
+  background:#fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+  z-index:40;
+  user-select:none;
+}
+.side-tag.big.top{ top:-24px; left:50%; transform:translateX(-50%); }
+.side-tag.big.left{ left:-24px; top:50%; transform:translateY(-50%); }
+.side-tag.big.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); }
+.side-tag.big.right{ right:-24px; top:50%; transform:translateY(-50%); }
