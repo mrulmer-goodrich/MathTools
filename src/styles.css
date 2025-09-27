@@ -235,3 +235,35 @@ body{
   box-shadow: 0 2px 0 rgba(0,0,0,.04);
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
+/* Center-of-side, larger, draggable number tags */
+.side-tag.big{
+  position:absolute;
+  font-weight:900;
+  font-size: clamp(16px, 1.6vw, 22px);
+  background:#fff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 2px 0 rgba(0,0,0,.04);
+}
+.side-tag.big.top{
+  top: -22px;                /* slightly outside the rectangle */
+  left: 50%;
+  transform: translateX(-50%);
+}
+.side-tag.big.left{
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.side-tag.big.bottom{
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.side-tag.big.right{
+  right: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
