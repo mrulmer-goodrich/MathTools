@@ -6,7 +6,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 2
+const SNAP_VERSION = 3
 
 const STEP_HEADS = [
   'Which rectangle is the Original? Which is the Copy?',
@@ -50,7 +50,7 @@ export default function ScaleFactorModule() {
   const [missingResult, setMissingResult] = useState(persisted.missingResult)
   const [openSum, setOpenSum] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [firstPick, setFirstPick] = useState(null)
+  const [firstPick, setFirstPick] = useState(null) // {shape, orient}
 
   useEffect(()=>{
     const snap = { version: SNAP_VERSION, problem, step, steps, labels, picked, num, den, slots, mSlots, missingResult }
@@ -168,6 +168,8 @@ export default function ScaleFactorModule() {
     return arr
   },[shown, cw,ch, ow,oh])
 
+  const isChosen = (s,o)=> firstPick && firstPick.shape===s && firstPick.orient===o
+
   return (
     <div className="container">
       <div className="panes equal">
@@ -179,10 +181,10 @@ export default function ScaleFactorModule() {
                 <div className={"shape-label-center "+(!labels.left?'hidden':'')}>{labels.left || ''}</div>
                 <div className="side-tag top">{ow}</div>
                 <div className="side-tag left">{oh}</div>
-                <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('orig','horizontal')}/>
-                <div className={"side-hit bottom"} onClick={()=>clickSide('orig','horizontal')}/>
-                <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('orig','vertical')}/>
-                <div className={"side-hit right"} onClick={()=>clickSide('orig','vertical')}/>
+                <div className={"side-hit top "+(isChosen('orig','horizontal')?'chosen':'')+" "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('orig','horizontal')}/>
+                <div className={"side-hit bottom "+(isChosen('orig','horizontal')?'chosen':'')} onClick={()=>clickSide('orig','horizontal')}/>
+                <div className={"side-hit left "+(isChosen('orig','vertical')?'chosen':'')+" "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('orig','vertical')}/>
+                <div className={"side-hit right "+(isChosen('orig','vertical')?'chosen':'')} onClick={()=>clickSide('orig','vertical')}/>
               </div>
             </Slot>
 
@@ -191,16 +193,16 @@ export default function ScaleFactorModule() {
                 <div className={"shape-label-center "+(!labels.right?'hidden':'')}>{labels.right || ''}</div>
                 {shown==='horizontal' && (<div className="side-tag top">{cw}</div>)}
                 {shown==='vertical' && (<div className="side-tag left">{ch}</div>)}
-                <div className={"side-hit top "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('copy','horizontal')}/>
-                <div className={"side-hit bottom"} onClick={()=>clickSide('copy','horizontal')}/>
-                <div className={"side-hit left "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('copy','vertical')}/>
-                <div className={"side-hit right"} onClick={()=>clickSide('copy','vertical')}/>
+                <div className={"side-hit top "+(isChosen('copy','horizontal')?'chosen':'')+" "+(picked && shown==='horizontal'?'good':'')} onClick={()=>clickSide('copy','horizontal')}/>
+                <div className={"side-hit bottom "+(isChosen('copy','horizontal')?'chosen':'')} onClick={()=>clickSide('copy','horizontal')}/>
+                <div className={"side-hit left "+(isChosen('copy','vertical')?'chosen':'')+" "+(picked && shown==='vertical'?'good':'')} onClick={()=>clickSide('copy','vertical')}/>
+                <div className={"side-hit right "+(isChosen('copy','vertical')?'chosen':'')} onClick={()=>clickSide('copy','vertical')}/>
               </div>
             </Slot>
           </div>
 
           {picked && (
-            <div className="chips center mt-10">
+            <div className="chips center mt-10 chips-lg">
               {shapeNumChips.map(c=><Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
             </div>
           )}
@@ -211,27 +213,33 @@ export default function ScaleFactorModule() {
         {/* RIGHT: steps */}
         <div className="card right-steps">
           <div className="step-panel">
-            <div className="step-title question-lg">{STEP_HEADS[step]}</div>
+            <div className="step-title question-xl">{STEP_HEADS[step]}</div>
 
             {/* Step 1: label shapes — drag onto LEFT pane */}
             {step===0 && (
-              <div className="chips mt-10">
-                <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
-                <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
-                {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
+              <div className="section">
+                <div className="muted bigger">Drag and drop the words on the correct image.</div>
+                <div className="chips mt-10 chips-lg with-borders">
+                  <Draggable id="wO" label="Original" data={{kind:'word',label:'Original'}} />
+                  <Draggable id="wC" label="Copy" data={{kind:'word',label:'Copy'}} />
+                  {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
+                </div>
               </div>
             )}
 
             {/* Step 2: pick pair by cross-rectangle clicks */}
             {step===1 && (
-              <div className="muted">Pick one side on a rectangle, then click the corresponding side on the other rectangle.</div>
+              <div className="section">
+                <div className="muted bigger">Click one side on a rectangle, then click the matching side on the other rectangle.</div>
+                <div className="muted tip">First pick highlights in teal; both flash green when the pair is correct.</div>
+              </div>
             )}
 
             {/* Step 3: formula words only */}
             {step===2 && (
-              <>
-                <div className="muted">What is the scale factor formula?</div>
-                <div className="fraction-row mt-8">
+              <div className="section">
+                <div className="muted bigger">What is the scale factor formula?</div>
+                <div className="fraction-row mt-8 big-fraction">
                   <Slot test={testWord('Scale Factor')} onDropContent={onDropFormula('sSF','Scale Factor')}>
                     {slots.sSF || '_____'} 
                   </Slot>
@@ -250,18 +258,18 @@ export default function ScaleFactorModule() {
                     </div>
                   </div>
                 </div>
-                <div className="chips">
+                <div className="chips chips-lg with-borders">
                   {wordBank.map(w=><Draggable key={w.id} id={w.id} label={w.label} data={w} />)}
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 4: Copy → numerator */}
             {step===3 && (
-              <>
-                <div className="muted">Drag the number for the <b>Copy</b> into the numerator.</div>
+              <div className="section">
+                <div className="muted bigger">Drag the number for the <b>Copy</b> into the numerator.</div>
                 {formulaReady && (
-                  <div className="fraction-row muted mt-8">
+                  <div className="fraction-row muted mt-8 big-fraction">
                     <span>Scale Factor = </span>
                     <div className="fraction ml-6">
                       <div>{num ?? '—'}</div>
@@ -270,7 +278,7 @@ export default function ScaleFactorModule() {
                     </div>
                   </div>
                 )}
-                <div className="fraction mt-8">
+                <div className="fraction mt-8 big-fraction">
                   <div>
                     <Slot test={d=>d?.kind==='num'} onDropContent={(d)=>dropNum('num',d)}>
                       {num ?? '—'}
@@ -279,15 +287,15 @@ export default function ScaleFactorModule() {
                   <div className="frac-bar thick"></div>
                   <div>{den ?? '—'}</div>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 5: Original → denominator */}
             {step===4 && (
-              <>
-                <div className="muted">Drag the number for the <b>Original</b> into the denominator.</div>
+              <div className="section">
+                <div className="muted bigger">Drag the number for the <b>Original</b> into the denominator.</div>
                 {formulaReady && (
-                  <div className="fraction-row muted mt-8">
+                  <div className="fraction-row muted mt-8 big-fraction">
                     <span>Scale Factor = </span>
                     <div className="fraction ml-6">
                       <div>{num ?? '—'}</div>
@@ -296,7 +304,7 @@ export default function ScaleFactorModule() {
                     </div>
                   </div>
                 )}
-                <div className="fraction mt-8">
+                <div className="fraction mt-8 big-fraction">
                   <div>{num ?? '—'}</div>
                   <div className="frac-bar thick"></div>
                   <div>
@@ -305,14 +313,14 @@ export default function ScaleFactorModule() {
                     </Slot>
                   </div>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 6 */}
             {step===5 && (
-              <>
-                <div className="muted">We’ll compute and simplify if needed.</div>
-                <div className="fraction mt-8">
+              <div className="section">
+                <div className="muted bigger">We’ll compute and simplify if needed.</div>
+                <div className="fraction mt-8 big-fraction">
                   <div>{num ?? '—'}</div>
                   <div className="frac-bar thick"></div>
                   <div>{den ?? '—'}</div>
@@ -320,14 +328,14 @@ export default function ScaleFactorModule() {
                 <div className="chips mt-8">
                   <button className="button primary" onClick={doCalculate}>Calculate Scale</button>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 7 */}
             {step===6 && (
-              <>
-                <div className="muted">Drag words to build: Original × Scale Factor = Copy</div>
-                <div className="chips mt-8">
+              <div className="section">
+                <div className="muted bigger">Drag words to build: Original × Scale Factor = Copy</div>
+                <div className="chips mt-8 chips-lg with-borders">
                   <Slot className="flat" test={testWord('Original')} onDropContent={()=>done(6)}>
                     <span className="slot">Original</span>
                   </Slot>
@@ -340,7 +348,7 @@ export default function ScaleFactorModule() {
                     <span className="slot">Copy</span>
                   </Slot>
                 </div>
-                <div className="chips mt-8">
+                <div className="chips mt-8 chips-lg with-borders">
                   <Draggable id="wO2" label="Original" data={{kind:'word',label:'Original'}} />
                   <Draggable id="wSF2" label="Scale Factor" data={{kind:'word',label:'Scale Factor'}} />
                   <Draggable id="wC2" label="Copy" data={{kind:'word',label:'Copy'}} />
@@ -348,23 +356,23 @@ export default function ScaleFactorModule() {
                 <div className="toolbar mt-8">
                   <button className="button primary" onClick={()=>{ done(6); next() }}>Confirm</button>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 8 */}
             {step===7 && (
-              <>
-                <div className="muted">Click the side on the Copy that is missing (the other orientation).</div>
+              <div className="section">
+                <div className="muted bigger">Click the side on the Copy that is missing (the other orientation).</div>
                 <div className="toolbar mt-8">
                   <button className="button primary" onClick={()=>{ done(7); next() }}>I found it</button>
                 </div>
-              </>
+              </div>
             )}
 
             {/* Step 9 */}
             {step===8 && (
-              <>
-                <div className="muted">We’ll use Original × (Copy/Original) to find the Copy’s missing side.</div>
+              <div className="section">
+                <div className="muted bigger">We’ll use Original × (Copy/Original) to find the Copy’s missing side.</div>
                 <div className="toolbar mt-8">
                   <button className="button success" onClick={computeMissing}>
                     Compute Missing Side
@@ -375,7 +383,7 @@ export default function ScaleFactorModule() {
                     <span className="badge">Result: {missingResult}</span>
                   </div>
                 )}
-              </>
+              </div>
             )}
 
             {errorMsg && <div className="error big-red mt-8">{errorMsg}</div>}
