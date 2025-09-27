@@ -1,20 +1,19 @@
-// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.4.0)
-// User-approved spec deltas:
-// - Clicks active ONLY in Step 1 (corresponding sides). No other click steps.
-// - Merge numerator/denominator into ONE step: “Fill the values from the shapes” (either order may be filled first).
-// - Rectangles use Small vs Large PRESETS (portrait) to signal >1 vs <1 visually; NOT to scale with numbers.
-// - NO ghost/opacity variants on pills; pills always visible.
-// - Anti-clipping for pills via dynamic --badge-offset and symmetric container padding.
-// - Keep all previously working features: persistence, word-bank randomization, drag rules, GCD simplify.
+// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.5.0)
+// Deltas vs 3.4.x:
+// - Step 1: Clicking the number *pill* OR full-side strip selects a side.
+// - Step 4 (Calculate): Do NOT auto-advance. Animate a 3-step visual process (3s each stage).
+//   After animation completes, enable an “I understand” button to advance.
+// - Step 5: After computing result, fire confetti and blink “New Problem” button.
+// - All prior requirements preserved: clicks active only in Step 1; single values step; Small/Large presets; no ghosting; anti-clipping.
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
 import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 14
+const SNAP_VERSION = 15
 
 const STEP_HEADS = [
   'Label the rectangles',
@@ -24,6 +23,36 @@ const STEP_HEADS = [
   'Calculate & Simplify',
   'Compute missing side'
 ]
+
+/* --- lightweight confetti --- */
+function Confetti({show}){
+  const COUNT = 28
+  if(!show) return null
+  const pieces = Array.from({length:COUNT}).map((_,i)=>{
+    const left = Math.random()*100
+    const delay = Math.random()*0.2
+    const duration = 2.2 + Math.random()*0.9
+    const size = 6 + Math.floor(Math.random()*8)
+    const rot = Math.floor(Math.random()*360)
+    const colors = ['#16a34a','#06b6d4','#f59e0b','#ef4444','#8b5cf6','#0ea5e9']
+    const color = colors[i % colors.length]
+    return (
+      <div key={i}
+        className="sf-confetti-piece"
+        style={{
+          left: left+'%',
+          width: size+'px',
+          height: (size+4)+'px',
+          background: color,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+          transform: `rotate(${rot}deg)`
+        }}
+      />
+    )
+  })
+  return <div className="sf-confetti">{pieces}</div>
+}
 
 export default function ScaleFactorModule() {
   const [session, setSession] = useState(loadSession())
@@ -39,8 +68,9 @@ export default function ScaleFactorModule() {
     picked: false,
     num: null, den: null,
     slots: { sSF:null, sNUM:null, sDEN:null },
-    missingResult: null,
-    calc: null
+    calc: null,
+    calcStage: 0,       // 0: not started; 1: show ÷g; 2: show reduced; 3: finished (enable button)
+    missingResult: null
   }
 
   const persisted = (session.scaleSnap && session.scaleSnap.version===SNAP_VERSION)
@@ -60,18 +90,23 @@ export default function ScaleFactorModule() {
   const [den, setDen] = useState(persisted.den)
   const [slots, setSlots] = useState(persisted.slots)
 
+  const [calc, setCalc] = useState(persisted.calc)
+  const [calcStage, setCalcStage] = useState(persisted.calcStage || 0)
+
   const [missingResult, setMissingResult]   = useState(persisted.missingResult)
   const [openSum, setOpenSum] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [calc, setCalc] = useState(persisted.calc)
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  const timersRef = useRef([])
 
   // Persist snapshot
   useEffect(()=>{
     const snap = { version: SNAP_VERSION, problem, step, steps, labels,
-      firstPick, chosen, picked, num, den, slots, missingResult, calc }
+      firstPick, chosen, picked, num, den, slots, calc, calcStage, missingResult }
     const next = { ...session, scaleSnap: snap }
     saveSession(next); setSession(next)
-  }, [problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, missingResult, calc]) // eslint-disable-line
+  }, [problem, step, steps, labels, firstPick, chosen, picked, num, den, slots, calc, calcStage, missingResult]) // eslint-disable-line
 
   const miss  = (i)=>setSteps(s=>{const c=[...s];c[i].misses++;return c})
   const done  = (i)=>setSteps(s=>{const c=[...s];c[i].done=true;return c})
@@ -93,7 +128,6 @@ export default function ScaleFactorModule() {
 
   /* ---------- Shared badge metrics (same size) ---------- */
   const sharedBadgeMetrics = useMemo(()=>{
-    // Choose basis loosely on larger of widths/heights to make pills comfortable
     const basis = Math.max(SMALL.w, SMALL.h) * 0.5
     const font = Math.max(18, Math.min(28, Math.floor(basis/6)))
     const padV = Math.round(font*0.45)
@@ -106,7 +140,6 @@ export default function ScaleFactorModule() {
       '--badge-pad-v': `${padV}px`,
       '--badge-pad-h': `${padH}px`,
       '--badge-offset': `${offset}px`,
-      // symmetric breathing room for anti-clipping
       paddingTop: `${offset+6}px`,
       paddingLeft: `${offset+6}px`,
       paddingRight: `${offset+6}px`,
@@ -176,47 +209,56 @@ export default function ScaleFactorModule() {
     } else {
       if(d.value===correctOrig){ setDen(d.value) } else { again(3); return }
     }
-    // advance only when both are present
     setTimeout(()=>{
-      if((num ?? where==='num' ? d.value : num) != null &&
-         (den ?? where!=='num' ? d.value : den) != null){
-        done(3); next()
-      }
+      const hasNum = (where==='num' ? d.value : num) != null
+      const hasDen = (where!=='num' ? d.value : den) != null
+      if(hasNum && hasDen){ done(3); next() }
     }, 0)
   }
 
-  // Step 4: calculate & simplify
+  // Step 4: calculate & simplify (animated)
   const gcd=(x,y)=>{x=Math.abs(x);y=Math.abs(y);while(y){[x,y]=[y,x%y]}return x||1}
   const doCalculate=()=>{
     if(num==null||den==null){ again(4); return }
     const g=gcd(num,den), a=num/g, b=den/g
-    setCalc({num,den,a,b,g}); done(4); next()
+    setCalc({num,den,a,b,g}); setCalcStage(1)
+    // 3s between stages
+    timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[]
+    timersRef.current.push(setTimeout(()=>setCalcStage(2), 3000))
+    timersRef.current.push(setTimeout(()=>setCalcStage(3), 6000))
   }
 
+  useEffect(()=>{
+    return () => { timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[] }
+  }, [])
+
   const newProblem=()=>{
+    timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[]
     const p=genScaleProblem()
     setProblem(p); setStep(0); setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
     setLabels({left:null,right:null})
     setFirstPick(null); setChosen({orig:null,copy:null}); setPicked(false)
     setSlots({sSF:null,sNUM:null,sDEN:null})
-    setNum(null); setDen(null); setCalc(null)
-    setMissingResult(null)
+    setNum(null); setDen(null); setCalc(null); setCalcStage(0)
+    setMissingResult(null); setShowConfetti(false)
   }
 
-  /* ---------- Pill / Tag (no click ownership; visuals only) ---------- */
-  const Tag = ({ id, value, side }) => {
-    const cls = 'side-tag ' + side + ( (step===1 && (isChosen('orig',side) || isChosen('copy',side))) ? ' chosen' : '' )
-    // Draggability determined by current step
+  /* ---------- Pill / Tag (pills are clickable in Step 1 as well) ---------- */
+  const Tag = ({ id, value, side, orient, shapeKey }) => {
+    const cls = 'side-tag ' + side
     const draggableNow = (step >= 3) && (value !== '?' && value != null && value !== '')
+    const onClick = () => { if(step===1) clickSide(shapeKey, side, orient) }
     if (draggableNow) {
       return (
-        <span className={cls} style={{fontSize:'var(--badge-font)', padding:`var(--badge-pad-v) var(--badge-pad-h)`}}>
+        <span className={cls} onClick={onClick} style={{fontSize:'var(--badge-font)', padding:`var(--badge-pad-v) var(--badge-pad-h)`}}>
           <Draggable id={id} label={String(value)} data={{ kind: 'num', value }} />
         </span>
       )
     }
     return (
-      <span className={cls} style={{fontSize:'var(--badge-font)', padding:`var(--badge-pad-v) var(--badge-pad-h)`}}>{value}</span>
+      <span className={cls} onClick={onClick} style={{fontSize:'var(--badge-font)', padding:`var(--badge-pad-v) var(--badge-pad-h)`}}>
+        {value}
+      </span>
     )
   }
 
@@ -248,20 +290,14 @@ export default function ScaleFactorModule() {
         <div className={"shape-label-center "+(!labels[isLeft?'left':'right']?'hidden':'')}>{labels[isLeft?'left':'right'] || ''}</div>
 
         {/* Horizontal pill (top) */}
-        <Tag id={(isLeft?'o':'c')+"num_h"} value={valueFor(isLeft,'horizontal')} side="top" />
+        <Tag id={(isLeft?'o':'c')+"num_h"} value={valueFor(isLeft,'horizontal')} side="top" orient="horizontal" shapeKey={shapeKey} />
 
         {/* Vertical pill (left) */}
-        <Tag id={(isLeft?'o':'c')+"num_v"} value={valueFor(isLeft,'vertical')} side="left" />
+        <Tag id={(isLeft?'o':'c')+"num_v"} value={valueFor(isLeft,'vertical')} side="left" orient="vertical" shapeKey={shapeKey} />
 
         {/* WIDE click strips (Step 1 only) */}
-        <div
-          className={hitCls('top','horizontal')}
-          onClick={()=>{ if (step===1) clickSide(shapeKey,'top','horizontal') }}
-        />
-        <div
-          className={hitCls('left','vertical')}
-          onClick={()=>{ if (step===1) clickSide(shapeKey,'left','vertical') }}
-        />
+        <div className={hitCls('top','horizontal')} onClick={()=>{ if (step===1) clickSide(shapeKey,'top','horizontal') }} />
+        <div className={hitCls('left','vertical')} onClick={()=>{ if (step===1) clickSide(shapeKey,'left','vertical') }} />
       </div>
     )
 
@@ -276,8 +312,12 @@ export default function ScaleFactorModule() {
   }
 
   /* ---------- Render ---------- */
+  const newBtnClass = "button primary big-under" + (missingResult!=null ? " flash" : "")
+
   return (
     <div className="container">
+      <Confetti show={showConfetti} />
+
       <div className="panes equal">
         {/* LEFT: shapes */}
         <div className="card shape-area">
@@ -285,7 +325,7 @@ export default function ScaleFactorModule() {
             <RectWithLabel which="orig" />
             <RectWithLabel which="copy" />
           </div>
-          <button className="button primary big-under" onClick={newProblem}>New Problem</button>
+          <button className={newBtnClass} onClick={newProblem}>New Problem</button>
         </div>
 
         {/* RIGHT: steps */}
@@ -372,10 +412,10 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {/* Step 4: calculate & simplify */}
+            {/* Step 4: calculate & simplify (animated + confirm) */}
             {step===4 && (
               <div className="section">
-                <div className="muted bigger">Tap Calculate to simplify the scale factor.</div>
+                <div className="muted bigger">Tap Calculate, watch the simplification, then confirm.</div>
                 <div className="row mt-8" style={{alignItems:'center', flexWrap:'wrap', gap:18}}>
                   <div className="fraction ml-12">
                     <div><span className="chip">{num}</span></div>
@@ -387,21 +427,32 @@ export default function ScaleFactorModule() {
 
                   {calc && (
                     <div className="row" style={{gap:12, alignItems:'center'}}>
-                      <span>÷</span><span className="chip">{calc.g}</span>
-                      <span style={{margin:'0 8px'}}>=</span>
-                      <div className="fraction">
+                      {/* Stage 1: show ÷ g */}
+                      <div className={"row " + (calcStage>=1 ? "sf-fade" : "sf-hidden")} style={{gap:6}} aria-hidden={calcStage<1}>
+                        <span>÷</span><span className="chip">{calc.g}</span>
+                        <span style={{margin:'0 8px'}}/>
+                        <span>÷</span><span className="chip">{calc.g}</span>
+                      </div>
+
+                      {/* Stage 2: equals simplified fraction */}
+                      <span className={(calcStage>=2 ? "sf-fade" : "sf-hidden")} aria-hidden={calcStage<2}>=</span>
+                      <div className={"fraction " + (calcStage>=2 ? "sf-fade" : "sf-hidden")} aria-hidden={calcStage<2}>
                         <div><span className="chip">{calc.a}</span></div>
                         <div className="frac-bar"></div>
                         <div><span className="chip">{calc.b}</span></div>
                       </div>
-                      <button className="button primary" onClick={()=>next()}>Next</button>
+
+                      {/* Confirm button becomes active at Stage 3 */}
+                      <button className="button primary" disabled={calcStage<3} onClick={()=>{ done(4); next(); }}>
+                        I understand
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Step 5: compute missing side (no clicks needed) */}
+            {/* Step 5: compute missing side */}
             {step===5 && (
               <div className="section">
                 <div className="muted bigger">Use Original × (Scale Factor) to find the Copy’s missing side.</div>
@@ -410,7 +461,10 @@ export default function ScaleFactorModule() {
                     const sf = (calc ? (calc.a/ calc.b) : (num/den))
                     const origSide = origVals[missingPair]
                     const result = Math.round((origSide * sf + Number.EPSILON) * 10) / 10
-                    setMissingResult(result); done(5)
+                    setMissingResult(result); 
+                    // celebratory effects
+                    setShowConfetti(true); setTimeout(()=>setShowConfetti(false), 2200)
+                    done(5)
                   }}>
                     Compute Missing Side
                   </button>
