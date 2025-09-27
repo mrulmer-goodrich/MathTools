@@ -1,14 +1,23 @@
-/* styles.css — drop-in reset + UI for UG Math Tools (compatible with original class names) */
+/* styles.css — drop-in reset + UI for UG Math Tools (v3.0.1) */
 
-/* Brand colors */
+/* -------- Brand color tokens (FINAL) -------- */
 :root{
-  --eastway-blue: #0f2a43;   /* dark blue */
-  --eastway-green:#0f3f2a;   /* dark green */
-  --cms-light:    #93c5fd;   /* light blue accent */
-  --text:         #0b1220;
-  --muted:        #5b6779;
-  --card:         #ffffff;
-  --card-border:  #e5e7eb;
+  --eastway-blue: #0B4B8C;    /* header, primary actions */
+  --eastway-green:#0C6B4D;    /* success/accents */
+  --cms-light:    #DAE9F6;    /* info accents, chip fills */
+
+  --ink:          #0F172A;
+  --ink-2:        #334155;
+  --ink-3:        #64748B;
+  --border:       #CBD5E1;
+  --border-2:     #E2E8F0;
+  --bg-subtle:    #F1F5F9;
+  --card:         #FFFFFF;
+
+  /* traffic light */
+  --t-green:  #10B981;
+  --t-yellow: #F59E0B;
+  --t-red:    #EF4444;
 }
 
 *{ box-sizing: border-box; }
@@ -17,7 +26,7 @@ html, body, #root{ height:100%; }
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  color: var(--text);
+  color: var(--ink);
   background: #f7fafc;
 }
 
@@ -56,29 +65,27 @@ body{
   transform: translateY(-1px);
   box-shadow: 0 14px 26px rgba(15,42,67,.15);
 }
-
-/* If BigButton component renders a <div> or <a>, ensure class name still styles it */
 .BigButton, .bigBtn, .big-button{ display:inline-flex; align-items:center; justify-content:center; }
 
 /* ---------- Cards & Panes ---------- */
 .panes{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; }
 .card{
   background: var(--card);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--border-2);
   border-radius: 14px;
   padding: 16px;
   box-shadow: 0 2px 10px rgba(0,0,0,.04);
 }
 
-/* ---------- General Buttons used inside modules ---------- */
-.button{ border-radius:12px; padding:10px 14px; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-weight:700; }
+/* ---------- General Buttons ---------- */
+.button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
 .button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
-.button.success{ background:#10b981; color:white; border-color:#0ea371; }
+.button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
 .button.big-under{ margin-top:12px; }
 .floating-summary{ position:fixed; right:16px; bottom:16px; }
 
 /* ---------- Text helpers ---------- */
-.muted{ color: var(--muted); }
+.muted{ color: var(--ink-3); }
 .mt-8{ margin-top:8px; } .mt-10{ margin-top:10px; } .ml-6{ margin-left:6px; } .ml-12{ margin-left:12px; }
 .center{ justify-content:center; display:flex; }
 .chips{ display:flex; flex-wrap:wrap; gap:10px; }
@@ -100,41 +107,74 @@ body{
 .hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #111827; }
 .hcell{ position:relative; display:flex; align-items:center; justify-content:center; border-right:2px solid #111827; }
 .hcell:nth-child(3n){ border-right:none; }
-.vline{ box-shadow: inset 6px 0 0 0 #111827; }     /* thick verticals */
-.rowline{ box-shadow: inset 0 6px 0 0 #111827; }    /* thick horizontal between rows */
+.vline{ box-shadow: inset 6px 0 0 0 #111827; }
+.rowline{ box-shadow: inset 0 6px 0 0 #111827; }
 .filled{ border:none !important; }
-.red-oval{ outline:3px solid #ef4444; padding:4px 6px; border-radius:999px; }
+.red-oval{ outline:3px solid var(--t-red); padding:4px 6px; border-radius:999px; }
 
 /* ---------- Scale Factor visuals ---------- */
 .shape-area{ position:relative; }
 .rects{ display:flex; gap:20px; align-items:flex-start; justify-content:center; margin-bottom:12px; }
 .rect{ position:relative; background:#fff; border:2px solid #111827; border-radius:10px; }
 .rect.copy{ background:#f3f7fb; }
-.shape-label{ position:absolute; top:6px; left:6px; font-weight:800; background:#fff; padding:2px 8px; border-radius:8px; border:1px solid #e5e7eb; }
+.shape-label{ position:absolute; top:6px; left:6px; font-weight:800; background:#fff; padding:2px 8px; border-radius:8px; border:1px solid var(--border-2); }
 .shape-label.hidden{ visibility:hidden; }
-.side-tag{ position:absolute; font-weight:800; background:#fff; padding:2px 8px; border-radius:8px; border:1px solid #e5e7eb; }
-.side-tag.top{ top:-12px; left:50%; transform:translateX(-50%); }
-.side-tag.bottom{ bottom:-12px; left:50%; transform:translateX(-50%); }
-.side-tag.left{ left:-12px; top:50%; transform:translateY(-50%); }
-.side-tag.right{ right:-12px; top:50%; transform:translateY(-50%); }
-.side-hit{ position:absolute; }
-.side-hit.top{ top:0; left:0; right:0; height:12px; cursor:pointer; }
-.side-hit.bottom{ bottom:0; left:0; right:0; height:12px; cursor:pointer; }
-.side-hit.left{ top:0; bottom:0; left:0; width:12px; cursor:pointer; }
-.side-hit.right{ top:0; bottom:0; right:0; width:12px; cursor:pointer; }
-.side-hit.good{ background:rgba(16,185,129,.15); }
 
-/* ---------- Misc ---------- */
+.rect-slot{ display:flex; align-items:center; justify-content:center; }
+
+/* Centered big label inside rectangle */
+.shape-label-center{
+  position:absolute;
+  top:50%; left:50%;
+  transform: translate(-50%, -50%);
+  font-weight: 900;
+  color: #b91c1c;
+  font-size: clamp(22px, 3.8vw, 36px);
+  text-transform: none;
+  background: transparent;
+}
+
+/* Side number tags — shared pill style; placement per side */
+.side-tag{ position:absolute; font-weight:900; background:#fff; border-radius:999px; border:2px solid var(--border); box-shadow: 0 2px 0 rgba(0,0,0,.06); z-index:40; user-select:none; }
+.side-tag.top{    top:-24px;    left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.left{   left:-24px;   top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.right{  right:-24px;  top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+
+/* Click targets around sides (wide, under tags) */
+.rect .side-hit{
+  position:absolute;
+  background: transparent;
+  z-index: 20; /* below tags */
+}
+.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+
+/* First pick is GREEN immediately (spec) */
+.rect .side-hit.chosen{ background: rgba(16,185,129,.18); } /* same hue as good */
+.rect .side-hit.good{   background: rgba(16,185,129,.18); }
+
+/* Ghost (perpendicular original) */
+.side-tag.ghost{
+  position:absolute;
+  opacity:.25;
+  background:#fff;
+  border:2px dashed var(--border);
+  border-radius:999px;
+  padding:4px 8px;
+  font-weight:700;
+}
+
+/* ---------- Fractions, chips, etc. ---------- */
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
 
-
-/* --- Landing page refinements --- */
 .landing-header{ text-align:center; }
 .landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
 .landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
 
 .home-buttons > *{
-  /* Make Scale Factor / H‑Table buttons bigger */
   font-size: 22px !important;
   padding: 20px 28px !important;
   border-radius: 16px !important;
@@ -143,89 +183,21 @@ body{
   text-align:center;
 }
 
-/* --- Scale Factor label centering + thick divisor line --- */
-.rect-slot{ display:flex; align-items:center; justify-content:center; }
-.shape-label-center{
-  position:absolute;
-  top:50%; left:50%;
-  transform: translate(-50%, -50%);
-  font-weight: 900;
-  color: #b91c1c;           /* red */
-  font-size: clamp(20px, 3.6vw, 34px);
-  text-transform: none;
-  background: transparent;
-}
-.question-lg{ font-size: 1.2rem; font-weight: 900; }
-
-.fraction.thick .frac-bar,
-.frac-bar.thick{ height: 3px; }
-
-/* --- Fraction layout fixes (ensures inline look) --- */
+/* Fraction layout */
 .fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.fraction{ display:grid; grid-template-rows: auto auto; grid-auto-flow: row; align-items:center; justify-items:center; min-width: 140px; }
+.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 140px; }
 .fraction > div:first-child{ grid-row:1; }
-.fraction > .frac-bar{ grid-row:2; width:100%; height:2px; background:#111827; border-radius:2px; }
+.fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
 .fraction > div:last-child{ grid-row:3; }
-.frac-bar.thick{ height:3px; }
-.slot{ display:inline-flex; min-width:60px; justify-content:center; border:1px dashed #cbd5e1; border-radius:8px; padding:4px 8px; }
+.slot{ display:inline-flex; min-width:60px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:4px 8px; }
 
-/* ---- Right pane sizing, chips borders, and pick indicators ---- */
-.right-steps .step-title.question-xl{ font-size: 1.35rem; line-height:1.2; }
-.right-steps .muted.bigger{ font-size:1.05rem; }
-.section{ margin-bottom: 18px; }
-
-/* make fraction bigger when needed */
-.big-fraction{ font-size: 1.1rem; }
-.big-fraction .slot{ min-width: 80px; padding: 6px 10px; }
-
-/* chips look like draggable pills */
-.chips-lg{ gap:12px; }
-.chips.with-borders > *{
-  border: 2px solid #cbd5e1 !important;
-  background: #fff !important;
-  border-radius: 12px !important;
-  padding: 8px 12px !important;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.04);
-}
-.chips.with-borders > *:active{ cursor: grabbing; }
-
-/* side-pick indicator for first selection */
-.side-hit.chosen{ background: rgba(34,197,94,.18); }  /* teal-ish highlight */
-.side-hit.good{ background: rgba(16,185,129,.18); }  /* already present */
-
-/* ensure label is big/red/centered */
-.shape-label-center{
-  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  font-weight: 900; color:#b91c1c; font-size: clamp(22px, 3.8vw, 36px);
-}
-
-/* ---- Bigger formula, tidy sections, draggable numbers on shapes ---- */
-.section{ margin-bottom: 20px; }
-.right-steps .step-title.question-xl{ font-size: 1.4rem; }
+.right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
 .right-steps .muted.bigger{ font-size: 1.08rem; }
+.section{ margin-bottom: 20px; }
 
-/* Inline row for words-formula on left and numbers on right */
-.row.formula-row{ display:flex; align-items:center; flex-wrap:wrap; }
-.big-fraction{ font-size: 1.22rem; }
-.big-fraction .slot{ min-width: 88px; padding: 8px 12px; }
-
-/* Draggable side tags should keep the pill look */
-.side-tag{ position:absolute; font-weight:800; background:#fff; padding:2px 8px; border-radius:999px; border:1px solid #e5e7eb; }
-.side-tag.top{ top:-12px; left:50%; transform:translateX(-50%); }
-.side-tag.bottom{ bottom:-12px; left:50%; transform:translateX(-50%); }
-.side-tag.left{ left:-12px; top:50%; transform:translateY(-50%); }
-.side-tag.right{ right:-12px; top:50%; transform:translateY(-50%); }
-
-/* First clicked edge highlight */
-.side-hit.chosen{ background: rgba(34,197,94,.18); }
-.side-hit.good{ background: rgba(16,185,129,.18); }
-
-/* Chip style improvements retained */
+/* Chips with borders */
 .chips.with-borders > *{
-  border: 2px solid #cbd5e1 !important;
+  border: 2px solid var(--border) !important;
   background: #fff !important;
   border-radius: 12px !important;
   padding: 8px 12px !important;
@@ -235,92 +207,3 @@ body{
   box-shadow: 0 2px 0 rgba(0,0,0,.04);
 }
 .chips.with-borders > *:active{ cursor: grabbing; }
-/* Center-of-side, larger, draggable number tags */
-.side-tag.big{
-  position:absolute;
-  font-weight:900;
-  font-size: clamp(16px, 1.6vw, 22px);
-  background:#fff;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 2px solid #cbd5e1;
-  box-shadow: 0 2px 0 rgba(0,0,0,.04);
-}
-.side-tag.big.top{
-  top: -22px;                /* slightly outside the rectangle */
-  left: 50%;
-  transform: translateX(-50%);
-}
-.side-tag.big.left{
-  left: -22px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.side-tag.big.bottom{
-  bottom: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.side-tag.big.right{
-  right: -22px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* WIDE CLICK TARGETS for side picks, keep under number tags */
-.rect .side-hit{
-  position:absolute;
-  background: transparent;
-  z-index: 20;               /* below side tags (z 40), above rect so clicks register */
-}
-.rect .side-hit.top{
-  top:-10px; left:0; right:0; height:34px;    /* wide horizontal strip */
-}
-.rect .side-hit.bottom{
-  bottom:-10px; left:0; right:0; height:34px;
-}
-.rect .side-hit.left{
-  left:-10px; top:0; bottom:0; width:34px;    /* wide vertical strip */
-}
-.rect .side-hit.right{
-  right:-10px; top:0; bottom:0; width:34px;
-}
-
-/* Bigger, centered number badges */
-.side-tag.big{
-  position:absolute;
-  font-weight:900;
-  font-size: clamp(18px, 1.8vw, 26px);
-  background:#fff;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 2px solid #cbd5e1;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-  z-index:40;
-  user-select:none;
-}
-.side-tag.big.top{ top:-24px; left:50%; transform:translateX(-50%); }
-.side-tag.big.left{ left:-24px; top:50%; transform:translateY(-50%); }
-.side-tag.big.bottom{ bottom:-24px; left:50%; transform:translateX(-50%); }
-.side-tag.big.right{ right:-24px; top:50%; transform:translateY(-50%); }
-
-/* Make Slot used for rectangles auto-size to contents */
-.rect-slot.auto { display:inline-block; width:auto; height:auto; }
-
-/* Stronger visual feedback */
-.rect .side-hit.chosen{ background: rgba(59,130,246,.12); } /* teal-ish */
-.rect .side-hit.good{ background: rgba(16,185,129,.18); }   /* green after correct pair */
-
-/* Ghost tag for perpendicular original number (reference only) */
-.side-tag.ghost{
-  position:absolute;
-  opacity:.25;
-  background:#fff;
-  border:2px dashed #cbd5e1;
-  border-radius:999px;
-  padding:4px 8px;
-  font-weight:700;
-}
-.side-tag.ghost.top{ top:-20px; left:50%; transform:translateX(-50%); }
-.side-tag.ghost.left{ left:-20px; top:50%; transform:translateY(-50%); }
-
