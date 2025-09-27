@@ -1,10 +1,10 @@
-/* styles.css — UG Math Tools (v3.4.0) */
-/* Deltas vs 3.3.x:
-   - Symmetric padding on .rects from JS via style to prevent pill clipping in all directions
-   - Dynamic --badge-offset drives all pill edge positions (no -24px constants)
-   - Wide side-hit overlays used only in Step 1 (per user choice)
-   - No ghost styling anywhere
+/* styles.css — UG Math Tools (v3.3.0 FULL) */
+/* Key deltas vs 3.0.6:
+   - Dynamic pill offset via --badge-offset; removes hardcoded -24px so pills never clip
+   - Wide side-hit overlays used as click targets; green tint for chosen/good states
+   - Slight padding added around shapes container to ensure pills never cut off
 */
+
 :root{
   --eastway-blue: #0B4B8C;
   --eastway-green:#0C6B4D;
@@ -58,16 +58,38 @@ body{
 .center{ justify-content:center; display:flex; }
 .chips{ display:flex; flex-wrap:wrap; gap:10px; }
 
+/* ---------- H-Table (unchanged) ---------- */
+.hwrap{ margin-top:12px; }
+.hgrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto repeat(2, 72px);
+  gap:0;
+  border:2px solid #111827;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+}
+.hhead, .hcell{ padding:10px; }
+.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #111827; }
+.hcell{ position:relative; display:flex; align-items:center; justify-content:center; border-right:2px solid #111827; }
+.hcell:nth-child(3n){ border-right:none; }
+.vline{ box-shadow: inset 6px 0 0 0 #111827; }
+.rowline{ box-shadow: inset 0 6px 0 0 #111827; }
+.filled{ border:none !important; }
+.red-oval{ outline:3px solid var(--t-red); padding:4px 6px; border-radius:999px; }
+
 /* ---------- Scale Factor visuals ---------- */
 .shape-area{ position:relative; }
 .rects{
   display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
+  /* breathing room is added inline via style from sharedBadgeMetrics (paddingTop/Left) */
   max-width: 100%;
   overflow: visible; /* ensure pills never clip */
 }
 .rect{
   position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px;
-  overflow: visible;
+  overflow: visible; /* safety */
 }
 .rect.copy{ background:#F5FAFF; }
 
@@ -76,24 +98,34 @@ body{
   font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
 }
 
-/* Side number tags — dynamic offset (no hard-coded -24) */
+/* Side number tags — use dynamic offset */
 .side-tag{
   position:absolute; font-weight:900; background:#fff; border-radius:999px;
   border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
 }
-.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); }
+.side-tag.top{    top: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); }
 .side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); }
-.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
-.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
+.side-tag.left{   left: calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
+.side-tag.right{  right: calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%); }
 
-/* Wide click targets (Step 1 only) */
+/* Wide click targets (under tags) */
 .rect .side-hit{
-  position:absolute; background: transparent; z-index: 20;
+  position:absolute; background: transparent; z-index: 20; /* below pills so pills remain draggable later */
 }
 .rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.bottom{ bottom:-10px; left:0; right:0; height:34px; cursor:pointer; }
 .rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.right{  right:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+
+/* First pick is GREEN immediately (full-side tint) */
 .rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
 .rect .side-hit.good{   background: rgba(16,185,129,.18); }
+
+/* Ghost for non-shown orientation during Step 1 */
+.side-tag.ghost{
+  opacity:.35; background:#fff; border:2px dashed var(--border);
+  z-index: 5; pointer-events: none;
+}
 
 /* ---------- Fractions, chips, etc. ---------- */
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
