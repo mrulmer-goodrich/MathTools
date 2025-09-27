@@ -153,13 +153,19 @@ export default function ScaleFactorModule() {
   const isGood  =(s,e)=> step>=2 && picked && ((s==='orig' && chosen.orig===e) || (s==='copy' && chosen.copy===e))
 
   /* ---------- Step 3 (words) ---------- */
-  const onDropFormula = (slotKey, want) => d => {
-    if (!testWord(want)(d)) { again(2); return }
-    const after = { ...slots, [slotKey]: want }
-    setSlots(after)
-    const ok = after.sSF==='Scale Factor' && after.sNUM==='Copy' && after.sDEN==='Original'
-    if(ok){ done(2); next() }
-  }
+// stores the FULL draggable object (id,label,kind), not just a string
+const onDropFormula = (slotKey, want) => (d) => {
+  if (!testWord(want)(d)) { again(2); return }
+  setSlots(prev => {
+    const nextSlots = { ...prev, [slotKey]: d }
+    const ok =
+      nextSlots.sSF?.label === 'Scale Factor' &&
+      nextSlots.sNUM?.label === 'Copy' &&
+      nextSlots.sDEN?.label === 'Original'
+    if (ok) { done(2); next() }
+    return nextSlots
+  })
+}
 
   /* ---------- Step 4/5 numbers ---------- */
   const dropNum = (where,d)=>{
