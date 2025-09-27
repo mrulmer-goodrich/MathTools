@@ -1,4 +1,4 @@
-// src/modules/scale/ScaleFactor.jsx (hotfix)
+// src/modules/scale/ScaleFactor.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -6,7 +6,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 5
+const SNAP_VERSION = 6
 
 const STEP_HEADS = [
   'Which rectangle is the Original? Which is the Copy?',
@@ -103,13 +103,11 @@ export default function ScaleFactorModule() {
 
   const clickSide = (shape, edge, orient)=>{
     if(!labels.left || !labels.right){ tryAgain(1); return }
-    // Only allow edges that belong to the 'shown' orientation to even register
     if(orient !== shown){ tryAgain(1); return }
     if(!firstPick){
       setFirstPick({shape, edge, orient})
       return
     }
-    // second pick: must be other shape, same orientation
     if(firstPick.shape !== shape && firstPick.orient === orient){
       const pair = { orig: (shape==='orig'? firstPick.edge : edge), copy: (shape==='copy'? firstPick.edge : edge) }
       setChosen(pair); setPicked(true); setFirstPick(null); done(1); next()
@@ -159,8 +157,18 @@ export default function ScaleFactorModule() {
     setMissingResult(null)
   }
 
+  // helpers
   const isChosen = (s,e)=> firstPick && firstPick.shape===s && firstPick.edge===e
   const isGood   = (s,e)=> picked && ((s==='orig' && chosen.orig===e) || (s==='copy' && chosen.copy===e))
+
+  // render helpers for side tags: center on side, large, only draggable when step >= 3
+  const Tag = ({id, value, side}) => {
+    const cls = 'side-tag big ' + side
+    if (step >= 3) {
+      return <Draggable id={id} label={String(value)} data={{kind:'num',value}} className={cls} style={{zIndex:30}} />
+    }
+    return <span className={cls} style={{zIndex:10}}>{value}</span>
+  }
 
   return (
     <div className="container">
@@ -168,12 +176,12 @@ export default function ScaleFactorModule() {
         {/* LEFT: shapes */}
         <div className="card shape-area">
           <div className="rects">
-            {/* Original: show number only for the SHOWN orientation */}
+            {/* Original */}
             <Slot className="rect-slot" test={testWord('Original')} onDropContent={dropLabelOnRect('left')}>
               <div className="rect" style={rectStyle(ow,oh)}>
                 <div className={"shape-label-center "+(!labels.left?'hidden':'')}>{labels.left || ''}</div>
-                {shown==='horizontal' && (<Draggable id="onum_h" label={String(ow)} data={{kind:'num', value: ow}} className="side-tag top" />)}
-                {shown==='vertical' && (<Draggable id="onum_v" label={String(oh)} data={{kind:'num', value: oh}} className="side-tag left" />)}
+                {shown==='horizontal' && (<Tag id="onum_h" value={ow} side="top" />)}
+                {shown==='vertical' && (<Tag id="onum_v" value={oh} side="left" />)}
                 <div className={"side-hit top "+(isChosen('orig','top')?'chosen':'')+" "+(isGood('orig','top')?'good':'')} onClick={()=>clickSide('orig','top','horizontal')}/>
                 <div className={"side-hit bottom "+(isChosen('orig','bottom')?'chosen':'')+" "+(isGood('orig','bottom')?'good':'')} onClick={()=>clickSide('orig','bottom','horizontal')}/>
                 <div className={"side-hit left "+(isChosen('orig','left')?'chosen':'')+" "+(isGood('orig','left')?'good':'')} onClick={()=>clickSide('orig','left','vertical')}/>
@@ -181,12 +189,12 @@ export default function ScaleFactorModule() {
               </div>
             </Slot>
 
-            {/* Copy: only the shown orientation number */}
+            {/* Copy */}
             <Slot className="rect-slot" test={testWord('Copy')} onDropContent={dropLabelOnRect('right')}>
               <div className="rect copy" style={rectStyle(cw,ch)}>
                 <div className={"shape-label-center "+(!labels.right?'hidden':'')}>{labels.right || ''}</div>
-                {shown==='horizontal' && (<Draggable id="cnum_h" label={String(cw)} data={{kind:'num', value: cw}} className="side-tag top" />)}
-                {shown==='vertical' && (<Draggable id="cnum_v" label={String(ch)} data={{kind:'num', value: ch}} className="side-tag left" />)}
+                {shown==='horizontal' && (<Tag id="cnum_h" value={cw} side="top" />)}
+                {shown==='vertical' && (<Tag id="cnum_v" value={ch} side="left" />)}
                 <div className={"side-hit top "+(isChosen('copy','top')?'chosen':'')+" "+(isGood('copy','top')?'good':'')} onClick={()=>clickSide('copy','top','horizontal')}/>
                 <div className={"side-hit bottom "+(isChosen('copy','bottom')?'chosen':'')+" "+(isGood('copy','bottom')?'good':'')} onClick={()=>clickSide('copy','bottom','horizontal')}/>
                 <div className={"side-hit left "+(isChosen('copy','left')?'chosen':'')+" "+(isGood('copy','left')?'good':'')} onClick={()=>clickSide('copy','left','vertical')}/>
@@ -335,7 +343,6 @@ export default function ScaleFactorModule() {
               </div>
             )}
 
-            {/* Steps 6–8 unchanged (same as previous version) */}
             {step===6 && (
               <div className="section">
                 <div className="muted bigger">Drag words to build: Original × Scale Factor = Copy</div>
