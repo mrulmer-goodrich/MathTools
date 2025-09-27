@@ -1,7 +1,8 @@
-/* styles.css — UG Math Tools (v3.5.0 SAFE)
+/* styles.css — UG Math Tools (v3.6.0 SAFE)
    - Preserves landing/header styles.
-   - Adds scoped fade-in helpers and confetti for the Scale Factor module.
+   - Adds scoped fade-in helpers and continuous confetti.
    - Keeps dynamic --badge-offset + wide side-hit overlays (Step 1 only).
+   - Adds button flash for "Compute".
 */
 
 /* -------- Brand color tokens -------- */
@@ -18,7 +19,6 @@
   --bg-subtle:    #F1F5F9;
   --card:         #FFFFFF;
 
-  /* traffic light */
   --t-green:  #10B981;
   --t-yellow: #F59E0B;
   --t-red:    #EF4444;
@@ -49,7 +49,7 @@ body{
 
 .row{ display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap: wrap; }
 
-/* ---------- Big Buttons (landing/home) ---------- */
+/* ---------- Big Buttons ---------- */
 .big-button,
 .row > button,
 .row > .button{
@@ -82,7 +82,7 @@ body{
   min-width: 0;
 }
 
-/* ---------- General Buttons ---------- */
+/* ---------- Buttons ---------- */
 .button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
 .button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
 .button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
@@ -96,7 +96,124 @@ body{
 .chips{ display:flex; flex-wrap:wrap; gap:10px; }
 .chips.center{ justify-content:center; }
 
-/* ---------- H-Table visuals ---------- */
+/* ---------- Scale Factor visuals ---------- */
+.shape-area{ position:relative; }
+.rects{
+  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
+  max-width: 100%;
+  overflow: visible; /* ensure pills never clip */
+}
+.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
+.rect.copy{ background:#F5FAFF; }
+
+.shape-label-center{
+  position:absolute; top:50%; left:50%; transform: translate(-50%, -50%);
+  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
+}
+
+/* Side number tags — dynamic offset */
+.side-tag{
+  position:absolute; font-weight:900; background:#fff; border-radius:999px;
+  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
+}
+.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+
+/* Wide click targets (Step 1 only) */
+.rect .side-hit{ position:absolute; background: transparent; z-index: 20; }
+.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
+.rect .side-hit.good{   background: rgba(16,185,129,.18); }
+
+/* ---------- Fractions, chips, etc. ---------- */
+.error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
+.fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 120px; }
+.fraction > div:first-child{ grid-row:1; }
+.fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
+.fraction > div:last-child{ grid-row:3; }
+.slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
+
+.right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
+.right-steps .muted.bigger{ font-size: 1.08rem; }
+.section{ margin-bottom: 20px; }
+
+/* Chips with borders */
+.chips.with-borders > *{
+  border: 2px solid var(--border) !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+.chips.with-borders > *:active{ cursor: grabbing; }
+
+.chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 12px; border: 2px solid var(--border); border-radius: 12px;
+  background: #fff; font-weight: 800; cursor: grab; user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06); line-height: 1;
+}
+.chip:active { cursor: grabbing; }
+
+.slot .chip { border-color: #333; border-radius: 12px; background: #fff; font-weight: 800; }
+
+/* Misc */
+.fraction-row.nowrap { flex-wrap:nowrap; }
+.big-fraction .frac-bar { height: 3px; }
+.result-big{ font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
+  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px; }
+
+@media (max-width: 980px){
+  .panes{ grid-template-columns: 1fr; }
+}
+
+/* Flashing buttons */
+.flash { animation: sfFlashBtn 1s infinite; }
+@keyframes sfFlashBtn {
+  0%,100%{ filter:none; transform:none; }
+  50%{ filter: drop-shadow(0 0 6px rgba(245,158,11,.55)); transform: translateY(-1px); }
+}
+
+/* --- scoped fade-in helpers for staged calc --- */
+.sf-hidden{ opacity:0; pointer-events:none; }
+.sf-fade{ animation: sfFadeIn .6s ease-out both; }
+@keyframes sfFadeIn{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform:none; } }
+
+/* --- continuous confetti --- */
+.sf-confetti{ position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
+.sf-confetti-piece{
+  position:absolute; top:-10vh; border-radius:2px; opacity:.95;
+  animation-name: sfConfettiFall; animation-timing-function: linear; animation-fill-mode: forwards;
+}
+@keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
+
+
+
+/* ---- Restored utility & landing styles from v3.5.0 ---- */
+
+/* Landing header text helpers */
+.landing-header{ text-align:center; }
+.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
+.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
+
+/* Home buttons grid */
+.home-buttons > *{
+  font-size: 22px !important;
+  padding: 20px 28px !important;
+  border-radius: 16px !important;
+  min-width: 240px;
+  justify-content:center;
+  text-align:center;
+}
+
+/* H-Table visuals */
 .hwrap{ margin-top:12px; }
 .hgrid{
   display:grid;
@@ -117,180 +234,17 @@ body{
 .filled{ border:none !important; }
 .red-oval{ outline:3px solid var(--t-red); padding:4px 6px; border-radius:999px; }
 
-/* ---------- Scale Factor visuals ---------- */
-.shape-area{ position:relative; }
-.rects{
-  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
-  max-width: 100%;
-  overflow: visible; /* ensure pills never clip */
-}
-.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
-.rect.copy{ background:#F5FAFF; } /* contrast from white */
-
-.shape-label-center{
-  position:absolute;
-  top:50%; left:50%;
-  transform: translate(-50%, -50%);
-  font-weight: 900;
-  color: #b91c1c;
-  font-size: clamp(22px, 3.8vw, 36px);
-}
-
-/* Side number tags — dynamic offset */
-.side-tag{
-  position:absolute; font-weight:900; background:#fff; border-radius:999px;
-  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
-}
-.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-
-/* Wide click targets (Step 1 only) */
-.rect .side-hit{
-  position:absolute; background: transparent; z-index: 20;
-}
-.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
-.rect .side-hit.good{   background: rgba(16,185,129,.18); }
-
-/* ---------- Fractions, chips, etc. ---------- */
-.error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
-
-.landing-header{ text-align:center; }
-.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
-.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
-
-.home-buttons > *{
-  font-size: 22px !important;
-  padding: 20px 28px !important;
-  border-radius: 16px !important;
-  min-width: 240px;
-  justify-content:center;
-  text-align:center;
-}
-
-/* Fraction layout */
-.fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 140px; }
-.fraction > div:first-child{ grid-row:1; }
-.fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
-.fraction > div:last-child{ grid-row:3; }
-.slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
-
-.right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
-.right-steps .muted.bigger{ font-size: 1.08rem; }
-.section{ margin-bottom: 20px; }
-
-/* Chips with borders (consistent) */
-.chips.with-borders > *{
-  border: 2px solid var(--border) !important;
-  background: #fff !important;
-  border-radius: 12px !important;
-  padding: 8px 12px !important;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-}
-.chips.with-borders > *:active{ cursor: grabbing; }
-
-/* Base chip pill style (applies everywhere, including inside slots) */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-  line-height: 1;
-}
-.chip:active { cursor: grabbing; }
-
-/* When a chip is rendered *inside a Slot*, keep the same pill look but with stronger contrast */
-.slot .chip {
-  border-color: #333;
-  border-radius: 12px;   /* ensure rounded in slots too */
-  background: #fff;
-  font-weight: 800;
-}
-
-/* keep formula rows on one line */
-.fraction-row.nowrap { flex-wrap: nowrap; }
-
-/* optional: larger, friendlier fraction when needed */
-.big-fraction .frac-bar { height: 3px; }
-
-/* success badge (uses your existing badge styles if present) */
+/* Utilities kept for other modules */
 .badge { 
   display:inline-flex; align-items:center; 
   padding:6px 10px; border-radius:10px; 
   background:#F1F5F9; font-weight:800; 
   border:1px solid var(--border-2);
 }
+.calc-inline { font-size:1.2rem; font-weight:800; }
 
-/* --- additions for v3.0.3 --- */
-.fraction-row.no-wrap{ flex-wrap: nowrap; }
-
-/* === v3.0.5 UI tune-ups === */
-.rects{ gap: 32px; }
-
-/* keep dropped numbers styled like chips */
-.slot .chip { font-weight: 800; border-width: 2px; }
-
-/* concept check slot */
+/* Slots */
 .slot.wide{ min-width: 260px; }
 
-/* large result badge */
-.result-big{
-  font-weight: 900;
-  font-size: 1.35rem;
-  background: #fff4d6;
-  border: 2px solid #f2c14e;
-  border-radius: 12px;
-  padding: 10px 14px;
-}
-
-/* make panes breathe a bit more on narrow widths */
-@media (max-width: 980px){
-  .panes{ grid-template-columns: 1fr; }
-}
-
-/* ---- v3.0.6 patch ---- */
-.fraction-row.nowrap { flex-wrap:nowrap; }
-.big-fraction { font-size:1.3rem; }
-.calc-inline { font-size:1.2rem; font-weight:800; }
-.result-big { font-size:1.6rem; font-weight:900; color:var(--eastway-green); }
-
-/* Make both panes truly flexible; allow shrinking */
-.panes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.card { min-width: 0; }
-
-/* Let the left shapes area shrink instead of forcing the grid wider */
-.shape-area .rects { max-width: 100%; }
-
-/* Flashing new problem button */
-.flash { animation: sfFlashBtn 1s infinite; }
-@keyframes sfFlashBtn {
-  0%,100%{ background:var(--cms-light); }
-  50%{ background:var(--t-yellow); }
-}
-
-/* --- scoped fade-in helpers for Step 4 --- */
-.sf-hidden{ opacity:0; pointer-events:none; }
-.sf-fade{ animation: sfFadeIn .6s ease-out both; }
-@keyframes sfFadeIn{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform:none; } }
-
-/* --- simple confetti --- */
-.sf-confetti{ position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
-.sf-confetti-piece{
-  position:absolute; top:-10vh; border-radius:2px; opacity:.95;
-  animation-name: sfConfettiFall; animation-timing-function: linear; animation-fill-mode: forwards;
-}
-@keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
+/* Alias maintained: some older code used 'no-wrap' */
+.fraction-row.no-wrap{ flex-wrap: nowrap; }
