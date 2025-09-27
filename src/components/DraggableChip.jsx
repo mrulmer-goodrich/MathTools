@@ -1,44 +1,42 @@
 // src/components/DraggableChip.jsx
 import React from 'react'
 
-/**
- * Draggable chip/pill.
- * NOTE: This version forwards `className` and `style` so components like
- * ScaleFactor can render absolute-positioned number pills by passing
- * `className="side-tag top"` etc. Without this, pills lose their size/position.
- */
 export default function Draggable({
   id,
   label,
   data,
   inline = false,
   className = '',
-  style = undefined,
-  children = null,
+  style,
+  title,
+  'aria-label': ariaLabel,
+  ...rest
 }) {
   const payload = data || { id, label, kind: 'chip' }
 
   const onDragStart = (e) => {
     const json = JSON.stringify(payload)
-    // Set both MIME types so all browsers provide something on drop
+    // set both mime types for cross-browser drops
     e.dataTransfer.setData('application/json', json)
     e.dataTransfer.setData('text/plain', json)
     e.dataTransfer.effectAllowed = 'copy'
   }
 
-  // Merge our base "chip" class with any caller-provided className (e.g., "side-tag top")
-  const cls = ['chip', inline ? 'inline' : '', className].filter(Boolean).join(' ')
-
+  // IMPORTANT:
+  // - we keep the "chip" class for styling
+  // - we APPEND any incoming className (e.g., "side-tag top")
+  // - we PASS THROUGH style so the --badge-* vars & absolute positioning apply
   return (
     <span
       draggable
       onDragStart={onDragStart}
-      className={cls}
+      className={`chip${inline ? ' inline' : ''}${className ? ' ' + className : ''}`}
       style={style}
-      aria-label={label}
-      title={label}
+      title={title ?? String(label)}
+      aria-label={ariaLabel ?? String(label)}
+      {...rest}
     >
-      {label ?? children}
+      {label}
     </span>
   )
 }
