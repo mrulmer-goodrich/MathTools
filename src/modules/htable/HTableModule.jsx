@@ -11,7 +11,7 @@ const STEP_HEADS = [
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
 ]
 
- 
+
 // --- Problem sanity filter (avoid nonsense unit combos like "pages = hours") ---
 const UNIT_CATS = {
   length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
