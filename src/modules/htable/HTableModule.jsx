@@ -11,12 +11,45 @@ const STEP_HEADS = [
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
 ]
 
+
+// --- Problem sanity filter (avoid nonsense unit combos like "pages = hours") ---
+const UNIT_CATS = {
+  length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
+  time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours'],
+  volume: ['liter','liters','cup','cups','tablespoon','tablespoons'],
+  count: ['item','items','page','pages','point','points'],
+  money: ['dollar','dollars','$']
+}
+const unitCategory = (u='') => {
+  const s = (u||'').toLowerCase()
+  for (const [cat, list] of Object.entries(UNIT_CATS)) {
+    if (list.includes(s)) return cat
+  }
+  return null
+}
+const saneProblem = (p) => {
+  try{
+    const [u1,u2] = p.units || []
+    const c1 = unitCategory(u1), c2 = unitCategory(u2)
+    // both units exist and share a category
+    if (!c1 || !c2 || c1!==c2) return false
+    // given unit should be one of them
+    if (p?.given?.unit && ![u1,u2].includes(p.given.unit)) return false
+    return true
+  }catch{ return false }
+}
+const genSaneHProblem = () => {
+  let tries = 0, p = genSaneHProblem()
+  while(!saneProblem(p) && tries<8){ p = genSaneHProblem(); tries++ }
+  return p
+}
+
 const LANG_BADGE = (mode) => mode
 
 export default function HTableModule() {
   // SAFER session default to avoid first-load crashes
   const [session, setSession] = useState(loadSession() || { attempts: [] })
-  const [problem, setProblem] = useState(() => (loadSession()?.hSnap?.problem) || genHProblem())
+  const [problem, setProblem] = useState(() => (loadSession()?.hSnap?.problem) || genSaneHProblem())
   const [table, setTable] = useState(() => (loadSession()?.hSnap?.table) || {
     head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
     product:null, divisor:null, result:null
@@ -156,7 +189,7 @@ export default function HTableModule() {
   const result  = computeResult(product)
 
   const resetProblem = ()=>{
-    setProblem(genHProblem())
+    setProblem(genSaneHProblem())
     setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
     setStep(0)
     setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
@@ -203,7 +236,7 @@ export default function HTableModule() {
               <div className="hgrid">
                 {/* Headers row */}
                 <div className="hhead">
-                  <Slot test={acceptCol1} onDropContent={(d)=>{
+                  <Slot className={`${!table.head1 ? "empty" : ""}`} test={acceptCol1} onDropContent={(d)=>{
                     if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
                   }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
@@ -212,7 +245,7 @@ export default function HTableModule() {
                   </Slot>
                 </div>
                 <div className="hhead">
-                  <Slot test={acceptCol2} onDropContent={(d)=>{
+                  <Slot className={`${!table.head2 ? "empty" : ""}`} test={acceptCol2} onDropContent={(d)=>{
                     if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
                   }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
@@ -224,34 +257,34 @@ export default function HTableModule() {
 
                 {/* Row 1 cells */}
                 <div className="hcell">
-                  <Slot className="flat" test={acceptUnitTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,uTop:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
+                  <Slot className={`flat ${!table.uTop ? "empty" : ""}`} test={acceptUnitTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,uTop:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
                     <span>{table.uTop || ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptScaleTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,sTop:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
+                  <Slot className={`flat ${table.sTop==null ? "empty" : ""}`} test={acceptScaleTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,sTop:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
                     <span>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptValueTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,vTop:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
+                  <Slot className={`flat ${table.vTop==null ? "empty" : ""}`} test={acceptValueTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,vTop:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
                     <span>{table.vTop ?? ''}</span>
                   </Slot>
                 </div>
 
                 {/* Row 2 cells */}
                 <div className="hcell">
-                  <Slot className="flat" test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,uBottom:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
+                  <Slot className={`flat ${!table.uBottom ? "empty" : ""}`} test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,uBottom:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
                     <span>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptScaleBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,sBottom:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
+                  <Slot className={`flat ${table.sBottom==null ? "empty" : ""}`} test={acceptScaleBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,sBottom:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
                     <span>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptValueBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,vBottom:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
+                  <Slot className={`flat ${table.vBottom==null ? "empty" : ""}`} test={acceptValueBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,vBottom:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
                     <span>{table.vBottom ?? ''}</span>
                   </Slot>
                 </div>
