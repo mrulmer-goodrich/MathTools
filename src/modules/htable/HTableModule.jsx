@@ -424,6 +424,12 @@ export default function HTableModule(){
         .math-strip .numerator { font-size: 24px; font-weight: 700; }
         .math-strip .bar { height: 4px; background: #0f172a; margin: 6px 0; }
         .math-strip .denominator { font-size: 24px; font-weight: 700; }
+        /* Force large empty dropzones inside data cells */
+        .hcell .empty, .hcell .slot, .hcell .slot.empty {
+          min-height: 96px !important;
+          height: 96px !important;
+        }
+
       `}</style>
 
       <div className="panes">
