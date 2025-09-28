@@ -331,3 +331,25 @@ body{
 /* Active difficulty helpers */
 .big-button.active{ outline:3px solid var(--eastway-blue); } /* if BigButton forwards className */
 .press.is-active > .big-button{ outline:3px solid var(--eastway-blue); outline-offset:2px; } /* wrapper fallback */
+
+/* Reserve space for the 3rd column but hide all visuals until K is placed */
+.col3-invisible .ptable thead th:nth-child(3),
+.col3-invisible .ptable tbody td:nth-child(3){
+  visibility: hidden;
+  background: transparent;
+  border-color: transparent;   /* hide the “outlines” */
+}
+
+/* Make the K-reveal dropzone truly invisible (no label or border) */
+.ptable-k-target { background: transparent; border: 0; }
+.ptable-k-target * { display: none !important; }
+
+/* Active difficulty look (works if BigButton forwards className) */
+.big-button.active{ outline:3px solid var(--eastway-blue); }
+
+/* Fallback active look if BigButton doesn't forward className */
+.press.is-active > .big-button{
+  outline:3px solid var(--eastway-blue);
+  outline-offset:2px;
+}
+
