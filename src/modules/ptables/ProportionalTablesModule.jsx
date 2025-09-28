@@ -1,6 +1,6 @@
 // src/modules/ptables/ProportionalTablesModule.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { genPTable } from "../../lib/ptables/generator.js";
+import { genPTable } from "../../lib/generator.js";
 
 // If your app already has these, great. If the prop names differ slightly in your project,
 // see the Integration Notes at the bottom of this file.
