@@ -239,5 +239,5 @@ body{
 
 /* === H-Table visual lines (oversized H) === */
 .hwrap .hgrid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(48px, auto); }
-.hgrid .hhead, .hgrid .hcell { border: none !important; } /* no extra borders */
+.hwrap .hgrid .hhead, .hwrap .hgrid .hcell { border: none !important; } /* no extra borders */
 .hgrid .hstroke { pointer-events: none; }
