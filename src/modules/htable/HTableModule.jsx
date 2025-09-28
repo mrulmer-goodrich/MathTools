@@ -1,12 +1,10 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v3.0)
-// Key fixes in this drop:
-// - Step 6 acceptance uses generator's given.row (top/bottom) so the given value
-//   must be dropped into the correct row regardless of unit spelling.
-// - Filters out BlackOut / FadeOut from language rotation (keeps XXXX mask only).
-// - Same sized dropzones via ROW_H across headers and data cells.
-// - Randomized chip order (headers/units/numbers).
-// - Inline fraction with '= result' on the same line.
-// - Full-screen confetti overlay.
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v3.1)
+// Changes vs v3.0:
+// • Step 4 now ONLY accepts the exact scale values from the problem (top=a, bottom=b).
+// • Red oval height/length tweaked for better coverage after row height changes.
+// • (kept) Step 6 uses generator's given.row so the given value must go in the correct row.
+// • (kept) BlackOut/FadeOut removed from language rotation, XXXX mask kept.
+// • (kept) uniform dropzones, randomized chips, inline fraction, full-screen confetti.
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -53,7 +51,6 @@ const saneProblem = (p) => {
     const [u1,u2] = p.units || []
     const c1 = unitCategory(u1), c2 = unitCategory(u2)
     if (!c1 || !c2 || c1!==c2) return false
-    // generator does not include given.unit; only row + value
     return true
   }catch{ return false }
 }
@@ -66,7 +63,7 @@ const genSaneHProblem = () => {
 function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5) }
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 12
+  const H_SNAP_VERSION = 13
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -195,10 +192,14 @@ export default function HTableModule(){
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
-  const acceptScaleTop   = d => step===4 && d.kind==='num'
-  const acceptScaleBottom= d => step===4 && d.kind==='num'
 
-  // Step 6 fix: generator gives given.row ('top'|'bottom'). Require drop into that row.
+  // STRICT Step 4: force exact scale values into the correct rows
+  const SCALE_TOP = Number(problem?.scale?.[0])
+  const SCALE_BOTTOM = Number(problem?.scale?.[1])
+  const acceptScaleTop   = d => step===4 && d.kind==='num' && Number(d.value) === SCALE_TOP
+  const acceptScaleBottom= d => step===4 && d.kind==='num' && Number(d.value) === SCALE_BOTTOM
+
+  // Step 6: require given number in the specified row
   const expectedRow = (problem?.given?.row === 'top') ? 'top' : 'bottom'
   const acceptValueTop   = d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='top'
   const acceptValueBottom= d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='bottom'
@@ -222,8 +223,6 @@ export default function HTableModule(){
     const r_vBottom = refs.vBottom.current?.getBoundingClientRect()
     if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) { setLines(l=>({ ...l, gridW: gr.width })); return }
     const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left
-    the_grid:
-    0
     const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left
     const vTop = r_vTop.top - gr.top
     const vBottom = r_vBottom.bottom - gr.top
@@ -256,7 +255,7 @@ export default function HTableModule(){
     const midX = (a.x + b.x)/2
     const midY = (a.y + b.y)/2
     const dx = b.x - a.x, dy = b.y - a.y
-    const len = Math.sqrt(dx*dx + dy*dy) + 120
+    const len = Math.sqrt(dx*dx + dy*dy) + 140   // +140 for better edge coverage
     const rot = Math.atan2(dy, dx) * 180/Math.PI
     setOval({ left: midX, top: midY, len, rot })
   },[highlightKeys])
@@ -502,7 +501,7 @@ export default function HTableModule(){
                   <div
                     style={{
                       position:'absolute',
-                      left: oval.left, top: oval.top, width: oval.len, height: 54,
+                      left: oval.left, top: oval.top, width: oval.len, height: 62,
                       transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
                       border: '5px solid #ef4444', borderRadius: 9999,
                       pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
