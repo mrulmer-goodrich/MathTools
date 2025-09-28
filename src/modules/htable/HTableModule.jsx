@@ -40,7 +40,7 @@ const saneProblem = (p) => {
 }
 const genSaneHProblem = () => {
   let tries = 0, p = genSaneHProblem()
-  while(!saneProblem(p) && tries<8){ p = genSaneHProblem(); tries++ }
+  while(!saneProblem(p) && tries<50){ p = genSaneHProblem(); tries++ }
   return p
 }
 
@@ -413,6 +413,10 @@ export default function HTableModule() {
               </div>
             )}
           </div>
+        </div>
+      
+        <div className="toolbar" style={{justifyContent:"center", marginTop: 12}}>
+          <button className="button primary" onClick={resetProblem}>New Problem</button>
         </div>
       </div>
 
