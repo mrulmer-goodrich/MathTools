@@ -213,7 +213,7 @@ export default function HTableModule() {
                 </div>
                 <div className="hhead">
                   <Slot test={acceptCol2} onDropContent={(d)=>{
-                    if(d.v==='Scale'){ setTable(t=>({...t, head2:'Scale'})); setDone(3); next() } else miss(3)
+                    if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
                   }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
@@ -224,42 +224,42 @@ export default function HTableModule() {
 
                 {/* Row 1 cells */}
                 <div className="hcell">
-                  <Slot className="flat" test={acceptUnitTop} onDropContent={(d)=>setTable(t=>({...t,uTop:d.label}))}>
+                  <Slot className="flat" test={acceptUnitTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,uTop:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
                     <span>{table.uTop || ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptScaleTop} onDropContent={(d)=>setTable(t=>({...t,sTop:d.value}))}>
+                  <Slot className="flat" test={acceptScaleTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,sTop:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
                     <span>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptValueTop} onDropContent={(d)=>setTable(t=>({...t,vTop:d.value}))}>
+                  <Slot className="flat" test={acceptValueTop} onDropContent={(d)=>setTable(t=>{ const t2={...t,vTop:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
                     <span>{table.vTop ?? ''}</span>
                   </Slot>
                 </div>
 
                 {/* Row 2 cells */}
                 <div className="hcell">
-                  <Slot className="flat" test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>({...t,uBottom:d.label}))}>
+                  <Slot className="flat" test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,uBottom:d.label}; const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean)); if(placed.size===2){ setDone(2); next(); } return t2; })}>
                     <span>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptScaleBottom} onDropContent={(d)=>setTable(t=>({...t,sBottom:d.value}))}>
+                  <Slot className="flat" test={acceptScaleBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,sBottom:d.value}; const ok=(t2.sTop!=null && t2.sBottom!=null) && (t2.sTop!==t2.sBottom); if(ok){ setDone(4); next(); } return t2; })}>
                     <span>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
                 <div className="hcell">
-                  <Slot className="flat" test={acceptValueBottom} onDropContent={(d)=>setTable(t=>({...t,vBottom:d.value}))}>
+                  <Slot className="flat" test={acceptValueBottom} onDropContent={(d)=>setTable(t=>{ const t2={...t,vBottom:d.value}; const placed=(t2.vTop!=null)!==(t2.vBottom!=null); const matches=(t2.vTop===problem.given.value)||(t2.vBottom===problem.given.value); if(placed && matches){ setDone(5); next(); } return t2; })}>
                     <span>{table.vBottom ?? ''}</span>
                   </Slot>
                 </div>
 
                 {/* H strokes (oversized H only) */}
-                <div className="hstroke horiz"></div>
-                <div className="hstroke vert-left"></div>
-                <div className="hstroke vert-right"></div>
+                <div className="hstroke horiz" style={{gridColumn:"1 / span 3", gridRow:"3", height:0, borderBottom:"4px solid #334155"}}></div>
+                <div className="hstroke vert-left" style={{gridColumn:"1", gridRow:"2 / span 2", width:0, borderRight:"4px solid #334155"}}></div>
+                <div className="hstroke vert-right" style={{gridColumn:"2", gridRow:"2 / span 2", width:0, borderRight:"4px solid #334155"}}></div>
               </div>
             </div>
           )}
@@ -273,9 +273,9 @@ export default function HTableModule() {
                 'Step 1: What do we do first?',
                 'Step 2: What do we put in the first column? (drag onto header)',
                 'Step 3: Place the units (drag onto left cells)',
-                'Step 4: Column 2 (drag onto header)',
+                'Step 4: What goes in the second column? (drag onto header)',
                 'Step 5: Place the scale numbers',
-                'Step 6: Place the given number',
+                'Step 6: Where does the other number go?',
                 'Step 7: What’s next?',
                 'Step 8: Which numbers are we multiplying? (click the grid cells after you place them)',
                 'Step 9: What’s next?',
@@ -303,7 +303,7 @@ export default function HTableModule() {
             {(step===1 || step===3) && (
               <div className="chips">
                 <Draggable id="c1" label="Units" data={{kind:'col',v:'Units'}} />
-                <Draggable id="c5" label="Scale" data={{kind:'col',v:'Scale'}} />
+                <Draggable id="c5" label="Scale Numbers" data={{kind:'col',v:'ScaleNumbers'}} />
                 <Draggable id="c2" label="Random Numbers" data={{kind:'col',v:'x'}} />
                 <Draggable id="c3" label="Answer" data={{kind:'col',v:'x'}} />
                 <Draggable id="c4" label="Multiply" data={{kind:'col',v:'x'}} />
@@ -311,53 +311,13 @@ export default function HTableModule() {
             )}
 
             {/* Step 3: units */}
-            {step===2 && (
-              <>
-                <div className="chips">
-                  {unitChoices.map(u=><Draggable key={u.id} id={u.id} label={u.label} data={u} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={()=>{
-                    // HT3: either arrangement is acceptable as long as two distinct units are placed
-                    const placed = new Set([table.uTop, table.uBottom].filter(Boolean))
-                    if(placed.size===2){ setDone(2); next() } else miss(2)
-                  }}>Confirm Units</button>
-                </div>
-              </>
-            )}
+            {step===2 && (<><div className="chips">{unitChoices.map(u=><Draggable key={u.id} id={u.id} label={u.label} data={u} />)}</div></>)}
 
             {/* Step 5: scale numbers */}
-            {step===4 && (
-              <>
-                <div className="chips">
-                  {numberChoices.map(n=><Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={()=>{
-                    // accept any placement of the two scale numbers as long as both are placed
-                    const ok = (table.sTop!=null && table.sBottom!=null) &&
-                               new Set([table.sTop, table.sBottom]).size===2
-                    if(ok){ setDone(4); next() } else miss(4)
-                  }}>Confirm Scale</button>
-                </div>
-              </>
-            )}
+            {step===4 && (<><div className="chips">{numberChoices.map(n=><Draggable key={n.id} id={n.id} label={n.label} data={n} />)}</div></>)}
 
             {/* Step 6: given */}
-            {step===5 && (
-              <>
-                <div className="chips">
-                  {numberChoices.map(n=><Draggable key={n.id} id={n.id} label={n.label} data={n} />)}
-                </div>
-                <div className="toolbar" style={{marginTop:8}}>
-                  <button className="button primary" onClick={()=>{
-                    const placed = (table.vTop!=null) !== (table.vBottom!=null) // exactly one row
-                    const matches = (table.vTop===problem.given.value) || (table.vBottom===problem.given.value)
-                    if(placed && matches){ setDone(5); next() } else miss(5)
-                  }}>Confirm Given</button>
-                </div>
-              </>
-            )}
+            {step===5 && (<><div className="chips">{numberChoices.map(n=><Draggable key={n.id} id={n.id} label={n.label} data={n} />)}</div></>)}
 
             {/* Step 7 & 9: next actions */}
             {(step===6 || step===8) && (
@@ -416,7 +376,7 @@ export default function HTableModule() {
             {step===1 && (
               <div className="chips">
                 <Draggable id="c1" label="Units" data={{kind:'col',v:'Units'}} />
-                <Draggable id="c5" label="Scale" data={{kind:'col',v:'Scale'}} />
+                <Draggable id="c5" label="Scale Numbers" data={{kind:'col',v:'ScaleNumbers'}} />
               </div>
             )}
           </div>
