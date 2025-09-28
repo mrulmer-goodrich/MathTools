@@ -1,68 +1,123 @@
 // src/modules/ptables/ProportionalTablesModule.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import Draggable from "../../components/DraggableChip.jsx";
 import Slot from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+// ---------- persistence ----------
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 
+// Helper: compare floats
+const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+
 export default function ProportionalTablesModule() {
-  const [difficulty, setDifficulty] = useState(loadDifficulty());
+  // difficulty + problem
+  const [difficulty, setDifficulty] = useState(loadDifficulty()); // default Easy
   const [problem, setProblem] = useState(() => genPTable(difficulty));
+
+  // header labels placed?
   const [xPlaced, setXPlaced] = useState(false);
   const [yPlaced, setYPlaced] = useState(false);
-  const [kPlaced, setKPlaced] = useState(false);
+  const [kPlaced, setKPlaced] = useState(false); // controls showing column 3
 
-  // { [rowIndex]: { num, den } }
+  // header equation assembly: k = Y/X
+  const [eqPlaced, setEqPlaced] = useState(false);      // '=' dropped
+  const [fracPlaced, setFracPlaced] = useState(false);  // Fraction template dropped
+  const [numIsY, setNumIsY] = useState(false);          // Y in numerator
+  const [denIsX, setDenIsX] = useState(false);          // X in denominator
+
+  // once header eq is correct, prefill row equations (Y/X = [ - / - ])
+  const headerEqCorrect = kPlaced && eqPlaced && fracPlaced && numIsY && denIsX;
+
+  // per-row fractions entered and computed k_i
+  // fractions: { [row]: { num, den } }, kValues: { [row]: number|null }
   const [fractions, setFractions] = useState({});
-  const [kFromFractions, setKFromFractions] = useState(null);
-  const [row4Answer, setRow4Answer] = useState(null);
-  const [feedback, setFeedback] = useState("");
+  const [kValues, setKValues] = useState({});
 
+  // gate for concept question
+  const allRowsComputed = useMemo(() => {
+    const rows = [0, 1, 2];
+    return rows.every((i) => {
+      const f = fractions[i];
+      return f?.num != null && f?.den != null && typeof kValues[i] === "number" && isFinite(kValues[i]);
+    });
+  }, [fractions, kValues]);
+
+  // concept question answer
+  const [conceptAnswer, setConceptAnswer] = useState(null); // 'yes_same' | 'yes_diff' | 'no_same' | 'no_diff'
+  const ksEqual = useMemo(() => {
+    const vals = [kValues[0], kValues[1], kValues[2]].filter((v) => typeof v === "number");
+    if (vals.length < 3) return null;
+    return approxEq(vals[0], vals[1]) && approxEq(vals[1], vals[2]);
+  }, [kValues]);
+
+  const conceptCorrect = useMemo(() => {
+    if (!allRowsComputed || ksEqual == null || !conceptAnswer) return false;
+    if (ksEqual && conceptAnswer === "yes_same") return true;
+    if (!ksEqual && conceptAnswer === "no_diff") return true;
+    return false;
+  }, [allRowsComputed, ksEqual, conceptAnswer]);
+
+  // reveal 4th row only if proportional AND concept answer correct
+  const revealFourthRow = conceptCorrect && ksEqual === true;
+
+  // overlay for Y = k × X (show when revealFourthRow)
+  const [row4Answer, setRow4Answer] = useState(null);
+
+  // ---------- effects ----------
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
-  const resetAll = (d = difficulty) => {
-    const next = genPTable(d);
+  // ---------- helpers ----------
+  const resetAll = (nextDiff = difficulty) => {
+    const next = genPTable(nextDiff);
     setProblem(next);
+
     setXPlaced(false);
     setYPlaced(false);
     setKPlaced(false);
+
+    setEqPlaced(false);
+    setFracPlaced(false);
+    setNumIsY(false);
+    setDenIsX(false);
+
     setFractions({});
-    setKFromFractions(null);
+    setKValues({});
+    setConceptAnswer(null);
     setRow4Answer(null);
-    setFeedback("");
   };
 
-  const writeFrac = (rowIndex, part, value) => {
+  const onRowDrop = (rowIndex, part, data) => {
+    // part: 'num' | 'den' ; data: { type:'value', value:number }
+    if (!data || data.type !== "value") return;
     setFractions((prev) => {
-      const next = { ...prev, [rowIndex]: { ...(prev[rowIndex] || {}), [part]: value } };
-      const rows = Object.values(next);
-      if (rows.length === 3 && rows.every(r => r.num != null && r.den != null)) {
-        const ks = rows.map(({ num, den }) => (den === 0 ? null : num / den));
-        if (ks.every(v => typeof v === "number" && isFinite(v))) {
-          const eq = (a,b) => Math.abs(a-b) < 1e-9;
-          const same = ks.every(v => eq(v, ks[0]));
-          if (same) {
-            setKFromFractions(ks[0]);
-            setFeedback("Nice! Constant of proportionality identified.");
-          } else {
-            setKFromFractions(null);
-            setFeedback("Those ratios don’t match. This table may not be proportional.");
-          }
-        }
-      }
+      const next = { ...prev, [rowIndex]: { ...(prev[rowIndex] || {}), [part]: data.value } };
       return next;
     });
   };
 
-  const onSolveRow4 = () => {
-    if (!problem.revealRow4 || kFromFractions == null) return;
-    setRow4Answer(kFromFractions * problem.revealRow4.x);
-    setFeedback("Multiply k · x to get y. Great work!");
+  const calcRow = (rowIndex) => {
+    const f = fractions[rowIndex];
+    if (!f || f.den == null || f.num == null || f.den === 0) return;
+    const kv = f.num / f.den;
+    setKValues((prev) => ({ ...prev, [rowIndex]: kv }));
   };
 
+  const calcAll = () => {
+    [0, 1, 2].forEach((i) => calcRow(i));
+  };
+
+  const solveRow4 = () => {
+    if (!revealFourthRow || !problem.revealRow4) return;
+    // compute k as consensus of kValues (they're equal)
+    const k = kValues[0];
+    const y = k * problem.revealRow4.x;
+    setRow4Answer(y);
+  };
+
+  // ---------- render helpers ----------
   const HeaderDrop = ({ placed, label, onDrop }) => (
     <Slot
       accept={["chip"]}
@@ -73,123 +128,307 @@ export default function ProportionalTablesModule() {
     </Slot>
   );
 
-  const FractionSlot = ({ rowIndex, part }) => (
-    <Slot
-      accept={["value"]}
-      onDrop={(data) => writeFrac(rowIndex, part, data?.value ?? null)}
-      className="slot ptable-fracslot"
-    >
-      {fractions[rowIndex]?.[part] ?? <span className="muted">—</span>}
-    </Slot>
-  );
+  const HeaderEqArea = () => {
+    // visible *only* after kPlaced (column revealed)
+    if (!kPlaced) return null;
 
-  return (
-    <div className="panes">
-      {/* LEFT CARD — TABLE */}
-      <div className="card">
-        <h2 className="brand" style={{ fontSize: 24, margin: 0, marginBottom: 6 }}>Proportional Table</h2>
+    const eqOK = headerEqCorrect;
 
-        <div className="ptable-wrap">
+    return (
+      <div className="ptable-header-eq">
+        {/* k  =  [ Y / X ] */}
+        <div className="ptable-eq-row">
+          <div className="badge">k</div>
+
+          {/* equals slot */}
+          <Slot
+            accept={["sym"]}
+            onDrop={(d) => { if (d?.type === "sym" && d?.name === "=") setEqPlaced(true); }}
+            className={`ptable-eq-slot ${eqPlaced ? "filled" : ""}`}
+          >
+            {eqPlaced ? "=" : <span className="muted">=</span>}
+          </Slot>
+
+          {/* fraction template slot (first drop), then Y/X sub-slots */}
+          {!fracPlaced ? (
+            <Slot
+              accept={["frac"]}
+              onDrop={(d) => { if (d?.type === "frac") setFracPlaced(true); }}
+              className="ptable-frac-template-slot"
+            >
+              <span className="muted">fraction</span>
+            </Slot>
+          ) : (
+            <div className="fraction-row nowrap">
+              <Slot
+                accept={["chip"]}
+                onDrop={(d) => { if (d?.type === "chip" && d?.name === "Y") setNumIsY(true); }}
+                className={`slot ptable-fracslot ${numIsY ? "filled" : ""}`}
+              >
+                {numIsY ? "Y" : <span className="muted">—</span>}
+              </Slot>
+              <span>/</span>
+              <Slot
+                accept={["chip"]}
+                onDrop={(d) => { if (d?.type === "chip" && d?.name === "X") setDenIsX(true); }}
+                className={`slot ptable-fracslot ${denIsX ? "filled" : ""}`}
+              >
+                {denIsX ? "X" : <span className="muted">—</span>}
+              </Slot>
+            </div>
+          )}
+        </div>
+
+        {eqOK && (
+          <div className="muted small" style={{ marginTop: 6 }}>
+            Great—now fill each row with its own <b>Y</b> and <b>X</b>, then Calculate.
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // generous invisible dropzone for K before the 3rd column is visible
+  const KRevealOverlay = () => {
+    if (kPlaced) return null;
+    return (
+      <div className="ptable-k-overlay">
+        <Slot
+          accept={["chip"]}
+          onDrop={(d) => {
+            if (d?.type === "chip" && d?.name === "K") setKPlaced(true);
+          }}
+          className="ptable-k-target"
+        >
+          {/* intentionally subtle; student is told to drop K to reveal */}
+          <span className="muted small">drop K here to reveal</span>
+        </Slot>
+      </div>
+    );
+  };
+
+  const Table = useMemo(() => {
+    const col3Hidden = !kPlaced ? "col3-hidden" : "";
+
+    return (
+      <div className={`ptable-wrap ${col3Hidden}`}>
+        <div className="ptable-rel">
+          {/* wide K drop overlay (only when hidden) */}
+          <KRevealOverlay />
+
           <table className="ptable">
             <thead>
               <tr>
-                <th><HeaderDrop placed={xPlaced} label="X" onDrop={() => setXPlaced(true)} /></th>
-                <th><HeaderDrop placed={yPlaced} label="Y" onDrop={() => setYPlaced(true)} /></th>
-                <th><HeaderDrop placed={kPlaced} label="K or Y/X" onDrop={() => setKPlaced(true)} /></th>
+                <th><HeaderDrop placed={xPlaced} label="X" onDrop={(d)=>{ if(d?.type==="chip" && d?.name==="X") setXPlaced(true); }} /></th>
+                <th><HeaderDrop placed={yPlaced} label="Y" onDrop={(d)=>{ if(d?.type==="chip" && d?.name==="Y") setYPlaced(true); }} /></th>
+                <th>
+                  {/* when visible, header shows the assembly area */}
+                  <HeaderDrop placed={kPlaced} label="K" onDrop={(d)=>{ if(d?.type==="chip" && d?.name==="K") setKPlaced(true); }} />
+                  <HeaderEqArea />
+                </th>
               </tr>
             </thead>
 
             <tbody>
-              {problem.rows.map((r, idx) => (
-                <tr key={idx}>
-                  <td>
-                    <Draggable id={`x-${idx}`} label={`${r.x}`} payload={{ type: "value", value: r.x }} className="chip" />
-                  </td>
-                  <td>
-                    <Draggable id={`y-${idx}`} label={`${r.y}`} payload={{ type: "value", value: r.y }} className="chip" />
-                  </td>
-                  <td>
-                    {xPlaced && yPlaced && kPlaced ? (
-                      <div className="fraction-row nowrap">
-                        <FractionSlot rowIndex={idx} part="num" />
-                        <span>/</span>
-                        <FractionSlot rowIndex={idx} part="den" />
-                      </div>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {[0,1,2].map((idx) => {
+                const r = problem.rows[idx];
+                return (
+                  <tr key={idx}>
+                    <td>
+                      <Draggable id={`x-${idx}`} label={`${r.x}`} payload={{ type: "value", value: r.x }} className="chip" />
+                    </td>
+                    <td>
+                      <Draggable id={`y-${idx}`} label={`${r.y}`} payload={{ type: "value", value: r.y }} className="chip" />
+                    </td>
+                    <td>
+                      {headerEqCorrect ? (
+                        <div className="fraction-row nowrap center">
+                          <div className="calc-inline">Y/X =</div>
+                          <Slot
+                            accept={["value"]}
+                            onDrop={(d) => onRowDrop(idx, "num", d)}
+                            className="slot ptable-fracslot"
+                          >
+                            {fractions[idx]?.num ?? <span className="muted">—</span>}
+                          </Slot>
+                          <span>/</span>
+                          <Slot
+                            accept={["value"]}
+                            onDrop={(d) => onRowDrop(idx, "den", d)}
+                            className="slot ptable-fracslot"
+                          >
+                            {fractions[idx]?.den ?? <span className="muted">—</span>}
+                          </Slot>
 
-              {problem.proportional && (
+                          <button className="button ml-12" onClick={() => calcRow(idx)}>
+                            Calculate
+                          </button>
+
+                          {typeof kValues[idx] === "number" && isFinite(kValues[idx]) && (
+                            <span className="badge ml-12">k = {kValues[idx]}</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* 4th row: only when proportional AND concept answer is correct */}
+              {revealFourthRow && problem.revealRow4 && (
                 <tr>
-                  <td>{problem.revealRow4?.x}</td>
+                  <td>{problem.revealRow4.x}</td>
                   <td>{row4Answer == null ? "?" : row4Answer}</td>
                   <td>
-                    {kFromFractions != null ? (
-                      <BigButton onClick={onSolveRow4}>Solve Y = k×X</BigButton>
-                    ) : (
-                      <span className="muted small">Find k first</span>
-                    )}
+                    <button className="button success" onClick={solveRow4}>Solve Y = k×X</button>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
 
-        {/* Controls row */}
-        <div className="row" style={{ justifyContent: "space-between", marginTop: 12 }}>
-          <div className="row" style={{ gap: 8 }}>
-            <BigButton onClick={() => { setDifficulty("easy");   resetAll("easy");   }} className={difficulty==="easy"?"flash":""}>Easy</BigButton>
-            <BigButton onClick={() => { setDifficulty("medium"); resetAll("medium"); }} className={difficulty==="medium"?"flash":""}>Medium</BigButton>
-            <BigButton onClick={() => { setDifficulty("hard");   resetAll("hard");   }} className={difficulty==="hard"?"flash":""}>Hard</BigButton>
-          </div>
-
-          <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+          {/* overlay after concept-correct & proportional */}
+          {revealFourthRow && (
+            <div className="ptable-overlay">
+              <div className="ptable-overlay-inner">
+                <span className="calc-inline">Y</span>
+                <span className="calc-inline" style={{ color: "#b91c1c", fontWeight: 900 }}>×</span>
+                <span className="result-big">k = {kValues[0]}</span>
+                <span className="calc-inline">· X</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+    );
+  }, [problem, xPlaced, yPlaced, kPlaced, headerEqCorrect, fractions, kValues, revealFourthRow, row4Answer]);
 
-      {/* RIGHT CARD — STEPS & CHIPS */}
+  // ---------- render ----------
+  return (
+    <div className="panes">
+      {/* LEFT CARD */}
+      <div className="card">
+        {/* difficulty row (top-left), New Problem centered under */}
+        <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
+          <BigButton
+            className={difficulty === "easy" ? "active" : ""}
+            onClick={() => { setDifficulty("easy"); resetAll("easy"); }}
+            aria-pressed={difficulty === "easy"}
+          >
+            Easy
+          </BigButton>
+          <BigButton
+            className={difficulty === "medium" ? "active" : ""}
+            onClick={() => { setDifficulty("medium"); resetAll("medium"); }}
+            aria-pressed={difficulty === "medium"}
+          >
+            Medium
+          </BigButton>
+          <BigButton
+            className={difficulty === "hard" ? "active" : ""}
+            onClick={() => { setDifficulty("hard"); resetAll("hard"); }}
+            aria-pressed={difficulty === "hard"}
+          >
+            Hard
+          </BigButton>
+        </div>
+
+        <div className="center" style={{ marginBottom: 12 }}>
+          <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+        </div>
+
+        {Table}
+      </div>
+
+      {/* RIGHT CARD — steps & chips */}
       <div className="card right-steps">
-        <h2 className="brand" style={{ fontSize: 24, margin: 0, marginBottom: 6 }}>Build the Equation</h2>
-
         <div className="section">
-          <div className="step-title">Step 1 — Label the headers</div>
-          <div className="muted bigger">Drag <b>X</b> to the first header, <b>Y</b> to the second, and <b>K</b> to the third.</div>
-        </div>
+          <div className="step-title">Label the table</div>
+          <div className="muted bigger">
+            Drag <b>X</b>, <b>Y</b> to the first two headers. Drop <b>K</b> onto the hidden third header to reveal it.
+          </div>
 
-        <div className="section">
-          <div className="step-title">Step 2 — Form the ratios</div>
-          <div className="muted bigger">For each row, drag values into the fraction to form <b>Y/X</b>.</div>
-        </div>
-
-        <div className="section">
-          <div className="step-title">Step 3 — Check for a constant</div>
-          <div className="muted bigger">If all three ratios match, the table is proportional and the common value is <b>k</b>.</div>
+          <div className="chips with-borders" style={{ marginTop: 10 }}>
+            <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
+            <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
+            <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} className="chip large" />
+          </div>
         </div>
 
         <div className="section">
-          <div className="step-title">Step 4 — Solve a new row</div>
-          <div className="muted bigger">Use <b>Y = k×X</b> to find the missing fourth-row <b>Y</b>.</div>
+          <div className="step-title">Complete the formula for k</div>
+          <div className="muted bigger">Build <b>k = Y / X</b> in the third header: drag “=” and the Fraction chip, then place <b>Y</b> on top and <b>X</b> on bottom.</div>
+
+          <div className="chips with-borders" style={{ marginTop: 10 }}>
+            <Draggable id="chip-eq" label="=" payload={{ type: "sym", name: "=" }} className="chip large" />
+            <Draggable id="chip-frac" label="Fraction" payload={{ type: "frac" }} className="chip large" />
+          </div>
         </div>
 
-        <div className="chips with-borders">
-          <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} />
-          <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} />
-          <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} />
-          <Draggable id="chip-eq" label="=" payload={{ type: "chip", name: "=" }} />
+        <div className="section">
+          <div className="step-title">Fill each row & calculate</div>
+          <div className="muted bigger">
+            For each row, make <b>Y/X = yᵢ/xᵢ</b> and press <b>Calculate</b>. You can recalc anytime.
+          </div>
+          <div className="center mt-8">
+            <button className="button" onClick={calcAll}>Calculate All</button>
+          </div>
         </div>
 
-        <div className="status-box mt-8">
-          <div className="step-title" style={{ marginBottom: 4 }}>Status</div>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>Headers: {xPlaced ? "X ✓" : "X …"}, {yPlaced ? "Y ✓" : "Y …"}, {kPlaced ? "K ✓" : "K …"}</li>
-            <li>k from rows: {kFromFractions != null ? <b>{kFromFractions}</b> : "—"}</li>
-            <li>Table: {kFromFractions != null ? (problem.proportional ? "Proportional ✓" : "Fractions disagree ✗") : "Undetermined"}</li>
-          </ul>
-          {feedback && <div className="mt-8">{feedback}</div>}
+        <div className="section">
+          <div className="step-title">Is this table proportional?</div>
+          <fieldset
+            className="mt-8"
+            disabled={!allRowsComputed}
+            aria-disabled={!allRowsComputed}
+          >
+            <div className="row" style={{ alignItems: "stretch", justifyContent: "center", gap: 8 }}>
+              <button
+                className="button"
+                onClick={() => setConceptAnswer("yes_same")}
+                disabled={!allRowsComputed}
+              >
+                Yes, because k is the same
+              </button>
+              <button
+                className="button"
+                onClick={() => setConceptAnswer("yes_diff")}
+                disabled={!allRowsComputed}
+              >
+                Yes, because k is NOT the same
+              </button>
+              <button
+                className="button"
+                onClick={() => setConceptAnswer("no_same")}
+                disabled={!allRowsComputed}
+              >
+                No, because k is the same
+              </button>
+              <button
+                className="button"
+                onClick={() => setConceptAnswer("no_diff")}
+                disabled={!allRowsComputed}
+              >
+                No, because k is NOT the same
+              </button>
+            </div>
+
+            {conceptAnswer && (
+              <div className="center mt-10">
+                {conceptCorrect ? (
+                  <div className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>
+                    ✓ Correct
+                  </div>
+                ) : (
+                  <div className="badge" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>
+                    Try again
+                  </div>
+                )}
+              </div>
+            )}
+          </fieldset>
         </div>
       </div>
     </div>
