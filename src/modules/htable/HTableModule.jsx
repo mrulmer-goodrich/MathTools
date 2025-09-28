@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.3 — solid H, bigger cells, fixed step gating)
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.4 — solid H, big cells, step gating refined, red oval)
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -6,7 +6,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-/* ---------- Step labels (more explicit text per your request) ---------- */
+/* ---------- Step titles (explicit prompts) ---------- */
 const STEP_TITLES = [
   'Step 1: What do we do first?',
   'Step 2: What do we put in the first column? (drag onto header)',
@@ -14,10 +14,10 @@ const STEP_TITLES = [
   'Step 4: What goes in the second column? (drag onto header)',
   'Step 5: Drop the correct scale numbers into the H-table',
   'Step 6: Where does the other number in the problem go? Drag to the H-table.',
-  'Step 7: What’s next?',
+  'Step 7: What do we do next?',
   'Step 8: Which numbers are we multiplying?',
-  'Step 9: What’s next?',
-  'Step 10: Which number are we dividing?'
+  'Step 9: Which number are we dividing by?',
+  'Step 10: Submit your answer'
 ]
 
 /* ---------- Step 1 tiles (correct = Draw an H-Table) ---------- */
@@ -61,7 +61,7 @@ const genSaneHProblem = () => {
 
 export default function HTableModule(){
   // bump so stale localStorage never freezes this build
-  const H_SNAP_VERSION = 6
+  const H_SNAP_VERSION = 7
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -138,23 +138,28 @@ export default function HTableModule(){
   },[problem?.id, allowedModes.length])
 
   /* ---------- chip pools ---------- */
+  // Units: ONLY the correct two units (no decoys) for Step 3
   const unitChoices = useMemo(()=>{
-    const pool = ['meters','kilometers','miles','seconds','minutes','hours','grams','kilograms','liters','milliliters','gallons','cups','dollars','euros']
-    const set = new Set(problem.units)
-    while(set.size<6) set.add(pool[Math.floor(Math.random()*pool.length)])
-    return Array.from(set).map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
+    const uniq = Array.from(new Set(problem.units || []))
+    return uniq.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
   },[problem])
+  // Numbers: we build at runtime; only used on steps 5 and 6
   const numberChoices = useMemo(()=>{
-    const nums = new Set([problem.scale?.[0], problem.scale?.[1], problem.given?.value].filter(x=>x!=null))
-    while(nums.size<6) nums.add(Math.floor(Math.random()*20)+1)
-    return Array.from(nums).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:n }))
+    const nums = [problem.scale?.[0], problem.scale?.[1], problem.given?.value].filter(x=>x!=null)
+    return Array.from(new Set(nums)).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:Number(n) }))
   },[problem])
-  const headerChoices = useMemo(()=>[
+
+  // Header options pools
+  const headerChoicesCol1 = useMemo(()=>[
     { id:'col_units', label:'Units', kind:'col', v:'Units' },
     { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
     { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-    // removed "Labels" option per request
+  ],[])
+  const headerChoicesCol2 = useMemo(()=>[
+    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
+    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
+    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
   ],[])
 
   /* ---------- accept tests (step-gated) ---------- */
@@ -162,11 +167,11 @@ export default function HTableModule(){
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
-  const acceptScaleTop   = d => step===4 && d.kind==='num'
-  const acceptScaleBottom= d => step===4 && d.kind==='num'
-  // FIX: value placement is Step 5, not 6
-  const acceptValueTop   = d => step===5 && d.kind==='num'
-  const acceptValueBottom= d => step===5 && d.kind==='num'
+  const acceptScaleTop   = d => step===5 && d.kind==='num'
+  const acceptScaleBottom= d => step===5 && d.kind==='num'
+  // The "other number" must go in the given row only (step 6)
+  const acceptValueTop   = d => step===6 && d.kind==='num' && problem?.given?.row==='top'
+  const acceptValueBottom= d => step===6 && d.kind==='num' && problem?.given?.row==='bottom'
 
   /* ---------- geometry refs for precise H-lines & highlight oval ---------- */
   const gridRef = useRef(null)
@@ -226,12 +231,12 @@ export default function HTableModule(){
     const midX = (a.x + b.x)/2
     const midY = (a.y + b.y)/2
     const dx = b.x - a.x, dy = b.y - a.y
-    const len = Math.sqrt(dx*dx + dy*dy) + 120 // little more padding
+    const len = Math.sqrt(dx*dx + dy*dy) + 120 // padding
     const rot = Math.atan2(dy, dx) * 180/Math.PI
     setOval({ left: midX, top: midY, len, rot })
   },[highlightKeys])
 
-  /* ---------- compute helpers (for steps 8 & 10) ---------- */
+  /* ---------- compute helpers (for steps 8 & 9) ---------- */
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
   const crossPair = useMemo(()=>{
     if(!givenRow || table.sTop==null || table.sBottom==null) return null
@@ -260,9 +265,9 @@ export default function HTableModule(){
 
   const chooseDivideByNumber = (num)=>{
     const divisor = num
-    if (table.product==null || divisor==null || divisor===0) { miss(9); return }
+    if (table.product==null || divisor==null || divisor===0) { miss(8); return }
     setTable(t=>({ ...t, divisor, result: t.product / divisor }))
-    setDone(9)
+    setDone(8); next()
   }
 
   const submitAttempt = ()=>{
@@ -322,7 +327,7 @@ export default function HTableModule(){
     )
   }
 
-  const CELL_H = 72 // bigger, uniform
+  const CELL_H = 84 // bigger, uniform across all body cells
   const lineColor = '#0f172a' // slate-900 (dark)
   const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : ''
 
@@ -338,7 +343,7 @@ export default function HTableModule(){
               {/* grid: no outer border; header row has no borders */}
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers: NO borders; only dashed empty state from CSS class */}
-                <div className="hhead">
+                <div className="hhead" style={{minHeight:CELL_H}}>
                   <Slot style={{minHeight:CELL_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{
@@ -349,7 +354,7 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead">
+                <div className="hhead" style={{minHeight:CELL_H}}>
                   <Slot style={{minHeight:CELL_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
                     onDropContent={(d)=>{
@@ -360,11 +365,11 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead">{/* blank */}</div>
+                <div className="hhead" style={{minHeight:CELL_H}}>{/* blank */}</div>
 
                 {/* Row 1 (data) */}
-                <div ref={refs.uTop} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${!table.uTop ? "empty" : ""}`}
+                <div ref={refs.uTop} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${!table.uTop ? "empty" : ""}`}
                     test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uTop:d.label}
@@ -375,24 +380,25 @@ export default function HTableModule(){
                     <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.sTop} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.sTop==null ? "empty" : ""}`}
+                <div ref={refs.sTop} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.sTop==null ? "empty" : ""}`}
                     test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sTop: Number(d.value)}
-                      const both = (t2.sTop!=null && t2.sBottom!=null && t2.sTop!==t2.sBottom)
+                      const both = (t2.sTop!=null && t2.sBottom!=null)
                       if(both){ setDone(4); next(); }
                       return t2
                     })}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.vTop} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.vTop==null ? "empty" : ""}`}
+                <div ref={refs.vTop} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
-                      const correct = problem?.given?.row==='top' && d.value===problem?.given?.value
-                      if(!correct){ miss(5); return t }
+                      const isCorrectRow = problem?.given?.row==='top'
+                      const isCorrectVal = d.value===problem?.given?.value
+                      if(!(isCorrectRow && isCorrectVal)){ miss(5); return t }
                       const t2={...t,vTop:Number(d.value)}
                       if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
                       return t2
@@ -401,12 +407,12 @@ export default function HTableModule(){
                   </Slot>
                 </div>
 
-                {/* Horizontal spacer (visual gap); solid line is drawn by absolute overlay below */}
+                {/* Spacer; solid H-line drawn below */}
                 <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
                 {/* Row 2 (data) */}
-                <div ref={refs.uBottom} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${!table.uBottom ? "empty" : ""}`}
+                <div ref={refs.uBottom} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${!table.uBottom ? "empty" : ""}`}
                     test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uBottom:d.label}
@@ -417,24 +423,25 @@ export default function HTableModule(){
                     <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.sBottom} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.sBottom==null ? "empty" : ""}`}
+                <div ref={refs.sBottom} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.sBottom==null ? "empty" : ""}`}
                     test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sBottom: Number(d.value)}
-                      const both = (t2.sTop!=null && t2.sBottom!=null && t2.sTop!==t2.sBottom)
+                      const both = (t2.sTop!=null && t2.sBottom!=null)
                       if(both){ setDone(4); next(); }
                       return t2
                     })}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.vBottom} className="hcell">
-                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
+                <div ref={refs.vBottom} className="hcell" style={{minHeight:CELL_H}}>
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
-                      const correct = problem?.given?.row==='bottom' && d.value===problem?.given?.value
-                      if(!correct){ miss(5); return t }
+                      const isCorrectRow = problem?.given?.row==='bottom'
+                      const isCorrectVal = d.value===problem?.given?.value
+                      if(!(isCorrectRow && isCorrectVal)){ miss(5); return t }
                       const t2={...t,vBottom:Number(d.value)}
                       if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
                       return t2
@@ -466,16 +473,16 @@ export default function HTableModule(){
                   }}
                 />
 
-                {/* Oval highlight for the chosen pair (step 8) */}
+                {/* Oval highlight for the chosen pair (step 8) — now RED */}
                 {oval && (
                   <div
                     style={{
                       position:'absolute',
                       left: oval.left, top: oval.top,
-                      width: oval.len, height: 50,
+                      width: oval.len, height: 54,
                       transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '5px solid #0ea5e9', borderRadius: 9999,
-                      pointerEvents:'none', boxShadow:'0 0 8px rgba(14,165,233,0.6)'
+                      border: '5px solid #ef4444', borderRadius: 9999,
+                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
                     }}
                   />
                 )}
@@ -497,74 +504,84 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* Header choices only for steps 1–3 */}
-            {step>=1 && step<=3 && (
+            {/* Header choices only for step 1 (col 1) or step 3 (col 2) */}
+            {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoices.map(h => (
+                {headerChoicesCol1.map(h => (
+                  <Draggable key={h.id} id={h.id} label={h.label} data={h} />
+                ))}
+              </div>
+            )}
+            {step===3 && (
+              <div className="chips with-borders center" style={{marginTop:8}}>
+                {headerChoicesCol2.map(h => (
                   <Draggable key={h.id} id={h.id} label={h.label} data={h} />
                 ))}
               </div>
             )}
 
-            {/* Unit chips only for steps 2–5 */}
-            {step>=2 && step<=5 && (
+            {/* Unit chips only for step 2 */}
+            {step===2 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
-            {/* Number chips only for steps 4–5 */}
-            {step>=4 && step<=5 && (
+            {/* Number chips only for steps 5 & 6 */}
+            {(step===5 || step===6) && (
               <div className="chips center mt-8">
                 {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
-            {/* Steps 7–10 */}
-            {step>=6 && (
-              <>
-                {step===6 && (
-                  <div className="chips center mt-8">
-                    <button className="chip" onClick={()=>{ setDone(6); next(); }}>Next</button>
-                  </div>
-                )}
+            {/* Step 7: choose operation (Cross Multiply is correct) */}
+            {step===6 && (
+              <div className="chips with-borders center mt-8">
+                {[
+                  { id:'op_x', label:'Cross Multiply', good:true },
+                  { id:'op_add', label:'Add the numbers' },
+                  { id:'op_sub', label:'Subtract the numbers' },
+                  { id:'op_avg', label:'Average the numbers' },
+                ].map(o => (
+                  <button
+                    key={o.id}
+                    className="chip"
+                    onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}
+                  >{o.label}</button>
+                ))}
+              </div>
+            )}
 
-                {step===7 && (
-                  <div className="chips with-borders center mt-8">
-                    {[crossPair, ...wrongPairs].filter(Boolean)
-                      .sort(()=>Math.random()-0.5)
-                      .map((p,idx)=>(
-                        <button key={idx} className="chip" onClick={()=>chooseMultiply(p)}>
-                          {p.label}
-                        </button>
-                      ))}
-                  </div>
-                )}
+            {/* Step 8: which numbers to multiply (chips built from crossPair + distractors) */}
+            {step===7 && (
+              <div className="chips with-borders center mt-8">
+                {[crossPair, ...wrongPairs].filter(Boolean)
+                  .sort(()=>Math.random()-0.5)
+                  .map((p,idx)=>(
+                    <button key={idx} className="chip" onClick={()=>chooseMultiply(p)}>
+                      {p.label}
+                    </button>
+                  ))}
+              </div>
+            )}
 
-                {step===8 && (
-                  <div className="chips center mt-8">
-                    <button className="chip" onClick={()=>{ setDone(8); next(); }}>Next</button>
-                  </div>
-                )}
+            {/* Step 9: choose divisor number */}
+            {step===8 && (
+              <div className="chips with-borders center mt-8">
+                <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sTop))}>
+                  Divide by {table.sTop ?? '—'}
+                </button>
+                <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sBottom))}>
+                  Divide by {table.sBottom ?? '—'}
+                </button>
+              </div>
+            )}
 
-                {step>=9 && (
-                  <>
-                    {step===9 && (
-                      <div className="chips with-borders center mt-8">
-                        <button className="chip" onClick={()=>chooseDivideByNumber(table.sTop ?? NaN)}>
-                          Divide by {table.sTop ?? '—'}
-                        </button>
-                        <button className="chip" onClick={()=>chooseDivideByNumber(table.sBottom ?? NaN)}>
-                          Divide by {table.sBottom ?? '—'}
-                        </button>
-                      </div>
-                    )}
-                    <div className="toolbar mt-10 center">
-                      <button className="button success" disabled={table.result==null} onClick={submitAttempt}>Submit</button>
-                    </div>
-                  </>
-                )}
-              </>
+            {/* Step 10: submit */}
+            {step>=9 && (
+              <div className="toolbar mt-10 center">
+                <button className="button success" disabled={table.result==null} onClick={submitAttempt}>Submit</button>
+              </div>
             )}
           </div>
         </div>
