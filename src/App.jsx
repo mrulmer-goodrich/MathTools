@@ -3,6 +3,7 @@ import React, {useState} from 'react'
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
+import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 
 export default function App(){
   const [route,setRoute] = useState('home')
@@ -19,6 +20,7 @@ export default function App(){
           <div className="row home-buttons">
             <BigButton onClick={()=>setRoute('scale')}>Scale Factor</BigButton>
             <BigButton onClick={()=>setRoute('htable')}>H‑Table</BigButton>
+            <BigButton onClick={()=>setRoute('ptables')}>Proportional Tables</BigButton>
           </div>
         </>
       )}
@@ -41,5 +43,17 @@ export default function App(){
         </>
       )}
     </div>
+  )
+}
+
+      {route==='ptables' && (
+        <>
+          <div className="row" style={{ justifyContent: 'center', marginBottom: 12 }}>
+            <BigButton onClick={() => setRoute('home')}>Home</BigButton>
+          </div>
+          <ProportionalTablesModule />
+        </>
+     )}
+      </div>
   )
 }
