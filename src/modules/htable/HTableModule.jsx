@@ -1,4 +1,11 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.4 — solid H, big cells, step gating refined, red oval)
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.6)
+// - Solid H lines, big uniform dropzones
+// - Step flow w/ distractors, strict row guards
+// - Red oval highlight (multiply), red triple underline (divisor)
+// - Large-print math strip persists across steps 8–10
+// - Step 10 "Calculate" shows "= answer", confetti, and blinking New Problem
+// - Language rotation w/ fallback + single mask "XXXX XXXX XX" (no Blackout Mode)
+
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -17,7 +24,7 @@ const STEP_TITLES = [
   'Step 7: What do we do next?',
   'Step 8: Which numbers are we multiplying?',
   'Step 9: Which number are we dividing by?',
-  'Step 10: Submit your answer'
+  'Step 10: Calculate',
 ]
 
 /* ---------- Step 1 tiles (correct = Draw an H-Table) ---------- */
@@ -61,7 +68,7 @@ const genSaneHProblem = () => {
 
 export default function HTableModule(){
   // bump so stale localStorage never freezes this build
-  const H_SNAP_VERSION = 7
+  const H_SNAP_VERSION = 8
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -75,6 +82,12 @@ export default function HTableModule(){
   const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_TITLES.map(()=>({misses:0,done:false})))
   const [openSum, setOpenSum] = useState(false)
 
+  // Large-print math strip state (appears at steps 8–10)
+  const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false })
+
+  // Confetti + blink
+  const [confettiOn, setConfettiOn] = useState(false)
+
   useEffect(()=>{
     const next = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } }
     saveSession(next); setSession(next)
@@ -85,16 +98,15 @@ export default function HTableModule(){
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
   /* ---------- language / redaction ---------- */
+  const FALLBACK_LANGS = ['Spanish','Vietnamese','French','Chinese','Arabic','Korean']
   const [showEnglish,setShowEnglish]=useState(true)
-  const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX'
+  const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX XXXX XX'
   const timerRef = useRef(null)
-  const allowedLangs = useMemo(()=>{
-    const byOrder = problem?.altOrder || []
-    const inAlts = Object.keys(problem?.text?.alts || {})
-    const ordered = byOrder.filter(x => inAlts.includes(x))
-    return ordered.length ? ordered : inAlts
+  const allowedModes = useMemo(()=>{
+    const altKeys = Object.keys(problem?.text?.alts || {})
+    const base = altKeys.length ? altKeys : FALLBACK_LANGS
+    return [...base, 'XXXX XXXX XX']
   },[problem?.id])
-  const allowedModes = useMemo(()=>[...allowedLangs, 'XXXX'],[allowedLangs])
   const redactText = (txt, units)=>{
     if(!txt) return ''
     const unitList = Array.isArray(units) ? units.slice() : []
@@ -129,24 +141,52 @@ export default function HTableModule(){
     startTimer()
     const t = setTimeout(()=>{
       setShowEnglish(false)
-      if(allowedModes.length>0){
+      if (allowedModes.length>0){
         const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
         setMode(pick)
       }
-    },10000)
+    }, 10000)
     return ()=>{ stopTimer(); clearTimeout(t) }
   },[problem?.id, allowedModes.length])
 
   /* ---------- chip pools ---------- */
-  // Units: ONLY the correct two units (no decoys) for Step 3
+
+  // Step 3: two correct units + 2 distractors from other categories
   const unitChoices = useMemo(()=>{
-    const uniq = Array.from(new Set(problem.units || []))
-    return uniq.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
+    const correct = Array.from(new Set(problem.units || [])).slice(0,2)
+    const cat = unitCategory(correct[0] || '') // choose distractors from other cats
+    const allUnitsFlat = Object.entries(UNIT_CATS).flatMap(([k,v]) => v.map(u=>({u,cat:k})))
+    const pool = allUnitsFlat.filter(x => x.cat !== cat && !correct.includes(x.u))
+    // pick two distractors that are short and common
+    const picks = []
+    for (let i=0; i<pool.length && picks.length<2; i++){
+      const candidate = pool[Math.floor(Math.random()*pool.length)]
+      if(!picks.find(p=>p.u===candidate.u)) picks.push(candidate)
+    }
+    const full = [...correct, ...picks.map(p=>p.u)].slice(0,4)
+    return full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
   },[problem])
-  // Numbers: we build at runtime; only used on steps 5 and 6
-  const numberChoices = useMemo(()=>{
-    const nums = [problem.scale?.[0], problem.scale?.[1], problem.given?.value].filter(x=>x!=null)
-    return Array.from(new Set(nums)).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:Number(n) }))
+
+  // Steps 5 & 6: numbers (robust, with distractors)
+  const makeNumberSet = (baseNums, needCount=6)=>{
+    const set = new Set(baseNums.filter(x=>Number.isFinite(Number(x))).map(Number))
+    // add distractors near the scale/given range
+    const approx = [...set]
+    const base = approx.length ? approx : [5,10,12,15,18,20]
+    const min = Math.max(1, Math.min(...base)-5)
+    const max = Math.max(...base)+10
+    while(set.size < needCount){
+      set.add(Math.floor(Math.random()*(max-min+1))+min)
+    }
+    return Array.from(set)
+  }
+  const numbersStep5 = useMemo(()=>{
+    const base = [problem.scale?.[0], problem.scale?.[1], problem.given?.value]
+    return makeNumberSet(base, 7).map((n,i)=>({ id:'n5_'+i, label:String(n), kind:'num', value:Number(n) }))
+  },[problem])
+  const numbersStep6 = useMemo(()=>{
+    const base = [problem.given?.value]
+    return makeNumberSet(base, 4).map((n,i)=>({ id:'n6_'+i, label:String(n), kind:'num', value:Number(n) }))
   },[problem])
 
   // Header options pools
@@ -169,11 +209,11 @@ export default function HTableModule(){
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
   const acceptScaleTop   = d => step===5 && d.kind==='num'
   const acceptScaleBottom= d => step===5 && d.kind==='num'
-  // The "other number" must go in the given row only (step 6)
-  const acceptValueTop   = d => step===6 && d.kind==='num' && problem?.given?.row==='top'
-  const acceptValueBottom= d => step===6 && d.kind==='num' && problem?.given?.row==='bottom'
+  // The "other number" must go in the given row only (step 6) — strict row guard
+  const acceptValueTop   = d => step===6 && d.kind==='num' && problem?.given?.row==='top' && d.value===problem?.given?.value
+  const acceptValueBottom= d => step===6 && d.kind==='num' && problem?.given?.row==='bottom' && d.value===problem?.given?.value
 
-  /* ---------- geometry refs for precise H-lines & highlight oval ---------- */
+  /* ---------- geometry refs for precise H-lines & highlight/underline overlays ---------- */
   const gridRef = useRef(null)
   const refs = {
     uTop: useRef(null),
@@ -185,6 +225,7 @@ export default function HTableModule(){
   }
   const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 })
   const [oval, setOval] = useState(null) // {left, top, len, rot}
+  const [tripleUL, setTripleUL] = useState(null) // {left, top, width}
 
   const measure = ()=>{
     const g = gridRef.current
@@ -209,6 +250,19 @@ export default function HTableModule(){
     // horizontal line between data rows
     const hTop = (r_vTop.bottom + r_vBottom.top)/2 - gr.top
     setLines({ v1Left: v1, v2Left: v2, vTop: r_vTop.top - gr.top, vHeight, hTop, gridW: gr.width })
+
+    // reposition triple underline if active
+    if (tripleUL && tripleUL.key){
+      const target = refs[tripleUL.key]?.current?.getBoundingClientRect()
+      if(target){
+        setTripleUL({
+          key: tripleUL.key,
+          left: target.left - gr.left + 8,
+          top: target.bottom - gr.top - 18,
+          width: Math.max(24, target.width - 16)
+        })
+      }
+    }
   }
 
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom])
@@ -259,31 +313,40 @@ export default function HTableModule(){
     const correct = (pair.a===crossPair.a && pair.b===crossPair.b)
     setHighlightKeys(pair.keys || [])
     if(!correct){ miss(7); return }
-    setTable(t=>({ ...t, product: pair.a * pair.b }))
+    const product = pair.a * pair.b
+    setTable(t=>({ ...t, product }))
+    setMathStrip(s=>({ ...s, a: pair.a, b: pair.b })) // show "a × b" starting step 8
     setDone(7); next()
   }
 
+  // When choosing the divisor, we also draw a red triple underline under that scale number
   const chooseDivideByNumber = (num)=>{
-    const divisor = num
-    if (table.product==null || divisor==null || divisor===0) { miss(8); return }
-    setTable(t=>({ ...t, divisor, result: t.product / divisor }))
+    const div = Number(num)
+    if (table.product==null || !Number.isFinite(div) || div===0) { miss(8); return }
+    const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null)
+    const g = gridRef.current
+    if (g && key){
+      const gr = g.getBoundingClientRect()
+      const r = refs[key].current?.getBoundingClientRect()
+      if (r){
+        setTripleUL({
+          key,
+          left: r.left - gr.left + 8,
+          top: r.bottom - gr.top - 18,
+          width: Math.max(24, r.width - 16)
+        })
+      }
+    }
+    const result = table.product / div
+    setTable(t=>({ ...t, divisor: div, result }))
+    setMathStrip(s=>({ ...s, divisor: div, result })) // update fraction
     setDone(8); next()
   }
 
-  const submitAttempt = ()=>{
-    if (table.result==null) return
-    const attempt = {
-      ts: Date.now(),
-      problemId: problem?.id,
-      units: problem?.units,
-      scale: [table.sTop, table.sBottom],
-      given: { row: problem?.given?.row, value: problem?.given?.value },
-      answer: table.result
-    }
-    const nextSession = { ...(session||{}), attempts: [...(session?.attempts||[]), attempt] }
-    saveSession({ ...nextSession, hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } })
-    setSession(nextSession)
-    setOpenSum(true)
+  const onCalculate = ()=>{
+    // We already computed result in Step 9; this toggles visibility and party
+    setMathStrip(s=>({ ...s, showResult: true }))
+    setConfettiOn(true)
   }
 
   const resetProblem = ()=>{
@@ -293,15 +356,19 @@ export default function HTableModule(){
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})))
     setShowEnglish(true); setMode('English')
     setHighlightKeys([])
+    setOval(null); setTripleUL(null)
+    setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false })
+    setConfettiOn(false)
   }
 
   const handleStep1 = (choice)=>{ if(choice?.correct){ setDone(0); setStep(1); } else { miss(0) } }
 
+  /* ---------- Story + language ---------- */
   const Story = ()=>{
     const p = problem
     let txt = p?.text?.english || ''
     if (!showEnglish){
-      if (mode === 'XXXX'){
+      if (mode === 'XXXX XXXX XX'){
         txt = redactText(p?.text?.english || '', problem.units)
       } else {
         const alt = p?.text?.alts?.[mode]
@@ -316,23 +383,48 @@ export default function HTableModule(){
         </div>
         <div className="toolbar" style={{justifyContent:'center', marginTop:4, gap:12, display:'flex'}}>
           <button
-            className="button big-under"
+            className={`button big-under ${confettiOn ? 'blink' : ''}`}
+            style={confettiOn ? { animation: 'htable-blink 1s linear infinite' } : undefined}
             onPointerDown={()=>{ setShowEnglish(true) }}
             onPointerUp={()=>{ setShowEnglish(false) }}
             aria-label="Hold English"
           >Hold: English</button>
-          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
+          <button
+            className={`button primary big-under ${confettiOn ? 'blink' : ''}`}
+            style={confettiOn ? { animation: 'htable-blink 1s linear infinite' } : undefined}
+            onClick={resetProblem}
+          >New Problem</button>
         </div>
       </>
     )
   }
 
-  const CELL_H = 84 // bigger, uniform across all body cells
+  const CELL_H = 96 // bigger, uniform across all body cells (same as headers)
   const lineColor = '#0f172a' // slate-900 (dark)
   const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : ''
 
   return (
     <div className="container">
+      {/* Inject local styles for blink + confetti + fraction strip */}
+      <style>{`
+        @keyframes htable-blink { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.3); } }
+        @keyframes confettiFall {
+          0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(120vh) rotate(720deg); opacity: 1; }
+        }
+        .htable-confetti { position: absolute; left: 0; top: 0; width: 100%; height: 0; pointer-events: none; }
+        .htable-confetti .piece {
+          position: absolute; width: 10px; height: 14px; opacity: 0.9;
+          animation: confettiFall linear infinite; border-radius: 2px;
+        }
+        .math-strip { margin-top: 14px; text-align: center; }
+        .math-strip .big { font-size: 26px; font-weight: 700; }
+        .math-strip .fraction { display: inline-block; }
+        .math-strip .numerator { font-size: 24px; font-weight: 700; }
+        .math-strip .bar { height: 4px; background: #0f172a; margin: 6px 0; }
+        .math-strip .denominator { font-size: 24px; font-weight: 700; }
+      `}</style>
+
       <div className="panes">
         {/* LEFT */}
         <div className="card">
@@ -396,6 +488,7 @@ export default function HTableModule(){
                   <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
+                      // double-guard: only correct row + value
                       const isCorrectRow = problem?.given?.row==='top'
                       const isCorrectVal = d.value===problem?.given?.value
                       if(!(isCorrectRow && isCorrectVal)){ miss(5); return t }
@@ -439,6 +532,7 @@ export default function HTableModule(){
                   <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
+                      // double-guard: only correct row + value
                       const isCorrectRow = problem?.given?.row==='bottom'
                       const isCorrectVal = d.value===problem?.given?.value
                       if(!(isCorrectRow && isCorrectVal)){ miss(5); return t }
@@ -473,7 +567,7 @@ export default function HTableModule(){
                   }}
                 />
 
-                {/* Oval highlight for the chosen pair (step 8) — now RED */}
+                {/* Oval highlight for the chosen pair (step 8) — RED */}
                 {oval && (
                   <div
                     style={{
@@ -486,13 +580,22 @@ export default function HTableModule(){
                     }}
                   />
                 )}
+
+                {/* Triple underline overlay — RED */}
+                {tripleUL && (
+                  <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
         {/* RIGHT */}
-        <div className="card right-steps">
+        <div className="card right-steps" style={{position:'relative', overflow:'hidden'}}>
           <div className="section">
             <div className="step-title">{STEP_TITLES[step]}</div>
 
@@ -520,17 +623,22 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* Unit chips only for step 2 */}
+            {/* Units only for step 2 */}
             {step===2 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
-            {/* Number chips only for steps 5 & 6 */}
-            {(step===5 || step===6) && (
+            {/* Numbers only for step 5 & 6 */}
+            {step===5 && (
               <div className="chips center mt-8">
-                {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                {numbersStep5.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+              </div>
+            )}
+            {step===6 && (
+              <div className="chips center mt-8">
+                {numbersStep6.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
@@ -552,20 +660,42 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* Step 8: which numbers to multiply (chips built from crossPair + distractors) */}
+            {/* Step 8: which numbers to multiply */}
             {step===7 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean)
                   .sort(()=>Math.random()-0.5)
                   .map((p,idx)=>(
-                    <button key={idx} className="chip" onClick={()=>chooseMultiply(p)}>
+                    <button key={idx} className="chip" onClick={()=>{
+                      chooseMultiply(p)
+                      // also clear any prior triple underline when redoing
+                      setTripleUL(null)
+                    }}>
                       {p.label}
                     </button>
                   ))}
               </div>
             )}
 
-            {/* Step 9: choose divisor number */}
+            {/* Large-print math strip (persists from step 8 onward) */}
+            {step>=7 && (
+              <div className="math-strip">
+                {!mathStrip.divisor ? (
+                  <div className="big">{(mathStrip.a!=null && mathStrip.b!=null) ? `${mathStrip.a} × ${mathStrip.b}` : ''}</div>
+                ) : (
+                  <div className="fraction">
+                    <div className="numerator">{`${mathStrip.a} × ${mathStrip.b}`}</div>
+                    <div className="bar"></div>
+                    <div className="denominator">{`${mathStrip.divisor}`}</div>
+                  </div>
+                )}
+                {mathStrip.showResult && (
+                  <div className="big" style={{marginTop:10}}>= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>
+                )}
+              </div>
+            )}
+
+            {/* Step 9: choose divisor */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
                 <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sTop))}>
@@ -577,13 +707,33 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* Step 10: submit */}
+            {/* Step 10: Calculate */}
             {step>=9 && (
               <div className="toolbar mt-10 center">
-                <button className="button success" disabled={table.result==null} onClick={submitAttempt}>Submit</button>
+                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
             )}
           </div>
+
+          {/* Confetti (right card) */}
+          {confettiOn && (
+            <div className="htable-confetti">
+              {Array.from({length:60}).map((_,i)=>{
+                const left = Math.random()*100
+                const dur = 5 + Math.random()*4
+                const delay = Math.random()*2
+                const bg = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4'][i%6]
+                return (
+                  <div key={i} className="piece" style={{
+                    left: `${left}%`,
+                    background: bg,
+                    animationDuration: `${dur}s`,
+                    animationDelay: `${delay}s`
+                  }} />
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
