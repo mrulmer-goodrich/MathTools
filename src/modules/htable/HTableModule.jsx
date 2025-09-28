@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — Merged (v1.0)
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v1.2)
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -6,11 +6,17 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
+/** ------------------------------
+ *  Step copy (kept identical)
+ *  ------------------------------ */
 const STEP_HEADS = [
   'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale', 'Place Given',
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
 ]
 
+/** ------------------------------
+ *  Problem sanity (same helpers)
+ *  ------------------------------ */
 const UNIT_CATS = {
   length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
   time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours'],
@@ -39,41 +45,47 @@ const genSaneHProblem = () => {
   return p
 }
 
+/** ------------------------------
+ *  Component
+ *  ------------------------------ */
 export default function HTableModule() {
- // Versioned snapshot so old saved state doesn't freeze the UI across releases
-const H_SNAP_VERSION = 2;
-const __persisted = loadSession() || {};
-const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION)
-  ? __persisted.hSnap
-  : null;
-  
-const [session, setSession] = useState(loadSession() || { attempts: [] });
-const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem());
-const [table, setTable] = useState(() => (H_PERSIST?.table) || {
-  head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
-  product:null, divisor:null, result:null
-});
-const [step, setStep] = useState(H_PERSIST?.step ?? 0);
-const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_HEADS.map(()=>({misses:0,done:false})));
-const [openSum, setOpenSum] = useState(false);
+  // versioned snapshot so old saved state doesn't freeze the UI
+  const H_SNAP_VERSION = 2
+  const __persisted = loadSession() || {}
+  const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION)
+    ? __persisted.hSnap
+    : null
 
-  // persist
+  const [session, setSession] = useState(loadSession() || { attempts: [] })
+  const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem())
+  const [table, setTable]   = useState(() => (H_PERSIST?.table) || {
+    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
+    product:null, divisor:null, result:null
+  })
+  const [step, setStep]     = useState(H_PERSIST?.step ?? 0)
+  const [steps, setSteps]   = useState(H_PERSIST?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
+  const [openSum, setOpenSum] = useState(false)
+
+  // persist entire snapshot any time core state changes
   useEffect(()=>{
-
     const next = {
-  ...(session || {}),
-  hSnap: { version: H_SNAP_VERSION, problem, table, step, steps }
-};
-    saveSession(next); setSession(next)
+      ...(session || {}),
+      hSnap: { version: H_SNAP_VERSION, problem, table, step, steps }
+    }
+    saveSession(next)
+    setSession(next)
   },[problem, table, step, steps])
 
-  const miss = (idx)=>setSteps(s=>{const c=[...s];c[idx].misses++;return c})
-  const setDone = (idx)=>setSteps(s=>{const c=[...s];c[idx].done=true;return c})
+  // convenience helpers for step flow
+  const miss = (idx)=>setSteps(s=>{const c=[...s]; if (c[idx]) c[idx].misses++; return c})
+  const setDone = (idx)=>setSteps(s=>{const c=[...s]; if (c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
 
-  // language/redaction
-  const [showEnglish,setShowEnglish]=useState(true)
-  const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX'
+  /** ------------------------------
+   *  Language / redaction logic
+   *  ------------------------------ */
+  const [showEnglish,setShowEnglish] = useState(true)
+  const [mode,setMode] = useState('English') // 'English' | <language> | 'XXXX'
   const timerRef = useRef(null)
 
   const allowedLangs = useMemo(()=>{
@@ -87,6 +99,7 @@ const [openSum, setOpenSum] = useState(false);
 
   const redactText = (txt, units)=>{
     if(!txt) return ''
+    // preserve unit tokens; redact letters elsewhere to 'X'
     const unitList = Array.isArray(units) ? units.slice() : []
     unitList.sort((a,b)=> (b||'').length - (a||'').length)
     const placeholders = new Map()
@@ -106,6 +119,7 @@ const [openSum, setOpenSum] = useState(false);
     return out
   }
 
+  const stopTimer = ()=> { if(timerRef.current){ clearInterval(timerRef.current); timerRef.current=null } }
   const startTimer = ()=>{
     stopTimer()
     timerRef.current = setInterval(()=>{
@@ -113,12 +127,13 @@ const [openSum, setOpenSum] = useState(false);
         const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
         setMode(pick)
       }
-    },15000)
+    }, 15000)
   }
-  const stopTimer = ()=> { if(timerRef.current){ clearInterval(timerRef.current); timerRef.current=null } }
 
   useEffect(()=>{
+    // T+0: start cadence
     startTimer()
+    // T+10s: switch once from English
     const t = setTimeout(()=>{
       setShowEnglish(false)
       if (allowedModes.length>0){
@@ -129,7 +144,9 @@ const [openSum, setOpenSum] = useState(false);
     return ()=>{ stopTimer(); clearTimeout(t) }
   },[problem?.id, allowedModes.length])
 
-  // choices
+  /** ------------------------------
+   *  Chip pools
+   *  ------------------------------ */
   const unitChoices = useMemo(()=>{
     const pool = ['meters','kilometers','miles','seconds','minutes','hours','grams','kilograms','liters','milliliters','gallons','cups','dollars','euros']
     const set = new Set(problem.units)
@@ -143,7 +160,9 @@ const [openSum, setOpenSum] = useState(false);
     return Array.from(nums).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:n }))
   },[problem])
 
-  // accept logic
+  /** ------------------------------
+   *  Accept tests (step-gated)
+   *  ------------------------------ */
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
@@ -153,13 +172,16 @@ const [openSum, setOpenSum] = useState(false);
   const acceptValueTop   = d => step===5 && d.kind==='num'
   const acceptValueBottom= d => step===5 && d.kind==='num'
 
-  // compute
+  /** ------------------------------
+   *  Compute pipeline (7–10)
+   *  ------------------------------ */
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
+
   const computeProduct = ()=>{
     if(!givenRow || table.sTop==null || table.sBottom==null) return null
-    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop
-    const v = givenRow==='top' ? table.vTop : table.vBottom
-    return (v!=null && sOpp!=null) ? v * sOpp : null
+    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop   // opposite scale to given
+    const v = givenRow==='top' ? table.vTop : table.vBottom        // given value
+    return (v!=null && sOpp!=null) ? v * sOpp : null               // cross-multiply
   }
   const computeResult = (product)=>{
     if(!givenRow) return null
@@ -167,9 +189,33 @@ const [openSum, setOpenSum] = useState(false);
     if(product==null || divisor==null) return null
     return product / divisor
   }
+
   const product = computeProduct()
   const result  = computeResult(product)
 
+  /** ------------------------------
+   *  Submit -> record attempt -> overlay
+   *  ------------------------------ */
+  const submitAttempt = ()=>{
+    if (result==null) return
+    const attempt = {
+      ts: Date.now(),
+      problemId: problem?.id,
+      units: problem?.units,
+      scale: [table.sTop, table.sBottom],
+      given: { row: problem?.given?.row, value: problem?.given?.value },
+      answer: result
+    }
+    // append to session.attempts and persist; overlay will read from session
+    const nextSession = { ...(session||{}), attempts: [...(session?.attempts||[]), attempt] }
+    saveSession({ ...nextSession, hSnap: { version: H_SNAP_VERSION, problem, table, step, steps } })
+    setSession(nextSession)
+    setOpenSum(true)
+  }
+
+  /** ------------------------------
+   *  Reset / New Problem
+   *  ------------------------------ */
   const resetProblem = ()=>{
     setProblem(genSaneHProblem())
     setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
@@ -178,6 +224,9 @@ const [openSum, setOpenSum] = useState(false);
     setShowEnglish(true); setMode('English')
   }
 
+  /** ------------------------------
+   *  Story (narrative box)
+   *  ------------------------------ */
   const Story = ()=>{
     const p = problem
     let txt = p?.text?.english || ''
@@ -186,6 +235,7 @@ const [openSum, setOpenSum] = useState(false);
         txt = redactText(p?.text?.english || '', problem.units)
       } else {
         const alt = p?.text?.alts?.[mode]
+        // never mix: if no alt exists, fully redact English
         txt = alt || redactText(p?.text?.english || '', problem.units)
       }
     }
@@ -206,21 +256,25 @@ const [openSum, setOpenSum] = useState(false);
     )
   }
 
-  // render
+  /** ------------------------------
+   *  Render
+   *  ------------------------------ */
   return (
     <div className="container">
       <div className="panes">
+        {/* LEFT CARD: Story + H-table */}
         <div className="card">
           <Story />
           {step>=1 && (
             <div className="hwrap" style={{position:'relative', marginTop:12}}>
-              {/* H lines */}
+              {/* H lines (CSS provides exact positions) */}
               <div className="hline horiz" />
               <div className="hline vert1" />
               <div className="hline vert2" />
 
-              {/* Headers */}
+              {/* Grid */}
               <div className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12}}>
+                {/* Headers */}
                 <div className="hhead">
                   <Slot className={`${!table.head1 ? "empty" : ""}`} test={acceptCol1} onDropContent={(d)=>{
                     if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
@@ -239,7 +293,7 @@ const [openSum, setOpenSum] = useState(false);
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead">{/* third column header intentionally blank */}</div>
+                <div className="hhead">{/* 3rd column intentionally blank */}</div>
 
                 {/* Row 1 */}
                 <div className="hcell">
@@ -267,7 +321,6 @@ const [openSum, setOpenSum] = useState(false);
                     const correct = problem?.given?.row==='top' && d.value===problem?.given?.value
                     if(!correct){ miss(5); return t }
                     const t2={...t,vTop:Number(d.value)}
-                    // auto-advance only when exactly one row has given
                     if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
                     return t2
                   })}>
@@ -280,7 +333,7 @@ const [openSum, setOpenSum] = useState(false);
                   <Slot className={`flat ${!table.uBottom ? "empty" : ""}`} test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>{
                     const t2={...t,uBottom:d.label}
                     const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                    if(placed.size===2 && t2.uTop!==t2.uBottom){ setDone(2); next(); }
+                    if(placed.size===2){ setDone(2); next(); }
                     return t2
                   })}>
                     <span>{table.uBottom || ''}</span>
@@ -313,10 +366,10 @@ const [openSum, setOpenSum] = useState(false);
               <div className="toolbar mt-10 center">
                 <button className="button" onClick={()=>{ if(step===6){ setDone(6); next(); } else miss(step) }}>Cross Multiply</button>
                 <button className="button" onClick={()=>{ if(step===8){ setDone(8); next(); } else miss(step) }}>Divide</button>
-                <button className="button success" disabled={result==null} onClick={()=> setOpenSum(true)}>Submit</button>
+                <button className="button success" disabled={result==null} onClick={submitAttempt}>Submit</button>
               </div>
 
-              {/* Product / result (read-only previews) */}
+              {/* Read-only previews */}
               <div className="mt-8 muted">
                 {product!=null && <div>Product: <strong>{product}</strong></div>}
                 {result!=null && <div>Result: <strong>{result}</strong></div>}
@@ -325,35 +378,38 @@ const [openSum, setOpenSum] = useState(false);
           )}
         </div>
 
-        {/* RIGHT: chips and steps */}
+        {/* RIGHT CARD: Chips + checklist */}
         <div className="card right-steps">
           <div className="section">
-
             <div className="step-title">
-  {[
-    'Step 1: What do we do first?',
-    'Step 2: What do we put in the first column? (drag onto header)',
-    'Step 3: Place the units (drag onto left cells)',
-    'Step 4: What goes in the second column? (drag onto header)',
-    'Step 5: Place the scale numbers',
-    'Step 6: Where does the other number go?',
-    'Step 7: What’s next?',
-    'Step 8: Which numbers are we multiplying? (click the grid cells after you place them)',
-    'Step 9: What’s next?',
-    'Step 10: Which number are we dividing? (click the divisor)'
-  ][step]}
-</div>
+              {[
+                'Step 1: What do we do first?',
+                'Step 2: What do we put in the first column? (drag onto header)',
+                'Step 3: Place the units (drag onto left cells)',
+                'Step 4: What goes in the second column? (drag onto header)',
+                'Step 5: Place the scale numbers',
+                'Step 6: Where does the other number go?',
+                'Step 7: What’s next?',
+                'Step 8: Which numbers are we multiplying? (click the grid cells after you place them)',
+                'Step 9: What’s next?',
+                'Step 10: Which number are we dividing? (click the divisor)'
+              ][step]}
+            </div>
+
             <div className="chips with-borders center">
               <Draggable id="col1" label="Units" data={{kind:'col', v:'Units'}} />
               <Draggable id="col2" label="Scale Numbers" data={{kind:'col', v:'ScaleNumbers'}} />
             </div>
+
             <div className="chips center mt-8">
               {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
             </div>
+
             <div className="chips center mt-8">
               {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
             </div>
           </div>
+
           <ol className="muted bigger">
             {STEP_HEADS.map((h,i)=>(
               <li key={i}><strong>{i+1}.</strong> {h} {steps?.[i]?.done ? '✓' : ''}</li>
@@ -363,7 +419,10 @@ const [openSum, setOpenSum] = useState(false);
       </div>
 
       {openSum && (
-        <SummaryOverlay attempts={session?.attempts || []} onClose={()=>setOpenSum(false)} />
+        <SummaryOverlay
+          attempts={session?.attempts || []}
+          onClose={() => { setOpenSum(false); resetProblem(); }}
+        />
       )}
     </div>
   )
