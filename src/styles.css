@@ -299,3 +299,37 @@ body{
   border-radius: 10px;
   padding: 4px 8px;
 }
+
+/* === Proportional Tables (ptable) — additive styles === */
+.ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
+.ptable{ width:100%; border-collapse:collapse; }
+.ptable thead th{
+  background:#f3f4f6; border-bottom:1px solid var(--border-2); padding:8px;
+  text-align:center; font-weight:800; font-size: 15px;
+}
+.ptable tbody td{
+  border-top:1px solid var(--border-2); padding:8px; text-align:center; height:60px;
+}
+.ptable th, .ptable td{ border-right:1px solid var(--border-2); }
+.ptable tr > *:last-child{ border-right:none; }
+
+/* Header drop slot look */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:42px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
+  font-weight:700;
+}
+.ptable-thslot.placed{ background:#e8f1ff; border:1px solid #cbd5e1; font-style:normal; }
+.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
+
+/* Fraction slots inside table */
+.ptable-fracslot{
+  min-width:56px; min-height:40px; border:1px solid var(--border) !important;
+  background:#fff !important; border-radius:8px !important;
+}
+
+/* Right-card status box */
+.status-box{
+  padding:12px; border:1px solid var(--border-2); border-radius:10px; background:#f9fafb;
+  font-size:14px;
+}
