@@ -261,3 +261,11 @@ body{
 /* Toolbar row parity & language badge */
 .htable-toolbar { justify-content: center; margin-top: 10px; gap: 12px; display:flex; }
 .lang-badge { font-size: 12px; color: #475569; margin-top: 6px; }
+
+
+/* Remove any inner panel look around the H grid */
+.hwrap, .hwrap .hgrid {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
