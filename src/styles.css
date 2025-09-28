@@ -1,344 +1,165 @@
-// src/modules/htable/HTableModule.jsx — Merged (v1.0)
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import Draggable from '../../components/DraggableChip.jsx'
-import Slot from '../../components/DropSlot.jsx'
-import SummaryOverlay from '../../components/SummaryOverlay.jsx'
-import { genHProblem } from '../../lib/generator.js'
-import { loadSession, saveSession } from '../../lib/localStorage.js'
+/* styles.css — Merged v3.6.3 + additions (non‑wrapping, halos, H‑lines) */
 
-const STEP_HEADS = [
-  'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale', 'Place Given',
-  'Next?', 'Which multiply?', 'Next?', 'Which divide?'
-]
+/* -------- Brand color tokens -------- */
+:root{
+  --eastway-blue: #0B4B8C;
+  --eastway-green:#0C6B4D;
+  --cms-light:    #DAE9F6;
 
-const UNIT_CATS = {
-  length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
-  time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours'],
-  volume: ['liter','liters','milliliter','milliliters','cup','cups','tablespoon','tablespoons','gallon','gallons'],
-  mass: ['gram','grams','kilogram','kilograms'],
-  count: ['item','items','page','pages','point','points'],
-  money: ['dollar','dollars','$','euro','euros']
-}
-const unitCategory = (u='') => {
-  const s = (u||'').toLowerCase()
-  for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
-  return null
-}
-const saneProblem = (p) => {
-  try{
-    const [u1,u2] = p.units || []
-    const c1 = unitCategory(u1), c2 = unitCategory(u2)
-    if (!c1 || !c2 || c1!==c2) return false
-    if (p?.given?.unit && ![u1,u2].includes(p.given.unit)) return false
-    return true
-  }catch{ return false }
-}
-const genSaneHProblem = () => {
-  let tries = 0, p = genHProblem()
-  while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++ }
-  return p
+  --ink:          #0F172A;
+  --ink-2:        #334155;
+  --ink-3:        #64748B;
+  --border:       #CBD5E1;
+  --border-2:     #E2E8F0;
+  --bg-subtle:    #F1F5F9;
+  --card:         #FFFFFF;
+
+  --t-green:  #10B981;
+  --t-yellow: #F59E0B;
+  --t-red:    #EF4444;
 }
 
-export default function HTableModule() {
-  const [session, setSession] = useState(loadSession() || { attempts: [] })
-  const [problem, setProblem] = useState(() => (loadSession()?.hSnap?.problem) || genSaneHProblem())
-  const [table, setTable] = useState(() => (loadSession()?.hSnap?.table) || {
-    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
-    product:null, divisor:null, result:null
-  })
-  const [step, setStep] = useState(loadSession()?.hSnap?.step ?? 0)
-  const [steps, setSteps] = useState(loadSession()?.hSnap?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
-  const [openSum, setOpenSum] = useState(false)
+*{ box-sizing: border-box; }
 
-  // persist
-  useEffect(()=>{
-    const next = { ...(session || {}), hSnap: { problem, table, step, steps } }
-    saveSession(next); setSession(next)
-  },[problem, table, step, steps])
+html, body, #root{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--ink);
+  background: #f7fafc;
+}
 
-  const miss = (idx)=>setSteps(s=>{const c=[...s];c[idx].misses++;return c})
-  const setDone = (idx)=>setSteps(s=>{const c=[...s];c[idx].done=true;return c})
-  const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
+.container{ max-width:1100px; margin: 24px auto; padding: 0 16px; }
+.header{
+  background: linear-gradient(90deg, var(--eastway-blue), var(--eastway-green));
+  color:white;
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15,42,67,.12);
+  margin-bottom: 18px;
+}
+.brand{ font-weight: 900; font-size: 28px; }
+.subtitle{ font-weight: 700; opacity: .9; margin-top: 4px; }
 
-  // language/redaction
-  const [showEnglish,setShowEnglish]=useState(true)
-  const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX'
-  const timerRef = useRef(null)
+.row{ display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap: wrap; }
 
-  const allowedLangs = useMemo(()=>{
-    const byOrder = problem?.altOrder || []
-    const inAlts = Object.keys(problem?.text?.alts || {})
-    const ordered = byOrder.filter(x => inAlts.includes(x))
-    return ordered.length ? ordered : inAlts
-  },[problem?.id])
+/* Buttons */
+.button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
+.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
+.button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
+.button.big-under{ margin-top:12px; }
+.button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
 
-  const allowedModes = useMemo(()=>[...allowedLangs, 'XXXX'],[allowedLangs])
+/* Cards & panes */
+.panes{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; }
+.card{
+  background: var(--card);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+  min-width: 0;
+}
 
-  const redactText = (txt, units)=>{
-    if(!txt) return ''
-    const unitList = Array.isArray(units) ? units.slice() : []
-    unitList.sort((a,b)=> (b||'').length - (a||'').length)
-    const placeholders = new Map()
-    let out = txt
-    unitList.forEach((u, idx)=>{
-      if(!u) return
-      const ph = `__UNIT_${idx}__`
-      placeholders.set(ph, u)
-      const re = new RegExp(`\\b${u.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b`, 'gi')
-      out = out.replace(re, ph)
-    })
-    out = out.replace(/[A-Za-z]/g, 'X')
-    placeholders.forEach((u, ph)=>{
-      const re = new RegExp(ph, 'g')
-      out = out.replace(re, u)
-    })
-    return out
-  }
+/* Text helpers */
+.muted{ color: var(--ink-3); }
+.muted.small{ font-size: .9rem; }
+.mt-8{ margin-top:8px; } .mt-10{ margin-top:10px; } .ml-6{ margin-left:6px; } .ml-12{ margin-left:12px; }
+.center{ justify-content:center; display:flex; }
+.chips{ display:flex; flex-wrap:wrap; gap:10px; }
+.chips.center{ justify-content:center; }
 
-  const startTimer = ()=>{
-    stopTimer()
-    timerRef.current = setInterval(()=>{
-      if (!showEnglish && allowedModes.length>0){
-        const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
-        setMode(pick)
-      }
-    },15000)
-  }
-  const stopTimer = ()=> { if(timerRef.current){ clearInterval(timerRef.current); timerRef.current=null } }
+/* Scale Factor visuals */
+.shape-area{ position:relative; }
+.rects{
+  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
+  max-width: 100%;
+  overflow: visible;
+}
+.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
+.rect.copy{ background:#F5FAFF; }
 
-  useEffect(()=>{
-    startTimer()
-    const t = setTimeout(()=>{
-      setShowEnglish(false)
-      if (allowedModes.length>0){
-        const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
-        setMode(pick)
-      }
-    }, 10000)
-    return ()=>{ stopTimer(); clearTimeout(t) }
-  },[problem?.id, allowedModes.length])
+.shape-label-center{
+  position:absolute; bottom:10px; left:50%; transform: translateX(-50%);
+  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
+}
 
-  // choices
-  const unitChoices = useMemo(()=>{
-    const pool = ['meters','kilometers','miles','seconds','minutes','hours','grams','kilograms','liters','milliliters','gallons','cups','dollars','euros']
-    const set = new Set(problem.units)
-    while(set.size<6) set.add(pool[Math.floor(Math.random()*pool.length)])
-    return Array.from(set).map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
-  },[problem])
+/* Side number tags — dynamic offset */
+.side-tag{
+  position:absolute; font-weight:900; background:#fff; border-radius:999px;
+  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
+  white-space: nowrap; /* never wrap */
+}
+.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
 
-  const numberChoices = useMemo(()=>{
-    const nums = new Set([problem.scale?.[0], problem.scale?.[1], problem.given?.value].filter(x=>x!=null))
-    while(nums.size<6) nums.add(Math.floor(Math.random()*20)+1)
-    return Array.from(nums).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:n }))
-  },[problem])
+/* Wide click targets (Step 1 only) */
+.rect .side-hit{ position:absolute; background: transparent; z-index: 20; }
+.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.chosen{ background: rgba(245,158,11,.18); } /* yellow */
+.rect .side-hit.good{   background: rgba(16,185,129,.18); } /* green */
 
-  // accept logic
-  const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
-  const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
-  const acceptUnitTop    = d => step===2 && d.kind==='unit'
-  const acceptUnitBottom = d => step===2 && d.kind==='unit'
-  const acceptScaleTop   = d => step===4 && d.kind==='num'
-  const acceptScaleBottom= d => step===4 && d.kind==='num'
-  const acceptValueTop   = d => step===5 && d.kind==='num'
-  const acceptValueBottom= d => step===5 && d.kind==='num'
+/* Fractions, chips */
+.error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
+.fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 120px; }
+.fraction.mini-frac{ width:96px; }
+.fraction > .frac-bar{ grid-row:2; width:100%; height:2px; background:#111827; border-radius:2px; }
+.slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
 
-  // compute
-  const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
-  const computeProduct = ()=>{
-    if(!givenRow || table.sTop==null || table.sBottom==null) return null
-    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop
-    const v = givenRow==='top' ? table.vTop : table.vBottom
-    return (v!=null && sOpp!=null) ? v * sOpp : null
-  }
-  const computeResult = (product)=>{
-    if(!givenRow) return null
-    const divisor = (givenRow==='top') ? table.sTop : table.sBottom
-    if(product==null || divisor==null) return null
-    return product / divisor
-  }
-  const product = computeProduct()
-  const result  = computeResult(product)
+.calc-row{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow-x:auto; }
+.stack-op{ display:grid; grid-template-rows:auto auto; row-gap:10px; justify-items:center; min-width:72px; }
+.chip-tiny{ padding:6px 10px !important; }
 
-  const resetProblem = ()=>{
-    setProblem(genSaneHProblem())
-    setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
-    setStep(0)
-    setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
-    setShowEnglish(true); setMode('English')
-  }
+/* Compute grid */
+.compute-grid{
+  display:grid;
+  grid-template-columns: minmax(120px,1fr) 24px minmax(140px,1fr) 24px minmax(140px,1fr);
+  align-items:end;
+  gap: 16px;
+}
+.compute-grid .op{ text-align:center; font-weight:900; font-size:1.2rem; }
 
-  const Story = ()=>{
-    const p = problem
-    let txt = p?.text?.english || ''
-    if (!showEnglish){
-      if (mode === 'XXXX'){
-        txt = redactText(p?.text?.english || '', problem.units)
-      } else {
-        const alt = p?.text?.alts?.[mode]
-        txt = alt || redactText(p?.text?.english || '', problem.units)
-      }
-    }
-    return (
-      <>
-        <div className="problem">{txt}</div>
-        <div className="toolbar" style={{justifyContent:'center', marginTop: 10, gap: 12, display:'flex'}}>
-          <button
-            className="button big-under"
-            onPointerDown={()=>{ setShowEnglish(true) }}
-            onPointerUp={()=>{ setShowEnglish(false) }}
-            aria-label="Hold English"
-          >Hold: English</button>
-          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
-        </div>
-        <div className="lang-badge">Mode: {showEnglish ? 'English' : mode}</div>
-      </>
-    )
-  }
+/* Chips with borders */
+.chips.with-borders > *{
+  border: 2px solid var(--border) !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+.chips.with-borders > *:active{ cursor: grabbing; }
 
-  // render
-  return (
-    <div className="container">
-      <div className="panes">
-        <div className="card">
-          <Story />
-          {step>=1 && (
-            <div className="hwrap" style={{position:'relative', marginTop:12}}>
-              {/* H lines */}
-              <div className="hline horiz" />
-              <div className="hline vert1" />
-              <div className="hline vert2" />
+/* Non-wrapping chips globally */
+.chip, .side-tag { white-space: nowrap; }
 
-              {/* Headers */}
-              <div className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12}}>
-                <div className="hhead">
-                  <Slot className={`${!table.head1 ? "empty" : ""}`} test={acceptCol1} onDropContent={(d)=>{
-                    if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
-                  }}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
-                      <span className="hhead-text">{table.head1 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead">
-                  <Slot className={`${!table.head2 ? "empty" : ""}`} test={acceptCol2} onDropContent={(d)=>{
-                    if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
-                  }}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
-                      <span className="hhead-text">{table.head2 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead">{/* third column header intentionally blank */}</div>
+/* H‑Table lines */
+.hwrap, .hwrap .hgrid{ background:transparent !important; border:none !important; box-shadow:none !important; }
+.hwrap .hline{ position:absolute; pointer-events:none; }
+.hwrap .hline.horiz{ left:0; right:0; top:50%; border-top:4px solid #334155; transform:translateY(-2px); }
+.hwrap .hline.vert1{ top:0; bottom:0; left:33.333%; border-left:4px solid #334155; transform:translateX(-2px); }
+.hwrap .hline.vert2{ top:0; bottom:0; left:66.666%; border-left:4px solid #334155; transform:translateX(-2px); }
 
-                {/* Row 1 */}
-                <div className="hcell">
-                  <Slot className={`flat ${!table.uTop ? "empty" : ""}`} test={acceptUnitTop} onDropContent={(d)=>setTable(t=>{
-                    const t2={...t,uTop:d.label}
-                    const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                    if(placed.size===2){ setDone(2); next(); }
-                    return t2
-                  })}>
-                    <span>{table.uTop || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className={`flat ${table.sTop==null ? "empty" : ""}`} test={acceptScaleTop} onDropContent={(d)=>setTable(t=>{
-                    const t2={...t,sTop: Number(d.value)}
-                    const both = (t2.sTop!=null && t2.sBottom!=null && t2.sTop!==t2.sBottom)
-                    if(both){ setDone(4); next(); }
-                    return t2
-                  })}>
-                    <span>{table.sTop ?? ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className={`flat ${table.vTop==null ? "empty" : ""}`} test={acceptValueTop} onDropContent={(d)=>setTable(t=>{
-                    const correct = problem?.given?.row==='top' && d.value===problem?.given?.value
-                    if(!correct){ miss(5); return t }
-                    const t2={...t,vTop:Number(d.value)}
-                    // auto-advance only when exactly one row has given
-                    if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
-                    return t2
-                  })}>
-                    <span>{table.vTop ?? ''}</span>
-                  </Slot>
-                </div>
+/* H‑Table empty state */
+.hwrap .empty{ outline:2px dashed #94a3b8; outline-offset:-6px; border-radius:10px; }
+.hwrap .hhead .empty, .hwrap .hcell .empty{
+  background: repeating-linear-gradient(45deg, rgba(148,163,184,.15), rgba(148,163,184,.15) 6px, transparent 6px, transparent 12px);
+}
 
-                {/* Row 2 */}
-                <div className="hcell">
-                  <Slot className={`flat ${!table.uBottom ? "empty" : ""}`} test={acceptUnitBottom} onDropContent={(d)=>setTable(t=>{
-                    const t2={...t,uBottom:d.label}
-                    const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                    if(placed.size===2 && t2.uTop!==t2.uBottom){ setDone(2); next(); }
-                    return t2
-                  })}>
-                    <span>{table.uBottom || ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className={`flat ${table.sBottom==null ? "empty" : ""}`} test={acceptScaleBottom} onDropContent={(d)=>setTable(t=>{
-                    const t2={...t,sBottom: Number(d.value)}
-                    const both = (t2.sTop!=null && t2.sBottom!=null && t2.sTop!==t2.sBottom)
-                    if(both){ setDone(4); next(); }
-                    return t2
-                  })}>
-                    <span>{table.sBottom ?? ''}</span>
-                  </Slot>
-                </div>
-                <div className="hcell">
-                  <Slot className={`flat ${table.vBottom==null ? "empty" : ""}`} test={acceptValueBottom} onDropContent={(d)=>setTable(t=>{
-                    const correct = problem?.given?.row==='bottom' && d.value===problem?.given?.value
-                    if(!correct){ miss(5); return t }
-                    const t2={...t,vBottom:Number(d.value)}
-                    if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
-                    return t2
-                  })}>
-                    <span>{table.vBottom ?? ''}</span>
-                  </Slot>
-                </div>
-              </div>
+/* Halo feedback */
+.side-tag.chosen{ outline: 3px solid #fbbf24; box-shadow: 0 0 0 4px rgba(245,158,11,.25); }
+.side-tag.good{   outline: 3px solid #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,.18); }
 
-              {/* Step 7–10 controls */}
-              <div className="toolbar mt-10 center">
-                <button className="button" onClick={()=>{ if(step===6){ setDone(6); next(); } else miss(step) }}>Cross Multiply</button>
-                <button className="button" onClick={()=>{ if(step===8){ setDone(8); next(); } else miss(step) }}>Divide</button>
-                <button className="button success" disabled={result==null} onClick={()=> setOpenSum(true)}>Submit</button>
-              </div>
-
-              {/* Product / result (read-only previews) */}
-              <div className="mt-8 muted">
-                {product!=null && <div>Product: <strong>{product}</strong></div>}
-                {result!=null && <div>Result: <strong>{result}</strong></div>}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT: chips and steps */}
-        <div className="card right-steps">
-          <div className="section">
-            <div className="chips with-borders center">
-              <Draggable id="col1" label="Units" data={{kind:'col', v:'Units'}} />
-              <Draggable id="col2" label="Scale Numbers" data={{kind:'col', v:'ScaleNumbers'}} />
-            </div>
-            <div className="chips center mt-8">
-              {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
-            </div>
-            <div className="chips center mt-8">
-              {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
-            </div>
-          </div>
-          <ol className="muted bigger">
-            {STEP_HEADS.map((h,i)=>(
-              <li key={i}><strong>{i+1}.</strong> {h} {steps?.[i]?.done ? '✓' : ''}</li>
-            ))}
-          </ol>
-        </div>
-      </div>
-
-      {openSum && (
-        <SummaryOverlay attempts={session?.attempts || []} onClose={()=>setOpenSum(false)} />
-      )}
-    </div>
-  )
+/* Confetti container */
+.sf-confetti{ position:fixed; left:0; right:0; top:0; bottom:0; pointer-events:none; overflow:hidden; z-index: 1000; }
+.sf-confetti-piece{ position:absolute; top:-10vh; animation-name: fall; animation-timing-function: linear; }
+@keyframes fall{
+  0%{ transform: translateY(-10vh) rotate(0deg); opacity:1 }
+  100%{ transform: translateY(110vh) rotate(360deg); opacity:.9 }
 }
