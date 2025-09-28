@@ -1,10 +1,10 @@
-// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.6.2)
-// Improvements from 3.6.0:
-// - Step 4 aligns as a single row: [num/den] [stacked ÷g] [= a/b] [= a if b==1].
-//   'I understand' stays disabled (grayed) until final reveal.
-// - Step 5: clearer layout using a compute grid: Original × Scale Factor = Copy,
-//   with a dedicated 'Compute' button below (no longer the equals sign).
-//   Result fills the Copy cell and updates the '?' pill. Continuous confetti kept.
+// src/modules/scale/ScaleFactor.jsx — FULL REPLACEMENT (v3.6.3)
+/*
+  Changes from 3.6.2 -> 3.6.3
+  - Step 4 row compaction: narrower fractions + stacked ÷g chips (reduced padding/width) to prevent wrap.
+  - Step 5 copy clarified: explicitly tells learners to drag the number from the Original.
+  - Scale factor display on Step 5 shows WHOLE NUMBER when denom==1.
+*/
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -13,7 +13,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genScaleProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-const SNAP_VERSION = 17
+const SNAP_VERSION = 18
 
 const STEP_HEADS = [
   'Label the rectangles',
@@ -229,9 +229,7 @@ export default function ScaleFactorModule() {
     setCalc({num,den,a,b,g})
     setCalcStage(1) // show ÷g
     timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[]
-    // stage 2 after 3s: simplified fraction
     timersRef.current.push(setTimeout(()=>setCalcStage(2), 3000))
-    // stage 3 (whole) and 4 (done)
     if(b===1){
       timersRef.current.push(setTimeout(()=>setCalcStage(3), 6000))
       timersRef.current.push(setTimeout(()=>setCalcStage(4), 9000))
@@ -361,16 +359,16 @@ export default function ScaleFactorModule() {
 
   const MiniFraction = ({top, bottom}) => (
     <div className="fraction mini-frac">
-      <div><span className="chip">{top}</span></div>
-      <div className="frac-bar"></div>
-      <div><span className="chip">{bottom}</span></div>
+      <div><span className="chip chip-tiny">{top}</span></div>
+      <div className="frac-bar narrow"></div>
+      <div><span className="chip chip-tiny">{bottom}</span></div>
     </div>
   )
 
   const StackedDivide = ({g, visible}) => (
     <div className={visible ? 'stack-op sf-fade' : 'stack-op sf-hidden'} aria-hidden={!visible}>
-      <span className="chip">÷ {g}</span>
-      <span className="chip">÷ {g}</span>
+      <span className="chip chip-tiny">÷ {g}</span>
+      <span className="chip chip-tiny">÷ {g}</span>
     </div>
   )
 
@@ -379,7 +377,9 @@ export default function ScaleFactorModule() {
   const stage3 = calcStage>=3 && calc?.b===1
   const stageDone = calcStage>=4 || (calcStage>=3 && calc && calc.b!==1)
 
-  const sfString = calc ? `${calc.a}/${calc.b}` : (num && den ? `${num}/${den}` : '—')
+  const sfString = calc
+    ? (calc.b===1 ? `${calc.a}` : `${calc.a}/${calc.b}`)
+    : (num && den ? `${num}/${den}` : '—')
 
   return (
     <div className="container">
@@ -485,22 +485,22 @@ export default function ScaleFactorModule() {
                 <div className="muted bigger">Tap Calculate, watch the simplification appear from left to right, then confirm.</div>
                 <div className="calc-row mt-8">
                   <MiniFraction top={num} bottom={den} />
-                  <StackedDivide g={calc?.g ?? 'g'} visible={stage1} />
-                  <span className={stage2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage2}>=</span>
-                  <div className={stage2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage2}>
+                  <StackedDivide g={calc?.g ?? 'g'} visible={calcStage>=1} />
+                  <span className={calcStage>=2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=2)}>=</span>
+                  <div className={calcStage>=2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=2)}>
                     <MiniFraction top={calc?.a ?? '—'} bottom={calc?.b ?? '—'} />
                   </div>
                   {calc?.b===1 && (
                     <>
-                      <span className={stage3 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage3}>=</span>
-                      <div className={stage3 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!stage3}>
-                        <span className="chip">{calc?.a ?? '—'}</span>
+                      <span className={calcStage>=3 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=3)}>=</span>
+                      <div className={calcStage>=3 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=3)}>
+                        <span className="chip chip-tiny">{calc?.a ?? '—'}</span>
                       </div>
                     </>
                   )}
                   {!calc && <button className="button primary" onClick={startCalcAnimation}>Calculate</button>}
                   {calc && (
-                    <button className="button primary" disabled={!stageDone} onClick={()=>{ done(4); next(); }}>
+                    <button className="button primary" disabled={!((calcStage>=4) || (calc && calc.b!==1 && calcStage>=3))} onClick={()=>{ done(4); next(); }}>
                       I understand
                     </button>
                   )}
@@ -511,7 +511,7 @@ export default function ScaleFactorModule() {
             {/* Step 5: compute missing side (clear grid) */}
             {step===5 && (
               <div className="section">
-                <div className="muted bigger">What formula do we use?</div>
+                <div className="muted bigger">Drag the number from the <b>Original</b> (left rectangle) that matches the missing side, then press Compute.</div>
 
                 {/* Formula words row */}
                 <div className="fraction-row mt-8 big-fraction">
