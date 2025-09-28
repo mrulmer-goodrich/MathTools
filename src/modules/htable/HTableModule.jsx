@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v1.2)
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v1.3)
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -7,15 +7,23 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 /** ------------------------------
- *  Step copy (kept identical)
+ *  Step copy (unchanged)
  *  ------------------------------ */
 const STEP_HEADS = [
   'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale', 'Place Given',
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
 ]
 
+// Step 1 tiles (correct = Draw an H-Table)
+const STEP1_CHOICES = [
+  { id: 'drawH',     label: 'Draw an H-Table',     correct: true },
+  { id: 'proportion',label: 'Make a Proportion',   correct: false },
+  { id: 'convert',   label: 'Convert Units First', correct: false },
+  { id: 'guess',     label: 'Just Guess',          correct: false },
+]
+
 /** ------------------------------
- *  Problem sanity (same helpers)
+ *  Problem sanity helpers
  *  ------------------------------ */
 const UNIT_CATS = {
   length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
@@ -49,7 +57,7 @@ const genSaneHProblem = () => {
  *  Component
  *  ------------------------------ */
 export default function HTableModule() {
-  // versioned snapshot so old saved state doesn't freeze the UI
+  // Versioned snapshot so old saved state doesn’t freeze the UI across releases
   const H_SNAP_VERSION = 2
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION)
@@ -206,7 +214,6 @@ export default function HTableModule() {
       given: { row: problem?.given?.row, value: problem?.given?.value },
       answer: result
     }
-    // append to session.attempts and persist; overlay will read from session
     const nextSession = { ...(session||{}), attempts: [...(session?.attempts||[]), attempt] }
     saveSession({ ...nextSession, hSnap: { version: H_SNAP_VERSION, problem, table, step, steps } })
     setSession(nextSession)
@@ -225,6 +232,14 @@ export default function HTableModule() {
   }
 
   /** ------------------------------
+   *  Step 1 handler
+   *  ------------------------------ */
+  const handleStep1 = (choice) => {
+    if (choice?.correct) { setDone(0); setStep(1); }
+    else { miss(0); }
+  };
+
+  /** ------------------------------
    *  Story (narrative box)
    *  ------------------------------ */
   const Story = ()=>{
@@ -235,7 +250,6 @@ export default function HTableModule() {
         txt = redactText(p?.text?.english || '', problem.units)
       } else {
         const alt = p?.text?.alts?.[mode]
-        // never mix: if no alt exists, fully redact English
         txt = alt || redactText(p?.text?.english || '', problem.units)
       }
     }
@@ -265,6 +279,22 @@ export default function HTableModule() {
         {/* LEFT CARD: Story + H-table */}
         <div className="card">
           <Story />
+
+          {/* STEP 1: tiles */}
+          {step===0 && (
+            <div className="card section" style={{marginTop:12}}>
+              <div className="step-title">Step 1: What do we do first?</div>
+              <div className="chips with-borders center">
+                {STEP1_CHOICES.map(c => (
+                  <button key={c.id} className="chip" onClick={()=>handleStep1(c)}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* H-table appears only after Step 1 is answered */}
           {step>=1 && (
             <div className="hwrap" style={{position:'relative', marginTop:12}}>
               {/* H lines (CSS provides exact positions) */}
@@ -293,7 +323,7 @@ export default function HTableModule() {
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead">{/* 3rd column intentionally blank */}</div>
+                <div className="hhead">{/* third column intentionally blank */}</div>
 
                 {/* Row 1 */}
                 <div className="hcell">
@@ -362,12 +392,14 @@ export default function HTableModule() {
                 </div>
               </div>
 
-              {/* Step 7–10 controls */}
-              <div className="toolbar mt-10 center">
-                <button className="button" onClick={()=>{ if(step===6){ setDone(6); next(); } else miss(step) }}>Cross Multiply</button>
-                <button className="button" onClick={()=>{ if(step===8){ setDone(8); next(); } else miss(step) }}>Divide</button>
-                <button className="button success" disabled={result==null} onClick={submitAttempt}>Submit</button>
-              </div>
+              {/* Step 7–10 controls (visible when relevant) */}
+              {step>=6 && (
+                <div className="toolbar mt-10 center">
+                  <button className="button" onClick={()=>{ if(step===6){ setDone(6); next(); } else miss(step) }}>Cross Multiply</button>
+                  <button className="button" onClick={()=>{ if(step===8){ setDone(8); next(); } else miss(step) }}>Divide</button>
+                  <button className="button success" disabled={result==null || step!==9} onClick={submitAttempt}>Submit</button>
+                </div>
+              )}
 
               {/* Read-only previews */}
               <div className="mt-8 muted">
@@ -378,7 +410,7 @@ export default function HTableModule() {
           )}
         </div>
 
-        {/* RIGHT CARD: Chips + checklist */}
+        {/* RIGHT CARD: dynamic guidance + chips */}
         <div className="card right-steps">
           <div className="section">
             <div className="step-title">
@@ -396,18 +428,22 @@ export default function HTableModule() {
               ][step]}
             </div>
 
-            <div className="chips with-borders center">
-              <Draggable id="col1" label="Units" data={{kind:'col', v:'Units'}} />
-              <Draggable id="col2" label="Scale Numbers" data={{kind:'col', v:'ScaleNumbers'}} />
-            </div>
+            {step>=1 && (
+              <>
+                <div className="chips with-borders center">
+                  <Draggable id="col1" label="Units" data={{kind:'col', v:'Units'}} />
+                  <Draggable id="col2" label="Scale Numbers" data={{kind:'col', v:'ScaleNumbers'}} />
+                </div>
 
-            <div className="chips center mt-8">
-              {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
-            </div>
+                <div className="chips center mt-8">
+                  {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                </div>
 
-            <div className="chips center mt-8">
-              {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
-            </div>
+                <div className="chips center mt-8">
+                  {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                </div>
+              </>
+            )}
           </div>
 
           <ol className="muted bigger">
