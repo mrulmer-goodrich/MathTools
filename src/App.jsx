@@ -14,12 +14,12 @@ export default function App(){
         <>
           <div className="header landing-header">
             <div className="brand landing-title">UG Math Tools</div>
-            <div className="subtitle landing-subtitle">Scale Factor + H‑Table Trainer</div>
+            <div className="subtitle landing-subtitle">Scale Factor + H-Table Trainer</div>
           </div>
 
           <div className="row home-buttons">
             <BigButton onClick={()=>setRoute('scale')}>Scale Factor</BigButton>
-            <BigButton onClick={()=>setRoute('htable')}>H‑Table</BigButton>
+            <BigButton onClick={()=>setRoute('htable')}>H-Table</BigButton>
             <BigButton onClick={()=>setRoute('ptables')}>Proportional Tables</BigButton>
           </div>
         </>
@@ -42,9 +42,6 @@ export default function App(){
           <HTableModule />
         </>
       )}
-    </div>
-  )
-}
 
       {route==='ptables' && (
         <>
@@ -53,7 +50,7 @@ export default function App(){
           </div>
           <ProportionalTablesModule />
         </>
-     )}
-      </div>
+      )}
+    </div>
   )
 }
