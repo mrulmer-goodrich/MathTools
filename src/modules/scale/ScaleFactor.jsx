@@ -268,10 +268,20 @@ export default function ScaleFactorModule() {
   }
 
   const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
-  const canArmCompute = () => {
-    const haveOrig = s5.origVal != null
-    return !s5.computed && !showConfetti && (wordsOK && haveOrig && (calc || (num!=null && den!=null)))
+const canArmCompute = () => {
+  if (showConfetti) return false;
+
+  // Step 4: Calculate & Simplify (just need numerator & denominator present)
+  if (step === 4) {
+    return !s5.computed && (num != null && den != null);
   }
+
+  // Step 5: Compute missing length (need words OK + original value + a calc path)
+  const haveOrig = s5.origVal != null;
+  return !s5.computed && (wordsOK && haveOrig && (calc || (num != null && den != null)));
+};
+
+
 
   const doComputeMissing = () => {
     const sf = (calc ? (calc.a/ calc.b) : (num/den))
@@ -369,8 +379,8 @@ export default function ScaleFactorModule() {
 
 const StackedDivide = ({ g, visible }) => (
   <div className={"stacked-op " + (visible ? "show" : "hide")}>
-    <span className="chip chip-tiny">{"÷\u202F" + g}</span>
-    <span className="chip chip-tiny">{"÷\u202F" + g}</span>
+<span className="chip chip-tiny">{"÷\u202F" + g}</span>
+<span className="chip chip-tiny">{"÷\u202F" + g}</span>
   </div>
 )
 
