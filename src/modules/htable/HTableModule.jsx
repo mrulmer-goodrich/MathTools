@@ -22,7 +22,7 @@ const STEP_HEADS = [
 const LANG_BADGE = (mode) => mode
 
 export default function HTableModule() {
-  const [session, setSession] = useState(loadSession())
+  const [session, setSession] = useState(loadSession() || { attempts: [] })
   const [problem, setProblem] = useState(() => session.hSnap?.problem || genHProblem())
   const [table, setTable] = useState(() => session.hSnap?.table || {
     head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
@@ -52,9 +52,9 @@ export default function HTableModule() {
   const timerRef = useRef(null)
 
   const allowedLangs = useMemo(()=>{
-    const alts = problem?.text?.alts || {}
-    return Object.keys(alts)
-  },[problem.id])
+    const alts = (problem && problem.text && problem.text.alts) ? problem.text.alts : {}
+    try { return Object.keys(alts) } catch { return [] }
+  },[problem && problem.id])
 
   const allowedModes = useMemo(()=>{
     // Randomize among languages and 'XXXX' only (no 'BlackOut' / masks)
@@ -365,7 +365,7 @@ export default function HTableModule() {
                       const missCount = steps.reduce((t,s)=>t+s.misses,0)
                       const scoreColor = missCount===0?'green':(missCount===1?'yellow':'red')
                       const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
-                      const nextSession = { ...session, attempts:[...session.attempts, attempt] }
+                      const nextSession = { ...session, attempts:[...(session.attempts || []), attempt] }
                       saveSession(nextSession); setSession(nextSession)
                       // new problem
                       resetProblem()
@@ -387,7 +387,7 @@ export default function HTableModule() {
       </div>
 
       <button className="button primary floating-summary" onClick={()=>setOpenSum(true)}>Summary</button>
-      <SummaryOverlay open={openSum} onClose={()=>setOpenSum(false)} attempts={session.attempts} stepHeads={STEP_HEADS} />
+      <SummaryOverlay open={openSum} onClose={()=>setOpenSum(false)} attempts={session.attempts || []} stepHeads={STEP_HEADS} />
     </div>
   )
 }
