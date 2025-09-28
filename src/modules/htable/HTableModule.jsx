@@ -42,113 +42,100 @@ export default function HTableModule() {
   const setDone = (idx)=>setSteps(s=>{const c=[...s];c[idx].done=true;return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
 
-  // Redaction modes
+  
+  // Redaction / translation modes
+  // - After 10s: switch away from English to a random mode among available languages or 'XXXX' (redacted)
+  // - Every 15s thereafter: randomize again
+  // - 'XXXX' redacts letters but preserves numbers and unit tokens from problem.units
   const [showEnglish,setShowEnglish]=useState(true)
-  const [mode,setMode]=useState('Spanish')
-  const [masked,setMasked]=useState('')
+  const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX'
   const timerRef = useRef(null)
+
+  const allowedLangs = useMemo(()=>{
+    const alts = problem?.text?.alts || {}
+    return Object.keys(alts)
+  },[problem.id])
+
+  const allowedModes = useMemo(()=>{
+    // Randomize among languages and 'XXXX' only (no 'BlackOut' / masks)
+    return [...allowedLangs, 'XXXX']
+  },[allowedLangs])
+
+  const redactText = (txt, units)=>{
+    if(!txt) return ''
+    const unitsSorted = [...(units||[])].sort((a,b)=>b.length-a.length)
+    let placeholderMap = new Map()
+    let out = txt
+    // Protect unit tokens by placeholder substitution
+    unitsSorted.forEach((u, idx)=>{
+      const ph = `__UNIT_${idx}__`
+      placeholderMap.set(ph, u)
+      // word boundary-ish replace (case-insensitive)
+      const re = new RegExp(`\b${u}\b`, 'gi')
+      out = out.replace(re, ph)
+    })
+    // Replace letters with X, leave digits/punct/space
+    out = out.replace(/[A-Za-z]/g, 'X')
+    // Restore units
+    placeholderMap.forEach((u, ph)=>{
+      const re = new RegExp(ph, 'g')
+      out = out.replace(re, u)
+    })
+    return out
+  }
 
   const startTimer = ()=>{
     stopTimer()
     timerRef.current = setInterval(()=>{
       if (!showEnglish){
-        const options = problem.altOrder.filter(m=>m!==mode)
-        const m = choice(options)
-        setMode(m)
-        setMasked( (m==='FadeOut') ? 'mask fade' : (m==='BlackOut' ? 'mask black' : '') )
+        if (allowedModes.length>0){
+          const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
+          setMode(pick)
+        }
       }
-    },10000)
+    },15000) // every 15s
   }
   const stopTimer = ()=> { if(timerRef.current){ clearInterval(timerRef.current); timerRef.current=null } }
 
   useEffect(()=>{
     startTimer()
-    const t = setTimeout(()=>setShowEnglish(false), 10000)
+    const t = setTimeout(()=>{
+      setShowEnglish(false)
+      if (allowedModes.length>0){
+        const pick = allowedModes[Math.floor(Math.random()*allowedModes.length)]
+        setMode(pick)
+      }
+    }, 10000) // first switch after 10s
     return ()=>{ stopTimer(); clearTimeout(t) }
-  },[problem.id])
+  },[problem.id, allowedModes.length])
 
-  // Unit choices
-  const unitChoices = useMemo(()=>{
-    const pool = ['in','cm','km','m','yd','miles','seconds','hours','minutes','liters','cups','tablespoons','pages','points','dollars','items','meters','yards']
-    const set = new Set(problem.units)
-    while(set.size<6) set.add(pool[Math.floor(Math.random()*pool.length)])
-    return Array.from(set).map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
-  },[problem])
-
-  // Number choices (appear only when needed; mirror story numbers so students can drag)
-  const numberChoices = useMemo(()=>{
-    const nums = new Set([problem.scale[0], problem.scale[1], problem.given.value])
-    while(nums.size<6) nums.add(Math.floor(Math.random()*20)+1)
-    return Array.from(nums).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:n }))
-  },[problem])
-
-  // Accept logic
-  const acceptCol1 = d => step===1 && d.kind==='col'
-  const acceptCol2 = d => step===3 && d.kind==='col'
-  const acceptUnitTop    = d => step===2 && d.kind==='unit'
-  const acceptUnitBottom = d => step===2 && d.kind==='unit'
-  const acceptScaleTop   = d => step===4 && d.kind==='num'
-  const acceptScaleBottom= d => step===4 && d.kind==='num'
-  const acceptValueTop   = d => step===5 && d.kind==='num'
-  const acceptValueBottom= d => step===5 && d.kind==='num'
-
-  // Product/Result
-  const computeProduct = ()=>{
-    // multiply given * opposite scale row
-    const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
-    if(!givenRow || table.sTop==null || table.sBottom==null) return null
-    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop
-    const v = givenRow==='top' ? table.vTop : table.vBottom
-    return (v!=null && sOpp!=null) ? v * sOpp : null
-  }
-  const computeResult = (product)=>{
-    const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
-    if(!givenRow) return null
-    const divisor = (givenRow==='top') ? table.sTop : table.sBottom
-    if(product==null || divisor==null) return null
-    return product / divisor
-  }
-
-  const product = computeProduct()
-  const result  = computeResult(product)
-
-  const resetProblem = ()=>{
-    setProblem(genHProblem())
-    setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
-    setStep(0)
-    setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
-    setShowEnglish(true); setMode('Spanish'); setMasked('')
-  }
-
-  // inline story with embedded draggable tokens (subtle styling)
+  // inline story renderer
   const Story = ()=>{
     const p = problem
-    const lang = showEnglish ? 'English' : mode
-    const txt = showEnglish ? p.text.english : (p.text.alts[lang] || p.text.english)
-    const maskClass = (!showEnglish && (mode==='FadeOut' || mode==='BlackOut')) ? masked : ''
+    let txt = p?.text?.english || ''
+    if (!showEnglish){
+      if (mode === 'XXXX'){
+        txt = redactText(p?.text?.english || '', problem.units)
+      } else {
+        const alt = p?.text?.alts?.[mode]
+        txt = alt || (p?.text?.english || '')
+      }
+    }
     return (
       <>
-        <div className={`problem ${maskClass}`}>
-          {/* Render plain text; we just show the paragraph, no separate token strip */}
-          {txt}
-        </div>
-        <div className="lang-badge">Mode: {showEnglish ? 'English' : LANG_BADGE(mode)}</div>
-        <div className="toolbar" style={{justifyContent:'center', marginTop: 10}}>
+        <div className="problem">{txt}</div>
+        <div className="toolbar" style={{justifyContent:'center', marginTop: 10, gap: 12, display:'flex'}}>
           <button
             className="button big-under"
             onPointerDown={()=>{ setShowEnglish(true) }}
-            onPointerUp={()=>{
-              setShowEnglish(false)
-              const options = problem.altOrder.filter(m=>m!=='English')
-              const m = choice(options)
-              setMode(m)
-              setMasked( (m==='FadeOut') ? 'mask fade' : (m==='BlackOut' ? 'mask black' : '') )
-            }}
+            onPointerUp={()=>{ setShowEnglish(false) }}
           >Hold: English</button>
+          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
         </div>
       </>
     )
   }
+
 
   const centerCellStyle = { display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48 }
 
@@ -247,7 +234,7 @@ export default function HTableModule() {
             <div className="step-title">
               {[
                 'Step 1: What do we do first?',
-                'Step 2: Column 1 (drag onto header)',
+                'Step 2: What do we put in the first column? (drag onto header)',
                 'Step 3: Place the units (drag onto left cells)',
                 'Step 4: Column 2 (drag onto header)',
                 'Step 5: Place the scale numbers',
