@@ -628,3 +628,47 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     answer
   }
 }
+
+// src/lib/ptables/generator.js
+// Problem generator for Proportional Tables.
+// Returns an object: { rows: [{x,y},...], k, proportional, revealRow4 }
+export function genPTable(difficulty = "easy") {
+  const rng = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  const ranges = {
+    easy: { kMin: 2, kMax: 9, xMin: 2, xMax: 12, noise: 0 },
+    medium: { kMin: 2, kMax: 12, xMin: 3, xMax: 18, noise: 0.2 },   // occasional non-proportional
+    hard: { kMin: 2, kMax: 16, xMin: 4, xMax: 24, noise: 0.35 }     // more frequent non-proportional
+  };
+
+  const R = ranges[difficulty] || ranges.easy;
+
+  // choose constant of proportionality k as an integer for clarity
+  const k = rng(R.kMin, R.kMax);
+
+  // build three base x's (distinct)
+  const xs = new Set();
+  while (xs.size < 3) xs.add(rng(R.xMin, R.xMax));
+  const xArr = Array.from(xs);
+
+  // With some probability on medium/hard, inject a non-proportional y
+  const makeNonProp = Math.random() < R.noise;
+
+  const rows = xArr.map((x, i) => {
+    let y = x * k;
+    if (makeNonProp && i === 1) {
+      // perturb one row to break proportionality
+      y += rng(1, Math.max(2, Math.floor(k / 2)));
+    }
+    return { x, y };
+  });
+
+  const proportional = !makeNonProp;
+
+  // We’ll always provide a 4th row prompt if proportional
+  const revealRow4 = proportional
+    ? { x: rng(R.xMin, R.xMax), y: null }
+    : null;
+
+  return { rows, k, proportional, revealRow4 };
+}
