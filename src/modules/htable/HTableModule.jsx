@@ -40,19 +40,30 @@ const genSaneHProblem = () => {
 }
 
 export default function HTableModule() {
-  const [session, setSession] = useState(loadSession() || { attempts: [] })
-  const [problem, setProblem] = useState(() => (loadSession()?.hSnap?.problem) || genSaneHProblem())
-  const [table, setTable] = useState(() => (loadSession()?.hSnap?.table) || {
-    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
-    product:null, divisor:null, result:null
-  })
-  const [step, setStep] = useState(loadSession()?.hSnap?.step ?? 0)
-  const [steps, setSteps] = useState(loadSession()?.hSnap?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
-  const [openSum, setOpenSum] = useState(false)
+ // Versioned snapshot so old saved state doesn't freeze the UI across releases
+const H_SNAP_VERSION = 2;
+const __persisted = loadSession() || {};
+const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION)
+  ? __persisted.hSnap
+  : null;
+  
+const [session, setSession] = useState(loadSession() || { attempts: [] });
+const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem());
+const [table, setTable] = useState(() => (H_PERSIST?.table) || {
+  head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
+  product:null, divisor:null, result:null
+});
+const [step, setStep] = useState(H_PERSIST?.step ?? 0);
+const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_HEADS.map(()=>({misses:0,done:false})));
+const [openSum, setOpenSum] = useState(false);
 
   // persist
   useEffect(()=>{
-    const next = { ...(session || {}), hSnap: { problem, table, step, steps } }
+
+    const next = {
+  ...(session || {}),
+  hSnap: { version: H_SNAP_VERSION, problem, table, step, steps }
+};
     saveSession(next); setSession(next)
   },[problem, table, step, steps])
 
@@ -317,6 +328,21 @@ export default function HTableModule() {
         {/* RIGHT: chips and steps */}
         <div className="card right-steps">
           <div className="section">
+
+            <div className="step-title">
+  {[
+    'Step 1: What do we do first?',
+    'Step 2: What do we put in the first column? (drag onto header)',
+    'Step 3: Place the units (drag onto left cells)',
+    'Step 4: What goes in the second column? (drag onto header)',
+    'Step 5: Place the scale numbers',
+    'Step 6: Where does the other number go?',
+    'Step 7: What’s next?',
+    'Step 8: Which numbers are we multiplying? (click the grid cells after you place them)',
+    'Step 9: What’s next?',
+    'Step 10: Which number are we dividing? (click the divisor)'
+  ][step]}
+</div>
             <div className="chips with-borders center">
               <Draggable id="col1" label="Units" data={{kind:'col', v:'Units'}} />
               <Draggable id="col2" label="Scale Numbers" data={{kind:'col', v:'ScaleNumbers'}} />
