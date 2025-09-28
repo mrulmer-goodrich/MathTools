@@ -1,9 +1,12 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.9)
-// - Uniform dropzone heights (ROW_H)
-// - Randomized chips
-// - Step 6 acceptance uses robust unit canonicalization (mi/mile/miles, km/kilometer/kilometers, etc.)
-// - Inline fraction + "= result" on one line (no wrapping)
-// - Full-screen confetti with max z-index
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v3.0)
+// Key fixes in this drop:
+// - Step 6 acceptance uses generator's given.row (top/bottom) so the given value
+//   must be dropped into the correct row regardless of unit spelling.
+// - Filters out BlackOut / FadeOut from language rotation (keeps XXXX mask only).
+// - Same sized dropzones via ROW_H across headers and data cells.
+// - Randomized chip order (headers/units/numbers).
+// - Inline fraction with '= result' on the same line.
+// - Full-screen confetti overlay.
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -45,45 +48,12 @@ const unitCategory = (u='') => {
   for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
   return null
 }
-
-// Canonicalize unit strings so abbreviations/singular/plural compare equal
-const CANON = {
-  // length
-  'in':'inches','inch':'inches','inches':'inches',
-  'cm':'cm','mm':'mm',
-  'm':'meters','meter':'meters','meters':'meters',
-  'km':'kilometers','kilometer':'kilometers','kilometers':'kilometers',
-  'yd':'yards','yard':'yards','yards':'yards',
-  'mi':'miles','mile':'miles','miles':'miles',
-  // time
-  'sec':'seconds','secs':'seconds','second':'seconds','seconds':'seconds',
-  'min':'minutes','mins':'minutes','minute':'minutes','minutes':'minutes',
-  'hour':'hours','hours':'hours',
-  // volume
-  'liter':'liters','liters':'liters',
-  'milliliter':'milliliters','milliliters':'milliliters',
-  'cup':'cups','cups':'cups',
-  'tablespoon':'tablespoons','tablespoons':'tablespoons',
-  'gallon':'gallons','gallons':'gallons',
-  // mass
-  'gram':'grams','grams':'grams',
-  'kilogram':'kilograms','kilograms':'kilograms',
-  // count
-  'item':'items','items':'items',
-  'page':'pages','pages':'pages',
-  'point':'points','points':'points',
-  // money
-  'dollar':'dollars','dollars':'dollars','$':'dollars',
-  'euro':'euros','euros':'euros'
-}
-const canon = (u='') => CANON[(u||'').toLowerCase()] || (u||'').toLowerCase()
-
 const saneProblem = (p) => {
   try{
     const [u1,u2] = p.units || []
     const c1 = unitCategory(u1), c2 = unitCategory(u2)
     if (!c1 || !c2 || c1!==c2) return false
-    if (p?.given?.unit && ![u1,u2].map(canon).includes(canon(p.given.unit))) return false
+    // generator does not include given.unit; only row + value
     return true
   }catch{ return false }
 }
@@ -96,7 +66,7 @@ const genSaneHProblem = () => {
 function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5) }
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 11
+  const H_SNAP_VERSION = 12
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -127,7 +97,7 @@ export default function HTableModule(){
   const [mode,setMode]=useState('English')
   const timerRef = useRef(null)
   const allowedModes = useMemo(()=>{
-    const altKeys = Object.keys(problem?.text?.alts || {})
+    const altKeys = Object.keys(problem?.text?.alts || {}).filter(k=>k!=='BlackOut' && k!=='FadeOut')
     const base = altKeys.length ? altKeys : FALLBACK_LANGS
     return [...base, 'XXXX XXXX XX']
   },[problem?.id])
@@ -227,9 +197,11 @@ export default function HTableModule(){
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
   const acceptScaleTop   = d => step===4 && d.kind==='num'
   const acceptScaleBottom= d => step===4 && d.kind==='num'
-  // Step 6: given must go to the row whose placed UNIT canon-matches problem.given.unit
-  const acceptValueTop   = d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && table.uTop && canon(table.uTop)===canon(problem?.given?.unit)
-  const acceptValueBottom= d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && table.uBottom && canon(table.uBottom)===canon(problem?.given?.unit)
+
+  // Step 6 fix: generator gives given.row ('top'|'bottom'). Require drop into that row.
+  const expectedRow = (problem?.given?.row === 'top') ? 'top' : 'bottom'
+  const acceptValueTop   = d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='top'
+  const acceptValueBottom= d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='bottom'
 
   // geometry
   const gridRef = useRef(null)
@@ -250,6 +222,8 @@ export default function HTableModule(){
     const r_vBottom = refs.vBottom.current?.getBoundingClientRect()
     if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) { setLines(l=>({ ...l, gridW: gr.width })); return }
     const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left
+    the_grid:
+    0
     const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left
     const vTop = r_vTop.top - gr.top
     const vBottom = r_vBottom.bottom - gr.top
@@ -469,7 +443,7 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(Number(d.value)===Number(problem?.given?.value) && table.uTop && canon(table.uTop)===canon(problem?.given?.unit))){ miss(5); return t }
+                      if(!(Number(d.value)===Number(problem?.given?.value) && expectedRow==='top')){ miss(5); return t }
                       const t2={...t,vTop:Number(d.value)}
                       if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
                       return t2
@@ -509,7 +483,7 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(Number(d.value)===Number(problem?.given?.value) && table.uBottom && canon(table.uBottom)===canon(problem?.given?.unit))){ miss(5); return t }
+                      if(!(Number(d.value)===Number(problem?.given?.value) && expectedRow==='bottom')){ miss(5); return t }
                       const t2={...t,vBottom:Number(d.value)}
                       if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
                       return t2
@@ -519,13 +493,21 @@ export default function HTableModule(){
                 </div>
 
                 {/* Solid H lines */}
-                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid #0f172a`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid #0f172a`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid #0f172a`}} />
+                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
 
                 {/* Red oval */}
                 {oval && (
-                  <div style={{position:'absolute', left: oval.left, top: oval.top, width: oval.len, height: 54, transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`, border: '5px solid #ef4444', borderRadius: 9999, pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'}} />
+                  <div
+                    style={{
+                      position:'absolute',
+                      left: oval.left, top: oval.top, width: oval.len, height: 54,
+                      transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
+                      border: '5px solid #ef4444', borderRadius: 9999,
+                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
+                    }}
+                  />
                 )}
                 {/* Red triple underline */}
                 {tripleUL && (
@@ -547,7 +529,9 @@ export default function HTableModule(){
 
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (<button key={c.id} className="chip" onClick={()=>handleStep1(c)}>{c.label}</button>))}
+                {STEP1_CHOICES.map(c => (
+                  <button key={c.id} className="chip" onClick={()=>handleStep1(c)}>{c.label}</button>
+                ))}
               </div>
             )}
 
@@ -586,7 +570,9 @@ export default function HTableModule(){
                   { id:'op_add', label:'Add the numbers' },
                   { id:'op_sub', label:'Subtract the numbers' },
                   { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (<button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}>{o.label}</button>))}
+                ].map(o => (
+                  <button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}>{o.label}</button>
+                ))}
               </div>
             )}
 
@@ -609,7 +595,9 @@ export default function HTableModule(){
                       <div className="bar"></div>
                       <div className="denominator">{`${mathStrip.divisor}`}</div>
                     </div>
-                    {mathStrip.showResult && (<div className="big">= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>)}
+                    {mathStrip.showResult && (
+                      <div className="big">= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -638,12 +626,21 @@ export default function HTableModule(){
             const dur = 5 + Math.random()*4
             const delay = Math.random()*2
             const bg = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4'][i%6]
-            return (<div key={i} className="piece" style={{ left: `${left}%`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` }} />)
+            return (
+              <div key={i} className="piece" style={{
+                left: `${left}%`,
+                background: bg,
+                animationDuration: `${dur}s`,
+                animationDelay: `${delay}s`
+              }} />
+            )
           })}
         </div>
       )}
 
-      {openSum && (<SummaryOverlay attempts={session?.attempts || []} onClose={()=>{ setOpenSum(false); resetProblem(); }} />)}
+      {openSum && (
+        <SummaryOverlay attempts={session?.attempts || []} onClose={()=>{ setOpenSum(false); resetProblem(); }} />
+      )}
     </div>
   )
 }
