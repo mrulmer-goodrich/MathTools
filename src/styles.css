@@ -411,3 +411,64 @@ body{
 /* Tighten badges used near results */
 .badge{ display:inline-flex; align-items:center; padding:6px 10px; border-radius:10px; background:#F1F5F9; font-weight:800; border:1px solid var(--border-2); }
 .calc-inline{ font-size:1.1rem; font-weight:800; }
+
+/* === PTABLE corrections (invisible reveal, darker grid, active state) === */
+
+/* Darker grid look */
+.ptable-table.dark .ptable thead th{
+  background:#e2e8f0;            /* darker header */
+  border-bottom:2px solid #94a3b8;
+}
+.ptable-table.dark .ptable tbody td,
+.ptable-table.dark .ptable th,
+.ptable-table.dark .ptable td{
+  border-right:1px solid #94a3b8;
+}
+.ptable-table.dark .ptable tbody td{ border-top:1px solid #94a3b8; }
+
+/* Hide entire third column until K is dropped */
+.col3-hidden .ptable thead th:nth-child(3),
+.col3-hidden .ptable tbody td:nth-child(3){ display:none; }
+
+/* Generous but INVISIBLE dropzone for K (no label) */
+.ptable-rel{ position:relative; }
+.ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.ptable-k-target{
+  pointer-events:auto;
+  width:95%; height:64px; border:0; border-radius:12px; background:transparent;
+}
+.ptable-k-target *{ display:none !important; } /* ensure no accidental label */
+
+/* Header drop slots and fraction slots (unchanged from previous patch, ensured sizes) */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc; font-weight:700;
+}
+.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; font-style:normal; }
+.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
+
+.ptable-header-eq{ margin-top:8px; }
+.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.ptable-eq-slot{
+  min-width:56px; height:40px; border:1px dashed var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.ptable-eq-slot.filled{ border-style:solid; }
+.ptable-frac-template-slot{
+  min-width:100px; height:40px; border:1px dashed var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.ptable-fracslot{ min-width:64px; min-height:40px; border:2px solid var(--border); background:#fff; border-radius:8px; }
+
+/* Proportional overlay */
+.ptable-overlay{
+  position:absolute; top:50%; left:8%; right:8%; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.ptable-overlay-inner{
+  background: rgba(255,255,255,.9); border:2px solid #f2c14e; border-radius:14px;
+  padding: 10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.08);
+  display:flex; gap:10px; align-items:center;
+}
+
+/* Bigger chips & active difficulty */
+.chip.large{ padding:12px 16px; font-size:18px; }
+.big-button.active{ outline:3px solid var(--eastway-blue); }
