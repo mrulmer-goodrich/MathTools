@@ -6,14 +6,6 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 import { choice } from '../../lib/rng.js'
 
-/**
- * HTableModule — full file replacement (clean UX, no feature loss)
- * - Centers column headers; removes placeholder descriptors in header cells.
- * - Adds a clear divider line directly BELOW the header row (without touching existing strokes).
- * - Keeps all original step logic, chips, and persistence.
- * - Uses inline styles for centering & divider (no CSS changes needed elsewhere).
- */
-
 const STEP_HEADS = [
   'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale', 'Place Given',
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
@@ -22,19 +14,20 @@ const STEP_HEADS = [
 const LANG_BADGE = (mode) => mode
 
 export default function HTableModule() {
+  // SAFER session default to avoid first-load crashes
   const [session, setSession] = useState(loadSession() || { attempts: [] })
-  const [problem, setProblem] = useState(() => session.hSnap?.problem || genHProblem())
-  const [table, setTable] = useState(() => session.hSnap?.table || {
+  const [problem, setProblem] = useState(() => (loadSession()?.hSnap?.problem) || genHProblem())
+  const [table, setTable] = useState(() => (loadSession()?.hSnap?.table) || {
     head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
     product:null, divisor:null, result:null
   })
-  const [step, setStep] = useState(session.hSnap?.step ?? 0)
-  const [steps, setSteps] = useState(session.hSnap?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
+  const [step, setStep] = useState(loadSession()?.hSnap?.step ?? 0)
+  const [steps, setSteps] = useState(loadSession()?.hSnap?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
   const [openSum, setOpenSum] = useState(false)
 
   // persist snapshot on every meaningful change
   useEffect(()=>{
-    const next = { ...session, hSnap: { problem, table, step, steps } }
+    const next = { ...(session || {}), hSnap: { problem, table, step, steps } }
     saveSession(next); setSession(next)
   },[problem, table, step, steps])
 
@@ -42,19 +35,23 @@ export default function HTableModule() {
   const setDone = (idx)=>setSteps(s=>{const c=[...s];c[idx].done=true;return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
 
-  
-  // Redaction / translation modes
-  // - After 10s: switch away from English to a random mode among available languages or 'XXXX' (redacted)
-  // - Every 15s thereafter: randomize again
-  // - 'XXXX' redacts letters but preserves numbers and unit tokens from problem.units
+  // ===== Language / Redaction Modes =====
+  // - After 10s: switch from English to a random mode among available languages or 'XXXX' (redacted)
+  // - Every 15s thereafter: randomize again among languages + 'XXXX'
+  // - 'XXXX' redacts letters but preserves numbers and unit tokens from the story
   const [showEnglish,setShowEnglish]=useState(true)
   const [mode,setMode]=useState('English') // 'English' | <language> | 'XXXX'
   const timerRef = useRef(null)
 
   const allowedLangs = useMemo(()=>{
-    const alts = (problem && problem.text && problem.text.alts) ? problem.text.alts : {}
-    try { return Object.keys(alts) } catch { return [] }
-  },[problem && problem.id])
+    // Prefer problem.altOrder if present; else keys in text.alts
+    const byOrder = problem?.altOrder || []
+    const inAlts = Object.keys(problem?.text?.alts || {})
+    // Keep order from altOrder, but only include those that exist in alts
+    const ordered = byOrder.filter(x => inAlts.includes(x))
+    // Fallback to whatever is in alts if altOrder empty
+    return ordered.length ? ordered : inAlts
+  },[problem?.id])
 
   const allowedModes = useMemo(()=>{
     // Randomize among languages and 'XXXX' only (no 'BlackOut' / masks)
@@ -63,21 +60,25 @@ export default function HTableModule() {
 
   const redactText = (txt, units)=>{
     if(!txt) return ''
-    const unitsSorted = [...(units||[])].sort((a,b)=>b.length-a.length)
-    let placeholderMap = new Map()
+    const unitList = Array.isArray(units) ? units.slice() : []
+    unitList.sort((a,b)=> (b||'').length - (a||'').length)
+    const placeholders = new Map()
     let out = txt
-    // Protect unit tokens by placeholder substitution
-    unitsSorted.forEach((u, idx)=>{
+
+    // Protect unit tokens by placeholder substitution (case-insensitive whole words)
+    unitList.forEach((u, idx)=>{
+      if(!u) return
       const ph = `__UNIT_${idx}__`
-      placeholderMap.set(ph, u)
-      // word boundary-ish replace (case-insensitive)
-      const re = new RegExp(`\b${u}\b`, 'gi')
+      placeholders.set(ph, u)
+      const re = new RegExp(`\\b${u.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`, 'gi')
       out = out.replace(re, ph)
     })
-    // Replace letters with X, leave digits/punct/space
+
+    // Replace letters with X; keep digits, punctuation, spaces
     out = out.replace(/[A-Za-z]/g, 'X')
+
     // Restore units
-    placeholderMap.forEach((u, ph)=>{
+    placeholders.forEach((u, ph)=>{
       const re = new RegExp(ph, 'g')
       out = out.replace(re, u)
     })
@@ -107,9 +108,62 @@ export default function HTableModule() {
       }
     }, 10000) // first switch after 10s
     return ()=>{ stopTimer(); clearTimeout(t) }
-  },[problem.id, allowedModes.length])
+  },[problem?.id, allowedModes.length])
 
-  // inline story renderer
+  // Unit choices
+  const unitChoices = useMemo(()=>{
+    const pool = ['in','cm','km','m','yd','miles','seconds','hours','minutes','liters','cups','tablespoons','pages','points','dollars','items','meters','yards']
+    const set = new Set(problem.units)
+    while(set.size<6) set.add(pool[Math.floor(Math.random()*pool.length)])
+    return Array.from(set).map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
+  },[problem])
+
+  // Number choices (appear only when needed; the actual numbers are embedded in the story but we mirror them here for dragging convenience)
+  const numberChoices = useMemo(()=>{
+    const nums = new Set([problem.scale[0], problem.scale[1], problem.given.value])
+    while(nums.size<6) nums.add(Math.floor(Math.random()*20)+1)
+    return Array.from(nums).map((n,i)=>({ id:'n'+i, label:String(n), kind:'num', value:n }))
+  },[problem])
+
+  // Accept logic
+  const acceptCol1 = d => step===1 && d.kind==='col'
+  const acceptCol2 = d => step===3 && d.kind==='col'
+  const acceptUnitTop    = d => step===2 && d.kind==='unit'
+  const acceptUnitBottom = d => step===2 && d.kind==='unit'
+  const acceptScaleTop   = d => step===4 && d.kind==='num'
+  const acceptScaleBottom= d => step===4 && d.kind==='num'
+  const acceptValueTop   = d => step===5 && d.kind==='num'
+  const acceptValueBottom= d => step===5 && d.kind==='num'
+
+  // Product/Result
+  const computeProduct = ()=>{
+    // multiply given * opposite scale row
+    const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
+    if(!givenRow || table.sTop==null || table.sBottom==null) return null
+    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop
+    const v = givenRow==='top' ? table.vTop : table.vBottom
+    return (v!=null && sOpp!=null) ? v * sOpp : null
+  }
+  const computeResult = (product)=>{
+    const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null)
+    if(!givenRow) return null
+    const divisor = (givenRow==='top') ? table.sTop : table.sBottom
+    if(product==null || divisor==null) return null
+    return product / divisor
+  }
+
+  const product = computeProduct()
+  const result  = computeResult(product)
+
+  const resetProblem = ()=>{
+    setProblem(genHProblem())
+    setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
+    setStep(0)
+    setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
+    setShowEnglish(true); setMode('English')
+  }
+
+  // inline story with embedded draggable tokens (subtle styling)
   const Story = ()=>{
     const p = problem
     let txt = p?.text?.english || ''
@@ -136,16 +190,12 @@ export default function HTableModule() {
     )
   }
 
-
-  const centerCellStyle = { display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48 }
-
   return (
     <div className="container">
       <div className="panes">
         {/* LEFT: Story + H table */}
         <div className="card">
           <Story />
-          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
 
           {/* H-table appears only after Step 1 */}
           {step>=1 && (
@@ -153,37 +203,24 @@ export default function HTableModule() {
               <div className="hgrid">
                 {/* Headers row */}
                 <div className="hhead">
-                  <Slot
-                    test={acceptCol1}
-                    onDropContent={(d)=>{
-                      if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
-                    }}>
-                    <div style={centerCellStyle}>
+                  <Slot test={acceptCol1} onDropContent={(d)=>{
+                    if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
+                  }}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
                   </Slot>
                 </div>
-
                 <div className="hhead">
-                  <Slot
-                    test={acceptCol2}
-                    onDropContent={(d)=>{
-                      if(d.v==='Scale'){ setTable(t=>({...t, head2:'Scale'})); setDone(3); next() } else miss(3)
-                    }}>
-                    <div style={centerCellStyle}>
+                  <Slot test={acceptCol2} onDropContent={(d)=>{
+                    if(d.v==='Scale'){ setTable(t=>({...t, head2:'Scale'})); setDone(3); next() } else miss(3)
+                  }}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
                   </Slot>
                 </div>
-
-                <div className="hhead">{/* 3rd column header intentionally blank */}</div>
-
-                {/* Divider directly below headers (spans all 3 columns) */}
-                <div
-                  className="hdivider"
-                  aria-hidden="true"
-                  style={{ gridColumn: '1 / span 3', height: 0, borderBottom: '2px solid #94a3b8', marginTop: 4 }}
-                />
+                <div className="hhead">{/* no label needed for 3rd col */}</div>
 
                 {/* Row 1 cells */}
                 <div className="hcell">
@@ -219,7 +256,7 @@ export default function HTableModule() {
                   </Slot>
                 </div>
 
-                {/* Existing H strokes (kept as-is) */}
+                {/* H strokes (oversized H only) */}
                 <div className="hstroke horiz"></div>
                 <div className="hstroke vert-left"></div>
                 <div className="hstroke vert-right"></div>
@@ -297,7 +334,7 @@ export default function HTableModule() {
                 </div>
                 <div className="toolbar" style={{marginTop:8}}>
                   <button className="button primary" onClick={()=>{
-                    // accept any placement of the two scale numbers as long as both are placed and distinct
+                    // accept any placement of the two scale numbers as long as both are placed
                     const ok = (table.sTop!=null && table.sBottom!=null) &&
                                new Set([table.sTop, table.sBottom]).size===2
                     if(ok){ setDone(4); next() } else miss(4)
@@ -365,7 +402,7 @@ export default function HTableModule() {
                       const missCount = steps.reduce((t,s)=>t+s.misses,0)
                       const scoreColor = missCount===0?'green':(missCount===1?'yellow':'red')
                       const attempt = { scoreColor, stepResults: steps, stepHeads: STEP_HEADS }
-                      const nextSession = { ...session, attempts:[...(session.attempts || []), attempt] }
+                      const nextSession = { ...(session || {}), attempts:[...(session.attempts || []), attempt] }
                       saveSession(nextSession); setSession(nextSession)
                       // new problem
                       resetProblem()
