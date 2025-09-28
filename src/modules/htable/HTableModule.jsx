@@ -1,10 +1,9 @@
 // src/modules/htable/HTableModule.jsx — Rebuilt (spec v3.1)
-// Changes vs v3.0:
-// • Step 4 now ONLY accepts the exact scale values from the problem (top=a, bottom=b).
-// • Red oval height/length tweaked for better coverage after row height changes.
-// • (kept) Step 6 uses generator's given.row so the given value must go in the correct row.
-// • (kept) BlackOut/FadeOut removed from language rotation, XXXX mask kept.
-// • (kept) uniform dropzones, randomized chips, inline fraction, full-screen confetti.
+// • Step 4 only accepts the exact scale values that match the unit placed in that row
+// • Red oval tweaked, triple-underline & full-screen confetti kept
+// • Given value (Step 6) must go in the row that matches its unit
+// • Language rotation keeps XXXX mask; BlackOut/FadeOut removed
+// • Uniform drop-zones; randomized chips; inline fraction; calculate fills unknown cell
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -33,7 +32,7 @@ const STEP1_CHOICES = [
   { id:'guess', label:'Just Guess', correct:false },
 ]
 
-
+/* ---------- unit categories ---------- */
 const UNIT_CATS = {
   length: [
     'mm','millimeter','millimeters',
@@ -68,12 +67,12 @@ const UNIT_CATS = {
   count: ['item','items','page','pages','point','points'],
   money: ['dollar','dollars','$','euro','euros']
 }
-
 const unitCategory = (u='') => {
   const s = (u||'').toLowerCase()
   for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
   return null
 }
+
 const saneProblem = (p) => {
   try{
     const [u1,u2] = p.units || []
@@ -87,8 +86,7 @@ const genSaneHProblem = () => {
   while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++ }
   return p
 }
-
-function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5) }
+const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5)
 
 export default function HTableModule(){
   const H_SNAP_VERSION = 13
@@ -107,6 +105,24 @@ export default function HTableModule(){
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false })
   const [confettiOn, setConfettiOn] = useState(false)
 
+  // --- Row <-> canonical unit helpers (unit-aware validation) ---
+  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
+  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
+  const givenUnitLabel = (problem?.given?.row === 'top'
+    ? problem?.units?.[0]
+    : problem?.units?.[1]) || '';
+
+  const toLower = (s)=> (s||'').toLowerCase();
+  const expectedScaleForRowUnit = (rowUnitLabel) => {
+    const u = toLower(rowUnitLabel);
+    if (!u) return null;
+    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
+    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
+    return null;
+  };
+  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
+
+  // persist
   useEffect(()=>{
     const next = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } }
     saveSession(next); setSession(next)
@@ -215,22 +231,15 @@ export default function HTableModule(){
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
   ]),[problem?.id])
 
-  // accept tests
+  // accept tests (gate by step/type only; row correctness enforced in onDropContent)
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
-
-  // STRICT Step 4: force exact scale values into the correct rows
-  const SCALE_TOP = Number(problem?.scale?.[0])
-  const SCALE_BOTTOM = Number(problem?.scale?.[1])
-  const acceptScaleTop   = d => step===4 && d.kind==='num' && Number(d.value) === SCALE_TOP
-  const acceptScaleBottom= d => step===4 && d.kind==='num' && Number(d.value) === SCALE_BOTTOM
-
-  // Step 6: require given number in the specified row
-  const expectedRow = (problem?.given?.row === 'top') ? 'top' : 'bottom'
-  const acceptValueTop   = d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='top'
-  const acceptValueBottom= d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && expectedRow==='bottom'
+  const acceptScaleTop    = d => step===4 && d.kind==='num'
+  const acceptScaleBottom = d => step===4 && d.kind==='num'
+  const acceptValueTop    = d => step===5 && d.kind==='num'
+  const acceptValueBottom = d => step===5 && d.kind==='num'
 
   // geometry
   const gridRef = useRef(null)
@@ -283,7 +292,7 @@ export default function HTableModule(){
     const midX = (a.x + b.x)/2
     const midY = (a.y + b.y)/2
     const dx = b.x - a.x, dy = b.y - a.y
-    const len = Math.sqrt(dx*dx + dy*dy) + 140   // +140 for better edge coverage
+    const len = Math.sqrt(dx*dx + dy*dy) + 140
     const rot = Math.atan2(dy, dx) * 180/Math.PI
     setOval({ left: midX, top: midY, len, rot })
   },[highlightKeys])
@@ -335,9 +344,19 @@ export default function HTableModule(){
   }
 
   const onCalculate = ()=>{
-    setMathStrip(s=>({ ...s, showResult: true }))
-    setConfettiOn(true)
-  }
+    // Fill the unknown cell in the H-table so no gray slot remains
+    setTable(t=>{
+      const r = t.result;
+      if (r == null) return t;
+      const unknownTop    = t.vTop == null  && t.vBottom != null;
+      const unknownBottom = t.vBottom == null && t.vTop != null;
+      if (unknownTop)    return { ...t, vTop: Number(r),   solvedRow:'top' };
+      if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
+      return t;
+    });
+    setMathStrip(s=>({ ...s, showResult: true }));
+    setConfettiOn(true);
+  };
 
   const resetProblem = ()=>{
     setProblem(genSaneHProblem())
@@ -399,6 +418,8 @@ export default function HTableModule(){
         @keyframes confettiFall { 0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(120vh) rotate(720deg); opacity: 1; } }
         .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
         .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
+        .blink-win { animation: blinkWin 0.9s linear infinite; }
+        @keyframes blinkWin { 50% { opacity: 0.25; } }
         .math-strip { margin-top: 14px; text-align: center; }
         .math-strip .big { font-size: 26px; font-weight: 700; }
         .math-strip .fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -458,10 +479,15 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sTop==null ? "empty" : ""}`}
                     test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
-                      const t2={...t,sTop: Number(d.value)}
-                      const both = (t2.sTop!=null && t2.sBottom!=null)
-                      if(both){ setDone(4); next(); }
-                      return t2
+                      const expected = expectedScaleForRowUnit(t.uTop);
+                      if (expected == null || Number(d.value) !== Number(expected)) {
+                        miss(4); 
+                        return t;
+                      }
+                      const t2 = { ...t, sTop: Number(d.value) };
+                      const both = (t2.sTop!=null && t2.sBottom!=null);
+                      if (both) { setDone(4); next(); }
+                      return t2;
                     })}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                   </Slot>
@@ -470,12 +496,14 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(Number(d.value)===Number(problem?.given?.value) && expectedRow==='top')){ miss(5); return t }
-                      const t2={...t,vTop:Number(d.value)}
-                      if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
-                      return t2
+                      const isRightRow = rowIsGivenUnit(t.uTop);
+                      const isRightNumber = Number(d.value) === Number(problem?.given?.value);
+                      if (!isRightRow || !isRightNumber) { miss(5); return t; }
+                      const t2 = { ...t, vTop: Number(d.value) };
+                      if (t2.vTop!=null && t2.vBottom==null) { setDone(5); next(); }
+                      return t2;
                     })}>
-                    <span className={cellCls('vTop')} style={{fontSize:22}}>{table.vTop ?? ''}</span>
+                    <span className={table.solvedRow==='top' ? 'blink-win' : ''}>{table.vTop ?? ''}</span>
                   </Slot>
                 </div>
 
@@ -498,10 +526,15 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sBottom==null ? "empty" : ""}`}
                     test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
-                      const t2={...t,sBottom: Number(d.value)}
-                      const both = (t2.sTop!=null && t2.sBottom!=null)
-                      if(both){ setDone(4); next(); }
-                      return t2
+                      const expected = expectedScaleForRowUnit(t.uBottom);
+                      if (expected == null || Number(d.value) !== Number(expected)) {
+                        miss(4); 
+                        return t;
+                      }
+                      const t2 = { ...t, sBottom: Number(d.value) };
+                      const both = (t2.sTop!=null && t2.sBottom!=null);
+                      if (both) { setDone(4); next(); }
+                      return t2;
                     })}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                   </Slot>
@@ -510,12 +543,14 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(Number(d.value)===Number(problem?.given?.value) && expectedRow==='bottom')){ miss(5); return t }
-                      const t2={...t,vBottom:Number(d.value)}
-                      if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
-                      return t2
+                      const isRightRow = rowIsGivenUnit(t.uBottom);
+                      const isRightNumber = Number(d.value) === Number(problem?.given?.value);
+                      if (!isRightRow || !isRightNumber) { miss(5); return t; }
+                      const t2 = { ...t, vBottom: Number(d.value) };
+                      if (t2.vBottom!=null && t2.vTop==null) { setDone(5); next(); }
+                      return t2;
                     })}>
-                    <span className={cellCls('vBottom')} style={{fontSize:22}}>{table.vBottom ?? ''}</span>
+                    <span className={table.solvedRow==='bottom' ? 'blink-win' : ''}>{table.vBottom ?? ''}</span>
                   </Slot>
                 </div>
 
@@ -663,10 +698,6 @@ export default function HTableModule(){
             )
           })}
         </div>
-      )}
-
-      {openSum && (
-        <SummaryOverlay attempts={session?.attempts || []} onClose={()=>{ setOpenSum(false); resetProblem(); }} />
       )}
     </div>
   )
