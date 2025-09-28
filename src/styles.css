@@ -333,3 +333,69 @@ body{
   padding:12px; border:1px solid var(--border-2); border-radius:10px; background:#f9fafb;
   font-size:14px;
 }
+
+/* === Proportional Tables (ptable) — final polish === */
+
+/* Darker table chrome */
+.ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
+.ptable{ width:100%; border-collapse:collapse; }
+.ptable thead th{
+  background:#e5e7eb; /* darker than before */
+  border-bottom:2px solid #cbd5e1;
+  padding:10px;
+  text-align:center; font-weight:800; font-size:15px;
+}
+.ptable tbody td{ border-top:1px solid #cbd5e1; padding:10px; text-align:center; height:60px; }
+.ptable th, .ptable td{ border-right:1px solid #cbd5e1; }
+.ptable tr > *:last-child{ border-right:none; }
+
+/* Header drop slots */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
+  font-weight:700;
+}
+.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; font-style:normal; }
+.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
+
+/* Header equation area (below K header) */
+.ptable-header-eq{ margin-top:8px; }
+.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.ptable-eq-slot{
+  min-width:56px; height:40px; border:1px dashed var(--border);
+  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.ptable-eq-slot.filled{ border-style:solid; }
+.ptable-frac-template-slot{
+  min-width:100px; height:40px; border:1px dashed var(--border);
+  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+
+/* Fraction slots (header & rows) */
+.ptable-fracslot{
+  min-width:64px; min-height:40px; border:2px solid var(--border);
+  background:#fff; border-radius:8px;
+}
+
+/* Hide entire 3rd column until K is dropped */
+.col3-hidden .ptable thead th:nth-child(3),
+.col3-hidden .ptable tbody td:nth-child(3){ display:none; }
+
+/* Generous invisible dropzone for K (when col3 hidden) */
+.ptable-rel{ position:relative; }
+.ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.ptable-k-overlay .ptable-k-target{
+  pointer-events:auto;
+  width:90%; height:64px; border:2px dashed #94a3b8; border-radius:12px;
+  background: repeating-linear-gradient(45deg, rgba(148,163,184,.12), rgba(148,163,184,.12) 6px, transparent 6px, transparent 12px);
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* Proportional overlay between columns 1 & 2 */
+.ptable-overlay{
+  position:absolute; top:50%; left:8%; right:8%; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.ptable-overlay-inner{
+  background: rgba(255,255,255,.9); border:2px solid #f2c14e; border-radius:14px;
+  padding: 10px 14px; box-shadow:0 6px
