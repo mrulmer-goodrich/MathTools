@@ -1,5 +1,5 @@
-/* styles.css — UG Math Tools (v3.6.2 SAFE)
-   - Keeps all 3.6.1 rules, adds calc-row, stack-op, compute-grid, and disabled button styles.
+/* styles.css — UG Math Tools (v3.6.3 SAFE)
+   - Keeps all 3.6.2 rules and adds chip sizing tweaks to avoid wrapping.
 */
 
 /* -------- Brand color tokens -------- */
@@ -131,15 +131,17 @@ body{
 .error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
 .fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 120px; }
-.fraction.mini-frac{ width:120px; } /* keeps the row compact */
+.fraction.mini-frac{ width:96px; } /* narrower to avoid wraps */
 .fraction > div:first-child{ grid-row:1; }
 .fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
+.fraction > .frac-bar.narrow{ height:2px; }
 .fraction > div:last-child{ grid-row:3; }
 .slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
 
 /* New: single-row calc alignment */
-.calc-row{ display:flex; align-items:center; gap:14px; flex-wrap:nowrap; overflow-x:auto; }
-.stack-op{ display:grid; grid-template-rows:auto auto; row-gap:22px; justify-items:center; }
+.calc-row{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow-x:auto; }
+.stack-op{ display:grid; grid-template-rows:auto auto; row-gap:10px; justify-items:center; min-width:72px; }
+.chip-tiny{ padding:6px 10px !important; } /* tighter chips used in narrow calc row */
 
 /* Compute grid */
 .compute-grid{
@@ -207,7 +209,7 @@ body{
 }
 @keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
 
-/* ---- Restored utility & landing styles from v3.6.1 ---- */
+/* ---- Restored utility & landing styles ---- */
 .landing-header{ text-align:center; }
 .landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
 .landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
