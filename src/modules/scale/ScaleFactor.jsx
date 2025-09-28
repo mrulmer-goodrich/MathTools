@@ -367,12 +367,13 @@ export default function ScaleFactorModule() {
     </div>
   )
 
-  const StackedDivide = ({g, visible}) => (
-    <div className={visible ? 'stack-op sf-fade' : 'stack-op sf-hidden'} aria-hidden={!visible}>
-      <span className="chip chip-tiny">{"÷\u202F" + g}</span>
-  
-    </div>
-  )
+const StackedDivide = ({ g, visible }) => (
+  <div className={"stacked-op " + (visible ? "show" : "hide")}>
+    <span className="chip chip-tiny">{"÷\u202F" + g}</span>
+    <span className="chip chip-tiny">{"÷\u202F" + g}</span>
+  </div>
+)
+
 
   const stage1 = calcStage>=1
   const stage2 = calcStage>=2
