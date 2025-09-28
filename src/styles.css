@@ -105,10 +105,7 @@ body{
 .rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
 .rect.copy{ background:#F5FAFF; }
 
-.shape-label-center{
-  position:absolute; top:50%; left:50%; transform: translate(-50%, -50%);
-  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
-}
+.shape-label-center{ position:absolute; bottom:10px; left:50%; transform: translateX(-50%); font-weight:900; color:#b91c1c; font-size: clamp(22px, 3.8vw, 36px); z-index: 35; }
 
 /* Side number tags — dynamic offset */
 .side-tag{
@@ -235,3 +232,10 @@ body{
 .calc-inline { font-size:1.2rem; font-weight:800; }
 .slot.wide{ min-width: 260px; }
 .fraction-row.no-wrap{ flex-wrap: nowrap; }
+
+/* Prevent internal line breaks inside chips and edge pills */
+.chip, .side-tag { white-space: nowrap; }
+
+/* Visual feedback for clicked/validated edge pills */
+.side-tag.chosen { outline: 3px solid var(--t-yellow); box-shadow: 0 0 0 4px rgba(245,158,11,.25); }
+.side-tag.good { outline: 3px solid var(--t-green); box-shadow: 0 0 0 4px rgba(16,185,129,.18); }
