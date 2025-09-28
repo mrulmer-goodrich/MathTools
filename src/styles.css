@@ -1,5 +1,7 @@
-/* styles.css — UG Math Tools (v3.6.3 SAFE)
-   - Keeps all 3.6.2 rules and adds chip sizing tweaks to avoid wrapping.
+/* styles.css — UG Math Tools (v3.6.3 SAFE, cleaned)
+   - Keeps all 3.6.2 rules, original values intact
+   - Removes duplicate blocks
+   - Adds minimal PTABLE helpers at the end
 */
 
 /* -------- Brand color tokens -------- */
@@ -182,8 +184,10 @@ body{
 /* Misc */
 .fraction-row.nowrap { flex-wrap:nowrap; }
 .big-fraction .frac-bar { height: 3px; }
-.result-big{ font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
-  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px; }
+.result-big{
+  font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
+  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px;
+}
 
 @media (max-width: 980px){
   .panes{ grid-template-columns: 1fr; }
@@ -217,68 +221,34 @@ body{
   font-size: 22px !important; padding: 20px 28px !important; border-radius: 16px !important;
   min-width: 240px; justify-content:center; text-align:center;
 }
-.hwrap{ margin-top:12px; }
+
+/* ---- H-Table grid & visuals ---- */
+.hwrap{ margin-top:12px; position: relative; border: none !important; background: transparent; }
 .hgrid{
-  display:grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto repeat(2, 72px);
-  gap:0; border:2px solid #111827; border-radius:12px; overflow:hidden; background:#fff;
+  display:grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(64px, auto);
+  gap:0; background:#fff;
 }
 .hhead, .hcell{ padding:10px; }
-.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #111827; }
-.hcell{ position:relative; display:flex; align-items:center; justify-content:center; border-right:2px solid #111827; }
-.hcell:nth-child(3n){ border-right:none; }
-.vline{ box-shadow: inset 6px 0 0 0 #111827; }
-.rowline{ box-shadow: inset 0 6px 0 0 #111827; }
-.filled{ border:none !important; }
-.red-oval{ outline:3px solid var(--t-red); padding:4px 6px; border-radius:999px; }
-
-.badge { display:inline-flex; align-items:center; padding:6px 10px; border-radius:10px; background:#F1F5F9; font-weight:800; border:1px solid var(--border-2); }
-.calc-inline { font-size:1.2rem; font-weight:800; }
-.slot.wide{ min-width: 260px; }
-.fraction-row.no-wrap{ flex-wrap: nowrap; }
-
-
-/* === H-Table visual lines (oversized H) === */
-.hwrap .hgrid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(48px, auto); }
-.hwrap .hgrid .hhead, .hwrap .hgrid .hcell { border: none !important; } /* no extra borders */
+.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; }
+.hcell{ position:relative; display:flex; align-items:center; justify-content:center; }
 .hgrid .hstroke { pointer-events: none; }
 
-
-/* === H-Table cleanup and overlays === */
-.hwrap { position: relative; border: none !important; background: transparent; }
-.hwrap .hgrid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(64px, auto); }
-.hwrap .hgrid .hhead, .hwrap .hgrid .hcell { border: none !important; }
-
-/* Oversized H lines (absolute; no outer border) */
 .hwrap .hline { position: absolute; pointer-events: none; }
 .hwrap .hline.horiz { left: 0; right: 0; top: 50%; border-top: 4px solid #334155; transform: translateY(-2px); }
 .hwrap .hline.vert1 { top: 0; bottom: 0; left: 33.333%; border-left: 4px solid #334155; transform: translateX(-2px); }
 .hwrap .hline.vert2 { top: 0; bottom: 0; left: 66.666%; border-left: 4px solid #334155; transform: translateX(-2px); }
 
-/* Drop affordance without labels */
+/* H-Table drop affordance */
 .hwrap .empty { outline: 2px dashed #94a3b8; outline-offset: -6px; border-radius: 10px; }
-.hwrap .hhead .empty, .hwrap .hcell .empty { background: repeating-linear-gradient(45deg, rgba(148,163,184,.15), rgba(148,163,184,.15) 6px, transparent 6px, transparent 12px); }
+.hwrap .hhead .empty, .hwrap .hcell .empty {
+  background: repeating-linear-gradient(45deg, rgba(148,163,184,.15), rgba(148,163,184,.15) 6px, transparent 6px, transparent 12px);
+}
 
 /* Toolbar row parity & language badge */
 .htable-toolbar { justify-content: center; margin-top: 10px; gap: 12px; display:flex; }
-.lang-badge { font-size: 12px; color: #475569; margin-top: 6px; }
-
-
-/* Remove any inner panel look around the H grid */
-.hwrap, .hwrap .hgrid {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.lang-badge {
-  margin-top: 8px;
-  display: inline-block;
-  font-size: 12px;
-  color: var(--ink-2);
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-2);
-  border-radius: 10px;
-  padding: 4px 8px;
+.lang-badge{
+  margin-top: 8px; display: inline-block; font-size: 12px; color: var(--ink-2);
+  background: var(--bg-subtle); border: 1px solid var(--border-2); border-radius: 10px; padding: 4px 8px;
 }
 
 /* Minimal helpers to restore expected layout */
@@ -288,59 +258,12 @@ body{
 .bigger { font-size: 15px; }
 .hhead-text { font-weight: 600; } /* used in H-table headings */
 
-/* already discussed earlier */
-.lang-badge{
-  margin-top: 8px;
-  display: inline-block;
-  font-size: 12px;
-  color: var(--ink-2);
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-2);
-  border-radius: 10px;
-  padding: 4px 8px;
-}
-
-/* === Proportional Tables (ptable) — additive styles === */
-.ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
-.ptable{ width:100%; border-collapse:collapse; }
-.ptable thead th{
-  background:#f3f4f6; border-bottom:1px solid var(--border-2); padding:8px;
-  text-align:center; font-weight:800; font-size: 15px;
-}
-.ptable tbody td{
-  border-top:1px solid var(--border-2); padding:8px; text-align:center; height:60px;
-}
-.ptable th, .ptable td{ border-right:1px solid var(--border-2); }
-.ptable tr > *:last-child{ border-right:none; }
-
-/* Header drop slot look */
-.ptable-thslot{
-  display:flex; align-items:center; justify-content:center;
-  height:42px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
-  font-weight:700;
-}
-.ptable-thslot.placed{ background:#e8f1ff; border:1px solid #cbd5e1; font-style:normal; }
-.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
-
-/* Fraction slots inside table */
-.ptable-fracslot{
-  min-width:56px; min-height:40px; border:1px solid var(--border) !important;
-  background:#fff !important; border-radius:8px !important;
-}
-
-/* Right-card status box */
-.status-box{
-  padding:12px; border:1px solid var(--border-2); border-radius:10px; background:#f9fafb;
-  font-size:14px;
-}
-
-/* === Proportional Tables (ptable) — final polish === */
-
+/* ---------- Proportional Tables (PTABLE) ---------- */
 /* Darker table chrome */
 .ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
 .ptable{ width:100%; border-collapse:collapse; }
 .ptable thead th{
-  background:#e5e7eb; /* darker than before */
+  background:#e5e7eb; /* darker */
   border-bottom:2px solid #cbd5e1;
   padding:10px;
   text-align:center; font-weight:800; font-size:15px;
@@ -377,19 +300,19 @@ body{
   background:#fff; border-radius:8px;
 }
 
-/* Hide entire 3rd column until K is dropped */
+/* Keep the 3rd column width before K is dropped (reserve space without content) */
+.col3-invisible .ptable thead th:nth-child(3),
+.col3-invisible .ptable tbody td:nth-child(3){ visibility: hidden; }
+
+/* (Legacy) If needed elsewhere: hide third column entirely */
 .col3-hidden .ptable thead th:nth-child(3),
 .col3-hidden .ptable tbody td:nth-child(3){ display:none; }
 
-/* Generous invisible dropzone for K (when col3 hidden) */
+/* Generous invisible dropzone for K (no label) */
 .ptable-rel{ position:relative; }
 .ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-.ptable-k-overlay .ptable-k-target{
-  pointer-events:auto;
-  width:90%; height:64px; border:2px dashed #94a3b8; border-radius:12px;
-  background: repeating-linear-gradient(45deg, rgba(148,163,184,.12), rgba(148,163,184,.12) 6px, transparent 6px, transparent 12px);
-  display:flex; align-items:center; justify-content:center;
-}
+.ptable-k-target{ pointer-events:auto; width:95%; height:64px; border:0; border-radius:12px; background:transparent; }
+.ptable-k-target *{ display:none !important; }
 
 /* Proportional overlay between columns 1 & 2 */
 .ptable-overlay{
@@ -405,70 +328,6 @@ body{
 /* Larger chips for right-pane */
 .chip.large{ padding: 12px 16px; font-size: 18px; }
 
-/* Active difficulty button look */
-.big-button.active{ outline:3px solid var(--eastway-blue); }
-
-/* Tighten badges used near results */
-.badge{ display:inline-flex; align-items:center; padding:6px 10px; border-radius:10px; background:#F1F5F9; font-weight:800; border:1px solid var(--border-2); }
-.calc-inline{ font-size:1.1rem; font-weight:800; }
-
-/* === PTABLE corrections (invisible reveal, darker grid, active state) === */
-
-/* Darker grid look */
-.ptable-table.dark .ptable thead th{
-  background:#e2e8f0;            /* darker header */
-  border-bottom:2px solid #94a3b8;
-}
-.ptable-table.dark .ptable tbody td,
-.ptable-table.dark .ptable th,
-.ptable-table.dark .ptable td{
-  border-right:1px solid #94a3b8;
-}
-.ptable-table.dark .ptable tbody td{ border-top:1px solid #94a3b8; }
-
-/* Hide entire third column until K is dropped */
-.col3-hidden .ptable thead th:nth-child(3),
-.col3-hidden .ptable tbody td:nth-child(3){ display:none; }
-
-/* Generous but INVISIBLE dropzone for K (no label) */
-.ptable-rel{ position:relative; }
-.ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-.ptable-k-target{
-  pointer-events:auto;
-  width:95%; height:64px; border:0; border-radius:12px; background:transparent;
-}
-.ptable-k-target *{ display:none !important; } /* ensure no accidental label */
-
-/* Header drop slots and fraction slots (unchanged from previous patch, ensured sizes) */
-.ptable-thslot{
-  display:flex; align-items:center; justify-content:center;
-  height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc; font-weight:700;
-}
-.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; font-style:normal; }
-.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
-
-.ptable-header-eq{ margin-top:8px; }
-.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
-.ptable-eq-slot{
-  min-width:56px; height:40px; border:1px dashed var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
-}
-.ptable-eq-slot.filled{ border-style:solid; }
-.ptable-frac-template-slot{
-  min-width:100px; height:40px; border:1px dashed var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
-}
-.ptable-fracslot{ min-width:64px; min-height:40px; border:2px solid var(--border); background:#fff; border-radius:8px; }
-
-/* Proportional overlay */
-.ptable-overlay{
-  position:absolute; top:50%; left:8%; right:8%; transform:translateY(-50%);
-  display:flex; align-items:center; justify-content:center; pointer-events:none;
-}
-.ptable-overlay-inner{
-  background: rgba(255,255,255,.9); border:2px solid #f2c14e; border-radius:14px;
-  padding: 10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.08);
-  display:flex; gap:10px; align-items:center;
-}
-
-/* Bigger chips & active difficulty */
-.chip.large{ padding:12px 16px; font-size:18px; }
-.big-button.active{ outline:3px solid var(--eastway-blue); }
+/* Active difficulty helpers */
+.big-button.active{ outline:3px solid var(--eastway-blue); } /* if BigButton forwards className */
+.press.is-active > .big-button{ outline:3px solid var(--eastway-blue); outline-offset:2px; } /* wrapper fallback */
