@@ -1,53 +1,11 @@
 // src/modules/ptables/ProportionalTablesModule.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import Draggable from "../../components/DraggableChip.jsx";
 import Slot from "../../components/DropSlot.jsx";
 
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
-
-const Header = ({ children }) => (
-  <div className="text-lg font-semibold tracking-wide mb-2">{children}</div>
-);
-
-const Chip = ({ id, label, payload, className = "" }) => (
-  <Draggable
-    id={id}
-    label={label}
-    payload={payload}
-    className={`px-4 py-2 text-xl rounded-xl shadow bg-white text-gray-800 hover:bg-gray-50 ${className}`}
-  />
-);
-
-function FractionDrop({ rowIndex, onRowFilled }) {
-  const [num, setNum] = useState(null);
-  const [den, setDen] = useState(null);
-
-  useEffect(() => {
-    if (num != null && den != null) onRowFilled(rowIndex, { num, den });
-  }, [num, den, onRowFilled, rowIndex]);
-
-  return (
-    <div className="flex items-center gap-3">
-      <Slot
-        accept={["value"]}
-        onDrop={(data) => setNum(data?.value ?? null)}
-        className="w-16 h-10 border rounded-md flex items-center justify-center text-xl bg-white"
-      >
-        {num ?? <span className="text-gray-400 italic">—</span>}
-      </Slot>
-      <div className="text-2xl">/</div>
-      <Slot
-        accept={["value"]}
-        onDrop={(data) => setDen(data?.value ?? null)}
-        className="w-16 h-10 border rounded-md flex items-center justify-center text-xl bg-white"
-      >
-        {den ?? <span className="text-gray-400 italic">—</span>}
-      </Slot>
-    </div>
-  );
-}
 
 export default function ProportionalTablesModule() {
   const [difficulty, setDifficulty] = useState(loadDifficulty());
@@ -106,86 +64,118 @@ export default function ProportionalTablesModule() {
     setFeedback("Multiply k · x to get y. Great work!");
   };
 
+  // header cell with drop zone
   const headerCell = (label, placed, onDrop) => (
     <Slot
       accept={["chip"]}
       onDrop={onDrop}
-      className={`h-12 border-2 rounded-md flex items-center justify-center text-lg font-semibold ${
-        placed ? "bg-blue-50" : "bg-gray-50"
+      className={`p-2 border font-semibold text-center ${
+        placed ? "bg-blue-50" : "bg-gray-50 italic text-gray-500"
       }`}
     >
       {placed ? label : "Drop here"}
     </Slot>
   );
 
-  const Table = useMemo(() => {
-    return (
-      <div className="w-full">
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          <div>{headerCell("X", xPlaced, () => setXPlaced(true))}</div>
-          <div>{headerCell("Y", yPlaced, () => setYPlaced(true))}</div>
-          <div>{headerCell("K or Y/X", kPlaced, () => setKPlaced(true))}</div>
-        </div>
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full h-full p-6">
+      {/* LEFT PANE — TABLE */}
+      <div className="rounded-2xl border shadow bg-white p-6 flex flex-col">
+        <h2 className="text-xl font-bold mb-4">Proportional Table</h2>
 
-        <div className="grid grid-cols-3 gap-2">
+        {/* TABLE */}
+        <div className="border rounded-lg overflow-hidden">
+          {/* Header row */}
+          <div className="grid grid-cols-3 divide-x divide-gray-300 bg-gray-100 font-semibold">
+            {headerCell("X", xPlaced, () => setXPlaced(true))}
+            {headerCell("Y", yPlaced, () => setYPlaced(true))}
+            {headerCell("K or Y/X", kPlaced, () => setKPlaced(true))}
+          </div>
+
+          {/* Data rows */}
           {problem.rows.map((r, idx) => (
-            <React.Fragment key={idx}>
-              <Draggable
-                id={`x-${idx}`}
-                label={`${r.x}`}
-                payload={{ type: "value", value: r.x }}
-                className="h-12 border rounded-md flex items-center justify-center text-xl bg-white"
-              />
-              <Draggable
-                id={`y-${idx}`}
-                label={`${r.y}`}
-                payload={{ type: "value", value: r.y }}
-                className="h-12 border rounded-md flex items-center justify-center text-xl bg-white"
-              />
-              <div className="h-12 flex items-center justify-center">
+            <div
+              key={idx}
+              className="grid grid-cols-3 divide-x divide-gray-300 border-t text-center"
+            >
+              <div className="p-2 flex justify-center items-center">
+                <Draggable
+                  id={`x-${idx}`}
+                  label={`${r.x}`}
+                  payload={{ type: "value", value: r.x }}
+                  className="px-3 py-1 border rounded bg-white shadow-sm"
+                />
+              </div>
+              <div className="p-2 flex justify-center items-center">
+                <Draggable
+                  id={`y-${idx}`}
+                  label={`${r.y}`}
+                  payload={{ type: "value", value: r.y }}
+                  className="px-3 py-1 border rounded bg-white shadow-sm"
+                />
+              </div>
+              <div className="p-2 flex justify-center items-center">
                 {xPlaced && yPlaced && kPlaced ? (
-                  <FractionDrop rowIndex={idx} onRowFilled={onRowFilled} />
+                  <div className="flex items-center gap-1">
+                    <Slot
+                      accept={["value"]}
+                      onDrop={(data) =>
+                        onRowFilled(idx, {
+                          num: data?.value,
+                          den: fractions[idx]?.den ?? null,
+                        })
+                      }
+                      className="w-14 h-10 border rounded flex items-center justify-center"
+                    >
+                      {fractions[idx]?.num ?? (
+                        <span className="text-gray-400 italic">—</span>
+                      )}
+                    </Slot>
+                    <span>/</span>
+                    <Slot
+                      accept={["value"]}
+                      onDrop={(data) =>
+                        onRowFilled(idx, {
+                          num: fractions[idx]?.num ?? null,
+                          den: data?.value,
+                        })
+                      }
+                      className="w-14 h-10 border rounded flex items-center justify-center"
+                    >
+                      {fractions[idx]?.den ?? (
+                        <span className="text-gray-400 italic">—</span>
+                      )}
+                    </Slot>
+                  </div>
                 ) : (
-                  <span className="text-gray-400 italic text-sm">—</span>
+                  <span className="text-gray-400 italic">—</span>
                 )}
               </div>
-            </React.Fragment>
+            </div>
           ))}
+
+          {/* Row 4 prompt */}
+          {problem.proportional && (
+            <div className="grid grid-cols-3 divide-x divide-gray-300 border-t text-center">
+              <div className="p-2">{problem.revealRow4?.x}</div>
+              <div className="p-2">{row4Answer == null ? "?" : row4Answer}</div>
+              <div className="p-2">
+                {kFromFractions != null ? (
+                  <button
+                    onClick={onSolveRow4}
+                    className="px-3 py-1 border rounded bg-gray-50 hover:bg-gray-100 text-sm"
+                  >
+                    Solve Y = k·X
+                  </button>
+                ) : (
+                  <span className="text-gray-400 text-sm">Find k first</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {problem.proportional && (
-          <div className="grid grid-cols-3 gap-2 mt-4 items-center">
-            <div className="h-12 border rounded-md flex items-center justify-center text-xl bg-white">
-              {problem.revealRow4?.x ?? ""}
-            </div>
-            <div className="h-12 border rounded-md flex items-center justify-center text-xl bg-white">
-              {row4Answer == null ? "?" : row4Answer}
-            </div>
-            <div className="h-12 flex items-center justify-center">
-              {kFromFractions != null ? (
-                <button
-                  onClick={onSolveRow4}
-                  className="px-4 py-2 border rounded-lg shadow text-sm bg-gray-50 hover:bg-gray-100"
-                >
-                  Solve Y = k·X
-                </button>
-              ) : (
-                <div className="text-gray-400 text-sm">Find k first</div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }, [problem, xPlaced, yPlaced, kPlaced, row4Answer, kFromFractions]);
-
-  return (
-    <div className="w-full h-full p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* LEFT PANE */}
-      <div className="rounded-2xl border shadow p-4 flex flex-col bg-white">
-        <Header>Proportional Table</Header>
-        <div className="mt-3 border-2 rounded-xl p-4 bg-gray-50">{Table}</div>
-
+        {/* Controls */}
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Difficulty:</span>
@@ -212,10 +202,11 @@ export default function ProportionalTablesModule() {
         </div>
       </div>
 
-      {/* RIGHT PANE */}
-      <div className="rounded-2xl border shadow p-4 flex flex-col bg-white">
-        <Header>Build the Equation</Header>
-        <p className="mt-2 text-sm leading-6 text-gray-700">
+      {/* RIGHT PANE — CHIPS & PROMPTS */}
+      <div className="rounded-2xl border shadow bg-white p-6 flex flex-col">
+        <h2 className="text-xl font-bold mb-4">Build the Equation</h2>
+
+        <p className="text-sm leading-6 text-gray-700 mb-4">
           1) Drag <b>X</b> to the first header, <b>Y</b> to the second, and{" "}
           <b>K</b> to the third. <br />
           2) For each row, drag values into the fraction to form <b>Y/X</b>. <br />
@@ -223,14 +214,16 @@ export default function ProportionalTablesModule() {
           4) If proportional, use <b>Y = k·X</b> to find the missing fourth-row Y.
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <Chip id="chip-x" label="X" payload={{ type: "chip", name: "X" }} />
-          <Chip id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} />
-          <Chip id="chip-k" label="K" payload={{ type: "chip", name: "K" }} />
-          <Chip id="chip-eq" label="=" payload={{ type: "chip", name: "=" }} />
+        {/* Chips */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} />
+          <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} />
+          <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} />
+          <Draggable id="chip-eq" label="=" payload={{ type: "chip", name: "=" }} />
         </div>
 
-        <div className="mt-4 p-3 rounded-lg bg-gray-50 border">
+        {/* Status box */}
+        <div className="p-3 rounded-lg bg-gray-50 border mb-4">
           <div className="text-sm font-medium mb-1">Status</div>
           <ul className="text-sm leading-7">
             <li>
@@ -250,7 +243,7 @@ export default function ProportionalTablesModule() {
               {kFromFractions != null
                 ? problem.proportional
                   ? "Proportional ✓"
-                  : "Fractions disagree"
+                  : "Fractions disagree ✗"
                 : "Undetermined"}
             </li>
           </ul>
