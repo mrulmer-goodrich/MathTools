@@ -6,6 +6,14 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 import { choice } from '../../lib/rng.js'
 
+/**
+ * HTableModule — full file replacement (clean UX, no feature loss)
+ * - Centers column headers; removes placeholder descriptors in header cells.
+ * - Adds a clear divider line directly BELOW the header row (without touching existing strokes).
+ * - Keeps all original step logic, chips, and persistence.
+ * - Uses inline styles for centering & divider (no CSS changes needed elsewhere).
+ */
+
 const STEP_HEADS = [
   'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale', 'Place Given',
   'Next?', 'Which multiply?', 'Next?', 'Which divide?'
@@ -67,7 +75,7 @@ export default function HTableModule() {
     return Array.from(set).map((u,i)=>({ id:'u'+i, label:u, kind:'unit' }))
   },[problem])
 
-  // Number choices (appear only when needed; the actual numbers are embedded in the story but we mirror them here for dragging convenience)
+  // Number choices (appear only when needed; mirror story numbers so students can drag)
   const numberChoices = useMemo(()=>{
     const nums = new Set([problem.scale[0], problem.scale[1], problem.given.value])
     while(nums.size<6) nums.add(Math.floor(Math.random()*20)+1)
@@ -142,6 +150,8 @@ export default function HTableModule() {
     )
   }
 
+  const centerCellStyle = { display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:48 }
+
   return (
     <div className="container">
       <div className="panes">
@@ -156,20 +166,37 @@ export default function HTableModule() {
               <div className="hgrid">
                 {/* Headers row */}
                 <div className="hhead">
-                  <Slot test={acceptCol1} onDropContent={(d)=>{
-                    if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
-                  }}>
-                    <span>{table.head1 || 'Header 1'}</span>
+                  <Slot
+                    test={acceptCol1}
+                    onDropContent={(d)=>{
+                      if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
+                    }}>
+                    <div style={centerCellStyle}>
+                      <span className="hhead-text">{table.head1 || ''}</span>
+                    </div>
                   </Slot>
                 </div>
+
                 <div className="hhead">
-                  <Slot test={acceptCol2} onDropContent={(d)=>{
-                    if(d.v==='Scale'){ setTable(t=>({...t, head2:'Scale'})); setDone(3); next() } else miss(3)
-                  }}>
-                    <span>{table.head2 || 'Header 2'}</span>
+                  <Slot
+                    test={acceptCol2}
+                    onDropContent={(d)=>{
+                      if(d.v==='Scale'){ setTable(t=>({...t, head2:'Scale'})); setDone(3); next() } else miss(3)
+                    }}>
+                    <div style={centerCellStyle}>
+                      <span className="hhead-text">{table.head2 || ''}</span>
+                    </div>
                   </Slot>
                 </div>
-                <div className="hhead">{/* no label needed for 3rd col */}</div>
+
+                <div className="hhead">{/* 3rd column header intentionally blank */}</div>
+
+                {/* Divider directly below headers (spans all 3 columns) */}
+                <div
+                  className="hdivider"
+                  aria-hidden="true"
+                  style={{ gridColumn: '1 / span 3', height: 0, borderBottom: '2px solid #94a3b8', marginTop: 4 }}
+                />
 
                 {/* Row 1 cells */}
                 <div className="hcell">
@@ -205,7 +232,7 @@ export default function HTableModule() {
                   </Slot>
                 </div>
 
-                {/* H strokes */}
+                {/* Existing H strokes (kept as-is) */}
                 <div className="hstroke horiz"></div>
                 <div className="hstroke vert-left"></div>
                 <div className="hstroke vert-right"></div>
@@ -283,7 +310,7 @@ export default function HTableModule() {
                 </div>
                 <div className="toolbar" style={{marginTop:8}}>
                   <button className="button primary" onClick={()=>{
-                    // accept any placement of the two scale numbers as long as both are placed
+                    // accept any placement of the two scale numbers as long as both are placed and distinct
                     const ok = (table.sTop!=null && table.sBottom!=null) &&
                                new Set([table.sTop, table.sBottom]).size===2
                     if(ok){ setDone(4); next() } else miss(4)
