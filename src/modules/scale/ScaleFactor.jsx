@@ -227,14 +227,13 @@ export default function ScaleFactorModule() {
     if(num==null||den==null){ again(4); return }
     const g=gcd(num,den), a=num/g, b=den/g
     setCalc({num,den,a,b,g})
-    setCalcStage(1) // show ÷g
+    setCalcStage(2) // skip showing ÷g; go straight to simplified fraction
     timersRef.current.forEach(id=>clearTimeout(id)); timersRef.current=[]
-    timersRef.current.push(setTimeout(()=>setCalcStage(2), 3000))
     if(b===1){
-      timersRef.current.push(setTimeout(()=>setCalcStage(3), 6000))
-      timersRef.current.push(setTimeout(()=>setCalcStage(4), 9000))
+      timersRef.current.push(setTimeout(()=>setCalcStage(3), 1200))
+      timersRef.current.push(setTimeout(()=>setCalcStage(4), 2400))
     } else {
-      timersRef.current.push(setTimeout(()=>setCalcStage(4), 6000))
+      timersRef.current.push(setTimeout(()=>setCalcStage(4), 1200))
     }
   }
 
@@ -268,20 +267,10 @@ export default function ScaleFactorModule() {
   }
 
   const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
-const canArmCompute = () => {
-  if (showConfetti) return false;
-
-  // Step 4: Calculate & Simplify (just need numerator & denominator present)
-  if (step === 4) {
-    return !s5.computed && (num != null && den != null);
+  const canArmCompute = () => {
+    const haveOrig = s5.origVal != null
+    return wordsOK && haveOrig && (calc || (num!=null && den!=null))
   }
-
-  // Step 5: Compute missing length (need words OK + original value + a calc path)
-  const haveOrig = s5.origVal != null;
-  return !s5.computed && (wordsOK && haveOrig && (calc || (num != null && den != null)));
-};
-
-
 
   const doComputeMissing = () => {
     const sf = (calc ? (calc.a/ calc.b) : (num/den))
@@ -295,9 +284,7 @@ const canArmCompute = () => {
 
   /* ---------- Pill / Tag ---------- */
   const Tag = ({ id, value, side, orient, shapeKey }) => {
-    const chosen = isChosen(shapeKey, side)
-    const good   = isGood(shapeKey, side)
-    const cls = 'side-tag ' + side + (chosen ? ' chosen' : '') + (good ? ' good' : '')
+    const cls = 'side-tag ' + side
     const displayVal = (value==='?' && !isNaN(missingResult) && shapeKey==='copy' && ((orient==='horizontal' && missingPair==='horizontal') || (orient==='vertical' && missingPair==='vertical')))
       ? missingResult
       : value
@@ -377,13 +364,12 @@ const canArmCompute = () => {
     </div>
   )
 
-const StackedDivide = ({ g, visible }) => (
-  <div className={"stacked-op " + (visible ? "show" : "hide")}>
-<span className="chip chip-tiny">{"÷\u202F" + g}</span>
-<span className="chip chip-tiny">{"÷\u202F" + g}</span>
-  </div>
-)
-
+  const StackedDivide = ({g, visible}) => (
+    <div className={visible ? 'stack-op sf-fade' : 'stack-op sf-hidden'} aria-hidden={!visible}>
+      <span className="chip chip-tiny">÷ {g}</span>
+      <span className="chip chip-tiny">÷ {g}</span>
+    </div>
+  )
 
   const stage1 = calcStage>=1
   const stage2 = calcStage>=2
@@ -498,7 +484,7 @@ const StackedDivide = ({ g, visible }) => (
                 <div className="muted bigger">Tap Calculate, watch the simplification appear from left to right, then confirm.</div>
                 <div className="calc-row mt-8">
                   <MiniFraction top={num} bottom={den} />
-                  <StackedDivide g={calc?.g ?? 'g'} visible={calcStage>=1} />
+                  {/* ÷g step hidden by design */}
                   <span className={calcStage>=2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=2)}>=</span>
                   <div className={calcStage>=2 ? 'sf-fade' : 'sf-hidden'} aria-hidden={!(calcStage>=2)}>
                     <MiniFraction top={calc?.a ?? '—'} bottom={calc?.b ?? '—'} />
