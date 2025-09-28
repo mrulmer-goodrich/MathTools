@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.2 H-lines exact)
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.3 — solid H, bigger cells, fixed step gating)
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
 import Slot from '../../components/DropSlot.jsx'
@@ -6,11 +6,18 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-/* ---------- Step labels (tweaked wording on 6 & 10) ---------- */
-const STEP_HEADS = [
-  'What first?', 'Column 1', 'Units', 'Column 2', 'Place Scale',
-  'Where does the other number in the problem go?', 'What’s next?',
-  'Which multiply?', 'What’s next?', 'Which number are we dividing?'
+/* ---------- Step labels (more explicit text per your request) ---------- */
+const STEP_TITLES = [
+  'Step 1: What do we do first?',
+  'Step 2: What do we put in the first column? (drag onto header)',
+  'Step 3: Place the units (drag onto left cells)',
+  'Step 4: What goes in the second column? (drag onto header)',
+  'Step 5: Drop the correct scale numbers into the H-table',
+  'Step 6: Where does the other number in the problem go? Drag to the H-table.',
+  'Step 7: What’s next?',
+  'Step 8: Which numbers are we multiplying?',
+  'Step 9: What’s next?',
+  'Step 10: Which number are we dividing?'
 ]
 
 /* ---------- Step 1 tiles (correct = Draw an H-Table) ---------- */
@@ -54,7 +61,7 @@ const genSaneHProblem = () => {
 
 export default function HTableModule(){
   // bump so stale localStorage never freezes this build
-  const H_SNAP_VERSION = 5
+  const H_SNAP_VERSION = 6
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -65,7 +72,7 @@ export default function HTableModule(){
     product:null, divisor:null, result:null
   })
   const [step, setStep] = useState(H_PERSIST?.step ?? 0)
-  const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_HEADS.map(()=>({misses:0,done:false})))
+  const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_TITLES.map(()=>({misses:0,done:false})))
   const [openSum, setOpenSum] = useState(false)
 
   useEffect(()=>{
@@ -75,7 +82,7 @@ export default function HTableModule(){
 
   const miss = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].misses++; return c})
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
-  const next = ()=>setStep(s=>Math.min(s+1, STEP_HEADS.length-1))
+  const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
   /* ---------- language / redaction ---------- */
   const [showEnglish,setShowEnglish]=useState(true)
@@ -147,7 +154,7 @@ export default function HTableModule(){
     { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
     { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-    { id:'col_labels', label:'Labels', kind:'col', v:'Labels' },
+    // removed "Labels" option per request
   ],[])
 
   /* ---------- accept tests (step-gated) ---------- */
@@ -157,8 +164,9 @@ export default function HTableModule(){
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
   const acceptScaleTop   = d => step===4 && d.kind==='num'
   const acceptScaleBottom= d => step===4 && d.kind==='num'
-  const acceptValueTop   = d => step===6 && d.kind==='num'
-  const acceptValueBottom= d => step===6 && d.kind==='num'
+  // FIX: value placement is Step 5, not 6
+  const acceptValueTop   = d => step===5 && d.kind==='num'
+  const acceptValueBottom= d => step===5 && d.kind==='num'
 
   /* ---------- geometry refs for precise H-lines & highlight oval ---------- */
   const gridRef = useRef(null)
@@ -198,17 +206,10 @@ export default function HTableModule(){
     setLines({ v1Left: v1, v2Left: v2, vTop: r_vTop.top - gr.top, vHeight, hTop, gridW: gr.width })
   }
 
-  useLayoutEffect(()=>{
-    measure()
-  },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom])
+  useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom])
+  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize) },[])
 
-  useEffect(()=>{
-    const onResize = ()=>measure()
-    window.addEventListener('resize', onResize)
-    return ()=>window.removeEventListener('resize', onResize)
-  },[])
-
-  /* ---------- Step 8 highlight: long diagonal oval encircling chosen pair ---------- */
+  /* ---------- Step 8 highlight oval ---------- */
   const [highlightKeys, setHighlightKeys] = useState([]) // e.g., ['vTop','sBottom']
   useLayoutEffect(()=>{
     if(!highlightKeys.length){ setOval(null); return }
@@ -225,7 +226,7 @@ export default function HTableModule(){
     const midX = (a.x + b.x)/2
     const midY = (a.y + b.y)/2
     const dx = b.x - a.x, dy = b.y - a.y
-    const len = Math.sqrt(dx*dx + dy*dy) + 100 // padding to look like an oval around both
+    const len = Math.sqrt(dx*dx + dy*dy) + 120 // little more padding
     const rot = Math.atan2(dy, dx) * 180/Math.PI
     setOval({ left: midX, top: midY, len, rot })
   },[highlightKeys])
@@ -284,7 +285,7 @@ export default function HTableModule(){
     setProblem(genSaneHProblem())
     setTable({ head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null, product:null, divisor:null, result:null })
     setStep(0)
-    setSteps(STEP_HEADS.map(()=>({misses:0,done:false})))
+    setSteps(STEP_TITLES.map(()=>({misses:0,done:false})))
     setShowEnglish(true); setMode('English')
     setHighlightKeys([])
   }
@@ -321,6 +322,8 @@ export default function HTableModule(){
     )
   }
 
+  const CELL_H = 72 // bigger, uniform
+  const lineColor = '#0f172a' // slate-900 (dark)
   const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : ''
 
   return (
@@ -336,23 +339,23 @@ export default function HTableModule(){
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers: NO borders; only dashed empty state from CSS class */}
                 <div className="hhead">
-                  <Slot style={{minHeight:56}} className={`${!table.head1 ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{
                       if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
                     }}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:56}}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:CELL_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
                   </Slot>
                 </div>
                 <div className="hhead">
-                  <Slot style={{minHeight:56}} className={`${!table.head2 ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
                     onDropContent={(d)=>{
                       if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
                     }}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:56}}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', minHeight:CELL_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
                   </Slot>
@@ -361,7 +364,7 @@ export default function HTableModule(){
 
                 {/* Row 1 (data) */}
                 <div ref={refs.uTop} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${!table.uTop ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${!table.uTop ? "empty" : ""}`}
                     test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uTop:d.label}
@@ -369,11 +372,11 @@ export default function HTableModule(){
                       if(placed.size===2){ setDone(2); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('uTop')} style={{fontSize:16}}>{table.uTop || ''}</span>
+                    <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                   </Slot>
                 </div>
                 <div ref={refs.sTop} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${table.sTop==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.sTop==null ? "empty" : ""}`}
                     test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sTop: Number(d.value)}
@@ -381,11 +384,11 @@ export default function HTableModule(){
                       if(both){ setDone(4); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('sTop')} style={{fontSize:20}}>{table.sTop ?? ''}</span>
+                    <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
                 <div ref={refs.vTop} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${table.vTop==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
                       const correct = problem?.given?.row==='top' && d.value===problem?.given?.value
@@ -394,16 +397,16 @@ export default function HTableModule(){
                       if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('vTop')} style={{fontSize:20}}>{table.vTop ?? ''}</span>
+                    <span className={cellCls('vTop')} style={{fontSize:22}}>{table.vTop ?? ''}</span>
                   </Slot>
                 </div>
 
-                {/* Horizontal divider: BETWEEN the two data rows only (no header borders) */}
+                {/* Horizontal spacer (visual gap); solid line is drawn by absolute overlay below */}
                 <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
                 {/* Row 2 (data) */}
                 <div ref={refs.uBottom} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${!table.uBottom ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${!table.uBottom ? "empty" : ""}`}
                     test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uBottom:d.label}
@@ -411,11 +414,11 @@ export default function HTableModule(){
                       if(placed.size===2){ setDone(2); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('uBottom')} style={{fontSize:16}}>{table.uBottom || ''}</span>
+                    <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
                 <div ref={refs.sBottom} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${table.sBottom==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.sBottom==null ? "empty" : ""}`}
                     test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sBottom: Number(d.value)}
@@ -423,11 +426,11 @@ export default function HTableModule(){
                       if(both){ setDone(4); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('sBottom')} style={{fontSize:20}}>{table.sBottom ?? ''}</span>
+                    <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
                 <div ref={refs.vBottom} className="hcell">
-                  <Slot style={{minHeight:56}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const correct = problem?.given?.row==='bottom' && d.value===problem?.given?.value
@@ -436,30 +439,30 @@ export default function HTableModule(){
                       if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
                       return t2
                     })}>
-                    <span className={cellCls('vBottom')} style={{fontSize:20}}>{table.vBottom ?? ''}</span>
+                    <span className={cellCls('vBottom')} style={{fontSize:22}}>{table.vBottom ?? ''}</span>
                   </Slot>
                 </div>
 
-                {/* Absolute overlay lines to create the H shape (no outer border, no header borders) */}
+                {/* Absolute overlay lines to create the H shape (dark, thick, SOLID) */}
                 <div
                   style={{
                     position:'absolute', pointerEvents:'none',
                     left:0, top:(lines.hTop||0), width:(lines.gridW||0),
-                    borderTop:'3px dashed #94a3b8'
+                    borderTop:`5px solid ${lineColor}`
                   }}
                 />
                 <div
                   style={{
                     position:'absolute', pointerEvents:'none',
                     top:(lines.vTop||0), left:(lines.v1Left||0),
-                    height:(lines.vHeight||0), borderLeft:'4px solid #94a3b8'
+                    height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`
                   }}
                 />
                 <div
                   style={{
                     position:'absolute', pointerEvents:'none',
                     top:(lines.vTop||0), left:(lines.v2Left||0),
-                    height:(lines.vHeight||0), borderLeft:'4px solid #94a3b8'
+                    height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`
                   }}
                 />
 
@@ -469,9 +472,9 @@ export default function HTableModule(){
                     style={{
                       position:'absolute',
                       left: oval.left, top: oval.top,
-                      width: oval.len, height: 44,
+                      width: oval.len, height: 50,
                       transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '4px solid #0ea5e9', borderRadius: 9999,
+                      border: '5px solid #0ea5e9', borderRadius: 9999,
                       pointerEvents:'none', boxShadow:'0 0 8px rgba(14,165,233,0.6)'
                     }}
                   />
@@ -484,9 +487,7 @@ export default function HTableModule(){
         {/* RIGHT */}
         <div className="card right-steps">
           <div className="section">
-            <div className="step-title">
-              {STEP_HEADS[step]}
-            </div>
+            <div className="step-title">{STEP_TITLES[step]}</div>
 
             {step===0 && (
               <div className="chips with-borders center">
@@ -505,15 +506,15 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* Unit chips only for steps 2–6 */}
-            {step>=2 && step<=6 && (
+            {/* Unit chips only for steps 2–5 */}
+            {step>=2 && step<=5 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
-            {/* Number chips only for steps 4–6 */}
-            {step>=4 && step<=6 && (
+            {/* Number chips only for steps 4–5 */}
+            {step>=4 && step<=5 && (
               <div className="chips center mt-8">
                 {numberChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
@@ -542,7 +543,7 @@ export default function HTableModule(){
 
                 {step===8 && (
                   <div className="chips center mt-8">
-                    <button className="chip" onClick={()=>{ /* explicit gate to step 9 */ setDone(8); setHighlightKeys(k=>k); next(); }}>Next</button>
+                    <button className="chip" onClick={()=>{ setDone(8); next(); }}>Next</button>
                   </div>
                 )}
 
