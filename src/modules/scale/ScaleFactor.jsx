@@ -270,7 +270,7 @@ export default function ScaleFactorModule() {
   const wordsOK = s5.f1?.label==='Original' && s5.f2?.label==='Scale Factor' && s5.f3?.label==='Copy'
   const canArmCompute = () => {
     const haveOrig = s5.origVal != null
-    return wordsOK && haveOrig && (calc || (num!=null && den!=null))
+    return !s5.computed && !showConfetti && (wordsOK && haveOrig && (calc || (num!=null && den!=null)))
   }
 
   const doComputeMissing = () => {
@@ -285,7 +285,9 @@ export default function ScaleFactorModule() {
 
   /* ---------- Pill / Tag ---------- */
   const Tag = ({ id, value, side, orient, shapeKey }) => {
-    const cls = 'side-tag ' + side
+    const chosen = isChosen(shapeKey, side)
+    const good   = isGood(shapeKey, side)
+    const cls = 'side-tag ' + side + (chosen ? ' chosen' : '') + (good ? ' good' : '')
     const displayVal = (value==='?' && !isNaN(missingResult) && shapeKey==='copy' && ((orient==='horizontal' && missingPair==='horizontal') || (orient==='vertical' && missingPair==='vertical')))
       ? missingResult
       : value
@@ -367,8 +369,8 @@ export default function ScaleFactorModule() {
 
   const StackedDivide = ({g, visible}) => (
     <div className={visible ? 'stack-op sf-fade' : 'stack-op sf-hidden'} aria-hidden={!visible}>
-      <span className="chip chip-tiny">÷ {g}</span>
-      <span className="chip chip-tiny">÷ {g}</span>
+      <span className="chip chip-tiny">÷\u202F{g}</span>
+      <span className="chip chip-tiny">÷\u202F{g}</span>
     </div>
   )
 
