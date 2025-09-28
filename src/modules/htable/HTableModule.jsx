@@ -33,14 +33,42 @@ const STEP1_CHOICES = [
   { id:'guess', label:'Just Guess', correct:false },
 ]
 
+
 const UNIT_CATS = {
-  length: ['in','inch','inches','cm','mm','m','meter','meters','km','kilometer','kilometers','yd','yard','yards','mi','mile','miles'],
-  time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours'],
-  volume: ['liter','liters','milliliter','milliliters','cup','cups','tablespoon','tablespoons','gallon','gallons'],
-  mass: ['gram','grams','kilogram','kilograms'],
+  length: [
+    'mm','millimeter','millimeters',
+    'cm','centimeter','centimeters',
+    'm','meter','meters',
+    'km','kilometer','kilometers',
+    'in','inch','inches',
+    'ft','foot','feet',
+    'yd','yard','yards',
+    'mi','mile','miles'
+  ],
+  time: [
+    'sec','secs','second','seconds',
+    'min','mins','minute','minutes',
+    'hour','hours',
+    'day','days','week','weeks','year','years'
+  ],
+  volume: [
+    'tsp','tsps','teaspoon','teaspoons',
+    'tbsp','tbsps','tablespoon','tablespoons',
+    'cup','cups',
+    'quart','quarts','qt','qts',
+    'gallon','gallons',
+    'liter','liters','l',
+    'milliliter','milliliters','ml'
+  ],
+  mass: [
+    'gram','grams','g',
+    'kilogram','kilograms','kg',
+    'pound','pounds','lb','lbs'
+  ],
   count: ['item','items','page','pages','point','points'],
   money: ['dollar','dollars','$','euro','euros']
 }
+
 const unitCategory = (u='') => {
   const s = (u||'').toLowerCase()
   for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
