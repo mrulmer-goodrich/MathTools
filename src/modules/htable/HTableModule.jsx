@@ -207,11 +207,11 @@ export default function HTableModule(){
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
-  const acceptScaleTop   = d => step===5 && d.kind==='num'
-  const acceptScaleBottom= d => step===5 && d.kind==='num'
+  const acceptScaleTop   = d => step===4 && d.kind==='num'
+  const acceptScaleBottom= d => step===4 && d.kind==='num'
   // The "other number" must go in the given row only (step 6) — strict row guard
-  const acceptValueTop   = d => step===6 && d.kind==='num' && problem?.given?.row==='top' && d.value===problem?.given?.value
-  const acceptValueBottom= d => step===6 && d.kind==='num' && problem?.given?.row==='bottom' && d.value===problem?.given?.value
+  const acceptValueTop   = d => step===5 && d.kind==='num' && problem?.given?.row==='top' && d.value===problem?.given?.value
+  const acceptValueBottom= d => step===5 && d.kind==='num' && problem?.given?.row==='bottom' && d.value===problem?.given?.value
 
   /* ---------- geometry refs for precise H-lines & highlight/underline overlays ---------- */
   const gridRef = useRef(null)
@@ -399,7 +399,8 @@ export default function HTableModule(){
     )
   }
 
-  const CELL_H = 96 // bigger, uniform across all body cells (same as headers)
+  const CELL_H = 96
+  const HEADER_H = 56 // bigger, uniform across all body cells (same as headers)
   const lineColor = '#0f172a' // slate-900 (dark)
   const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : ''
 
@@ -435,8 +436,8 @@ export default function HTableModule(){
               {/* grid: no outer border; header row has no borders */}
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers: NO borders; only dashed empty state from CSS class */}
-                <div className="hhead" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H}} className={`${!table.head1 ? "empty" : ""}`}
+                <div className="hhead" style={{minHeight:HEADER_H}}>
+                  <Slot style={{minHeight:HEADER_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{
                       if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
@@ -446,8 +447,8 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H}} className={`${!table.head2 ? "empty" : ""}`}
+                <div className="hhead" style={{minHeight:HEADER_H}}>
+                  <Slot style={{minHeight:HEADER_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
                     onDropContent={(d)=>{
                       if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
@@ -457,11 +458,11 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-                <div className="hhead" style={{minHeight:CELL_H}}>{/* blank */}</div>
+                <div className="hhead" style={{minHeight:HEADER_H}}>{/* blank */}</div>
 
                 {/* Row 1 (data) */}
                 <div ref={refs.uTop} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${!table.uTop ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uTop ? "empty" : ""}`}
                     test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uTop:d.label}
@@ -473,7 +474,7 @@ export default function HTableModule(){
                   </Slot>
                 </div>
                 <div ref={refs.sTop} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.sTop==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sTop==null ? "empty" : ""}`}
                     test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sTop: Number(d.value)}
@@ -485,7 +486,7 @@ export default function HTableModule(){
                   </Slot>
                 </div>
                 <div ref={refs.vTop} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vTop==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
                       // double-guard: only correct row + value
@@ -505,7 +506,7 @@ export default function HTableModule(){
 
                 {/* Row 2 (data) */}
                 <div ref={refs.uBottom} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${!table.uBottom ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uBottom ? "empty" : ""}`}
                     test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uBottom:d.label}
@@ -517,7 +518,7 @@ export default function HTableModule(){
                   </Slot>
                 </div>
                 <div ref={refs.sBottom} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.sBottom==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sBottom==null ? "empty" : ""}`}
                     test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,sBottom: Number(d.value)}
@@ -529,7 +530,7 @@ export default function HTableModule(){
                   </Slot>
                 </div>
                 <div ref={refs.vBottom} className="hcell" style={{minHeight:CELL_H}}>
-                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`flat ${table.vBottom==null ? "empty" : ""}`}
+                  <Slot style={{minHeight:CELL_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
                       // double-guard: only correct row + value
@@ -631,14 +632,14 @@ export default function HTableModule(){
             )}
 
             {/* Numbers only for step 5 & 6 */}
-            {step===5 && (
+            {step===4 && (
               <div className="chips center mt-8">
-                {numbersStep5.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                {(numbersStep5 && numbersStep5.length ? numbersStep5 : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
-            {step===6 && (
+            {step===5 && (
               <div className="chips center mt-8">
-                {numbersStep6.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                {(numbersStep6 && numbersStep6.length ? numbersStep6 : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
