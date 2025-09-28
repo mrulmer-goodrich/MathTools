@@ -1,6 +1,9 @@
-// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.8)
-// Uniform row height, strict given placement by unit, randomized chips,
-// inline fraction equation on Calculate, full-screen confetti overlay.
+// src/modules/htable/HTableModule.jsx — Rebuilt (spec v2.9)
+// - Uniform dropzone heights (ROW_H)
+// - Randomized chips
+// - Step 6 acceptance uses robust unit canonicalization (mi/mile/miles, km/kilometer/kilometers, etc.)
+// - Inline fraction + "= result" on one line (no wrapping)
+// - Full-screen confetti with max z-index
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import Draggable from '../../components/DraggableChip.jsx'
@@ -42,12 +45,45 @@ const unitCategory = (u='') => {
   for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
   return null
 }
+
+// Canonicalize unit strings so abbreviations/singular/plural compare equal
+const CANON = {
+  // length
+  'in':'inches','inch':'inches','inches':'inches',
+  'cm':'cm','mm':'mm',
+  'm':'meters','meter':'meters','meters':'meters',
+  'km':'kilometers','kilometer':'kilometers','kilometers':'kilometers',
+  'yd':'yards','yard':'yards','yards':'yards',
+  'mi':'miles','mile':'miles','miles':'miles',
+  // time
+  'sec':'seconds','secs':'seconds','second':'seconds','seconds':'seconds',
+  'min':'minutes','mins':'minutes','minute':'minutes','minutes':'minutes',
+  'hour':'hours','hours':'hours',
+  // volume
+  'liter':'liters','liters':'liters',
+  'milliliter':'milliliters','milliliters':'milliliters',
+  'cup':'cups','cups':'cups',
+  'tablespoon':'tablespoons','tablespoons':'tablespoons',
+  'gallon':'gallons','gallons':'gallons',
+  // mass
+  'gram':'grams','grams':'grams',
+  'kilogram':'kilograms','kilograms':'kilograms',
+  // count
+  'item':'items','items':'items',
+  'page':'pages','pages':'pages',
+  'point':'points','points':'points',
+  // money
+  'dollar':'dollars','dollars':'dollars','$':'dollars',
+  'euro':'euros','euros':'euros'
+}
+const canon = (u='') => CANON[(u||'').toLowerCase()] || (u||'').toLowerCase()
+
 const saneProblem = (p) => {
   try{
     const [u1,u2] = p.units || []
     const c1 = unitCategory(u1), c2 = unitCategory(u2)
     if (!c1 || !c2 || c1!==c2) return false
-    if (p?.given?.unit && ![u1,u2].includes(p.given.unit)) return false
+    if (p?.given?.unit && ![u1,u2].map(canon).includes(canon(p.given.unit))) return false
     return true
   }catch{ return false }
 }
@@ -57,12 +93,10 @@ const genSaneHProblem = () => {
   return p
 }
 
-function shuffle(arr){
-  return arr.slice().sort(()=>Math.random()-0.5)
-}
+function shuffle(arr){ return arr.slice().sort(()=>Math.random()-0.5) }
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 10
+  const H_SNAP_VERSION = 11
   const __persisted = loadSession() || {}
   const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
 
@@ -87,7 +121,7 @@ export default function HTableModule(){
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
-  /* language + redaction (mask only, rotation) */
+  // language
   const FALLBACK_LANGS = ['Spanish','Vietnamese','French','Chinese','Arabic','Korean']
   const [showEnglish,setShowEnglish]=useState(true)
   const [mode,setMode]=useState('English')
@@ -139,7 +173,7 @@ export default function HTableModule(){
     return ()=>{ stopTimer(); clearTimeout(t) }
   },[problem?.id, allowedModes.length])
 
-  /* pools */
+  // pools
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2)
     const cat = unitCategory(correct[0] || '')
@@ -186,27 +220,20 @@ export default function HTableModule(){
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
   ]),[problem?.id])
 
-  /* accept tests */
+  // accept tests
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
   const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
   const acceptUnitTop    = d => step===2 && d.kind==='unit'
   const acceptUnitBottom = d => step===2 && d.kind==='unit'
   const acceptScaleTop   = d => step===4 && d.kind==='num'
   const acceptScaleBottom= d => step===4 && d.kind==='num'
-  // Fix: the given value must go to the row whose UNIT matches problem.given.unit (independent of original "row").
-  const acceptValueTop   = d => step===5 && d.kind==='num' && d.value===problem?.given?.value && table.uTop && table.uTop.toLowerCase()===String(problem?.given?.unit||'').toLowerCase()
-  const acceptValueBottom= d => step===5 && d.kind==='num' && d.value===problem?.given?.value && table.uBottom && table.uBottom.toLowerCase()===String(problem?.given?.unit||'').toLowerCase()
+  // Step 6: given must go to the row whose placed UNIT canon-matches problem.given.unit
+  const acceptValueTop   = d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && table.uTop && canon(table.uTop)===canon(problem?.given?.unit)
+  const acceptValueBottom= d => step===5 && d.kind==='num' && Number(d.value)===Number(problem?.given?.value) && table.uBottom && canon(table.uBottom)===canon(problem?.given?.unit)
 
-  /* geometry */
+  // geometry
   const gridRef = useRef(null)
-  const refs = {
-    uTop: useRef(null),
-    sTop: useRef(null),
-    vTop: useRef(null),
-    uBottom: useRef(null),
-    sBottom: useRef(null),
-    vBottom: useRef(null),
-  }
+  const refs = { uTop: useRef(null), sTop: useRef(null), vTop: useRef(null), uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null) }
   const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 })
   const [oval, setOval] = useState(null)
   const [tripleUL, setTripleUL] = useState(null)
@@ -221,10 +248,7 @@ export default function HTableModule(){
     const r_uBottom = refs.uBottom.current?.getBoundingClientRect()
     const r_sBottom = refs.sBottom.current?.getBoundingClientRect()
     const r_vBottom = refs.vBottom.current?.getBoundingClientRect()
-    if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) {
-      setLines(l=>({ ...l, gridW: gr.width }))
-      return
-    }
+    if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) { setLines(l=>({ ...l, gridW: gr.width })); return }
     const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left
     const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left
     const vTop = r_vTop.top - gr.top
@@ -236,12 +260,7 @@ export default function HTableModule(){
     if (tripleUL && tripleUL.key){
       const target = refs[tripleUL.key]?.current?.getBoundingClientRect()
       if(target){
-        setTripleUL({
-          key: tripleUL.key,
-          left: target.left - gr.left + 8,
-          top: target.bottom - gr.top - 18,
-          width: Math.max(24, target.width - 16)
-        })
+        setTripleUL({ key: tripleUL.key, left: target.left - gr.left + 8, top: target.bottom - gr.top - 18, width: Math.max(24, target.width - 16) })
       }
     }
   }
@@ -305,12 +324,7 @@ export default function HTableModule(){
       const gr = g.getBoundingClientRect()
       const r = refs[key].current?.getBoundingClientRect()
       if (r){
-        setTripleUL({
-          key,
-          left: r.left - gr.left + 8,
-          top: r.bottom - gr.top - 18,
-          width: Math.max(24, r.width - 16)
-        })
+        setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) })
       }
     }
     const result = table.product / div
@@ -373,7 +387,7 @@ export default function HTableModule(){
     )
   }
 
-  const ROW_H = 88 // same height for headers and data
+  const ROW_H = 88
   const lineColor = '#0f172a'
   const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : ''
 
@@ -381,21 +395,16 @@ export default function HTableModule(){
     <div className="container" style={{position:'relative'}}>
       <style>{`
         @keyframes htable-blink { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.3); } }
-        @keyframes confettiFall {
-          0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(120vh) rotate(720deg); opacity: 1; }
-        }
-        .htable-confetti { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; }
-        .htable-confetti .piece {
-          position: absolute; width: 10px; height: 14px; opacity: 0.9;
-          animation: confettiFall linear infinite; border-radius: 2px;
-        }
+        @keyframes confettiFall { 0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(120vh) rotate(720deg); opacity: 1; } }
+        .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
+        .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
         .math-strip { margin-top: 14px; text-align: center; }
         .math-strip .big { font-size: 26px; font-weight: 700; }
-        .math-strip .fraction { display: inline-block; }
+        .math-strip .fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
         .math-strip .numerator { font-size: 24px; font-weight: 700; }
-        .math-strip .bar { height: 4px; background: #0f172a; margin: 6px 0; }
+        .math-strip .bar { width: 100%; height: 4px; background: #0f172a; margin: 6px 0; }
         .math-strip .denominator { font-size: 24px; font-weight: 700; }
+        .math-strip .eqline { display: inline-flex; align-items: center; gap: 16px; white-space: nowrap; }
         /* Force large empty dropzones inside cells regardless of global styles */
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
           min-height: ${ROW_H}px !important;
@@ -404,7 +413,6 @@ export default function HTableModule(){
       `}</style>
 
       <div className="panes">
-        {/* LEFT */}
         <div className="card">
           <Story />
 
@@ -415,9 +423,7 @@ export default function HTableModule(){
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
-                    onDropContent={(d)=>{
-                      if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1)
-                    }}>
+                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
@@ -426,9 +432,7 @@ export default function HTableModule(){
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
-                    onDropContent={(d)=>{
-                      if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3)
-                    }}>
+                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
@@ -465,7 +469,7 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(d.value===problem?.given?.value && table.uTop && table.uTop.toLowerCase()===String(problem?.given?.unit||'').toLowerCase())){ miss(5); return t }
+                      if(!(Number(d.value)===Number(problem?.given?.value) && table.uTop && canon(table.uTop)===canon(problem?.given?.unit))){ miss(5); return t }
                       const t2={...t,vTop:Number(d.value)}
                       if(t2.vTop!=null && t2.vBottom==null){ setDone(5); next(); }
                       return t2
@@ -505,7 +509,7 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
-                      if(!(d.value===problem?.given?.value && table.uBottom && table.uBottom.toLowerCase()===String(problem?.given?.unit||'').toLowerCase())){ miss(5); return t }
+                      if(!(Number(d.value)===Number(problem?.given?.value) && table.uBottom && canon(table.uBottom)===canon(problem?.given?.unit))){ miss(5); return t }
                       const t2={...t,vBottom:Number(d.value)}
                       if(t2.vBottom!=null && t2.vTop==null){ setDone(5); next(); }
                       return t2
@@ -515,21 +519,13 @@ export default function HTableModule(){
                 </div>
 
                 {/* Solid H lines */}
-                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid #0f172a`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid #0f172a`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid #0f172a`}} />
 
                 {/* Red oval */}
                 {oval && (
-                  <div
-                    style={{
-                      position:'absolute',
-                      left: oval.left, top: oval.top, width: oval.len, height: 54,
-                      transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '5px solid #ef4444', borderRadius: 9999,
-                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                    }}
-                  />
+                  <div style={{position:'absolute', left: oval.left, top: oval.top, width: oval.len, height: 54, transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`, border: '5px solid #ef4444', borderRadius: 9999, pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'}} />
                 )}
                 {/* Red triple underline */}
                 {tripleUL && (
@@ -551,9 +547,7 @@ export default function HTableModule(){
 
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep1(c)}>{c.label}</button>
-                ))}
+                {STEP1_CHOICES.map(c => (<button key={c.id} className="chip" onClick={()=>handleStep1(c)}>{c.label}</button>))}
               </div>
             )}
 
@@ -592,9 +586,7 @@ export default function HTableModule(){
                   { id:'op_add', label:'Add the numbers' },
                   { id:'op_sub', label:'Subtract the numbers' },
                   { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}>{o.label}</button>
-                ))}
+                ].map(o => (<button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}>{o.label}</button>))}
               </div>
             )}
 
@@ -611,15 +603,13 @@ export default function HTableModule(){
                 {!mathStrip.divisor ? (
                   <div className="big">{(mathStrip.a!=null && mathStrip.b!=null) ? `${mathStrip.a} × ${mathStrip.b}` : ''}</div>
                 ) : (
-                  <div className="eqline" style={{display:'flex', alignItems:'center', justifyContent:'center', gap:16}}>
+                  <div className="eqline">
                     <div className="fraction">
                       <div className="numerator">{`${mathStrip.a} × ${mathStrip.b}`}</div>
                       <div className="bar"></div>
                       <div className="denominator">{`${mathStrip.divisor}`}</div>
                     </div>
-                    {mathStrip.showResult && (
-                      <div className="big">= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>
-                    )}
+                    {mathStrip.showResult && (<div className="big">= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>)}
                   </div>
                 )}
               </div>
@@ -641,29 +631,19 @@ export default function HTableModule(){
         </div>
       </div>
 
-      {/* Full-screen confetti outside cards */}
       {confettiOn && (
         <div className="htable-confetti">
-          {Array.from({length:90}).map((_,i)=>{
+          {Array.from({length:120}).map((_,i)=>{
             const left = Math.random()*100
             const dur = 5 + Math.random()*4
             const delay = Math.random()*2
             const bg = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4'][i%6]
-            return (
-              <div key={i} className="piece" style={{
-                left: `${left}%`,
-                background: bg,
-                animationDuration: `${dur}s`,
-                animationDelay: `${delay}s`
-              }} />
-            )
+            return (<div key={i} className="piece" style={{ left: `${left}%`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` }} />)
           })}
         </div>
       )}
 
-      {openSum && (
-        <SummaryOverlay attempts={session?.attempts || []} onClose={()=>{ setOpenSum(false); resetProblem(); }} />
-      )}
+      {openSum && (<SummaryOverlay attempts={session?.attempts || []} onClose={()=>{ setOpenSum(false); resetProblem(); }} />)}
     </div>
   )
 }
