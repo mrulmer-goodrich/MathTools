@@ -417,4 +417,28 @@ body{
 /* Optional: subtle glow when a slot is an active drop target */
 .slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
 
+/* Keep header equation on one line, compact */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Compact header fraction slots so the K header never wraps */
+.ptable .ptable-fracslot.tiny { min-width: 42px; min-height: 30px; padding: 4px 6px; }
+
+/* Explicit 3-row grid for stacked fractions (prevents odd wrapping) */
+.fraction { grid-template-rows: auto auto auto; }
+
+/* Row calc group stays inside the third column and wraps nicely */
+.row-calc { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; max-width:100%; }
+.row-calc .fraction.mini-frac { width:72px; }           /* compact fractions */
+.ptable .ptable-fracslot { min-width: 36px; min-height: 28px; padding:4px 6px; } /* tighter slots in rows */
+
+/* Buttons fit and never look disabled */
+.button.sm { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* Optional: subtle glow when a slot is an active drop target */
+.slot.glow { box-shadow: 0 0 0 3px rgba(37,99,235,.25) inset; border-color: #93c5fd; }
+
 
