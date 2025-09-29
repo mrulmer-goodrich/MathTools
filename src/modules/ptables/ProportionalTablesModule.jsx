@@ -12,6 +12,7 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 // helpers
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
+const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
 
 // --- Local compatibility wrappers (safe; only affect this module) ---
 const Draggable = ({ payload, data, ...rest }) => {
@@ -35,9 +36,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, ...rest }) => {
 
 // tolerant accept types to match project-wide components
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
-const ACCEPT_EQ     = ["sym", "symbol", "chip"];
-const ACCEPT_FRAC   = ["frac", "fraction", "template"];
-const ACCEPT_VALUE  = ["value", "number"];
+const ACCEPT_VALUE  = ["value", "number"]; // row values
 
 export default function ProportionalTablesModule() {
   // difficulty & problem
@@ -50,11 +49,9 @@ export default function ProportionalTablesModule() {
   const [kPlaced, setKPlaced] = useState(false); // reveals 3rd header content
 
   // equation build (k = Y/X)
-  const [eqPlaced, setEqPlaced] = useState(false);
-  const [fracPlaced, setFracPlaced] = useState(false);
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
-  const headerEqCorrect = kPlaced && eqPlaced && fracPlaced && numIsY && denIsX;
+  const headerEqCorrect = kPlaced && numIsY && denIsX;
 
   // row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
@@ -64,12 +61,7 @@ export default function ProportionalTablesModule() {
   const allRowsComputed = useMemo(() => {
     return [0, 1, 2].every((i) => {
       const f = fractions[i];
-      return (
-        f?.num != null &&
-        f?.den != null &&
-        typeof kValues[i] === "number" &&
-        isFinite(kValues[i])
-      );
+      return f?.num != null && f?.den != null && Number.isFinite(kValues[i]);
     });
   }, [fractions, kValues]);
 
@@ -100,7 +92,7 @@ export default function ProportionalTablesModule() {
     setProblem(next);
 
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
-    setEqPlaced(false); setFracPlaced(false); setNumIsY(false); setDenIsX(false);
+    setNumIsY(false); setDenIsX(false);
 
     setFractions({}); setKValues({});
     setConceptAnswer(null); setRow4Answer(null);
@@ -125,10 +117,14 @@ export default function ProportionalTablesModule() {
   };
   const calcAll = () => [0, 1, 2].forEach(calcRow);
 
-  // row drop handler
+  // row drop handler (with validation)
   const onRowDrop = (i, part, d) => {
     if (!d || !ACCEPT_VALUE.includes(d.type)) return;
-    const val = Number(nameOf(d));
+    // accept only the matching row & axis (num expects 'y', den expects 'x')
+    if (d.row !== i) return;
+    if (part === "num" && d.axis !== "y") return;
+    if (part === "den" && d.axis !== "x") return;
+    const val = Number(d.value ?? nameOf(d));
     if (!Number.isFinite(val)) return;
     setFractions((prev) => ({ ...prev, [i]: { ...(prev[i] || {}), [part]: val } }));
   };
@@ -163,17 +159,17 @@ export default function ProportionalTablesModule() {
     </Slot>
   );
 
-  // header equation (under K header) — stacked fraction; appears after K
+  // header equation (under K header) — stay on one horizontal line
   const HeaderEqArea = () => {
     if (!kPlaced) return null;
     return (
       <div className="ptable-header-eq">
-        <div className="ptable-eq-row">
+        <div className="ptable-eq-row nowrap">
           <div className="badge">k</div>
           <span>=</span>
 
-          {/* Stacked fraction */}
-          <div className="fraction" aria-label="k equals Y over X">
+          {/* Stacked fraction, inline */}
+          <div className="fraction mini-frac" aria-label="k equals Y over X">
             <Slot
               // numerator must be Y
               accept={ACCEPT_HEADER}
@@ -202,7 +198,7 @@ export default function ProportionalTablesModule() {
 
         {numIsY && denIsX && (
           <div className="muted small" style={{ marginTop: 6 }}>
-            Great—now fill each row with its own <b>Y</b> and <b>X</b>, then Calculate.
+            Now drag each row’s <b>Y</b> and <b>X</b> into the spots and press <b>Calculate</b>.
           </div>
         )}
       </div>
@@ -220,9 +216,6 @@ export default function ProportionalTablesModule() {
             const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
             if (got === "K") {
               setKPlaced(true);
-              // Immediately reveal equation UI as you requested
-              setEqPlaced(true);
-              setFracPlaced(true);
             }
           }}
           className="ptable-k-target"
@@ -289,7 +282,7 @@ export default function ProportionalTablesModule() {
                       <Draggable
                         id={`x-${idx}`}
                         label={`${r.x}`}
-                        payload={{ type: "number", value: r.x }}
+                        payload={{ type: "value", axis: "x", row: idx, value: r.x }}
                         className="chip"
                       />
                     </td>
@@ -297,7 +290,7 @@ export default function ProportionalTablesModule() {
                       <Draggable
                         id={`y-${idx}`}
                         label={`${r.y}`}
-                        payload={{ type: "number", value: r.y }}
+                        payload={{ type: "value", axis: "y", row: idx, value: r.y }}
                         className="chip"
                       />
                     </td>
@@ -307,6 +300,7 @@ export default function ProportionalTablesModule() {
                           <div className="calc-inline">Y/X =</div>
                           <Slot
                             accept={ACCEPT_VALUE}
+                            validator={(d) => d?.row === idx && d?.axis === "y"}
                             onDrop={(d) => onRowDrop(idx, "num", d)}
                             className="slot ptable-fracslot"
                           >
@@ -315,16 +309,19 @@ export default function ProportionalTablesModule() {
                           <span>/</span>
                           <Slot
                             accept={ACCEPT_VALUE}
+                            validator={(d) => d?.row === idx && d?.axis === "x"}
                             onDrop={(d) => onRowDrop(idx, "den", d)}
                             className="slot ptable-fracslot"
                           >
                             {fractions[idx]?.den ?? <span className="muted">—</span>}
                           </Slot>
-                          <button className="button ml-12" onClick={() => calcRow(idx)}>
+
+                          <button className="button sm ml-12" onClick={() => calcRow(idx)}>
                             Calculate
                           </button>
-                          {typeof kValues[idx] === "number" && isFinite(kValues[idx]) && (
-                            <span className="badge ml-12">k = {kValues[idx]}</span>
+
+                          {Number.isFinite(kValues[idx]) && (
+                            <span className="ml-12 calc-inline">= <b>{fmt(kValues[idx])}</b></span>
                           )}
                         </div>
                       ) : (
@@ -358,7 +355,7 @@ export default function ProportionalTablesModule() {
                 <span className="calc-inline" style={{ color: "#b91c1c", fontWeight: 900 }}>
                   ×
                 </span>
-                <span className="result-big">k = {kValues[0]}</span>
+                <span className="result-big">k = {fmt(kValues[0])}</span>
                 <span className="calc-inline">· X</span>
               </div>
             </div>
@@ -438,7 +435,7 @@ export default function ProportionalTablesModule() {
         {currentStep === "build" && (
           <div className="section">
             <div className="step-title">What’s the equation for k?</div>
-            <div className="muted bigger">Drag and drop into the fraction.</div>
+            <div className="muted bigger">Drag <b>Y</b> and <b>X</b> into the fraction.</div>
             <div className="chips with-borders" style={{ marginTop: 10 }}>
               <Draggable id="chip-y2" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
               <Draggable id="chip-x2" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
@@ -450,7 +447,7 @@ export default function ProportionalTablesModule() {
           <div className="section">
             <div className="step-title">Fill each row & calculate</div>
             <div className="muted bigger">
-              For each row, make <b>Y/X = yᵢ/xᵢ</b> and press <b>Calculate</b>. Or use Calculate All.
+              For each row, make <b>Y/X = yᵢ/xᵢ</b> and press <b>Calculate</b>. Or use <b>Calculate All</b>.
             </div>
             <div className="center mt-8">
               <button className="button" onClick={calcAll}>Calculate All</button>
