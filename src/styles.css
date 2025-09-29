@@ -505,3 +505,8 @@ body{
 
 /* Very thin divisor */
 .frac-bar.extra-narrow { height: 1px; }
+
+/* Tap-to-place: show focus when a chip is tapped (optional) */
+.chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
+
+
