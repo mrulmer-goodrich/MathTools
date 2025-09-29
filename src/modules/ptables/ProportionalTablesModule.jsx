@@ -418,140 +418,144 @@ export default function ProportionalTablesModule() {
   }, [kDisplay]);
 
   return (
-    <div className="panes ptables-layout">
-      {/* LEFT CARD */}
-      <div className="card">
-        {/* Difficulty top-left */}
-        <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
-          <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
-            <BigButton
-              className={difficulty === "easy" ? "active" : ""}
-              onClick={() => { setDifficulty("easy"); resetAll("easy"); }}
-              aria-pressed={difficulty === "easy"}
-            >
-              Easy
-            </BigButton>
-          </div>
-          <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
-            <BigButton
-              className={difficulty === "medium" ? "active" : ""}
-              onClick={() => { setDifficulty("medium"); resetAll("medium"); }}
-              aria-pressed={difficulty === "medium"}
-            >
-              Medium
-            </BigButton>
-          </div>
-          <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
-            <BigButton
-              className={difficulty === "hard" ? "active" : ""}
-              onClick={() => { setDifficulty("hard"); resetAll("hard"); }}
-              aria-pressed={difficulty === "hard"}
-            >
-              Hard
-            </BigButton>
+  <div className="panes ptables-layout">
+    {/* LEFT CARD */}
+    <div className="card">
+      {/* Difficulty top-left */}
+      <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
+        <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
+          <BigButton
+            className={difficulty === "easy" ? "active" : ""}
+            onClick={() => { setDifficulty("easy"); resetAll("easy"); }}
+            aria-pressed={difficulty === "easy"}
+          >
+            Easy
+          </BigButton>
+        </div>
+        <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
+          <BigButton
+            className={difficulty === "medium" ? "active" : ""}
+            onClick={() => { setDifficulty("medium"); resetAll("medium"); }}
+            aria-pressed={difficulty === "medium"}
+          >
+            Medium
+          </BigButton>
+        </div>
+        <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
+          <BigButton
+            className={difficulty === "hard" ? "active" : ""}
+            onClick={() => { setDifficulty("hard"); resetAll("hard"); }}
+            aria-pressed={difficulty === "hard"}
+          >
+            Hard
+          </BigButton>
+        </div>
+      </div>
+
+      {Table}
+    </div>
+
+    {/* RIGHT CARD — one step visible at a time */}
+    <div className="card right-steps">
+      {currentStep === "label" && (
+        <div className="section">
+          <div className="step-title">Where do these values belong in the table?</div>
+          <div className="muted bigger">Drag and drop to the header of the table.</div>
+          <div className="chips with-borders" style={{ marginTop: 10 }}>
+            <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
+            <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
+            <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} className="chip large" />
           </div>
         </div>
+      )}
 
-        {Table}
-      </div>
-
-      {/* RIGHT CARD — one step visible at a time */}
-      <div className="card right-steps">
-        {currentStep === "label" && (
-          <div className="section">
-            <div className="step-title">Where do these values belong in the table?</div>
-            <div className="muted bigger">Drag and drop to the header of the table.</div>
-            <div className="chips with-borders" style={{ marginTop: 10 }}>
-              <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
-              <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
-              <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} className="chip large" />
-            </div>
+      {currentStep === "build" && (
+        <div className="section">
+          <div className="step-title">What’s the equation for k?</div>
+          <div className="muted bigger">Drag <b>Y</b> and <b>X</b> into the fraction.</div>
+          <div className="chips with-borders" style={{ marginTop: 10 }}>
+            <Draggable id="chip-y2" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
+            <Draggable id="chip-x2" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
           </div>
-        )}
+        </div>
+      )}
 
-        {currentStep === "build" && (
-          <div className="section">
-            <div className="step-title">What’s the equation for k?</div>
-            <div className="muted bigger">Drag <b>Y</b> and <b>X</b> into the fraction.</div>
-            <div className="chips with-borders" style={{ marginTop: 10 }}>
-              <Draggable id="chip-y2" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
-              <Draggable id="chip-x2" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
-            </div>
+      {currentStep === "fill" && (
+        <div className="section">
+          <div className="step-title">Fill each row & calculate</div>
+          <div className="muted bigger">
+            For each row, make <b>Y/X = yᵢ/xᵢ</b>. The result will appear after a moment.
           </div>
-        )}
-
-        {currentStep === "fill" && (
-          <div className="section">
-            <div className="step-title">Drag and drop the x and y values in the table</div>
-            <div className="muted bigger">
- 
-           
-        )}
-
-        {currentStep === "concept" && (
-          <div className="section">
-            <div className="step-title">Is this table proportional?</div>
-            <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              {randomizedConcept.map(({ key, label }) => (
-                <button key={key} className="button" onClick={() => setConceptAnswer(key)}>{label}</button>
-              ))}
-            </div>
-            {conceptAnswer && (
-              <div className="center mt-10">
-                {conceptCorrect ? (
-                  <div className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>✓ Correct</div>
-                ) : (
-                  <div className="badge" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>Try again</div>
-                )}
-              </div>
-            )}
+          <div className="center mt-8">
+            <button className="button" onClick={calcAll}>Calculate All</button>
           </div>
-        )}
+        </div>
+      )}
 
-        {currentStep === "solve" && (
-          <div className="section">
-            <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
-            <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              {solveOptions.map(({ key, label, correct }) => (
-                <button
-                  key={key}
-                  className="button"
-                  onClick={() => {
-                    if (correct) {
-                      solveRow4();
-                      const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
-                      if (el) {
-                        el.classList.add("flash");
-                        setTimeout(() => el.classList.remove("flash"), 1500);
-                      }
-                      // confetti
-                      const host = document.createElement("div");
-                      host.className = "sf-confetti";
-                      document.body.appendChild(host);
-                      const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
-                      for (let i = 0; i < 80; i++) {
-                        const p = document.createElement("div");
-                        p.className = "sf-confetti-piece";
-                        p.style.left = Math.random() * 100 + "vw";
-                        p.style.width = "6px";
-                        p.style.height = "10px";
-                        p.style.background = colors[(Math.random() * colors.length) | 0];
-                        p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
-                        host.appendChild(p);
-                      }
-                      setTimeout(() => host.remove(), 2500);
-                    } else {
-                      alert("Not quite — try another.");
+      {currentStep === "concept" && (
+        <div className="section">
+          <div className="step-title">Is this table proportional?</div>
+          <div className="row" style={{ gap: 8, justifyContent: "center" }}>
+            {randomizedConcept.map(({ key, label }) => (
+              <button key={key} className="button" onClick={() => setConceptAnswer(key)}>{label}</button>
+            ))}
+          </div>
+          {conceptAnswer && (
+            <div className="center mt-10">
+              {conceptCorrect ? (
+                <div className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>✓ Correct</div>
+              ) : (
+                <div className="badge" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>Try again</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {currentStep === "solve" && (
+        <div className="section">
+          <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
+          <div className="row" style={{ gap: 8, justifyContent: "center" }}>
+            {solveOptions.map(({ key, label, correct }) => (
+              <button
+                key={key}
+                className="button"
+                onClick={() => {
+                  if (correct) {
+                    solveRow4();
+                    const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
+                    if (el) {
+                      el.classList.add("flash");
+                      setTimeout(() => el.classList.remove("flash"), 1500);
                     }
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+                    // confetti
+                    const host = document.createElement("div");
+                    host.className = "sf-confetti";
+                    document.body.appendChild(host);
+                    const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
+                    for (let i = 0; i < 80; i++) {
+                      const p = document.createElement("div");
+                      p.className = "sf-confetti-piece";
+                      p.style.left = Math.random() * 100 + "vw";
+                      p.style.width = "6px";
+                      p.style.height = "10px";
+                      p.style.background = colors[(Math.random() * colors.length) | 0];
+                      p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
+                      host.appendChild(p);
+                    }
+                    setTimeout(() => host.remove(), 2500);
+                  } else {
+                    alert("Not quite — try another.");
+                  }
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
-  )
+  </div>
+);
 }
