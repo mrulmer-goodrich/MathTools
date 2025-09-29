@@ -379,3 +379,18 @@ body{
   border-color: #93c5fd;
 }
 
+/* Keep the K header on one horizontal line */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Smaller button in row cells to avoid overflow */
+.button.sm { padding: 6px 10px; font-size: 12px; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* Stacked fraction grid explicit (avoids odd wraps) */
+.fraction { grid-template-rows: auto auto auto; }
+
+/* Optional: subtle glow cue when a slot is a valid drop target */
+.slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
