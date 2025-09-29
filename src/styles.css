@@ -357,3 +357,25 @@ body{
 .ptable { table-layout: fixed; }
 .ptable col { width: 33.3333%; }
 
+/* Guarantee header drop targets get the event */
+.ptable thead, .ptable thead * {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Stacked fraction: numerator | bar | denominator */
+.fraction{
+  display: grid;
+  grid-template-rows: auto auto auto; /* was: auto auto */
+  align-items: center;
+  justify-items: center;
+  min-width: 120px;
+}
+
+/* DropSlot visual cue */
+.slot.glow {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset;
+  border-color: #93c5fd;
+}
+
