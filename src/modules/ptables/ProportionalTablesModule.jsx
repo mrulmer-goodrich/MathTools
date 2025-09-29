@@ -15,22 +15,68 @@ const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]=[a[j],a[i]]; } return a; };
 
+
 // --- Local compatibility wrappers (only affect this module) ---
-const Draggable = ({ payload, data, ...rest }) => {
-  const merged = data ?? payload ?? undefined;
-  return <DraggableBase data={merged} {...rest} />;
+// Tiny in-module store to support tap-to-place without touching shared components
+const _pickStore = {
+  data: null,
+  set(d) { this.data = d || null; },
+  peek() { return this.data; },
+  clear() { this.data = null; }
 };
 
-const Slot = ({ accept, onDrop, validator, test, onDropContent, ...rest }) => {
+// Wrap Draggable so this module can pass `payload` (legacy) or `data` (current)
+// and also support tap-to-place (click/touch) pickup.
+const Draggable = ({ payload, data, onClick, ...rest }) => {
+  const merged = data ?? payload ?? undefined;
+
+  const handleClick = (e) => {
+    _pickStore.set(merged);           // tap = pick up
+    onClick?.(e);
+  };
+
+  return (
+    <DraggableBase
+      data={merged}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      {...rest}
+    />
+  );
+};
+
+// Wrap DropSlot so this module can pass accept/validator and add tap-to-place drop.
+const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
+
   const onDropContentFn = onDropContent ?? onDrop;
-  return <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest} />;
+
+  // Tap on slot = try to place the currently picked chip
+  const handleClick = (e) => {
+    const picked = _pickStore.peek();
+    if (picked && testFn(picked)) {
+      try { onDropContentFn?.(picked); } catch {}
+      _pickStore.clear();
+    }
+    onClick?.(e);
+  };
+
+  return (
+    <DropSlotBase
+      test={testFn}
+      onDropContent={onDropContentFn}
+      onClick={handleClick}
+      {...rest}
+    />
+  );
 };
+
 
 // accept types
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
