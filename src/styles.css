@@ -353,3 +353,7 @@ body{
   outline-offset:2px;
 }
 
+/* Equal column widths even when K column is visually hidden */
+.ptable { table-layout: fixed; }
+.ptable col { width: 33.3333%; }
+
