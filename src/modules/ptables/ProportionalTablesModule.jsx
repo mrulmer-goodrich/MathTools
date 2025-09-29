@@ -14,7 +14,7 @@ const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 
 // tolerant accept types to match project-wide components
-const ACCEPT_HEADER = ["chip", "sym", "symbol"];      // X, Y, K may be chip/sym
+const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"]; // include 'header' too
 const ACCEPT_EQ     = ["sym", "symbol", "chip"];      // "=" might be sym or chip
 const ACCEPT_FRAC   = ["frac", "fraction", "template"];
 const ACCEPT_VALUE  = ["value", "number"];            // row values
@@ -128,16 +128,21 @@ export default function ProportionalTablesModule() {
     return "solve";
   }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsComputed, conceptCorrect]);
 
-  // header drop (for X / Y)
-  const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
-    <Slot
-      accept={ACCEPT_HEADER}
-      onDrop={(d) => { if (nameOf(d) === expectName) onPlaced(true); }}
-      className={`ptable-thslot ${placed ? "placed" : "empty"}`}
-    >
-      {placed ? label : "Drop here"}
-    </Slot>
-  );
+ // header drop (for X / Y) — tolerant compare
+const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
+  <Slot
+    accept={ACCEPT_HEADER}
+    onDrop={(d) => {
+      const got = (nameOf(d) ?? "").toString().trim().toLowerCase();
+      const want = (expectName ?? "").toString().trim().toLowerCase();
+      if (got === want) onPlaced(true);
+    }}
+    className={`ptable-thslot ${placed ? "placed" : "empty"}`}
+  >
+    {placed ? label : "Drop here"}
+  </Slot>
+);
+
 
   // header equation (under K header) — shown only after K placed
   const HeaderEqArea = () => {
