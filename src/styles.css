@@ -441,4 +441,34 @@ body{
 /* Optional: subtle glow when a slot is an active drop target */
 .slot.glow { box-shadow: 0 0 0 3px rgba(37,99,235,.25) inset; border-color: #93c5fd; }
 
+/* Keep header equation on one line, compact */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Header fraction: small slots so it never wraps */
+.ptable .ptable-fracslot.tiny { min-width: 38px; min-height: 28px; padding: 3px 6px; }
+
+/* Row calc: force single line, compact; stay inside col 3 */
+.row-calc.nowrap { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap: nowrap; max-width:100%; overflow:hidden; }
+
+/* Compact fractions & thin divisor bars */
+.fraction { grid-template-rows: auto auto auto; }
+.fraction.mini-frac { width: 64px; }
+.frac-bar.narrow { height: 2px; }
+.row-calc .frac-bar.extra-narrow { height: 1px; }
+
+/* Tight row slots so y_i / x_i aren't wide */
+.ptable .ptable-fracslot.tight { min-width: 32px; min-height: 28px; padding: 3px 6px; }
+
+/* Keep chip look when dropped into slots */
+.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
+.chip-tiny { padding: 6px 10px !important; font-size: 14px; }
+
+/* Make left Y/X bold (when not chips) */
+.fraction.static strong { font-weight: 900; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+
 
