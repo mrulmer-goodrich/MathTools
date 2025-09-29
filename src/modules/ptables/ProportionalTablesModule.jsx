@@ -13,20 +13,25 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 // --- Local compatibility wrappers (safe; only affect this module) ---
 const Draggable = ({ payload, data, ...rest }) => {
-  // Prefer explicit `data`, else legacy `payload`
   const merged = data ?? payload ?? undefined;
   return <DraggableBase data={merged} {...rest} />;
 };
 
 const Slot = ({ accept, onDrop, validator, test, onDropContent, ...rest }) => {
   const testFn = test ?? ((d) => {
-    // Accept-list check (type/kind)
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
-    // Optional validator chaining
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
@@ -34,7 +39,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, ...rest }) => {
   return <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest} />;
 };
 
-// tolerant accept types to match project-wide components
+// accept types
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
 const ACCEPT_VALUE  = ["value", "number"]; // row values
 
@@ -48,12 +53,12 @@ export default function ProportionalTablesModule() {
   const [yPlaced, setYPlaced] = useState(false);
   const [kPlaced, setKPlaced] = useState(false); // reveals 3rd header content
 
-  // equation build (k = Y/X)
+  // header fraction (k = Y/X)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-  // row fraction inputs & computed k values
+  // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
   const [kValues, setKValues] = useState({});     // {rowIndex: number}
 
@@ -71,7 +76,16 @@ export default function ProportionalTablesModule() {
     return approxEq(vals[0], vals[1]) && approxEq(vals[1], vals[2]);
   }, [kValues]);
 
-  const [conceptAnswer, setConceptAnswer] = useState(null); // 'yes_same' | 'yes_diff' | 'no_same' | 'no_diff'
+  const randomizedConcept = useMemo(() =>
+    shuffle([
+      { key: "yes_same", label: "Yes, because k is the same" },
+      { key: "yes_diff", label: "Yes, because k is NOT the same" },
+      { key: "no_same",  label: "No, because k is the same" },
+      { key: "no_diff",  label: "No, because k is NOT the same" },
+    ])
+  , [problem]);
+
+  const [conceptAnswer, setConceptAnswer] = useState(null);
   const conceptCorrect = useMemo(() => {
     if (!allRowsComputed || ksEqual == null || !conceptAnswer) return false;
     if (ksEqual && conceptAnswer === "yes_same") return true;
@@ -93,12 +107,11 @@ export default function ProportionalTablesModule() {
 
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
     setNumIsY(false); setDenIsX(false);
-
     setFractions({}); setKValues({});
     setConceptAnswer(null); setRow4Answer(null);
   };
 
-  // auto-calc when both numerator & denominator present
+  // auto-calc row k when both numerator & denominator are present
   useEffect(() => {
     [0, 1, 2].forEach((i) => {
       const f = fractions[i];
@@ -117,10 +130,9 @@ export default function ProportionalTablesModule() {
   };
   const calcAll = () => [0, 1, 2].forEach(calcRow);
 
-  // row drop handler (with validation)
+  // row drop handler with strict validation (row + axis)
   const onRowDrop = (i, part, d) => {
     if (!d || !ACCEPT_VALUE.includes(d.type)) return;
-    // accept only the matching row & axis (num expects 'y', den expects 'x')
     if (d.row !== i) return;
     if (part === "num" && d.axis !== "y") return;
     if (part === "den" && d.axis !== "x") return;
@@ -159,7 +171,7 @@ export default function ProportionalTablesModule() {
     </Slot>
   );
 
-  // header equation (under K header) — stay on one horizontal line
+  // header equation (under K header) — compact, single line
   const HeaderEqArea = () => {
     if (!kPlaced) return null;
     return (
@@ -167,29 +179,19 @@ export default function ProportionalTablesModule() {
         <div className="ptable-eq-row nowrap">
           <div className="badge">k</div>
           <span>=</span>
-
-          {/* Stacked fraction, inline */}
           <div className="fraction mini-frac" aria-label="k equals Y over X">
             <Slot
-              // numerator must be Y
               accept={ACCEPT_HEADER}
-              onDrop={(d) => {
-                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
-                if (got === "Y") setNumIsY(true);
-              }}
-              className={`slot ptable-fracslot ${numIsY ? "filled" : ""}`}
+              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
+              className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
             >
               {numIsY ? "Y" : <span className="muted">—</span>}
             </Slot>
-            <div className="frac-bar" />
+            <div className="frac-bar narrow" />
             <Slot
-              // denominator must be X
               accept={ACCEPT_HEADER}
-              onDrop={(d) => {
-                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
-                if (got === "X") setDenIsX(true);
-              }}
-              className={`slot ptable-fracslot ${denIsX ? "filled" : ""}`}
+              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
+              className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
             >
               {denIsX ? "X" : <span className="muted">—</span>}
             </Slot>
@@ -214,9 +216,7 @@ export default function ProportionalTablesModule() {
           accept={ACCEPT_HEADER}
           onDrop={(d) => {
             const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
-            if (got === "K") {
-              setKPlaced(true);
-            }
+            if (got === "K") { setKPlaced(true); }
           }}
           className="ptable-k-target"
         />
@@ -240,36 +240,14 @@ export default function ProportionalTablesModule() {
             <thead>
               <tr>
                 <th>
-                  <HeaderDrop
-                    placed={xPlaced}
-                    label="X"
-                    expectName="X"
-                    onPlaced={setXPlaced}
-                  />
+                  <HeaderDrop placed={xPlaced} label="X" expectName="X" onPlaced={setXPlaced} />
                 </th>
                 <th>
-                  <HeaderDrop
-                    placed={yPlaced}
-                    label="Y"
-                    expectName="Y"
-                    onPlaced={setYPlaced}
-                  />
+                  <HeaderDrop placed={yPlaced} label="Y" expectName="Y" onPlaced={setYPlaced} />
                 </th>
                 <th>
-                  {/* when K is not yet placed: keep height but show NO slot/hint */}
-                  {kPlaced ? (
-                    <>
-                      <HeaderDrop
-                        placed={kPlaced}
-                        label="K"
-                        expectName="K"
-                        onPlaced={setKPlaced}
-                      />
-                      <HeaderEqArea />
-                    </>
-                  ) : (
-                    <div style={{ height: 44 }} />
-                  )}
+                  {/* After K is placed, show only the equation (no duplicate big K tile) */}
+                  {kPlaced ? <HeaderEqArea /> : <div style={{ height: 44 }} />}
                 </th>
               </tr>
             </thead>
@@ -297,24 +275,29 @@ export default function ProportionalTablesModule() {
                     <td>
                       {headerEqCorrect ? (
                         <div className="fraction-row nowrap center">
-                          <div className="calc-inline">Y/X =</div>
-                          <Slot
-                            accept={ACCEPT_VALUE}
-                            validator={(d) => d?.row === idx && d?.axis === "y"}
-                            onDrop={(d) => onRowDrop(idx, "num", d)}
-                            className="slot ptable-fracslot"
-                          >
-                            {fractions[idx]?.num ?? <span className="muted">—</span>}
-                          </Slot>
-                          <span>/</span>
-                          <Slot
-                            accept={ACCEPT_VALUE}
-                            validator={(d) => d?.row === idx && d?.axis === "x"}
-                            onDrop={(d) => onRowDrop(idx, "den", d)}
-                            className="slot ptable-fracslot"
-                          >
-                            {fractions[idx]?.den ?? <span className="muted">—</span>}
-                          </Slot>
+                          <div className="calc-inline">Y/X</div>
+                          <span>=</span>
+
+                          {/* stacked fraction in each row */}
+                          <div className="fraction mini-frac">
+                            <Slot
+                              accept={ACCEPT_VALUE}
+                              validator={(d) => d?.row === idx && d?.axis === "y"}
+                              onDrop={(d) => onRowDrop(idx, "num", d)}
+                              className="slot ptable-fracslot"
+                            >
+                              {fractions[idx]?.num ?? <span className="muted">—</span>}
+                            </Slot>
+                            <div className="frac-bar narrow" />
+                            <Slot
+                              accept={ACCEPT_VALUE}
+                              validator={(d) => d?.row === idx && d?.axis === "x"}
+                              onDrop={(d) => onRowDrop(idx, "den", d)}
+                              className="slot ptable-fracslot"
+                            >
+                              {fractions[idx]?.den ?? <span className="muted">—</span>}
+                            </Slot>
+                          </div>
 
                           <button className="button sm ml-12" onClick={() => calcRow(idx)}>
                             Calculate
@@ -346,20 +329,6 @@ export default function ProportionalTablesModule() {
               )}
             </tbody>
           </table>
-
-          {/* proportional overlay */}
-          {revealFourthRow && (
-            <div className="ptable-overlay" aria-hidden="true">
-              <div className="ptable-overlay-inner">
-                <span className="calc-inline">Y</span>
-                <span className="calc-inline" style={{ color: "#b91c1c", fontWeight: 900 }}>
-                  ×
-                </span>
-                <span className="result-big">k = {fmt(kValues[0])}</span>
-                <span className="calc-inline">· X</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* New Problem BELOW the table, centered */}
@@ -459,10 +428,9 @@ export default function ProportionalTablesModule() {
           <div className="section">
             <div className="step-title">Is this table proportional?</div>
             <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              <button className="button" onClick={() => setConceptAnswer("yes_same")}>Yes, because k is the same</button>
-              <button className="button" onClick={() => setConceptAnswer("yes_diff")}>Yes, because k is NOT the same</button>
-              <button className="button" onClick={() => setConceptAnswer("no_same")}>No, because k is the same</button>
-              <button className="button" onClick={() => setConceptAnswer("no_diff")}>No, because k is NOT the same</button>
+              {randomizedConcept.map(({ key, label }) => (
+                <button key={key} className="button" onClick={() => setConceptAnswer(key)}>{label}</button>
+              ))}
             </div>
             {conceptAnswer && (
               <div className="center mt-10">
