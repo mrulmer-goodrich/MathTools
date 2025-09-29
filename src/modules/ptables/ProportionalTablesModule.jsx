@@ -13,7 +13,7 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
-const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]=[a[j],a[i]]; } return a; };
 
 // --- Local compatibility wrappers (only affect this module) ---
 const Draggable = ({ payload, data, ...rest }) => {
@@ -54,16 +54,20 @@ export default function ProportionalTablesModule() {
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
   const [kValues, setKValues] = useState({});     // {rowIndex: number}
-  const [reveal, setReveal] = useState({});       // {rowIndex: boolean} - show "= value" after 3s
+  const [reveal, setReveal] = useState({});       // {rowIndex: boolean} - show "= value" after delay
   const revealTimers = useRef({});                // refs to timeouts per row
 
-  // concept question state
+  // concept readiness + correctness
   const allRowsComputed = useMemo(() => {
-    return [0, 1, 2].every((i) => {
+    return [0,1,2].every(i => {
       const f = fractions[i];
       return f?.num != null && f?.den != null && Number.isFinite(kValues[i]);
     });
   }, [fractions, kValues]);
+
+  const allRowsRevealed = useMemo(() => {
+    return [0,1,2].every(i => Number.isFinite(kValues[i]) && reveal[i] === true);
+  }, [kValues, reveal]);
 
   const ksEqual = useMemo(() => {
     const vals = [kValues[0], kValues[1], kValues[2]];
@@ -129,7 +133,7 @@ export default function ProportionalTablesModule() {
     });
   }, [fractions]);
 
-  // reveal "= value" after 3s once both values present
+  // reveal "= value" after 2s once both values present
   useEffect(() => {
     [0, 1, 2].forEach((i) => {
       const f = fractions[i];
@@ -137,12 +141,12 @@ export default function ProportionalTablesModule() {
         if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
         revealTimers.current[i] = setTimeout(() => {
           setReveal((prev) => ({ ...prev, [i]: true }));
-        }, 3000);
+        }, 2000);
       }
     });
   }, [fractions, kValues, reveal]);
 
-  // manual calc (still available if you want to trigger instantly elsewhere)
+  // manual calc (still available for "Calculate All")
   const calcRow = (i) => {
     const f = fractions[i];
     if (!f || f.den == null || f.num == null || f.den === 0) return;
@@ -159,7 +163,7 @@ export default function ProportionalTablesModule() {
     const val = Number(d.value ?? nameOf(d));
     if (!Number.isFinite(val)) return;
 
-    // reset reveal for this row & clear prior timer so we re-wait 3s
+    // reset reveal for this row & clear prior timer so we re-wait 2s
     if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
     setReveal((prev) => ({ ...prev, [i]: false }));
 
@@ -176,10 +180,10 @@ export default function ProportionalTablesModule() {
   const currentStep = useMemo(() => {
     if (!xPlaced || !yPlaced || !kPlaced) return "label";
     if (!headerEqCorrect) return "build";
-    if (!allRowsComputed) return "fill";
+    if (!allRowsRevealed) return "fill";     // wait until values are revealed
     if (!conceptCorrect) return "concept";
     return "solve";
-  }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsComputed, conceptCorrect]);
+  }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsRevealed, conceptCorrect]);
 
   // header drop (for X / Y / K)
   const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
@@ -205,17 +209,25 @@ export default function ProportionalTablesModule() {
           <div className="badge">k</div>
           <span>=</span>
           <div className="fraction mini-frac" aria-label="k equals Y over X">
+            {/* Numerator: Y */}
             <Slot
               accept={ACCEPT_HEADER}
-              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
+              onDrop={(d) => {
+                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
+                if (got === "Y") setNumIsY(true);
+              }}
               className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
             >
               {numIsY ? <span className="chip chip-tiny">Y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
+            {/* Denominator: X */}
             <Slot
               accept={ACCEPT_HEADER}
-              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
+              onDrop={(d) => {
+                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
+                if (got === "X") setDenIsX(true);
+              }}
               className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
             >
               {denIsX ? <span className="chip chip-tiny">X</span> : <span className="muted">—</span>}
@@ -249,6 +261,24 @@ export default function ProportionalTablesModule() {
     );
   };
 
+  const burstConfetti = () => {
+    const host = document.createElement("div");
+    host.className = "sf-confetti";
+    document.body.appendChild(host);
+    const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
+    for (let i = 0; i < 80; i++) {
+      const p = document.createElement("div");
+      p.className = "sf-confetti-piece";
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.width = "6px";
+      p.style.height = "10px";
+      p.style.background = colors[(Math.random() * colors.length) | 0];
+      p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
+      host.appendChild(p);
+    }
+    setTimeout(() => host.remove(), 2500);
+  };
+
   // table
   const Table = useMemo(() => {
     const invis = !kPlaced ? "col3-invisible" : "";
@@ -258,9 +288,9 @@ export default function ProportionalTablesModule() {
           <KRevealOverlay />
           <table className="ptable" style={{ tableLayout: "fixed" }}>
             <colgroup>
-              <col style={{ width: "33.3333%" }} />
-              <col style={{ width: "33.3333%" }} />
-              <col style={{ width: "33.3333%" }} />
+              <col style={{ width: "25%" }} />
+              <col style={{ width: "25%" }} />
+              <col style={{ width: "50%" }} />
             </colgroup>
             <thead>
               <tr>
@@ -327,7 +357,7 @@ export default function ProportionalTablesModule() {
                             </Slot>
                           </div>
 
-                          {/* reveal result after 3s */}
+                          {/* reveal result after delay */}
                           {Number.isFinite(kValues[idx]) && reveal[idx] && (
                             <span className="eq result">= <b>{fmt(kValues[idx])}</b></span>
                           )}
@@ -346,9 +376,9 @@ export default function ProportionalTablesModule() {
                   <td>{problem.revealRow4.x}</td>
                   <td>{row4Answer == null ? "?" : row4Answer}</td>
                   <td>
-                    <button className="button success" onClick={solveRow4}>
-                      Solve y = kx
-                    </button>
+                    <span className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>
+                      k = {fmt(kValues[0])}
+                    </span>
                   </td>
                 </tr>
               )}
@@ -379,16 +409,16 @@ export default function ProportionalTablesModule() {
   const kDisplay = fmt(kValues[0]);
   const solveOptions = useMemo(() => {
     const options = [
-      { key: "ok", label: `y = kx (k = ${kDisplay})`, correct: true },
+      { key: "dot", label: "y = k • x", correct: true },  // correct (multiplication dot)
+      { key: "div", label: "y = k ÷ x", correct: false },
       { key: "add", label: "y = k + x", correct: false },
-      { key: "sub", label: "y = k - x", correct: false },
-      { key: "div", label: "y = x/k", correct: false },
+      { key: "emd", label: "y = k – x", correct: false }, // EN DASH
     ];
     return shuffle(options);
   }, [kDisplay]);
 
   return (
-    <div className="panes">
+    <div className="panes ptables-layout">
       {/* LEFT CARD */}
       <div className="card">
         {/* Difficulty top-left */}
@@ -491,8 +521,32 @@ export default function ProportionalTablesModule() {
                   key={key}
                   className="button"
                   onClick={() => {
-                    if (correct) solveRow4();
-                    else alert("Not quite — try another.");
+                    if (correct) {
+                      solveRow4();
+                      const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
+                      if (el) {
+                        el.classList.add("flash");
+                        setTimeout(() => el.classList.remove("flash"), 1500);
+                      }
+                      // confetti
+                      const host = document.createElement("div");
+                      host.className = "sf-confetti";
+                      document.body.appendChild(host);
+                      const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
+                      for (let i = 0; i < 80; i++) {
+                        const p = document.createElement("div");
+                        p.className = "sf-confetti-piece";
+                        p.style.left = Math.random() * 100 + "vw";
+                        p.style.width = "6px";
+                        p.style.height = "10px";
+                        p.style.background = colors[(Math.random() * colors.length) | 0];
+                        p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
+                        host.appendChild(p);
+                      }
+                      setTimeout(() => host.remove(), 2500);
+                    } else {
+                      alert("Not quite — try another.");
+                    }
                   }}
                 >
                   {label}
