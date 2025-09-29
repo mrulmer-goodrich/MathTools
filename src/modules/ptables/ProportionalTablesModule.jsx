@@ -13,16 +13,9 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
+const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
 
-// --- Local compatibility wrappers (safe; only affect this module) ---
+// --- Local compatibility wrappers (only affect this module) ---
 const Draggable = ({ payload, data, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   return <DraggableBase data={merged} {...rest} />;
@@ -51,7 +44,7 @@ export default function ProportionalTablesModule() {
   // header labels
   const [xPlaced, setXPlaced] = useState(false);
   const [yPlaced, setYPlaced] = useState(false);
-  const [kPlaced, setKPlaced] = useState(false); // reveals 3rd header content
+  const [kPlaced, setKPlaced] = useState(false);
 
   // header fraction (k = Y/X)
   const [numIsY, setNumIsY] = useState(false);
@@ -239,16 +232,9 @@ export default function ProportionalTablesModule() {
             </colgroup>
             <thead>
               <tr>
-                <th>
-                  <HeaderDrop placed={xPlaced} label="X" expectName="X" onPlaced={setXPlaced} />
-                </th>
-                <th>
-                  <HeaderDrop placed={yPlaced} label="Y" expectName="Y" onPlaced={setYPlaced} />
-                </th>
-                <th>
-                  {/* After K is placed, show only the equation (no duplicate big K tile) */}
-                  {kPlaced ? <HeaderEqArea /> : <div style={{ height: 44 }} />}
-                </th>
+                <th><HeaderDrop placed={xPlaced} label="X" expectName="X" onPlaced={setXPlaced} /></th>
+                <th><HeaderDrop placed={yPlaced} label="Y" expectName="Y" onPlaced={setYPlaced} /></th>
+                <th>{kPlaced ? <HeaderEqArea /> : <div style={{ height: 44 }} />}</th>
               </tr>
             </thead>
             <tbody>
@@ -274,11 +260,17 @@ export default function ProportionalTablesModule() {
                     </td>
                     <td>
                       {headerEqCorrect ? (
-                        <div className="fraction-row nowrap center">
-                          <div className="calc-inline">Y/X</div>
-                          <span>=</span>
+                        <div className="row-calc">
+                          {/* left: static Y/X fraction */}
+                          <div className="fraction mini-frac">
+                            <div>Y</div>
+                            <div className="frac-bar narrow" />
+                            <div>X</div>
+                          </div>
 
-                          {/* stacked fraction in each row */}
+                          <span className="eq">=</span>
+
+                          {/* right: draggable y_i / x_i */}
                           <div className="fraction mini-frac">
                             <Slot
                               accept={ACCEPT_VALUE}
@@ -299,12 +291,10 @@ export default function ProportionalTablesModule() {
                             </Slot>
                           </div>
 
-                          <button className="button sm ml-12" onClick={() => calcRow(idx)}>
-                            Calculate
-                          </button>
+                          <button className="button sm" onClick={() => calcRow(idx)}>Calculate</button>
 
                           {Number.isFinite(kValues[idx]) && (
-                            <span className="ml-12 calc-inline">= <b>{fmt(kValues[idx])}</b></span>
+                            <span className="eq result">= <b>{fmt(kValues[idx])}</b></span>
                           )}
                         </div>
                       ) : (
