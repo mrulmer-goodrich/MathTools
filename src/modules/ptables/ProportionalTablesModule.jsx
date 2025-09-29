@@ -1,9 +1,9 @@
 // src/modules/ptables/ProportionalTablesModule.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
-import Draggable from "../../components/DraggableChip.jsx";
-import Slot from "../../components/DropSlot.jsx";
-import BigButton from "../../components/BigButton.jsx";
+import DraggableBase from "../../components/DraggableChip.jsx";
+import DropSlotBase from "../../components/DropSlot.jsx";
+import BigButton from "../../components/BigButton.jsx"; // ✅ fixed path
 
 // persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
@@ -13,11 +13,31 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 
+// --- Local compatibility wrappers (safe; only affect this module) ---
+const Draggable = ({ payload, data, ...rest }) => {
+  // Prefer explicit `data`, else legacy `payload`
+  const merged = data ?? payload ?? undefined;
+  return <DraggableBase data={merged} {...rest} />;
+};
+
+const Slot = ({ accept, onDrop, validator, test, onDropContent, ...rest }) => {
+  const testFn = test ?? ((d) => {
+    // Accept-list check (type/kind)
+    const t = (d?.type ?? d?.kind ?? "").toString();
+    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
+    // Optional validator chaining
+    const valOk = typeof validator === "function" ? !!validator(d) : true;
+    return listOk && valOk;
+  });
+  const onDropContentFn = onDropContent ?? onDrop;
+  return <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest} />;
+};
+
 // tolerant accept types to match project-wide components
-const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"]; // include 'header' too
-const ACCEPT_EQ     = ["sym", "symbol", "chip"];      // "=" might be sym or chip
+const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
+const ACCEPT_EQ     = ["sym", "symbol", "chip"];
 const ACCEPT_FRAC   = ["frac", "fraction", "template"];
-const ACCEPT_VALUE  = ["value", "number"];            // row values
+const ACCEPT_VALUE  = ["value", "number"];
 
 export default function ProportionalTablesModule() {
   // difficulty & problem
@@ -35,6 +55,7 @@ export default function ProportionalTablesModule() {
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && eqPlaced && fracPlaced && numIsY && denIsX;
+
 
   // row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
