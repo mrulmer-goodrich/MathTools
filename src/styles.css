@@ -487,4 +487,21 @@ body{
 /* (Optional) if any row still stretches, limit the whole group width */
 .ptable tbody td:nth-child(3) .row-calc.nowrap { max-width: 100%; overflow: hidden; }
 
+/* ---- PTables layout + fraction compacting (append to end of CSS) ---- */
+.ptables-layout { grid-template-columns: 3fr 2fr; }
 
+/* Compact fractions (~3 digits) */
+.fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
+.fraction.mini-frac .frac-bar { width: 48px !important; }
+
+/* Keep calc row on one line inside col 3 */
+.row-calc.nowrap { flex-wrap: nowrap !important; gap: 8px; max-width: 100%; overflow: hidden; }
+
+/* Tiny header slots so K header doesn't wrap */
+.ptable .ptable-fracslot.tiny { min-width: 34px; min-height: 26px; padding: 2px 6px; }
+
+/* Keep dropped chips styled as chips */
+.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
+
+/* Very thin divisor */
+.frac-bar.extra-narrow { height: 1px; }
