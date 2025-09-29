@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
-import BigButton from "../../components/BigButton.jsx"; // ✅ fixed path
+import BigButton from "../../components/BigButton.jsx";
 
 // persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
@@ -55,7 +55,6 @@ export default function ProportionalTablesModule() {
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && eqPlaced && fracPlaced && numIsY && denIsX;
-
 
   // row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
@@ -149,67 +148,59 @@ export default function ProportionalTablesModule() {
     return "solve";
   }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsComputed, conceptCorrect]);
 
- // header drop (for X / Y) — tolerant compare
-const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
-  <Slot
-    accept={ACCEPT_HEADER}
-    onDrop={(d) => {
-      const got = (nameOf(d) ?? "").toString().trim().toLowerCase();
-      const want = (expectName ?? "").toString().trim().toLowerCase();
-      if (got === want) onPlaced(true);
-    }}
-    className={`ptable-thslot ${placed ? "placed" : "empty"}`}
-  >
-    {placed ? label : "Drop here"}
-  </Slot>
-);
+  // header drop (for X / Y / K)
+  const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
+    <Slot
+      accept={ACCEPT_HEADER}
+      onDrop={(d) => {
+        const got = (nameOf(d) ?? "").toString().trim().toLowerCase();
+        const want = (expectName ?? "").toString().trim().toLowerCase();
+        if (got === want) onPlaced(true);
+      }}
+      className={`ptable-thslot ${placed ? "placed" : "empty"}`}
+    >
+      {placed ? label : "Drop here"}
+    </Slot>
+  );
 
-
-  // header equation (under K header) — shown only after K placed
+  // header equation (under K header) — stacked fraction; appears after K
   const HeaderEqArea = () => {
     if (!kPlaced) return null;
     return (
       <div className="ptable-header-eq">
         <div className="ptable-eq-row">
           <div className="badge">k</div>
+          <span>=</span>
 
-          <Slot
-            accept={ACCEPT_EQ}
-            onDrop={(d) => { if (nameOf(d) === "=") setEqPlaced(true); }}
-            className={`ptable-eq-slot ${eqPlaced ? "filled" : ""}`}
-          >
-            {eqPlaced ? "=" : <span className="muted">=</span>}
-          </Slot>
-
-          {!fracPlaced ? (
+          {/* Stacked fraction */}
+          <div className="fraction" aria-label="k equals Y over X">
             <Slot
-              accept={ACCEPT_FRAC}
-              onDrop={() => setFracPlaced(true)}
-              className="ptable-frac-template-slot"
+              // numerator must be Y
+              accept={ACCEPT_HEADER}
+              onDrop={(d) => {
+                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
+                if (got === "Y") setNumIsY(true);
+              }}
+              className={`slot ptable-fracslot ${numIsY ? "filled" : ""}`}
             >
-              <span className="muted">fraction</span>
+              {numIsY ? "Y" : <span className="muted">—</span>}
             </Slot>
-          ) : (
-            <div className="fraction-row nowrap">
-              <Slot
-                accept={ACCEPT_HEADER}
-                onDrop={(d) => { if (nameOf(d) === "Y") setNumIsY(true); }}
-                className={`slot ptable-fracslot ${numIsY ? "filled" : ""}`}
-              >
-                {numIsY ? "Y" : <span className="muted">—</span>}
-              </Slot>
-              <span>/</span>
-              <Slot
-                accept={ACCEPT_HEADER}
-                onDrop={(d) => { if (nameOf(d) === "X") setDenIsX(true); }}
-                className={`slot ptable-fracslot ${denIsX ? "filled" : ""}`}
-              >
-                {denIsX ? "X" : <span className="muted">—</span>}
-              </Slot>
-            </div>
-          )}
+            <div className="frac-bar" />
+            <Slot
+              // denominator must be X
+              accept={ACCEPT_HEADER}
+              onDrop={(d) => {
+                const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
+                if (got === "X") setDenIsX(true);
+              }}
+              className={`slot ptable-fracslot ${denIsX ? "filled" : ""}`}
+            >
+              {denIsX ? "X" : <span className="muted">—</span>}
+            </Slot>
+          </div>
         </div>
-        {headerEqCorrect && (
+
+        {numIsY && denIsX && (
           <div className="muted small" style={{ marginTop: 6 }}>
             Great—now fill each row with its own <b>Y</b> and <b>X</b>, then Calculate.
           </div>
@@ -225,7 +216,15 @@ const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
       <div className="ptable-k-overlay" aria-hidden="true">
         <Slot
           accept={ACCEPT_HEADER}
-          onDrop={(d) => { if (nameOf(d) === "K") setKPlaced(true); }}
+          onDrop={(d) => {
+            const got = (nameOf(d) ?? "").toString().trim().toUpperCase();
+            if (got === "K") {
+              setKPlaced(true);
+              // Immediately reveal equation UI as you requested
+              setEqPlaced(true);
+              setFracPlaced(true);
+            }
+          }}
           className="ptable-k-target"
         />
       </div>
@@ -239,9 +238,11 @@ const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
       <div className="ptable-wrap">
         <div className={`ptable-rel ptable-table dark ${invis}`}>
           <KRevealOverlay />
-          <table className="ptable">
+          <table className="ptable" style={{ tableLayout: "fixed" }}>
             <colgroup>
-              <col /> <col /> <col /> {/* reserve width for col 3 so layout doesn’t jump */}
+              <col style={{ width: "33.3333%" }} />
+              <col style={{ width: "33.3333%" }} />
+              <col style={{ width: "33.3333%" }} />
             </colgroup>
             <thead>
               <tr>
@@ -386,7 +387,7 @@ const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
     <div className="panes">
       {/* LEFT CARD */}
       <div className="card">
-        {/* Difficulty top-left (both className + wrapper to ensure active look) */}
+        {/* Difficulty top-left */}
         <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
           <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
             <BigButton
@@ -424,10 +425,8 @@ const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
       <div className="card right-steps">
         {currentStep === "label" && (
           <div className="section">
-            <div className="step-title">Label the table</div>
-            <div className="muted bigger">
-              Drag <b>X</b>, <b>Y</b>, and <b>K</b> onto the column headers.
-            </div>
+            <div className="step-title">Where do these values belong in the table?</div>
+            <div className="muted bigger">Drag and drop to the header of the table.</div>
             <div className="chips with-borders" style={{ marginTop: 10 }}>
               <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
               <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
@@ -438,13 +437,9 @@ const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
 
         {currentStep === "build" && (
           <div className="section">
-            <div className="step-title">Complete the formula for k</div>
-            <div className="muted bigger">
-              Build <b>k = Y / X</b> in the third header.
-            </div>
+            <div className="step-title">What’s the equation for k?</div>
+            <div className="muted bigger">Drag and drop into the fraction.</div>
             <div className="chips with-borders" style={{ marginTop: 10 }}>
-              <Draggable id="chip-eq" label="=" payload={{ type: "sym", name: "=" }} className="chip large" />
-              <Draggable id="chip-frac" label="Fraction" payload={{ type: "frac" }} className="chip large" />
               <Draggable id="chip-y2" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
               <Draggable id="chip-x2" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
             </div>
