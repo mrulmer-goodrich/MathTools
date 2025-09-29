@@ -1,5 +1,5 @@
 // src/modules/ptables/ProportionalTablesModule.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
@@ -54,6 +54,8 @@ export default function ProportionalTablesModule() {
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
   const [kValues, setKValues] = useState({});     // {rowIndex: number}
+  const [reveal, setReveal] = useState({});       // {rowIndex: boolean} - show "= value" after 3s
+  const revealTimers = useRef({});                // refs to timeouts per row
 
   // concept question state
   const allRowsComputed = useMemo(() => {
@@ -93,6 +95,14 @@ export default function ProportionalTablesModule() {
   // persist difficulty
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
+  // clear timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(revealTimers.current).forEach((t) => clearTimeout(t));
+      revealTimers.current = {};
+    };
+  }, []);
+
   // reset all for new problem/difficulty
   const resetAll = (nextDiff = difficulty) => {
     const next = genPTable(nextDiff);
@@ -101,7 +111,11 @@ export default function ProportionalTablesModule() {
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
     setNumIsY(false); setDenIsX(false);
     setFractions({}); setKValues({});
+    setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
+
+    Object.values(revealTimers.current).forEach((t) => clearTimeout(t));
+    revealTimers.current = {};
   };
 
   // auto-calc row k when both numerator & denominator are present
@@ -115,7 +129,20 @@ export default function ProportionalTablesModule() {
     });
   }, [fractions]);
 
-  // manual calc
+  // reveal "= value" after 3s once both values present
+  useEffect(() => {
+    [0, 1, 2].forEach((i) => {
+      const f = fractions[i];
+      if (f?.num != null && f?.den != null && Number.isFinite(kValues[i]) && !reveal[i]) {
+        if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
+        revealTimers.current[i] = setTimeout(() => {
+          setReveal((prev) => ({ ...prev, [i]: true }));
+        }, 3000);
+      }
+    });
+  }, [fractions, kValues, reveal]);
+
+  // manual calc (still available if you want to trigger instantly elsewhere)
   const calcRow = (i) => {
     const f = fractions[i];
     if (!f || f.den == null || f.num == null || f.den === 0) return;
@@ -123,7 +150,7 @@ export default function ProportionalTablesModule() {
   };
   const calcAll = () => [0, 1, 2].forEach(calcRow);
 
-  // row drop handler with strict validation (row + axis)
+  // row drop handler with strict validation (row + axis), also resets reveal timer
   const onRowDrop = (i, part, d) => {
     if (!d || !ACCEPT_VALUE.includes(d.type)) return;
     if (d.row !== i) return;
@@ -131,6 +158,11 @@ export default function ProportionalTablesModule() {
     if (part === "den" && d.axis !== "x") return;
     const val = Number(d.value ?? nameOf(d));
     if (!Number.isFinite(val)) return;
+
+    // reset reveal for this row & clear prior timer so we re-wait 3s
+    if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
+    setReveal((prev) => ({ ...prev, [i]: false }));
+
     setFractions((prev) => ({ ...prev, [i]: { ...(prev[i] || {}), [part]: val } }));
   };
 
@@ -164,7 +196,7 @@ export default function ProportionalTablesModule() {
     </Slot>
   );
 
-  // header equation (under K header) — compact, single line
+  // header equation (under K header) — compact, single line; shows chips immediately
   const HeaderEqArea = () => {
     if (!kPlaced) return null;
     return (
@@ -178,7 +210,7 @@ export default function ProportionalTablesModule() {
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
               className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
             >
-              {numIsY ? "Y" : <span className="muted">—</span>}
+              {numIsY ? <span className="chip chip-tiny">Y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
             <Slot
@@ -186,14 +218,14 @@ export default function ProportionalTablesModule() {
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
               className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
             >
-              {denIsX ? "X" : <span className="muted">—</span>}
+              {denIsX ? <span className="chip chip-tiny">X</span> : <span className="muted">—</span>}
             </Slot>
           </div>
         </div>
 
         {numIsY && denIsX && (
           <div className="muted small" style={{ marginTop: 6 }}>
-            Now drag each row’s <b>Y</b> and <b>X</b> into the spots and press <b>Calculate</b>.
+            Now drag each row’s <b>Y</b> and <b>X</b> into the spots. The result will appear after a moment.
           </div>
         )}
       </div>
@@ -260,40 +292,43 @@ export default function ProportionalTablesModule() {
                     </td>
                     <td>
                       {headerEqCorrect ? (
-                        <div className="row-calc">
-                          {/* left: static Y/X fraction */}
-                          <div className="fraction mini-frac">
-                            <div>Y</div>
-                            <div className="frac-bar narrow" />
-                            <div>X</div>
+                        <div className="row-calc nowrap">
+                          {/* left: static Y/X fraction (bold) */}
+                          <div className="fraction mini-frac static">
+                            <div><strong>Y</strong></div>
+                            <div className="frac-bar extra-narrow" />
+                            <div><strong>X</strong></div>
                           </div>
 
                           <span className="eq">=</span>
 
-                          {/* right: draggable y_i / x_i */}
+                          {/* right: draggable y_i / x_i (chips retained) */}
                           <div className="fraction mini-frac">
                             <Slot
                               accept={ACCEPT_VALUE}
                               validator={(d) => d?.row === idx && d?.axis === "y"}
                               onDrop={(d) => onRowDrop(idx, "num", d)}
-                              className="slot ptable-fracslot"
+                              className="slot ptable-fracslot tight"
                             >
-                              {fractions[idx]?.num ?? <span className="muted">—</span>}
+                              {fractions[idx]?.num != null
+                                ? <span className="chip chip-tiny">{fractions[idx].num}</span>
+                                : <span className="muted">—</span>}
                             </Slot>
-                            <div className="frac-bar narrow" />
+                            <div className="frac-bar extra-narrow" />
                             <Slot
                               accept={ACCEPT_VALUE}
                               validator={(d) => d?.row === idx && d?.axis === "x"}
                               onDrop={(d) => onRowDrop(idx, "den", d)}
-                              className="slot ptable-fracslot"
+                              className="slot ptable-fracslot tight"
                             >
-                              {fractions[idx]?.den ?? <span className="muted">—</span>}
+                              {fractions[idx]?.den != null
+                                ? <span className="chip chip-tiny">{fractions[idx].den}</span>
+                                : <span className="muted">—</span>}
                             </Slot>
                           </div>
 
-                          <button className="button sm" onClick={() => calcRow(idx)}>Calculate</button>
-
-                          {Number.isFinite(kValues[idx]) && (
+                          {/* reveal result after 3s */}
+                          {Number.isFinite(kValues[idx]) && reveal[idx] && (
                             <span className="eq result">= <b>{fmt(kValues[idx])}</b></span>
                           )}
                         </div>
@@ -312,7 +347,7 @@ export default function ProportionalTablesModule() {
                   <td>{row4Answer == null ? "?" : row4Answer}</td>
                   <td>
                     <button className="button success" onClick={solveRow4}>
-                      Solve Y = k×X
+                      Solve y = kx
                     </button>
                   </td>
                 </tr>
@@ -337,7 +372,20 @@ export default function ProportionalTablesModule() {
     kValues,
     revealFourthRow,
     row4Answer,
+    reveal,
   ]);
+
+  // right-panel "solve" options (after concept)
+  const kDisplay = fmt(kValues[0]);
+  const solveOptions = useMemo(() => {
+    const options = [
+      { key: "ok", label: `y = kx (k = ${kDisplay})`, correct: true },
+      { key: "add", label: "y = k + x", correct: false },
+      { key: "sub", label: "y = k - x", correct: false },
+      { key: "div", label: "y = x/k", correct: false },
+    ];
+    return shuffle(options);
+  }, [kDisplay]);
 
   return (
     <div className="panes">
@@ -406,7 +454,7 @@ export default function ProportionalTablesModule() {
           <div className="section">
             <div className="step-title">Fill each row & calculate</div>
             <div className="muted bigger">
-              For each row, make <b>Y/X = yᵢ/xᵢ</b> and press <b>Calculate</b>. Or use <b>Calculate All</b>.
+              For each row, make <b>Y/X = yᵢ/xᵢ</b>. The result will appear after a moment.
             </div>
             <div className="center mt-8">
               <button className="button" onClick={calcAll}>Calculate All</button>
@@ -436,9 +484,20 @@ export default function ProportionalTablesModule() {
 
         {currentStep === "solve" && (
           <div className="section">
-            <div className="step-title">Finish the problem</div>
-            <div className="muted bigger">
-              Use <b>Y = k×X</b> to find the missing fourth-row <b>Y</b> on the left.
+            <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
+            <div className="row" style={{ gap: 8, justifyContent: "center" }}>
+              {solveOptions.map(({ key, label, correct }) => (
+                <button
+                  key={key}
+                  className="button"
+                  onClick={() => {
+                    if (correct) solveRow4();
+                    else alert("Not quite — try another.");
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         )}
