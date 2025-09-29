@@ -237,7 +237,7 @@ export default function ProportionalTablesModule() {
 
         {numIsY && denIsX && (
           <div className="muted small" style={{ marginTop: 6 }}>
-            Now drag each row’s <b>Y</b> and <b>X</b> into the spots. The result will appear after a moment.
+            Now drag each row’s <b>y</b> and <b>x</b> into the spots. The result will appear after a moment.
           </div>
         )}
       </div>
@@ -482,14 +482,10 @@ export default function ProportionalTablesModule() {
 
         {currentStep === "fill" && (
           <div className="section">
-            <div className="step-title">Fill each row & calculate</div>
+            <div className="step-title">Drag and drop the x and y values in the table</div>
             <div className="muted bigger">
-              For each row, make <b>Y/X = yᵢ/xᵢ</b>. The result will appear after a moment.
-            </div>
-            <div className="center mt-8">
-              <button className="button" onClick={calcAll}>Calculate All</button>
-            </div>
-          </div>
+ 
+           
         )}
 
         {currentStep === "concept" && (
