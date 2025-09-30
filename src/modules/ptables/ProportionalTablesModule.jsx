@@ -362,16 +362,18 @@ export default function ProportionalTablesModule(){
   );
 
   return (
-    <div className="container">
-      <Controls />
-      <div className="panes">
-        <div className="card">
-          <div className="step-title">Chips</div>
-          <ChipsLeft />
-        </div>
-        <div className="card">
-          {Table}
-          <Concept />
+    <div className="ptables">
+      <div className="container">
+        <Controls />
+        <div className="panes">
+          <div className="card">
+            <div className="step-title">Chips</div>
+            <ChipsLeft />
+          </div>
+          <div className="card">
+            {Table}
+            <Concept />
+          </div>
         </div>
       </div>
     </div>
