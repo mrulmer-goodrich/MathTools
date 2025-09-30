@@ -1,515 +1,69 @@
-/* styles.css — UG Math Tools (v3.6.3 SAFE, cleaned)
-   - Keeps all 3.6.2 rules, original values intact
-   - Removes duplicate blocks
-   - Adds minimal PTABLE helpers at the end
-*/
 
-/* -------- Brand color tokens -------- */
 :root{
-  --eastway-blue: #0B4B8C;
+  --eastway-blue:#0B4B8C;
   --eastway-green:#0C6B4D;
-  --cms-light:    #DAE9F6;
-
-  --ink:          #0F172A;
-  --ink-2:        #334155;
-  --ink-3:        #64748B;
-  --border:       #CBD5E1;
-  --border-2:     #E2E8F0;
-  --bg-subtle:    #F1F5F9;
-  --card:         #FFFFFF;
-
-  --t-green:  #10B981;
-  --t-yellow: #F59E0B;
-  --t-red:    #EF4444;
+  --cms-light:#DAE9F6;
+  --ink:#0F172A;
+  --ink-2:#334155;
+  --ink-3:#64748B;
+  --border:#CBD5E1;
+  --border-2:#E2E8F0;
+  --bg-subtle:#F1F5F9;
+  --card:#FFFFFF;
+  --t-green:#10B981;
+  --t-yellow:#F59E0B;
+  --t-red:#EF4444;
 }
 
-*{ box-sizing: border-box; }
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; }
+body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; color:var(--ink); background:#f7fafc; }
 
-html, body, #root{ height:100%; }
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  color: var(--ink);
-  background: #f7fafc;
-}
+.container{ max-width:1100px; margin:24px auto; padding:0 16px; }
+.row{ display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.card{ background:var(--card); border:1px solid var(--border-2); border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.04); min-width:0; }
 
-/* ---------- Header & Landing ---------- */
-.container{ max-width:1100px; margin: 24px auto; padding: 0 16px; }
-.header{
-  background: linear-gradient(90deg, var(--eastway-blue), var(--eastway-green));
-  color:white;
-  padding: 18px 20px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15,42,67,.12);
-  margin-bottom: 18px;
-}
-.brand{ font-weight: 900; font-size: 28px; }
-.subtitle{ font-weight: 700; opacity: .9; margin-top: 4px; }
+.big-button,.row>button,.row>.button{ font-size:18px; font-weight:900; padding:16px 22px; border-radius:14px; border:none; background:var(--cms-light); color:#05223c; cursor:pointer; box-shadow:0 10px 20px rgba(15,42,67,.10); }
+.big-button:hover,.row>button:hover,.row>.button:hover{ transform:translateY(-1px); box-shadow:0 14px 26px rgba(15,42,67,.15); }
+.BigButton,.bigBtn,.big-button{ display:inline-flex; align-items:center; justify-content:center; }
 
-.row{ display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap: wrap; }
+.panes{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
 
-/* ---------- Big Buttons ---------- */
-.big-button,
-.row > button,
-.row > .button{
-  font-size: 18px;
-  font-weight: 900;
-  padding: 16px 22px;
-  border-radius: 14px;
-  border: none;
-  background: var(--cms-light);
-  color: #05223c;
-  cursor: pointer;
-  box-shadow: 0 10px 20px rgba(15,42,67,.10);
-}
-.big-button:hover,
-.row > button:hover,
-.row > .button:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(15,42,67,.15);
-}
-.BigButton, .bigBtn, .big-button{ display:inline-flex; align-items:center; justify-content:center; }
+.chip{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:999px; background:#fff; border:1px solid var(--border); box-shadow:0 2px 6px rgba(0,0,0,.06); font-weight:800; }
+.chip-tiny{ padding:4px 8px; font-size:12px; }
 
-/* ---------- Cards & Panes ---------- */
-.panes{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; }
-.card{
-  background: var(--card);
-  border: 1px solid var(--border-2);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.04);
-  min-width: 0;
-}
-
-/* ---------- Buttons ---------- */
-.button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
-.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
-.button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
-.button.big-under{ margin-top:12px; }
-.button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
-.floating-summary{ position:fixed; right:16px; bottom:16px; }
-
-/* ---------- Text helpers ---------- */
-.muted{ color: var(--ink-3); }
-.muted.small{ font-size: .9rem; }
-.mt-8{ margin-top:8px; } .mt-10{ margin-top:10px; } .ml-6{ margin-left:6px; } .ml-12{ margin-left:12px; }
-.center{ justify-content:center; display:flex; }
-.chips{ display:flex; flex-wrap:wrap; gap:10px; }
-.chips.center{ justify-content:center; }
-
-/* ---------- Scale Factor visuals ---------- */
-.shape-area{ position:relative; }
-.rects{
-  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
-  max-width: 100%;
-  overflow: visible; /* ensure pills never clip */
-}
-.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
-.rect.copy{ background:#F5FAFF; }
-
-.shape-label-center{
-  position:absolute; top:50%; left:50%; transform: translate(-50%, -50%);
-  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
-}
-
-/* Side number tags — dynamic offset */
-.side-tag{
-  position:absolute; font-weight:900; background:#fff; border-radius:999px;
-  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
-}
-.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
-
-/* Wide click targets (Step 1 only) */
-.rect .side-hit{ position:absolute; background: transparent; z-index: 20; }
-.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
-.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
-.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
-.rect .side-hit.good{   background: rgba(16,185,129,.18); }
-
-/* ---------- Fractions, chips, etc. ---------- */
-.error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
-.fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 120px; }
-.fraction.mini-frac{ width:96px; } /* narrower to avoid wraps */
-.fraction > div:first-child{ grid-row:1; }
-.fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
-.fraction > .frac-bar.narrow{ height:2px; }
-.fraction > div:last-child{ grid-row:3; }
-.slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
-
-/* New: single-row calc alignment */
-.calc-row{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow-x:auto; }
-.stack-op{ display:grid; grid-template-rows:auto auto; row-gap:10px; justify-items:center; min-width:72px; }
-.chip-tiny{ padding:6px 10px !important; } /* tighter chips used in narrow calc row */
-
-/* Compute grid */
-.compute-grid{
-  display:grid;
-  grid-template-columns: minmax(120px,1fr) 24px minmax(140px,1fr) 24px minmax(140px,1fr);
-  align-items:end;
-  gap: 16px;
-}
-.compute-grid .op{ text-align:center; font-weight:900; font-size:1.2rem; }
-.compute-grid .col .slot, .compute-grid .col .chip{ justify-self:center; }
-
-.right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
-.right-steps .muted.bigger{ font-size: 1.08rem; }
-.section{ margin-bottom: 20px; }
-
-/* Chips with borders */
-.chips.with-borders > *{
-  border: 2px solid var(--border) !important;
-  background: #fff !important;
-  border-radius: 12px !important;
-  padding: 8px 12px !important;
-  font-weight: 800;
-  cursor: grab;
-  user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06);
-}
-.chips.with-borders > *:active{ cursor: grabbing; }
-
-.chip {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 8px 12px; border: 2px solid var(--border); border-radius: 12px;
-  background: #fff; font-weight: 800; cursor: grab; user-select: none;
-  box-shadow: 0 2px 0 rgba(0,0,0,.06); line-height: 1;
-}
-.chip:active { cursor: grabbing; }
-.slot .chip { border-color: #333; border-radius: 12px; background: #fff; font-weight: 800; }
-
-/* Misc */
-.fraction-row.nowrap { flex-wrap:nowrap; }
-.big-fraction .frac-bar { height: 3px; }
-.result-big{
-  font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
-  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px;
-}
-
-@media (max-width: 980px){
-  .panes{ grid-template-columns: 1fr; }
-}
-
-/* Flashing buttons */
-.flash { animation: sfFlashBtn 1s infinite; }
-@keyframes sfFlashBtn {
-  0%,100%{ filter:none; transform:none; }
-  50%{ filter: drop-shadow(0 0 6px rgba(245,158,11,.55)); transform: translateY(-1px); }
-}
-
-/* --- fade-in helpers for staged calc --- */
-.sf-hidden{ opacity:0; pointer-events:none; }
-.sf-fade{ animation: sfFadeIn .6s ease-out both; }
-@keyframes sfFadeIn{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform:none; } }
-
-/* --- continuous confetti --- */
-.sf-confetti{ position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
-.sf-confetti-piece{
-  position:absolute; top:-10vh; border-radius:2px; opacity:.95;
-  animation-name: sfConfettiFall; animation-timing-function: linear; animation-fill-mode: forwards;
-}
-@keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
-
-/* ---- Restored utility & landing styles ---- */
-.landing-header{ text-align:center; }
-.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
-.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
-.home-buttons > *{
-  font-size: 22px !important; padding: 20px 28px !important; border-radius: 16px !important;
-  min-width: 240px; justify-content:center; text-align:center;
-}
-
-/* ---- H-Table grid & visuals ---- */
-.hwrap{ margin-top:12px; position: relative; border: none !important; background: transparent; }
-.hgrid{
-  display:grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(64px, auto);
-  gap:0; background:#fff;
-}
-.hhead, .hcell{ padding:10px; }
-.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; }
-.hcell{ position:relative; display:flex; align-items:center; justify-content:center; }
-.hgrid .hstroke { pointer-events: none; }
-
-.hwrap .hline { position: absolute; pointer-events: none; }
-.hwrap .hline.horiz { left: 0; right: 0; top: 50%; border-top: 4px solid #334155; transform: translateY(-2px); }
-.hwrap .hline.vert1 { top: 0; bottom: 0; left: 33.333%; border-left: 4px solid #334155; transform: translateX(-2px); }
-.hwrap .hline.vert2 { top: 0; bottom: 0; left: 66.666%; border-left: 4px solid #334155; transform: translateX(-2px); }
-
-/* H-Table drop affordance */
-.hwrap .empty { outline: 2px dashed #94a3b8; outline-offset: -6px; border-radius: 10px; }
-.hwrap .hhead .empty, .hwrap .hcell .empty {
-  background: repeating-linear-gradient(45deg, rgba(148,163,184,.15), rgba(148,163,184,.15) 6px, transparent 6px, transparent 12px);
-}
-
-/* Toolbar row parity & language badge */
-.htable-toolbar { justify-content: center; margin-top: 10px; gap: 12px; display:flex; }
-.lang-badge{
-  margin-top: 8px; display: inline-block; font-size: 12px; color: var(--ink-2);
-  background: var(--bg-subtle); border: 1px solid var(--border-2); border-radius: 10px; padding: 4px 8px;
-}
-
-/* Minimal helpers to restore expected layout */
-.section { margin-top: 16px; }
-.right-steps { padding: 12px; }
-.step-title { font-weight: 700; margin-bottom: 8px; }
-.bigger { font-size: 15px; }
-.hhead-text { font-weight: 600; } /* used in H-table headings */
-
-/* ---------- Proportional Tables (PTABLE) ---------- */
-/* Darker table chrome */
 .ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
-.ptable{ width:100%; border-collapse:collapse; }
-.ptable thead th{
-  background:#e5e7eb; /* darker */
-  border-bottom:2px solid #cbd5e1;
-  padding:10px;
-  text-align:center; font-weight:800; font-size:15px;
-}
-.ptable tbody td{ border-top:1px solid #cbd5e1; padding:10px; text-align:center; height:60px; }
-.ptable th, .ptable td{ border-right:1px solid #cbd5e1; }
-.ptable tr > *:last-child{ border-right:none; }
+.ptable{ width:100%; border-collapse:collapse; table-layout:fixed; }
+.ptable thead th{ background:#e5e7eb; border-bottom:2px solid #cbd5e1; padding:10px; text-align:center; font-weight:800; font-size:15px; }
+.ptable tbody td{ border-top:1px solid #cbd5e1; padding:10px; text-align:center; height:60px; overflow:visible; }
+.ptable th,.ptable td{ border-right:1px solid #cbd5e1; }
+.ptable tr>*:last-child{ border-right:none; }
 
-/* Header drop slots */
-.ptable-thslot{
-  display:flex; align-items:center; justify-content:center;
-  height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
-  font-weight:700;
-}
-.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; font-style:normal; }
+.ptable-thslot{ display:flex; align-items:center; justify-content:center; height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc; font-weight:700; }
+.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; }
 .ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
 
-/* Header equation area (below K header) */
 .ptable-header-eq{ margin-top:8px; }
-.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
-.ptable-eq-slot{
-  min-width:56px; height:40px; border:1px dashed var(--border);
-  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
-}
-.ptable-eq-slot.filled{ border-style:solid; }
-.ptable-frac-template-slot{
-  min-width:100px; height:40px; border:1px dashed var(--border);
-  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
-}
+.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap; }
+.calc-inline{ white-space:nowrap; }
 
-/* Fraction slots (header & rows) */
-.ptable-fracslot{
-  min-width:64px; min-height:40px; border:2px solid var(--border);
-  background:#fff; border-radius:8px;
-}
+.fraction{ display:grid; grid-template-rows:auto auto auto; align-items:center; justify-items:center; min-width:120px; }
+.frac-bar{ width:100%; height:2px; background:#0f172a33; }
+.frac-bar.narrow{ width:80px; }
+.ptable-fracslot{ min-width:64px; min-height:40px; border:2px solid var(--border); background:#fff; border-radius:8px; }
+.ptable-fracslot.tiny{ min-width:42px; min-height:30px; padding:4px 6px; }
+.slot.glow{ box-shadow:0 0 0 3px rgba(37,99,235,.25) inset; border-color:#93c5fd; }
 
-/* Keep the 3rd column width before K is dropped (reserve space without content) */
 .col3-invisible .ptable thead th:nth-child(3),
-.col3-invisible .ptable tbody td:nth-child(3){ visibility: hidden; }
+.col3-invisible .ptable tbody td:nth-child(3){ visibility:hidden; background:transparent; border-color:transparent; }
 
-/* (Legacy) If needed elsewhere: hide third column entirely */
-.col3-hidden .ptable thead th:nth-child(3),
-.col3-hidden .ptable tbody td:nth-child(3){ display:none; }
-
-/* Generous invisible dropzone for K (no label) */
 .ptable-rel{ position:relative; }
 .ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
 .ptable-k-target{ pointer-events:auto; width:95%; height:64px; border:0; border-radius:12px; background:transparent; }
 .ptable-k-target *{ display:none !important; }
 
-/* Proportional overlay between columns 1 & 2 */
-.ptable-overlay{
-  position:absolute; top:50%; left:8%; right:8%; transform:translateY(-50%);
-  display:flex; align-items:center; justify-content:center; pointer-events:none;
-}
-.ptable-overlay-inner{
-  background: rgba(255,255,255,.9); border:2px solid #f2c14e; border-radius:14px;
-  padding: 10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.08);
-  display:flex; gap:10px; align-items:center;
-}
+.section{ margin-top:16px; }
+.step-title{ font-weight:700; margin-bottom:8px; }
+.lang-badge{ margin-top:8px; display:inline-block; font-size:12px; color:var(--ink-2); background:var(--bg-subtle); border:1px solid var(--border-2); border-radius:10px; padding:4px 8px; }
 
-/* Larger chips for right-pane */
-.chip.large{ padding: 12px 16px; font-size: 18px; }
-
-/* Active difficulty helpers */
-.big-button.active{ outline:3px solid var(--eastway-blue); } /* if BigButton forwards className */
-.press.is-active > .big-button{ outline:3px solid var(--eastway-blue); outline-offset:2px; } /* wrapper fallback */
-
-/* Reserve space for the 3rd column but hide all visuals until K is placed */
-.col3-invisible .ptable thead th:nth-child(3),
-.col3-invisible .ptable tbody td:nth-child(3){
-  visibility: hidden;
-  background: transparent;
-  border-color: transparent;   /* hide the “outlines” */
-}
-
-/* Make the K-reveal dropzone truly invisible (no label or border) */
-.ptable-k-target { background: transparent; border: 0; }
-.ptable-k-target * { display: none !important; }
-
-/* Active difficulty look (works if BigButton forwards className) */
-.big-button.active{ outline:3px solid var(--eastway-blue); }
-
-/* Fallback active look if BigButton doesn't forward className */
-.press.is-active > .big-button{
-  outline:3px solid var(--eastway-blue);
-  outline-offset:2px;
-}
-
-/* Equal column widths even when K column is visually hidden */
-.ptable { table-layout: fixed; }
-.ptable col { width: 33.3333%; }
-
-/* Guarantee header drop targets get the event */
-.ptable thead, .ptable thead * {
-  pointer-events: auto;
-  position: relative;
-  z-index: 2;
-}
-
-/* Stacked fraction: numerator | bar | denominator */
-.fraction{
-  display: grid;
-  grid-template-rows: auto auto auto; /* was: auto auto */
-  align-items: center;
-  justify-items: center;
-  min-width: 120px;
-}
-
-/* DropSlot visual cue */
-.slot.glow {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset;
-  border-color: #93c5fd;
-}
-
-/* Keep the K header on one horizontal line */
-.ptable-eq-row.nowrap { flex-wrap: nowrap; }
-.ptable .calc-inline { white-space: nowrap; }
-
-/* Smaller button in row cells to avoid overflow */
-.button.sm { padding: 6px 10px; font-size: 12px; }
-
-/* Ensure header drop targets always receive events */
-.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
-
-/* Stacked fraction grid explicit (avoids odd wraps) */
-.fraction { grid-template-rows: auto auto auto; }
-
-/* Optional: subtle glow cue when a slot is a valid drop target */
-.slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
-
-/* Keep header equation on one line, compact */
-.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
-.ptable .calc-inline { white-space: nowrap; }
-
-/* Compact slots for the header fraction so it never wraps */
-.ptable .ptable-fracslot.tiny { min-width: 42px; min-height: 30px; }
-
-/* Explicit 3-row grid for stacked fractions (prevents odd wrapping) */
-.fraction { grid-template-rows: auto auto auto; }
-
-/* Make table cells show everything; avoid clipping and cut-off buttons */
-.ptable tbody td { overflow: visible; }
-
-/* Small button used inside cells */
-.button.sm { padding: 6px 10px; font-size: 12px; }
-
-/* Ensure header drop targets always receive events */
-.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
-
-/* Optional: subtle glow when a slot is an active drop target */
-.slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
-
-/* Keep header equation on one line, compact */
-.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
-.ptable .calc-inline { white-space: nowrap; }
-
-/* Compact header fraction slots so the K header never wraps */
-.ptable .ptable-fracslot.tiny { min-width: 42px; min-height: 30px; padding: 4px 6px; }
-
-/* Explicit 3-row grid for stacked fractions (prevents odd wrapping) */
-.fraction { grid-template-rows: auto auto auto; }
-
-/* Row calc group stays inside the third column and wraps nicely */
-.row-calc { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; max-width:100%; }
-.row-calc .fraction.mini-frac { width:72px; }           /* compact fractions */
-.ptable .ptable-fracslot { min-width: 36px; min-height: 28px; padding:4px 6px; } /* tighter slots in rows */
-
-/* Buttons fit and never look disabled */
-.button.sm { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
-
-/* Ensure header drop targets always receive events */
-.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
-
-/* Optional: subtle glow when a slot is an active drop target */
-.slot.glow { box-shadow: 0 0 0 3px rgba(37,99,235,.25) inset; border-color: #93c5fd; }
-
-/* Keep header equation on one line, compact */
-.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
-.ptable .calc-inline { white-space: nowrap; }
-
-/* Header fraction: small slots so it never wraps */
-.ptable .ptable-fracslot.tiny { min-width: 38px; min-height: 28px; padding: 3px 6px; }
-
-/* Row calc: force single line, compact; stay inside col 3 */
-.row-calc.nowrap { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap: nowrap; max-width:100%; overflow:hidden; }
-
-/* Compact fractions & thin divisor bars */
-.fraction { grid-template-rows: auto auto auto; }
-.fraction.mini-frac { width: 64px; }
-.frac-bar.narrow { height: 2px; }
-.row-calc .frac-bar.extra-narrow { height: 1px; }
-
-/* Tight row slots so y_i / x_i aren't wide */
-.ptable .ptable-fracslot.tight { min-width: 32px; min-height: 28px; padding: 3px 6px; }
-
-/* Keep chip look when dropped into slots */
-.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
-.chip-tiny { padding: 6px 10px !important; font-size: 14px; }
-
-/* Make left Y/X bold (when not chips) */
-.fraction.static strong { font-weight: 900; }
-
-/* Ensure header drop targets always receive events */
-.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
-
-/* === Short, fixed-length fraction bars (header + rows) === */
-/* Make the compact fractions truly compact (override the generic min-width) */
-.fraction.mini-frac { width: 72px !important; min-width: 0 !important; }
-
-/* Bar length ~3 digits wide */
-.fraction.mini-frac .frac-bar { width: 52px !important; }
-
-/* Extra insurance: keep header version short too */
-.ptable-header-eq .fraction.mini-frac { width: 72px !important; }
-.ptable-header-eq .fraction.mini-frac .frac-bar { width: 52px !important; }
-
-/* Keep the third-column calc content on one line */
-.row-calc.nowrap { flex-wrap: nowrap !important; }
-
-/* (Optional) if any row still stretches, limit the whole group width */
-.ptable tbody td:nth-child(3) .row-calc.nowrap { max-width: 100%; overflow: hidden; }
-
-/* ---- PTables layout + fraction compacting (append to end of CSS) ---- */
-.ptables-layout { grid-template-columns: 3fr 2fr; }
-
-/* Compact fractions (~3 digits) */
-.fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
-.fraction.mini-frac .frac-bar { width: 48px !important; }
-
-/* Keep calc row on one line inside col 3 */
-.row-calc.nowrap { flex-wrap: nowrap !important; gap: 8px; max-width: 100%; overflow: hidden; }
-
-/* Tiny header slots so K header doesn't wrap */
-.ptable .ptable-fracslot.tiny { min-width: 34px; min-height: 26px; padding: 2px 6px; }
-
-/* Keep dropped chips styled as chips */
-.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
-
-/* Very thin divisor */
-.frac-bar.extra-narrow { height: 1px; }
-
-/* Tap-to-place: show focus when a chip is tapped (optional) */
-.chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
-
-/* PTABLE v6 minimal helpers — preserve existing style */
-.concept-grid-2x2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.ptable .eq{ margin: 0 6px; }
-
+.button.sm{ padding:6px 10px; font-size:12px; }
