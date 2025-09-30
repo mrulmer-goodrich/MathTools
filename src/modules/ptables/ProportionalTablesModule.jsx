@@ -1,12 +1,3 @@
-// src/modules/ptables/ProportionalTablesModule.jsx  (v7)
-// - Restores your established look (two cards) and keeps tap-first with drag fallback
-// - Lowercase x/y/k everywhere
-// - Mixed-number / integer / 1-decimal formatting
-// - Concept answers always 2×2
-// - K overlay invisible until placed
-// - Removes any stray "Drop here" text in headers
-// - Keeps drag components intact; only this module wraps them for tap-to-place
-// - No summary/checkmark UI here
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -14,21 +5,15 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
-// ---------------- Persistence (difficulty only) ----------------
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 
-// ---------------- Helpers ----------------
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 
-// number formatting per spec
 function formatNumber(n){
   if (!Number.isFinite(n)) return "";
-  // whole
   if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
-  // mixed number if denominator < 10 and value rational-close
-  // Try to detect simple fraction close to p/q with q<10
   const qMax = 9;
   for (let q=2;q<=qMax;q++){
     const p = Math.round(n*q);
@@ -39,13 +24,11 @@ function formatNumber(n){
       return `${num}/${q}`;
     }
   }
-  // otherwise 1 decimal
   return (Math.round(n*10)/10).toFixed(1);
 }
 
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 
-// ---------------- Local tap-pick store (module-local only) ----------------
 const _pickStore = {
   data: null,
   set(d){ this.data = d || null; },
@@ -53,7 +36,6 @@ const _pickStore = {
   clear(){ this.data = null; }
 };
 
-// Wrap Draggable to support tap-to-pick without changing shared component
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
@@ -68,7 +50,6 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
   );
 };
 
-// Wrap DropSlot to support tap-to-place
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
@@ -92,36 +73,28 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
   );
 };
 
-// Accept types
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
 const ACCEPT_VALUE  = ["value", "number"];
 
-// ---------------- Component ----------------
 export default function ProportionalTablesModule(){
-  // difficulty & problem
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem]     = useState(() => genPTable(difficulty));
 
-  // header labels placed (x, y, k)
   const [xPlaced, setXPlaced] = useState(false);
   const [yPlaced, setYPlaced] = useState(false);
   const [kPlaced, setKPlaced] = useState(false);
 
-  // header fraction (k = y/x)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-  // per-row fraction inputs & computed k values
-  const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
-  const [kValues, setKValues]     = useState({}); // {rowIndex: number}
-  const [reveal, setReveal]       = useState({}); // {rowIndex: boolean} delay reveal "= value"
+  const [fractions, setFractions] = useState({});
+  const [kValues, setKValues]     = useState({});
+  const [reveal, setReveal]       = useState({});
   const revealTimers = useRef({});
 
-  // persist difficulty
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
-  // compute k when both numerator & denominator present
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
@@ -132,7 +105,6 @@ export default function ProportionalTablesModule(){
     });
   }, [fractions]);
 
-  // reveal row value after short delay once k calculated
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
@@ -145,14 +117,12 @@ export default function ProportionalTablesModule(){
     });
   }, [fractions, kValues, reveal]);
 
-  // equality across first three ks
   const ksEqual = useMemo(() => {
     const vals = [kValues[0], kValues[1], kValues[2]];
     if (vals.some(v => typeof v !== "number")) return null;
     return approxEq(vals[0], vals[1]) && approxEq(vals[1], vals[2]);
   }, [kValues]);
 
-  // concept answers randomized, always 2×2 on screen
   const randomizedConcept = useMemo(() =>
     shuffle([
       { key: "yes_same", label: "Yes, because k is the same" },
@@ -171,17 +141,14 @@ export default function ProportionalTablesModule(){
     return false;
   }, [headerEqCorrect, ksEqual, conceptAnswer]);
 
-  // reveal fourth row only when proportional & concept correct
   const revealFourthRow = conceptCorrect && ksEqual === true;
   const [row4Answer, setRow4Answer] = useState(null);
 
-  // teardown timers
   useEffect(() => () => {
     Object.values(revealTimers.current).forEach(t => clearTimeout(t));
     revealTimers.current = {};
   }, []);
 
-  // reset all
   const resetAll = (nextDiff = difficulty) => {
     const next = genPTable(nextDiff);
     setProblem(next);
@@ -194,7 +161,6 @@ export default function ProportionalTablesModule(){
     _pickStore.clear();
   };
 
-  // ---------- Subcomponents ----------
   const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
     <Slot
       accept={ACCEPT_HEADER}
@@ -206,7 +172,6 @@ export default function ProportionalTablesModule(){
       className={`ptable-thslot ${placed ? "placed" : "empty"}`}
       aria-label={placed ? label : `place ${expectName}`}
     >
-      {/* no text when empty per spec */}
       {placed ? label : <span className="visually-hidden">target</span>}
     </Slot>
   );
@@ -219,7 +184,6 @@ export default function ProportionalTablesModule(){
           <div className="badge">k</div>
           <span className="calc-inline">=</span>
           <div className="fraction mini-frac" aria-label="k equals y over x">
-            {/* y (numerator) */}
             <Slot
               accept={ACCEPT_HEADER}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "y") setNumIsY(true); }}
@@ -228,7 +192,6 @@ export default function ProportionalTablesModule(){
               {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
-            {/* x (denominator) */}
             <Slot
               accept={ACCEPT_HEADER}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "x") setDenIsX(true); }}
@@ -255,25 +218,6 @@ export default function ProportionalTablesModule(){
     );
   };
 
-  const burstConfetti = () => {
-    const host = document.createElement("div");
-    host.className = "sf-confetti";
-    document.body.appendChild(host);
-    const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
-    for (let i = 0; i < 80; i++) {
-      const p = document.createElement("div");
-      p.className = "sf-confetti-piece";
-      p.style.left = Math.random() * 100 + "vw";
-      p.style.width = "6px";
-      p.style.height = "10px";
-      p.style.background = colors[(Math.random() * colors.length) | 0];
-      p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
-      host.appendChild(p);
-    }
-    setTimeout(() => host.remove(), 2500);
-  };
-
-  // ---------- Render ----------
   const Table = useMemo(() => {
     const invis = !kPlaced ? "col3-invisible" : "";
     return (
@@ -332,7 +276,6 @@ export default function ProportionalTablesModule(){
                   </td>
                 </tr>
               ))}
-              {/* 4th row */}
               <tr>
                 <td colSpan={2}>
                   {revealFourthRow ? (
@@ -359,15 +302,11 @@ export default function ProportionalTablesModule(){
         </div>
       </div>
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problem, xPlaced, yPlaced, kPlaced, fractions, kValues, reveal, revealFourthRow, row4Answer]);
 
-  // ---------- Left pane chips (x, y, k and row values) ----------
   const ChipsLeft = () => {
     const vals = problem?.values || [];
-    // Build header symbol chips (lowercase x/y/k)
     const symbols = ["x","y","k"].map((s) => ({ type:"header", label:s }));
-    // Value chips: take row values from generator
     const valueChips = vals.map(v => ({ type:"value", value:v }));
     const all = [...symbols, ...valueChips];
     return (
@@ -381,7 +320,6 @@ export default function ProportionalTablesModule(){
     );
   };
 
-  // ---------- Right pane: concept question ----------
   const Concept = () => {
     const disabled = !(headerEqCorrect && [0,1,2].every(i => Number.isFinite(kValues[i])));
     return (
@@ -394,7 +332,7 @@ export default function ProportionalTablesModule(){
               className={`button ${conceptAnswer===opt.key?"active":""}`}
               onClick={() => setConceptAnswer(opt.key)}
               disabled={disabled}
-              style={{ width: 240 }}  // 2×2 grid sizing
+              style={{ width: 240 }}
             >
               {opt.label}
             </button>
@@ -405,7 +343,6 @@ export default function ProportionalTablesModule(){
     );
   };
 
-  // ---------- Top controls ----------
   const Controls = () => (
     <div className="row" style={{ justifyContent:"center", gap:12 }}>
       <div className="press">
@@ -424,7 +361,6 @@ export default function ProportionalTablesModule(){
     </div>
   );
 
-  // ---------- Layout (two cards) ----------
   return (
     <div className="container">
       <Controls />
