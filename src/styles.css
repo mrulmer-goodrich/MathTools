@@ -1,69 +1,423 @@
 
-:root{
-  --eastway-blue:#0B4B8C;
-  --eastway-green:#0C6B4D;
-  --cms-light:#DAE9F6;
-  --ink:#0F172A;
-  --ink-2:#334155;
-  --ink-3:#64748B;
-  --border:#CBD5E1;
-  --border-2:#E2E8F0;
-  --bg-subtle:#F1F5F9;
-  --card:#FFFFFF;
-  --t-green:#10B981;
-  --t-yellow:#F59E0B;
-  --t-red:#EF4444;
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { genPTable } from "../../lib/generator.js";
+import DraggableBase from "../../components/DraggableChip.jsx";
+import DropSlotBase from "../../components/DropSlot.jsx";
+import BigButton from "../../components/BigButton.jsx";
+
+const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
+const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
+
+const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
+
+function formatNumber(n){
+  if (!Number.isFinite(n)) return "";
+  if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+  const qMax = 9;
+  for (let q=2;q<=qMax;q++){
+    const p = Math.round(n*q);
+    if (Math.abs(n - p/q) < 1e-6){
+      const whole = Math.trunc(p/q);
+      const num = Math.abs(p - whole*q);
+      if (whole !== 0) return `${whole} ${num}/${q}`;
+      return `${num}/${q}`;
+    }
+  }
+  return (Math.round(n*10)/10).toFixed(1);
 }
 
-*{ box-sizing:border-box; }
-html,body,#root{ height:100%; }
-body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; color:var(--ink); background:#f7fafc; }
+const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 
-.container{ max-width:1100px; margin:24px auto; padding:0 16px; }
-.row{ display:flex; gap:16px; align-items:center; justify-content:center; flex-wrap:wrap; }
-.card{ background:var(--card); border:1px solid var(--border-2); border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.04); min-width:0; }
+const _pickStore = {
+  data: null,
+  set(d){ this.data = d || null; },
+  peek(){ return this.data; },
+  clear(){ this.data = null; }
+};
 
-.big-button,.row>button,.row>.button{ font-size:18px; font-weight:900; padding:16px 22px; border-radius:14px; border:none; background:var(--cms-light); color:#05223c; cursor:pointer; box-shadow:0 10px 20px rgba(15,42,67,.10); }
-.big-button:hover,.row>button:hover,.row>.button:hover{ transform:translateY(-1px); box-shadow:0 14px 26px rgba(15,42,67,.15); }
-.BigButton,.bigBtn,.big-button{ display:inline-flex; align-items:center; justify-content:center; }
+const Draggable = ({ payload, data, onClick, ...rest }) => {
+  const merged = data ?? payload ?? undefined;
+  const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
+  return (
+    <DraggableBase
+      data={merged}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      {...rest}
+    />
+  );
+};
 
-.panes{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; align-items:start; }
+const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
+  const testFn = test ?? ((d) => {
+    const t = (d?.type ?? d?.kind ?? "").toString();
+    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
+    const valOk = typeof validator === "function" ? !!validator(d) : true;
+    return listOk && valOk;
+  });
+  const onDropContentFn = onDropContent ?? onDrop;
+  const handleClick = (e) => {
+    const picked = _pickStore.peek();
+    if (picked && testFn(picked)) { try { onDropContentFn?.(picked); } catch {} _pickStore.clear(); }
+    onClick?.(e);
+  };
+  return (
+    <DropSlotBase
+      test={testFn}
+      onDropContent={onDropContentFn}
+      onClick={handleClick}
+      {...rest}
+    />
+  );
+};
 
-.chip{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:999px; background:#fff; border:1px solid var(--border); box-shadow:0 2px 6px rgba(0,0,0,.06); font-weight:800; }
-.chip-tiny{ padding:4px 8px; font-size:12px; }
+const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
+const ACCEPT_VALUE  = ["value", "number"];
 
-.ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
-.ptable{ width:100%; border-collapse:collapse; table-layout:fixed; }
-.ptable thead th{ background:#e5e7eb; border-bottom:2px solid #cbd5e1; padding:10px; text-align:center; font-weight:800; font-size:15px; }
-.ptable tbody td{ border-top:1px solid #cbd5e1; padding:10px; text-align:center; height:60px; overflow:visible; }
-.ptable th,.ptable td{ border-right:1px solid #cbd5e1; }
-.ptable tr>*:last-child{ border-right:none; }
+export default function ProportionalTablesModule(){
+  const [difficulty, setDifficulty] = useState(loadDifficulty());
+  const [problem, setProblem]     = useState(() => genPTable(difficulty));
 
-.ptable-thslot{ display:flex; align-items:center; justify-content:center; height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc; font-weight:700; }
-.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; }
-.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
+  const [xPlaced, setXPlaced] = useState(false);
+  const [yPlaced, setYPlaced] = useState(false);
+  const [kPlaced, setKPlaced] = useState(false);
 
-.ptable-header-eq{ margin-top:8px; }
-.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:nowrap; }
-.calc-inline{ white-space:nowrap; }
+  const [numIsY, setNumIsY] = useState(false);
+  const [denIsX, setDenIsX] = useState(false);
+  const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-.fraction{ display:grid; grid-template-rows:auto auto auto; align-items:center; justify-items:center; min-width:120px; }
-.frac-bar{ width:100%; height:2px; background:#0f172a33; }
-.frac-bar.narrow{ width:80px; }
-.ptable-fracslot{ min-width:64px; min-height:40px; border:2px solid var(--border); background:#fff; border-radius:8px; }
-.ptable-fracslot.tiny{ min-width:42px; min-height:30px; padding:4px 6px; }
-.slot.glow{ box-shadow:0 0 0 3px rgba(37,99,235,.25) inset; border-color:#93c5fd; }
+  const [fractions, setFractions] = useState({});
+  const [kValues, setKValues]     = useState({});
+  const [reveal, setReveal]       = useState({});
+  const revealTimers = useRef({});
 
-.col3-invisible .ptable thead th:nth-child(3),
-.col3-invisible .ptable tbody td:nth-child(3){ visibility:hidden; background:transparent; border-color:transparent; }
+  useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
-.ptable-rel{ position:relative; }
-.ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-.ptable-k-target{ pointer-events:auto; width:95%; height:64px; border:0; border-radius:12px; background:transparent; }
-.ptable-k-target *{ display:none !important; }
+  useEffect(() => {
+    [0,1,2].forEach(i => {
+      const f = fractions[i];
+      if (f?.num != null && f?.den != null && f.den !== 0){
+        const kv = f.num / f.den;
+        setKValues(prev => (prev[i] === kv ? prev : { ...prev, [i]: kv }));
+      }
+    });
+  }, [fractions]);
 
-.section{ margin-top:16px; }
-.step-title{ font-weight:700; margin-bottom:8px; }
-.lang-badge{ margin-top:8px; display:inline-block; font-size:12px; color:var(--ink-2); background:var(--bg-subtle); border:1px solid var(--border-2); border-radius:10px; padding:4px 8px; }
+  useEffect(() => {
+    [0,1,2].forEach(i => {
+      const f = fractions[i];
+      if (f?.num != null && f?.den != null && Number.isFinite(kValues[i]) && !reveal[i]){
+        if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
+        revealTimers.current[i] = setTimeout(() => {
+          setReveal(prev => ({ ...prev, [i]: true }));
+        }, 1200);
+      }
+    });
+  }, [fractions, kValues, reveal]);
 
-.button.sm{ padding:6px 10px; font-size:12px; }
+  const ksEqual = useMemo(() => {
+    const vals = [kValues[0], kValues[1], kValues[2]];
+    if (vals.some(v => typeof v !== "number")) return null;
+    return approxEq(vals[0], vals[1]) && approxEq(vals[1], vals[2]);
+  }, [kValues]);
+
+  const randomizedConcept = useMemo(() =>
+    shuffle([
+      { key: "yes_same", label: "Yes, because k is the same" },
+      { key: "no_diff",  label: "No, because k is NOT the same" },
+      { key: "no_same",  label: "No, because k is the same" },
+      { key: "yes_diff", label: "Yes, because k is NOT the same" },
+    ])
+  , [problem]);
+
+  const [conceptAnswer, setConceptAnswer] = useState(null);
+  const conceptCorrect = useMemo(() => {
+    if (!headerEqCorrect) return false;
+    if (ksEqual == null) return false;
+    if (ksEqual && conceptAnswer === "yes_same") return true;
+    if (!ksEqual && conceptAnswer === "no_diff") return true;
+    return false;
+  }, [headerEqCorrect, ksEqual, conceptAnswer]);
+
+  const revealFourthRow = conceptCorrect && ksEqual === true;
+  const [row4Answer, setRow4Answer] = useState(null);
+
+  useEffect(() => () => {
+    Object.values(revealTimers.current).forEach(t => clearTimeout(t));
+    revealTimers.current = {};
+  }, []);
+
+  const resetAll = (nextDiff = difficulty) => {
+    const next = genPTable(nextDiff);
+    setProblem(next);
+    setXPlaced(false); setYPlaced(false); setKPlaced(false);
+    setNumIsY(false); setDenIsX(false);
+    setFractions({}); setKValues({}); setReveal({});
+    setConceptAnswer(null); setRow4Answer(null);
+    Object.values(revealTimers.current).forEach(t => clearTimeout(t));
+    revealTimers.current = {};
+    _pickStore.clear();
+  };
+
+  const HeaderDrop = ({ placed, label, expectName, onPlaced }) => (
+    <Slot
+      accept={ACCEPT_HEADER}
+      onDrop={(d) => {
+        const got = (nameOf(d) ?? "").toString().trim().toLowerCase();
+        const want = (expectName ?? "").toString().trim().toLowerCase();
+        if (got === want) onPlaced(true);
+      }}
+      className={`ptable-thslot ${placed ? "placed" : "empty"}`}
+      aria-label={placed ? label : `place ${expectName}`}
+    >
+      {placed ? label : <span className="visually-hidden">target</span>}
+    </Slot>
+  );
+
+  const HeaderEqArea = () => {
+    if (!kPlaced) return null;
+    return (
+      <div className="ptable-header-eq">
+        <div className="ptable-eq-row nowrap">
+          <div className="badge">k</div>
+          <span className="calc-inline">=</span>
+          <div className="fraction mini-frac" aria-label="k equals y over x">
+            <Slot
+              accept={ACCEPT_HEADER}
+              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "y") setNumIsY(true); }}
+              className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
+            >
+              {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
+            </Slot>
+            <div className="frac-bar narrow" />
+            <Slot
+              accept={ACCEPT_HEADER}
+              onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "x") setDenIsX(true); }}
+              className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
+            >
+              {denIsX ? <span className="chip chip-tiny">x</span> : <span className="muted">—</span>}
+            </Slot>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const KRevealOverlay = () => {
+    if (kPlaced) return null;
+    return (
+      <div className="ptable-k-overlay" aria-hidden="true">
+        <Slot
+          accept={ACCEPT_HEADER}
+          onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "k") setKPlaced(true); }}
+          className="ptable-k-target"
+        />
+      </div>
+    );
+  };
+
+  const Table = useMemo(() => {
+    const invis = !kPlaced ? "col3-invisible" : "";
+    return (
+      <div className="ptable-wrap">
+        <div className={`ptable-rel ptable-table ${invis}`}>
+          <KRevealOverlay />
+          <table className="ptable" style={{ tableLayout:"fixed" }}>
+            <colgroup>
+              <col style={{ width:"25%" }}/>
+              <col style={{ width:"25%" }}/>
+              <col style={{ width:"50%" }}/>
+            </colgroup>
+            <thead>
+              <tr>
+                <th><HeaderDrop placed={xPlaced} label="x" expectName="x" onPlaced={setXPlaced} /></th>
+                <th><HeaderDrop placed={yPlaced} label="y" expectName="y" onPlaced={setYPlaced} /></th>
+                <th>
+                  {kPlaced ? (
+                    <>
+                      <div className="hhead-text">k</div>
+                      <HeaderEqArea />
+                    </>
+                  ) : (
+                    <div className="hhead-text">k</div>
+                  )}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {[0,1,2].map(i => (
+                <tr key={i}>
+                  <td>
+                    <Slot
+                      accept={ACCEPT_VALUE}
+                      onDrop={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), num: d?.value } }))}
+                      className="slot ptable-fracslot"
+                    >
+                      {fractions[i]?.num ?? <span className="muted">—</span>}
+                    </Slot>
+                  </td>
+                  <td>
+                    <Slot
+                      accept={ACCEPT_VALUE}
+                      onDrop={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), den: d?.value } }))}
+                      className="slot ptable-fracslot"
+                    >
+                      {fractions[i]?.den ?? <span className="muted">—</span>}
+                    </Slot>
+                  </td>
+                  <td>
+                    {reveal[i] && Number.isFinite(kValues[i]) ? (
+                      <div className="calc-inline">= <b>{formatNumber(kValues[i])}</b></div>
+                    ) : (
+                      <span className="muted">…</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={2}>
+                  {revealFourthRow ? (
+                    <div className="calc-inline">Use k to find the missing value.</div>
+                  ) : <span className="muted">—</span>}
+                </td>
+                <td>
+                  {revealFourthRow ? (
+                    <div className="row" style={{ justifyContent:"center" }}>
+                      {["× k","÷ k"].map((label,idx)=>{
+                        const val = idx===0 ? "mul" : "div";
+                        return (
+                          <button key={val} className={`button ${row4Answer===val?"active":""}`} onClick={()=> setRow4Answer(val)}>
+                            {label.replace("k","k")}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : <span className="muted">—</span>}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }, [problem, xPlaced, yPlaced, kPlaced, fractions, kValues, reveal, revealFourthRow, row4Answer]);
+
+  const ChipsLeft = () => {
+    const vals = problem?.values || [];
+    const symbols = ["x","y","k"].map((s) => ({ type:"header", label:s }));
+    const valueChips = vals.map(v => ({ type:"value", value:v }));
+    const all = [...symbols, ...valueChips];
+    return (
+      <div className="row" style={{ justifyContent:"center", flexWrap:"wrap", gap:12 }}>
+        {all.map((c, idx) => (
+          <Draggable key={idx} data={c} className="chip">
+            {"label" in c ? c.label : c.value}
+          </Draggable>
+        ))}
+      </div>
+    );
+  };
+
+  const Concept = () => {
+    const disabled = !(headerEqCorrect && [0,1,2].every(i => Number.isFinite(kValues[i])));
+    return (
+      <div className="section">
+        <div className="step-title">Is the table proportional?</div>
+        <div className="row" style={{ justifyContent:"center", gap:12, flexWrap:"wrap", maxWidth:520, margin:"0 auto" }}>
+          {randomizedConcept.map((opt) => (
+            <button
+              key={opt.key}
+              className={`button ${conceptAnswer===opt.key?"active":""}`}
+              onClick={() => setConceptAnswer(opt.key)}
+              disabled={disabled}
+              style={{ width: 240 }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {conceptCorrect && <div className="lang-badge" style={{ marginTop:10 }}>Great — k is constant.</div>}
+      </div>
+    );
+  };
+
+  const Controls = () => (
+    <div className="row" style={{ justifyContent:"center", gap:12 }}>
+      <div className="press">
+        <BigButton onClick={() => resetAll(difficulty)} label="New Problem" />
+      </div>
+      <select
+        aria-label="difficulty"
+        value={difficulty}
+        onChange={(e)=> resetAll(e.target.value)}
+        className="button"
+      >
+        <option value="easy">easy</option>
+        <option value="medium">medium</option>
+        <option value="hard">hard</option>
+      </select>
+    </div>
+  );
+
+  return (
+    <div className="ptables">
+      <div className="container">
+        <Controls />
+        <div className="panes">
+          <div className="card">
+            <div className="step-title">Chips</div>
+            <ChipsLeft />
+          </div>
+          <div className="card">
+            {Table}
+            <Concept />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* === APPEND ONLY (PTABLES SCOPE) === */
+.visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;border:0;padding:0;white-space:nowrap;clip-path:inset(50%);clip:rect(0 0 0 0);overflow:hidden}
+
+.ptables .chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.06);font-weight:800;color:var(--ink)}
+.ptables .chip-tiny{padding:4px 8px;font-size:12px}
+
+.ptables .ptable-wrap{border:1px solid var(--border-2);border-radius:12px;overflow:hidden;background:#fff}
+.ptables .ptable{width:100%;border-collapse:collapse;table-layout:fixed}
+.ptables .ptable thead th{background:#e5e7eb;border-bottom:2px solid #cbd5e1;padding:10px;text-align:center;font-weight:800;font-size:15px}
+.ptables .ptable tbody td{border-top:1px solid #cbd5e1;padding:10px;text-align:center;height:60px;overflow:visible}
+.ptables .ptable th,.ptables .ptable td{border-right:1px solid #cbd5e1}
+.ptables .ptable tr>*:last-child{border-right:none}
+
+.ptables .ptable-thslot{display:flex;align-items:center;justify-content:center;height:44px;border:1px dashed var(--border);border-radius:10px;background:#f8fafc;font-weight:700}
+.ptables .ptable-thslot.placed{background:#e8f1ff;border-color:#cbd5e1}
+.ptables .ptable-thslot.empty{color:#94a3b8;font-style:italic}
+
+.ptables .ptable-header-eq{margin-top:8px}
+.ptables .ptable-eq-row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:nowrap}
+.ptables .calc-inline{white-space:nowrap}
+
+.ptables .fraction{display:grid;grid-template-rows:auto auto auto;align-items:center;justify-items:center;min-width:120px}
+.ptables .frac-bar{width:100%;height:2px;background:#0f172a33}
+.ptables .frac-bar.narrow{width:80px}
+.ptables .ptable-fracslot{min-width:64px;min-height:40px;border:2px solid var(--border);background:#fff;border-radius:8px}
+.ptables .ptable-fracslot.tiny{min-width:42px;min-height:30px;padding:4px 6px}
+.ptables .slot.glow{box-shadow:0 0 0 3px rgba(37,99,235,.25) inset;border-color:#93c5fd}
+
+.ptables .col3-invisible .ptable thead th:nth-child(3),
+.ptables .col3-invisible .ptable tbody td:nth-child(3){visibility:hidden;background:transparent;border-color:transparent}
+
+.ptables .ptable-rel{position:relative}
+.ptables .ptable-k-overlay{position:absolute;top:0;left:66.6667%;right:0;height:88px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.ptables .ptable-k-target{pointer-events:auto;width:95%;height:64px;border:0;border-radius:12px;background:transparent}
+.ptables .ptable-k-target *{display:none!important}
+
+.ptables .section{margin-top:16px}
+.ptables .step-title{font-weight:700;margin-bottom:8px}
+.ptables .lang-badge{margin-top:8px;display:inline-block;font-size:12px;color:var(--ink-2);background:var(--bg-subtle);border:1px solid var(--border-2);border-radius:10px;padding:4px 8px}
+
+.ptables .button.sm{padding:6px 10px;font-size:12px}
