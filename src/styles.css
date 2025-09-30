@@ -509,52 +509,7 @@ body{
 /* Tap-to-place: show focus when a chip is tapped (optional) */
 .chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
 
-/* ===================== PTABLE v5 Scoped UI ===================== */
-.ptable-module .ptable-card{ border-radius:16px; padding:16px; margin-top:12px; }
+/* PTABLE v6 minimal helpers — preserve existing style */
+.concept-grid-2x2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ptable .eq{ margin: 0 6px; }
 
-/* Header grid */
-.ptable-module .ptable-grid.header{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
-.ptable-module .ptable-thslot{ min-height:52px; display:flex; align-items:center; justify-content:center; border:2px dashed var(--border); border-radius:12px; background: var(--bg-subtle); }
-.ptable-module .ptable-thslot.placed{ border-style:solid; background:#fff; }
-
-/* Blink helper */
-@keyframes ptableBlink { 0%{opacity:1} 50%{opacity:.35} 100%{opacity:1} }
-.ptable-module .blink{ animation: ptableBlink 1s infinite; }
-
-/* Header equation */
-.ptable-module .ptable-header-eq{ margin-top:10px; }
-.ptable-module .ptable-eq-row{ display:flex; align-items:center; gap:12px; }
-.ptable-module .ptable-eq-row .badge{ background:#0b4b8c; color:#fff; padding:2px 10px; border-radius:10px; font-weight:800; text-transform:lowercase; }
-.ptable-module .eq{ display:inline-block; min-width:16px; text-align:center; }
-
-/* Fractions */
-.ptable-module .fraction{ display:inline-grid; grid-template-rows: auto 3px auto; align-items:center; }
-.ptable-module .fraction .frac-bar{ height:3px; background: var(--ink-2); width: 62px; border-radius:2px; justify-self:center; }
-.ptable-module .fraction.mini-frac .frac-bar{ width: 52px; }
-.ptable-module .frac-bar.narrow{ width: 46px; }
-.ptable-module .ptable-fracslot{ min-width: 48px; min-height: 32px; display:flex; align-items:center; justify-content:center; }
-.ptable-module .ptable-fracslot.tiny{ min-width:38px; min-height:28px; }
-.ptable-module .chip-tiny{ font-size:1rem; font-weight:700; }
-
-/* Rows */
-.ptable-module .ptable-rows{ margin-top:14px; display:grid; gap:10px; }
-.ptable-module .ptable-row{ display:flex; align-items:center; gap:14px; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; }
-.ptable-module .ptable-row-label{ width:70px; text-align:right; font-weight:600; color: var(--ink-2); text-transform: lowercase; }
-
-/* Concept 2x2 grid */
-.ptable-module .ptable-grid-2x2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px; }
-.ptable-module .choice{ padding:12px; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); text-align:center; }
-.ptable-module .choice.selected{ outline:3px solid var(--cms-light); }
-
-/* Solve strip */
-.ptable-module .ptable-solve{ margin-top:16px; }
-.ptable-module .solve-strip{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.ptable-module .kpill{ background: var(--cms-light); border:1px solid transparent; border-radius:999px; padding:6px 12px; font-weight:700; }
-
-/* Tap panel */
-.ptable-module .tap-panel{ position:fixed; left:50%; transform: translateX(-50%); bottom:18px; padding:10px 12px; border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,.18); z-index: 30; }
-.ptable-module .tap-panel .choices-row{ display:flex; gap:8px; flex-wrap:wrap; }
-
-/* High-contrast chips/buttons only inside module */
-.ptable-module .chip{ border:1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,.08); background:#fff; }
-.ptable-module .chip-lg{ font-weight:700; padding:10px 14px; border-radius:999px; }
