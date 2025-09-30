@@ -5,6 +5,24 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+// Make ~33% of problems non-proportional by perturbing one row (safe, small change)
+const makeMaybeNonProp = (p) => {
+  try {
+    const rows = (p?.rows || []).map(r => ({...r}));
+    if (rows.length >= 3) {
+      const k0 = rows[0].x !== 0 ? rows[0].y / rows[0].x : null;
+      const allEqual = k0 != null && rows.slice(1,3).every(r => r.x !== 0 && Math.abs(r.y/r.x - k0) < 1e-9);
+      if (allEqual && Math.random() < 0.33) {
+        const i = 1 + Math.floor(Math.random()*2); // pick row 1 or 2
+        rows[i].y = rows[i].y + (rows[i].y > 1 ? 1 : 2); // tiny nudge to break equality
+        return { ...p, rows, nonPropInjected: true };
+      }
+    }
+  } catch {}
+  return p;
+};
+
+
 // Number formatting per spec: whole -> int; denominator < 10 -> mixed number; else 1 decimal
 function _gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a||1; }
 function _toMixed(n){
@@ -112,17 +130,7 @@ export default function ProportionalTablesModule() {
   // difficulty & problem
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => makeMaybeNonProp(genPTable(difficulty)));
-  // Make ~33% of problems non-proportional by perturbing one row (safe, small change)
-  const makeMaybeNonProp = (p) => {
-    try {
-      const rows = (p?.rows || []).map(r => ({...r}));
-      if (rows.length >= 3) {
-        const k0 = rows[0].x !== 0 ? rows[0].y / rows[0].x : null;
-        const allEqual = k0 != null && rows.slice(1,3).every(r => r.x !== 0 && Math.abs(r.y/r.x - k0) < 1e-9);
-        if (allEqual && Math.random() < 0.33) {
-          const i = 1 + Math.floor(Math.random()*2); // pick row 1 or 2
-          rows[i].y = rows[i].y + (rows[i].y > 1 ? 1 : 2); // tiny nudge to break equality
-          return { ...p, rows, nonPropInjected: true };
+  
         }
       }
     } catch {}
