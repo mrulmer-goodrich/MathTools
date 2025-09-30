@@ -509,4 +509,52 @@ body{
 /* Tap-to-place: show focus when a chip is tapped (optional) */
 .chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
 
+/* ===================== PTABLE v4 UI additions ===================== */
+.topbar.slim{ height: 48px; padding: 6px 10px; display:flex; align-items:center; gap:10px; }
+.topbar .spacer{ flex:1; }
+.ptable-module .card{ border-radius:16px; padding:16px; }
+.ptable-card{ margin-top:12px; }
 
+/* High-contrast chips & buttons */
+.chip{ border:1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,.08); background:#fff; }
+.chip-lg{ font-weight:700; padding:10px 14px; border-radius:999px; }
+.chip-tiny{ font-size:.95rem; font-weight:700; }
+
+/* Blink helper */
+@keyframes blinkFade { 0%{opacity:1} 50%{opacity:.3} 100%{opacity:1} }
+.blink{ animation: blinkFade 1s infinite; }
+
+/* Grid */
+.ptable-grid.header{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+.ptable-thslot{ min-height:56px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border); border-radius:12px; background: var(--bg-subtle); }
+.ptable-thslot.placed{ border-style:solid; background:#fff; }
+.ptable-header-eq{ margin-top:10px; }
+.ptable-eq-row{ display:flex; align-items:center; gap:10px; }
+.ptable-eq-row .badge{ background:#0b4b8c; color:#fff; padding:2px 8px; border-radius:10px; font-weight:800; text-transform:lowercase; }
+
+/* Fractions */
+.fraction{ display:inline-grid; grid-template-rows: auto 2px auto; grid-auto-flow:row; align-items:center; }
+.fraction .frac-bar{ height:2px; background: var(--ink-2); width: 56px; border-radius:2px; justify-self:center; }
+.fraction.mini-frac .frac-bar{ width: 48px; }
+.frac-bar.narrow{ width: 40px; }
+.ptable-fracslot{ min-width: 44px; min-height: 30px; display:flex; align-items:center; justify-content:center; }
+.ptable-fracslot.tiny{ min-width:36px; min-height:26px; }
+
+/* Rows */
+.ptable-rows{ margin-top:14px; display:grid; gap:10px; }
+.ptable-row{ display:flex; align-items:center; gap:12px; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; }
+.ptable-row .muted.small{ width:64px; text-align:right; }
+
+/* Concept 2x2 */
+.grid-2x2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px; }
+.choice{ padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); text-align:center; }
+.choice.selected{ outline:3px solid var(--cms-light); }
+
+/* Solve strip */
+.ptable-solve{ margin-top:16px; }
+.solve-strip{ display:flex; align-items:center; gap:10px; }
+.kpill{ background: var(--cms-light); border:1px solid transparent; border-radius:999px; padding:6px 10px; }
+
+/* Tap panel */
+.tap-panel{ position:fixed; left:50%; transform: translateX(-50%); bottom:18px; padding:10px 12px; border-radius:14px; box-shadow:0 12px 28px rgba(0,0,0,.18); }
+.tap-panel .choices-row{ display:flex; gap:8px; flex-wrap:wrap; }
