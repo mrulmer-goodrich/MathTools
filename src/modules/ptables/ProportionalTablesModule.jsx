@@ -13,6 +13,7 @@ const DropSlot      = DropSlotBase;
 
 
 
+
 // --- PTables scoped confetti helper (no-op if not present) ---
 function __ptableBurstConfetti(times=6, interval=220){
   const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
@@ -60,7 +61,7 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
-const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 
 // --- Local compatibility wrappers (only affect this module) ---
