@@ -2,9 +2,50 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
-import DropSlot from "../../components/DropSlot.jsx";
+import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+
+
+// --- PTables scoped confetti helper (no-op if not present) ---
+function __ptableBurstConfetti(times=6, interval=220){
+  const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
+  if(!c) return;
+  let i=0; const t=setInterval(()=>{ c({ particleCount: 200, spread: 80, startVelocity: 55, origin:{y:0.3} }); if(++i>=times) clearInterval(t); }, interval);
+}
+// --- end helper ---
+// ---- tap-to-place helpers (surgical; keeps drag working) ----
+const __tapPickStore = { v:null, set(x){this.v=x||null;}, peek(){return this.v;}, clear(){this.v=null;} };
+
+function __wrapDraggable(DraggableChip){
+  return function __TapDraggable(props){
+    const { data, onClick, ...rest } = props;
+    const handleClick = (e)=>{ __tapPickStore.set(data); if(onClick) onClick(e); };
+    return <__TapDraggable {...rest} data={data} onClick={handleClick}>{props.children}</DraggableChip>;
+  };
+}
+
+function __wrapDropSlot(DropSlot){
+  return function __TapSlot(props){
+    const { test, accept, onDropContent, onClick, ...rest } = props;
+    const testFn = test || (d => {
+      const t = (d && (d.type||d.kind||"")).toString();
+      return Array.isArray(accept) && accept.length ? accept.includes(t) : true;
+    });
+    const handleClick = (e)=>{
+      const picked = __tapPickStore.peek();
+      if (picked && testFn(picked)) { try{ onDropContent && onDropContent(picked); }catch(e){} __tapPickStore.clear(); }
+      if (onClick) onClick(e);
+    };
+    return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
+      <__TapSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
+    </div>;
+  };
+}
+
+const __TapDraggable = __wrapDraggable(DraggableChip);
+const __TapSlot = __wrapDropSlot(DropSlot);
+// ---- end tap-to-place helpers ----
 // persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
@@ -48,7 +89,6 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
 
 // Wrap DropSlot so this module can pass accept/validator and add tap-to-place drop.
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
-
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
@@ -68,14 +108,13 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
     onClick?.(e);
   };
 
-    return (
-    <div onClick={handleClick} style={{ display: "inline-block" }}>
-      <DropSlot
-        test={testFn}
-        onDropContent={onDropContentFn}
-        {...rest}
-      />
-    </div>
+  return (
+    <__TapSlotBase
+      test={testFn}
+      onDropContent={onDropContentFn}
+      onClick={handleClick}
+      {...rest}
+    />
   );
 };
 
@@ -97,7 +136,7 @@ export default function ProportionalTablesModule() {
   // header fraction (k = y / x)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
-  const headerEqCorrect = kPlaced && numIsY && denIsX;
+  const headerEqCorrect = kPlaced && numIsY;
 
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
@@ -141,7 +180,7 @@ export default function ProportionalTablesModule() {
   }, [allRowsComputed, ksEqual, conceptAnswer]);
 
   // fourth row reveal only if proportional & concept is correct
-  const revealFourthRow = conceptCorrect && ksEqual === true;
+  const revealFourthRow = (ksEqual === true && conceptCorrect);
   const [row4Answer, setRow4Answer] = useState(null);
 
   // persist difficulty
@@ -194,7 +233,6 @@ export default function ProportionalTablesModule() {
     });
   }, [fractions, kValues, reveal]);
 
-  // manual calc (still available for "Calculate All")
   const calcRow = (i) => {
     const f = fractions[i];
     if (!f || f.den == null || f.num == null || f.den === 0) return;
@@ -266,7 +304,7 @@ export default function ProportionalTablesModule() {
               }}
               className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
             >
-              {numIsY ? <span className="chip chip-tiny">Y</span> : <span className="muted">—</span>}
+              {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
             {/* Denominator: X */}
@@ -278,12 +316,12 @@ export default function ProportionalTablesModule() {
               }}
               className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
             >
-              {denIsX ? <span className="chip chip-tiny">X</span> : <span className="muted">—</span>}
+              {denIsX ? <span className="chip chip-tiny">x</span> : <span className="muted">—</span>}
             </Slot>
           </div>
         </div>
 
-        {numIsY && denIsX && (
+        {numIsY && (
           <div className="muted small" style={{ marginTop: 6 }}>
             Now drag each row’s <b>y</b> and <b>x</b> into the spots. The result will appear after a moment.
           </div>
@@ -342,8 +380,8 @@ export default function ProportionalTablesModule() {
             </colgroup>
             <thead>
               <tr>
-                <th><HeaderDrop placed={xPlaced} label="x" expectName="x" onPlaced={setXPlaced} /></th>
-                <th><HeaderDrop placed={yPlaced} label="y" expectName="y" onPlaced={setYPlaced} /></th>
+                <th><HeaderDrop placed={xPlaced} label="X" expectName="X" onPlaced={setXPlaced} /></th>
+                <th><HeaderDrop placed={yPlaced} label="Y" expectName="Y" onPlaced={setYPlaced} /></th>
                 <th>{kPlaced ? <HeaderEqArea /> : <div style={{ height: 44 }} />}</th>
               </tr>
             </thead>
@@ -508,10 +546,11 @@ export default function ProportionalTablesModule() {
       {currentStep === "label" && (
         <div className="section">
           <div className="step-title">Where do these values belong in the table?</div>
-<div className="chips with-borders" style={{ marginTop: 10 }}>
-            <Draggable id="chip-x" label="x" payload={{ type: "chip", name: "x" }} className="chip large" />
-            <Draggable id="chip-y" label="y" payload={{ type: "chip", name: "y" }} className="chip large" />
-            <Draggable id="chip-k" label="k" payload={{ type: "chip", name: "k" }} className="chip large" />
+          <div className="muted bigger">Drag and drop to the header of the table.</div>
+          <div className="chips with-borders" style={{ marginTop: 10 }}>
+            <Draggable id="chip-x" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
+            <Draggable id="chip-y" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
+            <Draggable id="chip-k" label="K" payload={{ type: "chip", name: "K" }} className="chip large" />
           </div>
         </div>
       )}
@@ -519,10 +558,10 @@ export default function ProportionalTablesModule() {
       {currentStep === "build" && (
         <div className="section">
           <div className="step-title">What’s the equation for k?</div>
-          <div className="muted bigger">Drag <b>Y</b> and <b>X</b> into the fraction.</div>
+          <div className="muted bigger">Drag <b>y</b> and <b>x</b> into the fraction.</div>
           <div className="chips with-borders" style={{ marginTop: 10 }}>
-            <Draggable id="chip-y2" label="y" payload={{ type: "chip", name: "y" }} className="chip large" />
-            <Draggable id="chip-x2" label="x" payload={{ type: "chip", name: "x" }} className="chip large" />
+            <Draggable id="chip-y2" label="Y" payload={{ type: "chip", name: "Y" }} className="chip large" />
+            <Draggable id="chip-x2" label="X" payload={{ type: "chip", name: "X" }} className="chip large" />
           </div>
         </div>
       )}
@@ -533,7 +572,9 @@ export default function ProportionalTablesModule() {
           <div className="muted bigger">
             For each row, make <b>Y/X = yᵢ/xᵢ</b>. The result will appear after a moment.
           </div>
-</div>
+          <div className="center mt-8">
+          </div>
+        </div>
       )}
 
       {currentStep === "concept" && (
