@@ -37,7 +37,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
+      <Slot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</Slot>
     </div>;
   };
 }
@@ -108,7 +108,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
   };
 
   return (
-    <DropSlot
+    <Slot
       test={testFn}
       onDropContent={onDropContentFn}
       onClick={handleClick}
