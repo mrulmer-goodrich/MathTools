@@ -6,9 +6,6 @@ import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
 // Aliases: use project naming but render base components
-const DraggableChip = DraggableBase;
-const DropSlot      = DropSlotBase;
-
 // --- PTables scoped confetti helper (no-op if not present) ---
 function __ptableBurstConfetti(times=6, interval=220){
   const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
@@ -16,41 +13,38 @@ function __ptableBurstConfetti(times=6, interval=220){
   let i=0; const t=setInterval(()=>{ c({ particleCount: 200, spread: 80, startVelocity: 55, origin:{y:0.3} }); if(++i>=times) clearInterval(t); }, interval);
 }
 // --- end helper ---
+// ---- tap-to-place helpers (surgical; keeps drag working) ----
+const __tapPickStore = { v:null, set(x){this.v=x||null;}, peek(){return this.v;}, clear(){this.v=null;} };
 
-// ---- LOCAL tap-to-place wrappers (kept; redundant older wrappers removed) ----
-const _pickStore = {
-  data: null,
-  set(d) { this.data = d || null; },
-  peek() { return this.data; },
-  clear() { this.data = null; }
-};
-
-const Draggable = ({ payload, data, onClick, ...rest }) => {
-  const merged = data ?? payload ?? undefined;
-  const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
-};
-
-const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
-  const testFn = test ?? ((d) => {
-    const t = (d?.type ?? d?.kind ?? "").toString();
-    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
-    const valOk = typeof validator === "function" ? !!validator(d) : true;
-    return listOk && valOk;
-  });
-  const onDropContentFn = onDropContent ?? onDrop;
-  const handleClick = (e) => {
-    const picked = _pickStore.peek();
-    if (picked && testFn(picked)) {
-      try { onDropContentFn?.(picked); } catch {}
-      _pickStore.clear();
-    }
-    onClick?.(e);
+function __wrapDraggable(DraggableChip){
+  return function __TapDraggable(props){
+    const { data, onClick, ...rest } = props;
+    const handleClick = (e)=>{ __tapPickStore.set(data); if(onClick) onClick(e); };
+    return <DraggableBase {...rest} data={data} onClick={handleClick}>{props.children}</DraggableBase>;
   };
-  return <DropSlotBase test={testFn} onDropContent={onDropContentFn} onClick={handleClick} {...rest} />;
-};
-// ---- end tap-to-place wrappers ----
+}
 
+function __wrapDropSlot(DropSlot){
+  return function __TapSlot(props){
+    const { test, accept, onDropContent, onClick, ...rest } = props;
+    const testFn = test || (d => {
+      const t = (d && (d.type||d.kind||"")).toString();
+      return Array.isArray(accept) && accept.length ? accept.includes(t) : true;
+    });
+    const handleClick = (e)=>{
+      const picked = __tapPickStore.peek();
+      if (picked && testFn(picked)) { try{ onDropContent && onDropContent(picked); }catch(e){} __tapPickStore.clear(); }
+      if (onClick) onClick(e);
+    };
+    return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
+      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
+    </div>;
+  };
+}
+
+const __TapDraggable = __wrapDraggable(DraggableChip);
+const __TapSlot = __wrapDropSlot(DropSlot);
+// ---- end tap-to-place helpers ----
 // persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
@@ -59,8 +53,70 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
-// Fisher–Yates with safe swap
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+
+// --- Local compatibility wrappers (only affect this module) ---
+// Tiny in-module store to support tap-to-place without touching shared components
+const _pickStore = {
+  data: null,
+  set(d) { this.data = d || null; },
+  peek() { return this.data; },
+  clear() { this.data = null; }
+};
+
+// Wrap Draggable so this module can pass `payload` (legacy) or `data` (current)
+// and also support tap-to-place (click/touch) pickup.
+const Draggable = ({ payload, data, onClick, ...rest }) => {
+  const merged = data ?? payload ?? undefined;
+
+  const handleClick = (e) => {
+    _pickStore.set(merged);           // tap = pick up
+    onClick?.(e);
+  };
+
+  return (
+    <DraggableBase
+      data={merged}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      {...rest}
+    />
+  );
+};
+
+// Wrap DropSlot so this module can pass accept/validator and add tap-to-place drop.
+const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest }) => {
+  const testFn = test ?? ((d) => {
+    const t = (d?.type ?? d?.kind ?? "").toString();
+    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
+    const valOk = typeof validator === "function" ? !!validator(d) : true;
+    return listOk && valOk;
+  });
+
+  const onDropContentFn = onDropContent ?? onDrop;
+
+  // Tap on slot = try to place the currently picked chip
+  const handleClick = (e) => {
+    const picked = _pickStore.peek();
+    if (picked && testFn(picked)) {
+      try { onDropContentFn?.(picked); } catch {}
+      _pickStore.clear();
+    }
+    onClick?.(e);
+  };
+
+  return (
+    <DropSlot
+      test={testFn}
+      onDropContent={onDropContentFn}
+      onClick={handleClick}
+      {...rest}
+    />
+  );
+};
+
 
 // accept types
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
@@ -229,7 +285,7 @@ export default function ProportionalTablesModule() {
     </Slot>
   );
 
-  // header equation (under K header)
+  // header equation (under K header) — compact, single line; shows chips immediately
   const HeaderEqArea = () => {
     if (!kPlaced) return null;
     return (
@@ -263,6 +319,12 @@ export default function ProportionalTablesModule() {
             </Slot>
           </div>
         </div>
+
+        {numIsY && (
+          <div className="muted small" style={{ marginTop: 6 }}>
+            Now drag each row’s <b>y</b> and <b>x</b> into the spots. The result will appear after a moment.
+          </div>
+        )}
       </div>
     );
   };
@@ -282,6 +344,24 @@ export default function ProportionalTablesModule() {
         />
       </div>
     );
+  };
+
+  const burstConfetti = () => {
+    const host = document.createElement("div");
+    host.className = "sf-confetti";
+    document.body.appendChild(host);
+    const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
+    for (let i = 0; i < 80; i++) {
+      const p = document.createElement("div");
+      p.className = "sf-confetti-piece";
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.width = "6px";
+      p.style.height = "10px";
+      p.style.background = colors[(Math.random() * colors.length) | 0];
+      p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
+      host.appendChild(p);
+    }
+    setTimeout(() => host.remove(), 2500);
   };
 
   // table
@@ -414,10 +494,10 @@ export default function ProportionalTablesModule() {
   const kDisplay = fmt(kValues[0]);
   const solveOptions = useMemo(() => {
     const options = [
-      { key: "dot", label: "y = k • x", correct: true },
+      { key: "dot", label: "y = k • x", correct: true },  // correct (multiplication dot)
       { key: "div", label: "y = k ÷ x", correct: false },
       { key: "add", label: "y = k + x", correct: false },
-      { key: "emd", label: "y = k – x", correct: false },
+      { key: "emd", label: "y = k – x", correct: false }, // EN DASH
     ];
     return shuffle(options);
   }, [kDisplay]);
@@ -520,19 +600,19 @@ export default function ProportionalTablesModule() {
         <div className="section">
           <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
           <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-            {["y = k • x","y = k ÷ x","y = k + x","y = k – x"].map((label) => (
+            {solveOptions.map(({ key, label, correct }) => (
               <button
-                key={label}
+                key={key}
                 className="button"
                 onClick={() => {
-                  if (label === "y = k • x") {
+                  if (correct) {
                     solveRow4();
                     const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
                     if (el) {
                       el.classList.add("flash");
                       setTimeout(() => el.classList.remove("flash"), 1500);
                     }
-                    // simple confetti
+                    // confetti
                     const host = document.createElement("div");
                     host.className = "sf-confetti";
                     document.body.appendChild(host);
