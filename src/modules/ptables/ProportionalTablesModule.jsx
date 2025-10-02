@@ -68,14 +68,16 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
   };
 
   return (
-    <DropSlotBase
+    <div className="tap-slot-wrap" onClick={handleClick}>
+      <DropSlotBase
       test={testFn}
       onDropContent={onDropContentFn}
       onClick={handleClick}
       {...rest}
-    />
+     />
+    </div>
   );
-};
+}
 
 
 // accept types
@@ -92,7 +94,7 @@ export default function ProportionalTablesModule() {
   const [yPlaced, setYPlaced] = useState(false);
   const [kPlaced, setKPlaced] = useState(false);
 
-  // header fraction (k = y / x)
+  // header fraction (k = Y/X)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
@@ -192,6 +194,7 @@ export default function ProportionalTablesModule() {
     });
   }, [fractions, kValues, reveal]);
 
+  // manual calc (still available for "Calculate All")
   const calcRow = (i) => {
     const f = fractions[i];
     if (!f || f.den == null || f.num == null || f.den === 0) return;
@@ -241,7 +244,7 @@ export default function ProportionalTablesModule() {
       }}
       className={`ptable-thslot ${placed ? "placed" : "empty"}`}
     >
-      {placed ? label : "Drop here"}
+      {placed ? label : <span className="visually-hidden">slot</span>}
     </Slot>
   );
 
@@ -253,7 +256,7 @@ export default function ProportionalTablesModule() {
         <div className="ptable-eq-row nowrap">
           <div className="badge">k</div>
           <span>=</span>
-          <div className="fraction mini-frac" aria-label="k equals Y over X">
+          <div className="fraction mini-frac" aria-label="k equals y over x">
             {/* Numerator: Y */}
             <Slot
               accept={ACCEPT_HEADER}
@@ -263,7 +266,7 @@ export default function ProportionalTablesModule() {
               }}
               className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
             >
-              {numIsY ? <span className="chip chip-tiny">Y</span> : <span className="muted">—</span>}
+              {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
             {/* Denominator: X */}
@@ -275,7 +278,7 @@ export default function ProportionalTablesModule() {
               }}
               className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
             >
-              {denIsX ? <span className="chip chip-tiny">X</span> : <span className="muted">—</span>}
+              {denIsX ? <span className="chip chip-tiny">x</span> : <span className="muted">—</span>}
             </Slot>
           </div>
         </div>
@@ -532,6 +535,7 @@ export default function ProportionalTablesModule() {
             For each row, make <b>Y/X = yᵢ/xᵢ</b>. The result will appear after a moment.
           </div>
           <div className="center mt-8">
+            <button className="button" onClick={calcAll}>Calculate All</button>
           </div>
         </div>
       )}
