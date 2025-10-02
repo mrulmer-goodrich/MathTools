@@ -80,7 +80,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-  <DropSlotBase {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlotBase>
+      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlotBase>
     </div>;
   };
 }
