@@ -534,3 +534,21 @@ body{
 .ptable-module .chip, .ptables .chip, .ptable .chip { text-transform: none; }
 .ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:12px;justify-content:center;max-width:480px;margin:0 auto}
 .ptables .ptable-concept-choices .button{width:100%}
+
+/* styles.append.ptables.v7.9.css */
+/* Append to bottom of your styles.css */
+/* Scoped to .ptable-module */
+
+.ptable-module table, 
+.ptable-module th, 
+.ptable-module td {
+  border: 2px solid #444; /* thicker/darker borders */
+}
+
+.ptable-module .confetti-fullpage {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
