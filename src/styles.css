@@ -509,41 +509,18 @@ body{
 /* Tap-to-place: show focus when a chip is tapped (optional) */
 .chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
 
+/* ==== APPEND to styles.css (PTables scoped additions) — v7.6 ==== */
+.ptables-layout .visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;border:0;padding:0;white-space:nowrap;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden}
 
-/* ==== APPEND to styles.css (PTables scope) — v7.5 ==== */
-.ptables .visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;border:0;padding:0;white-space:nowrap;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden}
+/* Concept answers: always display as 2×2 grid */
+.ptables-layout .concept-grid{
+  display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap:10px; justify-content:center; align-items:start; max-width:520px; margin:0 auto;
+}
+.ptables-layout .concept-grid .button{ width:100%; }
 
-.ptables .chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.06);font-weight:800;color:var(--ink)}
-.ptables .chip-tiny{padding:4px 8px;font-size:12px}
+/* Header slots look empty (no literal text) when not placed */
+.ptables-layout .ptable-thslot.empty{ color: #94a3b8; font-style: italic; }
+.ptables-layout .ptable-thslot.empty > *{ pointer-events:none; }
 
-.ptables .ptable-wrap{border:1px solid var(--border-2);border-radius:12px;overflow:hidden;background:#fff}
-.ptables .ptable{width:100%;border-collapse:collapse;table-layout:fixed}
-.ptables .ptable thead th{background:#e5e7eb;border-bottom:2px solid #cbd5e1;padding:10px;text-align:center;font-weight:800;font-size:15px}
-.ptables .ptable tbody td{border-top:1px solid #cbd5e1;padding:10px;text-align:center;height:60px;overflow:visible}
-.ptables .ptable th,.ptables .ptable td{border-right:1px solid #cbd5e1}
-.ptables .ptable tr>*:last-child{border-right:none}
 
-.ptables .ptable-thslot{display:flex;align-items:center;justify-content:center;height:44px;border:1px dashed var(--border);border-radius:10px;background:#f8fafc;font-weight:700}
-.ptables .ptable-thslot.placed{background:#e8f1ff;border-color:#cbd5e1}
-.ptables .ptable-thslot.empty{color:#94a3b8}
-
-.ptables .ptable-header-eq{margin-top:8px}
-.ptables .ptable-eq-row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:nowrap}
-.ptables .calc-inline{white-space:nowrap}
-
-.ptables .fraction{display:grid;grid-template-rows:auto auto auto;align-items:center;justify-items:center;min-width:120px}
-.ptables .frac-bar{width:100%;height:2px;background:#0f172a33}
-.ptables .frac-bar.narrow{width:80px}
-.ptables .ptable-fracslot{min-width:64px;min-height:40px;border:2px solid var(--border);background:#fff;border-radius:8px}
-.ptables .ptable-fracslot.tiny{min-width:42px;min-height:30px;padding:4px 6px}
-
-.ptables .col3-invisible .ptable thead th:nth-child(3),
-.ptables .col3-invisible .ptable tbody td:nth-child(3){visibility:hidden;background:transparent;border-color:transparent}
-
-.ptables .ptable-rel{position:relative}
-.ptables .ptable-k-overlay{position:absolute;top:0;left:66.6667%;right:0;height:88px;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.ptables .ptable-k-target{pointer-events:auto;width:95%;height:64px;border:0;border-radius:12px;background:transparent}
-.ptables .ptable-k-target *{display:none!important}
-
-.ptables .section{margin-top:16px}
-.ptables .step-title{font-weight:700;margin-bottom:8px}
