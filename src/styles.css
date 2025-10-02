@@ -528,3 +528,9 @@ body{
 /* ==== APPEND (PTables) v7.8: concept grid & minor fixes ==== */
 .ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;justify-content:center;max-width:420px;margin:0 auto}
 .ptables .ptable-concept-choices .button{width:100%}
+
+
+/* === ptables v7.8.3 append: ensure lowercase rendering + 2x2 concept grid === */
+.ptable-module .chip, .ptables .chip, .ptable .chip { text-transform: none; }
+.ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:12px;justify-content:center;max-width:480px;margin:0 auto}
+.ptables .ptable-concept-choices .button{width:100%}
