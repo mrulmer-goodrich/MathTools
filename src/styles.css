@@ -552,3 +552,16 @@ body{
   z-index: 9999;
 }
 
+
+/* ==== APPEND (PTables) v7.9: borders + concept grid + last-row parity ==== */
+.ptables .ptable th,
+.ptables .ptable td{
+  border-color:#94a3b8!important;
+  border-width:1.5px!important;
+}
+.ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;justify-content:center;max-width:420px;margin:0 auto}
+.ptables .ptable-concept-choices .button{width:100%}
+.ptables .ptable tbody tr:last-child td{
+  border-top:1.5px solid #94a3b8;
+  padding:10px;
+  height:60px;
