@@ -1,29 +1,30 @@
-/* src/modules/ptables/ProportionalTablesModule.jsx — v7.3
-   - Chip payloads normalized (type,label,value)
-   - Header/row Slot accept/type matching fixed
-   - Visible placeholders removed (no 'target' text)
-   - Tap-first with drag fallback preserved
+/* src/modules/ptables/ProportionalTablesModule.jsx — v7.4
+   Ground rule: restore original 2‑pane feel, keep your global styles.
+   This file is self-contained and *only* touches PTables behavior.
+   - Chips are normalized: { type: "header"|"value", label: string, value?: number }
+   - Headers accept only "header"; row slots accept only "value"
+   - Tap‑first (tap chip → tap slot) with drag fallback preserved
+   - Concept question appears only after header is correct AND all 3 k-values are computed & revealed
 */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
-import DraggableBase from "../../components/DraggableChip.jsx";
-import DropSlotBase from "../../components/DropSlot.jsx";
+import DraggableChip from "../../components/DraggableChip.jsx";
+import DropSlot from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
-// ----------------------------------
-// persistence
+// ------------------------------ persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 
-// helpers
+// ------------------------------ helpers
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 
-// numeric formatting: integer; small denom -> mixed number; else 1 decimal
 function formatNumber(n){
   if (!Number.isFinite(n)) return "";
-  if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
-  const qMax = 9;
-  for (let q=2;q<=qMax;q++){
+  const r = Math.round(n);
+  if (Math.abs(n - r) < 1e-9) return String(r);
+  // try small denom fractions → return mixed if denom <= 9
+  for (let q=2; q<=9; q++){
     const p = Math.round(n*q);
     if (Math.abs(n - p/q) < 1e-6){
       const whole = Math.trunc(p/q);
@@ -37,79 +38,67 @@ function formatNumber(n){
 
 const shuffle = (arr) => { const a=[...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
 
-// ----------------------------------
-// tap-to-place tiny store (module local)
-const _pickStore = {
-  data: null,
-  set(d){ this.data = d || null; },
-  peek(){ return this.data; },
-  clear(){ this.data = null; }
+// ------------------------------ tap‑to‑place store
+const pickStore = { v:null, set(x){this.v=x||null;}, peek(){return this.v;}, clear(){this.v=null;} };
+
+// Wrap Draggable so tapping picks it up (desktop drag still works)
+const Draggable = ({ data, children, onClick, ...rest }) => {
+  const payload = data;
+  const handleClick = (e) => { pickStore.set(payload); onClick?.(e); };
+  return <DraggableChip data={payload} onClick={handleClick} role="button" tabIndex={0} {...rest}>{children}</DraggableChip>;
 };
 
-// Draggable wrapper: always passes normalized data and supports tap pickup
-const Draggable = ({ data, payload, onClick, children, ...rest }) => {
-  const merged = data ?? payload ?? undefined;
-  const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest}>{children}</DraggableBase>;
-};
-
-// DropSlot wrapper: adds tap-to-place
-const Slot = ({ accept, onDropContent, test, validator, onClick, ...rest }) => {
+// Wrap DropSlot so tapping a slot places the picked chip if allowed
+const Slot = ({ accept, onDropContent, validator, test, onClick, ...rest }) => {
   const testFn = test ?? ((d) => {
-    const t = (d?.type ?? d?.kind ?? "").toString();
-    const inList = Array.isArray(accept) && accept.length ? accept.includes(t) : true;
-    const valOk = typeof validator === "function" ? !!validator(d) : true;
-    return inList && valOk;
+    const t = (d?.type ?? "").toString();
+    const okType = Array.isArray(accept) && accept.length ? accept.includes(t) : true;
+    const okRule = typeof validator === "function" ? !!validator(d) : true;
+    return okType && okRule;
   });
   const handleClick = (e) => {
-    const picked = _pickStore.peek();
-    if (picked && testFn(picked)) { try{ onDropContent?.(picked); }catch{} _pickStore.clear(); }
+    const picked = pickStore.peek();
+    if (picked && testFn(picked)) { try{ onDropContent?.(picked); }catch{} pickStore.clear(); }
     onClick?.(e);
   };
-  return <DropSlotBase test={testFn} onDropContent={onDropContent} onClick={handleClick} {...rest} />;
+  return <DropSlot test={testFn} onDropContent={onDropContent} onClick={handleClick} {...rest} />;
 };
 
-// ----------------------------------
-// accept/type constants
+// ------------------------------ chip normalization
 const ACCEPT_HEADER = ["header"];
 const ACCEPT_VALUE  = ["value"];
 
-// normalize chips from generator output
-function makeChips(problem){
-  const symbols = ["x","y","k"].map((s) => ({ type:"header", label:s }));
-  const vals = (problem?.values ?? []).map((v) => ({
-    type: "value",
-    label: String(v),
-    value: Number(v)
-  }));
-  return [...symbols, ...vals];
-}
+const toChips = (problem) => {
+  const sym = ["x","y","k"].map(s => ({ type:"header", label:s }));
+  const vals = (problem?.values || []).map(n => ({ type:"value", label:String(n), value:Number(n) }));
+  return [...sym, ...vals];
+};
 
 export default function ProportionalTablesModule(){
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => genPTable(difficulty));
-  const [chips, setChips]     = useState(() => makeChips(genPTable(difficulty)));
+  const [chips, setChips]     = useState(() => toChips(genPTable(difficulty)));
 
   // header state
   const [xPlaced, setXPlaced] = useState(false);
   const [yPlaced, setYPlaced] = useState(false);
   const [kPlaced, setKPlaced] = useState(false);
 
-  // k = y/x scaffold state
+  // k = y/x scaffold
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-  // row fractions & computed k
-  const [fractions, setFractions] = useState({}); // {row:{num,den}}
-  const [kValues, setKValues]     = useState({}); // {row:number}
-  const [reveal, setReveal]       = useState({}); // {row:boolean}
+  // rows
+  const [fractions, setFractions] = useState({}); // {i:{num,den}}
+  const [kValues, setKValues]     = useState({}); // {i:number}
+  const [reveal, setReveal]       = useState({}); // {i:boolean}
   const timersRef = useRef({});
 
   // persist difficulty
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
-  // compute k per row
+  // compute each row's k
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
@@ -120,15 +109,13 @@ export default function ProportionalTablesModule(){
     });
   }, [fractions]);
 
-  // reveal delay
+  // reveal after short delay
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
       if (f?.num != null && f?.den != null && Number.isFinite(kValues[i]) && !reveal[i]){
         if (timersRef.current[i]) clearTimeout(timersRef.current[i]);
-        timersRef.current[i] = setTimeout(() => {
-          setReveal(prev => ({ ...prev, [i]: true }));
-        }, 1200);
+        timersRef.current[i] = setTimeout(() => setReveal(prev => ({ ...prev, [i]: true })), 900);
       }
     });
   }, [fractions, kValues, reveal]);
@@ -140,6 +127,7 @@ export default function ProportionalTablesModule(){
   }, []);
 
   const allRowsComputed = useMemo(() => [0,1,2].every(i => Number.isFinite(kValues[i])), [kValues]);
+  const allRowsRevealed = useMemo(() => [0,1,2].every(i => Number.isFinite(kValues[i]) && reveal[i] === true), [kValues, reveal]);
   const ksEqual = useMemo(() => {
     const vals = [kValues[0], kValues[1], kValues[2]];
     if (vals.some(v => typeof v !== "number")) return null;
@@ -156,9 +144,9 @@ export default function ProportionalTablesModule(){
   , [problem]);
 
   const [conceptAnswer, setConceptAnswer] = useState(null);
-  const conceptEligible = headerEqCorrect && allRowsComputed && [0,1,2].every(i => reveal[i] === true);
+  const conceptEligible = headerEqCorrect && allRowsComputed && allRowsRevealed;
   const conceptCorrect = useMemo(() => {
-    if (!conceptEligible) return false;
+    if (!conceptEligible || !conceptAnswer) return false;
     if (ksEqual && conceptAnswer === "yes_same") return true;
     if (!ksEqual && conceptAnswer === "no_diff") return true;
     return false;
@@ -167,20 +155,20 @@ export default function ProportionalTablesModule(){
   const revealFourthRow = conceptCorrect && ksEqual === true;
   const [row4Answer, setRow4Answer] = useState(null);
 
-  const resetAll = (nextDiff = difficulty) => {
-    const next = genPTable(nextDiff);
-    setProblem(next);
-    setChips(makeChips(next));
+  const resetAll = (next = difficulty) => {
+    const p = genPTable(next);
+    setProblem(p);
+    setChips(toChips(p));
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
     setNumIsY(false); setDenIsX(false);
     setFractions({}); setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
     Object.values(timersRef.current).forEach(t => clearTimeout(t));
     timersRef.current = {};
-    _pickStore.clear();
+    pickStore.clear();
   };
 
-  // ---------------- UI pieces ----------------
+  // ------------- UI Blocks
   const HeaderDrop = ({ placed, label, expect, onPlaced }) => (
     <Slot
       accept={ACCEPT_HEADER}
@@ -203,19 +191,11 @@ export default function ProportionalTablesModule(){
           <div className="badge">k</div>
           <span className="calc-inline">=</span>
           <div className="fraction mini-frac" aria-label="k equals y over x">
-            <Slot
-              accept={ACCEPT_HEADER}
-              onDropContent={(d) => { const got=(d?.label??"").toLowerCase(); if (got==="y") setNumIsY(true); }}
-              className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
-            >
+            <Slot accept={ACCEPT_HEADER} onDropContent={(d)=>{ if ((d?.label||'').toLowerCase()==='y') setNumIsY(true); }} className={`slot ptable-fracslot tiny ${numIsY?'filled':''}`}>
               {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
-            <Slot
-              accept={ACCEPT_HEADER}
-              onDropContent={(d) => { const got=(d?.label??"").toLowerCase(); if (got==="x") setDenIsX(true); }}
-              className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
-            >
+            <Slot accept={ACCEPT_HEADER} onDropContent={(d)=>{ if ((d?.label||'').toLowerCase()==='x') setDenIsX(true); }} className={`slot ptable-fracslot tiny ${denIsX?'filled':''}`}>
               {denIsX ? <span className="chip chip-tiny">x</span> : <span className="muted">—</span>}
             </Slot>
           </div>
@@ -228,11 +208,7 @@ export default function ProportionalTablesModule(){
     if (kPlaced) return null;
     return (
       <div className="ptable-k-overlay" aria-hidden="true">
-        <Slot
-          accept={ACCEPT_HEADER}
-          onDropContent={(d) => { const got=(d?.label??"").toLowerCase(); if (got==="k") setKPlaced(true); }}
-          className="ptable-k-target"
-        />
+        <Slot accept={ACCEPT_HEADER} onDropContent={(d)=>{ if ((d?.label||'').toLowerCase()==='k') setKPlaced(true); }} className="ptable-k-target" />
       </div>
     );
   };
@@ -263,48 +239,32 @@ export default function ProportionalTablesModule(){
               {[0,1,2].map(i => (
                 <tr key={i}>
                   <td>
-                    <Slot
-                      accept={ACCEPT_VALUE}
-                      onDropContent={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), num: Number(d?.value ?? d?.label) } }))}
-                      className="slot ptable-fracslot"
-                    >
+                    <Slot accept={ACCEPT_VALUE} onDropContent={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), num: Number(d?.value ?? d?.label) } }))} className="slot ptable-fracslot">
                       {fractions[i]?.num ?? <span className="muted">—</span>}
                     </Slot>
                   </td>
                   <td>
-                    <Slot
-                      accept={ACCEPT_VALUE}
-                      onDropContent={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), den: Number(d?.value ?? d?.label) } }))}
-                      className="slot ptable-fracslot"
-                    >
+                    <Slot accept={ACCEPT_VALUE} onDropContent={(d)=> setFractions(prev => ({ ...prev, [i]: { ...(prev[i]||{}), den: Number(d?.value ?? d?.label) } }))} className="slot ptable-fracslot">
                       {fractions[i]?.den ?? <span className="muted">—</span>}
                     </Slot>
                   </td>
                   <td>
                     {reveal[i] && Number.isFinite(kValues[i]) ? (
                       <div className="calc-inline">= <b>{formatNumber(kValues[i])}</b></div>
-                    ) : (
-                      <span className="muted">…</span>
-                    )}
+                    ) : <span className="muted">…</span>}
                   </td>
                 </tr>
               ))}
               <tr>
                 <td colSpan={2}>
-                  {revealFourthRow ? (
-                    <div className="calc-inline">Use k to find the missing value.</div>
-                  ) : <span className="muted">—</span>}
+                  {revealFourthRow ? <div className="calc-inline">Use k to find the missing value.</div> : <span className="muted">—</span>}
                 </td>
                 <td>
                   {revealFourthRow ? (
-                    <div className="row" style={{ justifyContent:"center" }}>
+                    <div className="row" style={{ justifyContent:"center", gap:10 }}>
                       {["× k","÷ k"].map((label,idx)=>{
                         const val = idx===0 ? "mul" : "div";
-                        return (
-                          <button key={val} className={`button ${row4Answer===val?"active":""}`} onClick={()=> setRow4Answer(val)}>
-                            {label}
-                          </button>
-                        );
+                        return <button key={val} className={`button ${row4Answer===val?"active":""}`} onClick={()=> setRow4Answer(val)}>{label}</button>;
                       })}
                     </div>
                   ) : <span className="muted">—</span>}
@@ -320,9 +280,7 @@ export default function ProportionalTablesModule(){
   const ChipsLeft = () => (
     <div className="row" style={{ justifyContent:"center", flexWrap:"wrap", gap:12 }}>
       {chips.map((c, idx) => (
-        <Draggable key={idx} data={c} className="chip">
-          {c.label}
-        </Draggable>
+        <Draggable key={idx} data={c} className="chip">{c.label}</Draggable>
       ))}
     </div>
   );
@@ -334,12 +292,7 @@ export default function ProportionalTablesModule(){
         <div className="step-title">Is the table proportional?</div>
         <div className="row" style={{ justifyContent:"center", gap:12, flexWrap:"wrap", maxWidth:520, margin:"0 auto" }}>
           {randomizedConcept.map((opt) => (
-            <button
-              key={opt.key}
-              className={`button ${conceptAnswer===opt.key?"active":""}`}
-              onClick={() => setConceptAnswer(opt.key)}
-              style={{ width: 240 }}
-            >
+            <button key={opt.key} className={`button ${conceptAnswer===opt.key?"active":""}`} onClick={() => setConceptAnswer(opt.key)} style={{ width: 240 }}>
               {opt.label}
             </button>
           ))}
@@ -353,12 +306,7 @@ export default function ProportionalTablesModule(){
       <div className="press">
         <BigButton onClick={() => resetAll(difficulty)} label="New Problem" />
       </div>
-      <select
-        aria-label="difficulty"
-        value={difficulty}
-        onChange={(e)=> resetAll(e.target.value)}
-        className="button"
-      >
+      <select aria-label="difficulty" value={difficulty} onChange={(e)=> resetAll(e.target.value)} className="button">
         <option value="easy">easy</option>
         <option value="medium">medium</option>
         <option value="hard">hard</option>
