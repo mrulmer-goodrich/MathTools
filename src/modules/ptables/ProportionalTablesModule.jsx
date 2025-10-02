@@ -1,10 +1,13 @@
-/* src/modules/ptables/ProportionalTablesModule.jsx — v7.4
-   Ground rule: restore original 2‑pane feel, keep your global styles.
-   This file is self-contained and *only* touches PTables behavior.
-   - Chips are normalized: { type: "header"|"value", label: string, value?: number }
-   - Headers accept only "header"; row slots accept only "value"
-   - Tap‑first (tap chip → tap slot) with drag fallback preserved
-   - Concept question appears only after header is correct AND all 3 k-values are computed & revealed
+/* src/modules/ptables/ProportionalTablesModule.jsx — v7.5
+   Baseline: your current files (today's upload). This is a surgical update:
+   - Keeps two‑pane layout and your global styles intact
+   - Adds tap‑first with drag fallback
+   - Normalizes chip payloads (type/label/value)
+   - Aligns Slot accept rules (headers 'header', rows 'value')
+   - Shows scaffold 'k = y/x' after k placed (requires y numerator, x denominator)
+   - Computes k per row, reveals '= value' after short delay
+   - Gates concept question until header + rows are complete; 2×2 choices
+   - Unlocks 4th row '× k' / '÷ k' only after correct concept and constant k
 */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -23,8 +26,7 @@ function formatNumber(n){
   if (!Number.isFinite(n)) return "";
   const r = Math.round(n);
   if (Math.abs(n - r) < 1e-9) return String(r);
-  // try small denom fractions → return mixed if denom <= 9
-  for (let q=2; q<=9; q++){
+  for (let q=2;q<=9;q++){
     const p = Math.round(n*q);
     if (Math.abs(n - p/q) < 1e-6){
       const whole = Math.trunc(p/q);
@@ -98,7 +100,7 @@ export default function ProportionalTablesModule(){
   // persist difficulty
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
-  // compute each row's k
+  // compute k per row
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
@@ -109,7 +111,7 @@ export default function ProportionalTablesModule(){
     });
   }, [fractions]);
 
-  // reveal after short delay
+  // delayed reveal of '= value'
   useEffect(() => {
     [0,1,2].forEach(i => {
       const f = fractions[i];
@@ -168,14 +170,11 @@ export default function ProportionalTablesModule(){
     pickStore.clear();
   };
 
-  // ------------- UI Blocks
+  // ------------------------------ UI blocks
   const HeaderDrop = ({ placed, label, expect, onPlaced }) => (
     <Slot
       accept={ACCEPT_HEADER}
-      onDropContent={(d) => {
-        const got = (d?.label ?? "").toString().trim().toLowerCase();
-        if (got === expect) onPlaced(true);
-      }}
+      onDropContent={(d) => { const got=(d?.label??"").toLowerCase(); if (got===expect) onPlaced(true); }}
       className={`ptable-thslot ${placed ? "placed" : "empty"}`}
       aria-label={placed ? label : `place ${expect}`}
     >
