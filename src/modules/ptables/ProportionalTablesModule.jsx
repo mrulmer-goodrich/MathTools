@@ -21,7 +21,7 @@ function __wrapDraggable(DraggableChip){
   return function __TapDraggable(props){
     const { data, onClick, ...rest } = props;
     const handleClick = (e)=>{ __tapPickStore.set(data); if(onClick) onClick(e); };
-    return <__TapDraggable {...rest} data={data} onClick={handleClick}>{props.children}</__TapDraggable>;
+    return <DraggableChip {...rest} data={data} onClick={handleClick}>{props.children}</DraggableChip>;
   };
 }
 
@@ -38,7 +38,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-      <__TapSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</__TapSlot>
+      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
     </div>;
   };
 }
