@@ -5,6 +5,49 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+
+// === PATCH SHIMS (local only; do not edit shared components) ===
+// Tap-to-place tiny store
+const __shimPick = { d:null, set(x){this.d=x||null;}, peek(){return this.d;}, clear(){this.d=null;} };
+
+// Keep the original names used throughout the file: DraggableChip / DropSlot.
+// These wrap the base components to add tap-to-place and capitalization defaults.
+const DraggableChip = ({ data, payload, label, onClick, ...rest }) => {
+  const merged = data ?? payload;
+  // Uppercase default labels for header chips if label not provided
+  let finalLabel = label;
+  try {
+    if (!finalLabel && merged && merged.type === "header") {
+      const nm = (merged.name || "").toString().toLowerCase();
+      if (nm === "x" || nm === "y" || nm === "k") finalLabel = nm.toUpperCase();
+    }
+  } catch {}
+  const handleClick = (e) => { __shimPick.set(merged); onClick?.(e); };
+  return <DraggableChipBase data={merged} label={finalLabel} onClick={handleClick} {...rest} />;
+};
+
+const DropSlot = ({ accept, test, validator, onDrop, onDropContent, onClick, children, ...rest }) => {
+  const testFn = test ?? ((d) => {
+    const t = (d?.type ?? d?.kind ?? "").toString();
+    const allow = Array.isArray(accept) && accept.length ? accept.includes(t) : true;
+    const valid = typeof validator === "function" ? !!validator(d) : true;
+    return allow && valid;
+  });
+  const onDropContentFn = onDropContent ?? onDrop;
+  const handleClick = (e) => {
+    const picked = __shimPick.peek();
+    if (picked && testFn(picked)) { try { onDropContentFn?.(picked); } catch {} __shimPick.clear(); }
+    onClick?.(e);
+  };
+  // Wrap to guarantee taps register even if base doesn't bubble onClick
+  return (
+    <div onClick={handleClick} style={{ display:"inline-block", width:"100%" }}>
+      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlot>
+    </div>
+  );
+};
+// === END PATCH SHIMS ===
+
 // Aliases: use project naming but render base components
 // --- PTables scoped confetti helper (no-op if not present) ---
 function __ptableBurstConfetti(times=6, interval=220){
@@ -37,7 +80,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-      <Slot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</Slot>
+      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
     </div>;
   };
 }
@@ -108,7 +151,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
   };
 
   return (
-    <Slot
+    <DropSlot
       test={testFn}
       onDropContent={onDropContentFn}
       onClick={handleClick}
