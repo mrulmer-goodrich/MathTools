@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
-import DropSlotBase from "../../components/DropSlot.jsx";
+import DropSlot from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
 // persistence
@@ -69,8 +69,8 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, ...rest
   };
 
     return (
-    <div onClick={handleClick} style={display:"inline-block"}>
-      <DropSlotBase
+    <div onClick={handleClick} style={{ display: "inline-block" }}>
+      <DropSlot
         test={testFn}
         onDropContent={onDropContentFn}
         {...rest}
