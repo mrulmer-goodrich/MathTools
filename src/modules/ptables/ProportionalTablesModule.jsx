@@ -5,6 +5,10 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+// Aliases: use project naming but render base components
+const DraggableChip = DraggableBase;
+const DropSlot      = DropSlotBase;
+
 // aliases to use consistent names in wrappers and JSX
 const DraggableChip = DraggableBase;
 const DropSlot = DropSlotBase;
@@ -25,7 +29,7 @@ function __wrapDraggable(DraggableChip){
   return function __TapDraggable(props){
     const { data, onClick, ...rest } = props;
     const handleClick = (e)=>{ __tapPickStore.set(data); if(onClick) onClick(e); };
-    return <DraggableChip {...rest} data={data} onClick={handleClick}>{props.children}</DraggableChip>;
+    return <DraggableBase {...rest} data={data} onClick={handleClick}>{props.children}</DraggableBase>;
   };
 }
 
