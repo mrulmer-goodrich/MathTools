@@ -10,8 +10,6 @@ const DraggableChip = DraggableBase;
 const DropSlot      = DropSlotBase;
 
 // aliases to use consistent names in wrappers and JSX
-const DraggableChip = DraggableBase;
-const DropSlot = DropSlotBase;
 
 
 
@@ -46,7 +44,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlotBase>
+      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
     </div>;
   };
 }
@@ -62,7 +60,7 @@ const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
-const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]=[a[j],a[i]]; } return a; };
+const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 
 // --- Local compatibility wrappers (only affect this module) ---
@@ -144,7 +142,7 @@ export default function ProportionalTablesModule() {
   // header fraction (k = y / x)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
-  const headerEqCorrect = kPlaced && numIsY;
+  const headerEqCorrect = kPlaced && numIsY && denIsX;
 
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({}); // {rowIndex: {num, den}}
