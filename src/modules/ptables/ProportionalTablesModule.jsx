@@ -5,7 +5,9 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
-
+// use the existing components under the names our wrappers expect
+const DraggableChip = DraggableBase;
+const DropSlot = DropSlotBase;
 
 // --- PTables scoped confetti helper (no-op if not present) ---
 function __ptableBurstConfetti(times=6, interval=220){
@@ -14,6 +16,7 @@ function __ptableBurstConfetti(times=6, interval=220){
   let i=0; const t=setInterval(()=>{ c({ particleCount: 200, spread: 80, startVelocity: 55, origin:{y:0.3} }); if(++i>=times) clearInterval(t); }, interval);
 }
 // --- end helper ---
+
 // ---- tap-to-place helpers (surgical; keeps drag working) ----
 const __tapPickStore = { v:null, set(x){this.v=x||null;}, peek(){return this.v;}, clear(){this.v=null;} };
 
@@ -46,6 +49,9 @@ function __wrapDropSlot(DropSlot){
 const __TapDraggable = __wrapDraggable(DraggableChip);
 const __TapSlot = __wrapDropSlot(DropSlot);
 // ---- end tap-to-place helpers ----
+
+
+
 // persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
