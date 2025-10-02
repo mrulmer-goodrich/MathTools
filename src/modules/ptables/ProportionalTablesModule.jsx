@@ -42,7 +42,7 @@ const DropSlot = ({ accept, test, validator, onDrop, onDropContent, onClick, chi
   // Wrap to guarantee taps register even if base doesn't bubble onClick
   return (
     <div onClick={handleClick} style={{ display:"inline-block", width:"100%" }}>
-      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlot>
+      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
     </div>
   );
 };
@@ -80,7 +80,7 @@ function __wrapDropSlot(DropSlot){
       if (onClick) onClick(e);
     };
     return <div onClick={handleClick} style={{ display: "inline-block", width: "100%" }}>
-      <DropSlot {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlot>
+  <DropSlotBase {...rest} test={testFn} onDropContent={onDropContent} onClick={onClick}>{props.children}</DropSlotBase>
     </div>;
   };
 }
