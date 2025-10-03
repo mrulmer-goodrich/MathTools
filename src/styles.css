@@ -856,3 +856,41 @@ body{
   0%,100% { opacity: 0.25; }
   50% { opacity: 1; }
 }
+/* === styles.css — PTables v8.2.7 APPEND (place at absolute bottom) ===
+Forces ultra-high-contrast blink that cannot be hidden by stacking/overflow.
+Also bumps chip text size slightly for readability.
+*/
+
+/* Ensure wrapper exists above table clipping/stacking */
+.slot-wrap{ position: relative !important; overflow: visible !important; isolation: isolate !important; }
+
+/* Nuclear blink: thick animated outline + glow. Uses !important to win. */
+.slot-wrap.ptable-blink-wrap::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:12px;
+  outline: 4px solid #111 !important;                /* dark outline for white UIs */
+  box-shadow:
+    0 0 0 8px rgba(59,130,246,0.45) !important,      /* blue halo */
+    0 0 22px rgba(59,130,246,0.55) !important;       /* outer glow */
+  animation: wrapBlinkV27 0.6s steps(2,end) infinite !important; /* hard blink */
+  pointer-events:none;
+  z-index: 2147483647 !important; /* on top of everything */
+}
+@keyframes wrapBlinkV27{
+  0% { opacity: 0.15; }
+  50%{ opacity: 1; }
+  100%{ opacity: 0.15; }
+}
+
+/* Pulse marker: make larger by default */
+.ptable-pulse{
+  width: clamp(34px, 55%, 52px) !important;
+  height: clamp(34px, 55%, 52px) !important;
+  border-width: 5px !important;
+  z-index: 2147483646 !important;
+}
+
+/* Chip readability bump */
+.chip.chip-lg, .chip.chip-med{ font-size: 20px !important; font-weight: 900 !important; }
