@@ -815,3 +815,11 @@ body{
 @keyframes confFall{
   to { transform: translateY(108vh) rotate(720deg); }
 }
+/* styles.css — PTables v8.2.5 append: make blink unmistakable */
+.ptable-thslot, .slot.ptable-fracslot { position: relative !important; overflow: visible !important; }
+.ptable-blink-hard, .blink-bg { z-index: 5 !important; }
+.ptable-pulse{ z-index: 6 !important; width: clamp(28px, 50%, 44px); height: clamp(28px, 50%, 44px); border-width: 4px; }
+
+/* very visible background flash + outline */
+.blink-bg{ animation: ptableBlinkBG 0.8s linear infinite !important; outline: 3px solid #f59e0b !important; outline-offset: 2px !important; box-shadow: 0 0 0 6px rgba(245,158,11,0.25) !important; }
+@keyframes ptableBlinkBG{ 0%,100% { background:#fff; } 50% { background:#fff0b3; } }
