@@ -823,3 +823,19 @@ body{
 /* very visible background flash + outline */
 .blink-bg{ animation: ptableBlinkBG 0.8s linear infinite !important; outline: 3px solid #f59e0b !important; outline-offset: 2px !important; box-shadow: 0 0 0 6px rgba(245,158,11,0.25) !important; }
 @keyframes ptableBlinkBG{ 0%,100% { background:#fff; } 50% { background:#fff0b3; } }
+
+   /* === Force blink styles to win (append to bottom of styles.css) === */
+.slot.ptable-blink-hard,
+.slot.blink-bg,
+.ptable-thslot.ptable-blink-hard,
+.ptable-thslot.blink-bg,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-fracslot.blink-bg {
+  background: #fff0b3 !important; /* pale yellow flash */
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 6px rgba(245,158,11,0.45) !important;
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  z-index: 10 !important;
+}
+
