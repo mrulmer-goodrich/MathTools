@@ -779,3 +779,39 @@ body{
 .pTable td, .pTable th { vertical-align: middle; }
 .pTable .chip-lg{ line-height: 1; }
 /* If your table uses a fixed row height elsewhere, this keeps chips centered without expanding rows */
+
+   /* styles.css — PTables v8.2.3 appends */
+/* Enforce blink visibility & layering; restore fade-in on revealed k; full-screen confetti fallback */
+
+.ptable-thslot, .slot.ptable-fracslot { position: relative !important; overflow: visible !important; }
+
+/* Make halos & pulses sit above contents, regardless of other shadows */
+.ptable-blink-hard, .blink-bg { z-index: 2 !important; }
+.ptable-pulse { z-index: 3 !important; }
+
+/* Stronger background flash (even on bright themes) */
+.blink-bg{
+  animation: ptableBlinkBG 0.8s linear infinite !important;
+}
+@keyframes ptableBlinkBG{
+  0%,100% { background: #ffffff; }
+  50%     { background: #fff0b3; } /* brighter pale yellow */
+}
+
+/* Fade-in for revealed k values */
+.eq.result.reveal-value{
+  opacity: 0;
+  animation: kReveal 0.5s ease-out forwards;
+}
+@keyframes kReveal { to { opacity: 1; } }
+
+/* Full-screen confetti fallback */
+.sf-confetti{ position: fixed; inset: 0; pointer-events:none; overflow: visible; z-index: 9999; }
+.sf-confetti-piece{
+  position:absolute; top:-8vh;
+  animation: confFall linear forwards;
+  transform: translateY(0) rotate(0);
+}
+@keyframes confFall{
+  to { transform: translateY(108vh) rotate(720deg); }
+}
