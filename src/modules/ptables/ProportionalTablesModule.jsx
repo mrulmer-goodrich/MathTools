@@ -411,7 +411,7 @@ export default function ProportionalTablesModule() {
         </div>
 
         <div className="center" style={{ marginTop: 18 }}>
-          <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+         <BigButton onClick={() => resetAll()}>New Problem</BigButton>
         </div>
 
 
