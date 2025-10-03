@@ -1013,3 +1013,45 @@ body{
 .fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
 .fraction.mini-frac .frac-bar { width: 48px !important; }
 
+/* =========================
+   PTables v8.3.3 micro‑overrides (append at bottom of styles.css)
+   - Precisely center the blue pulse ring
+   - Avoid clipping in header/row cells
+   - Remove blink-induced vertical jitter
+   ========================= */
+
+/* Ensure slots are the positioning context for the pulse ring */
+.ptable-thslot,
+.slot.ptable-fracslot,
+.slot {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Centered pulse ring sized to fit *inside* the slot padding box */
+.ptable-pulse {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  /* Stay inside the slot to avoid cut-off by borders/radii */
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 12px) !important;
+  max-width: 44px !important;
+  max-height: 36px !important;
+  border-radius: 999px !important;
+  pointer-events: none !important;
+  box-shadow: 0 0 0 6px rgba(59,130,246,.22) !important;
+}
+
+/* Remove the subtle Y-translation that could make the pulse appear off-center */
+.ptable-blink-hard,
+.blink-bg {
+  transform: none !important;
+}
+
+/* Keep fraction areas from clipping the ring */
+.row-calc, .fraction, .ptable tbody td, .ptable thead th {
+  overflow: visible !important;
+}
+
