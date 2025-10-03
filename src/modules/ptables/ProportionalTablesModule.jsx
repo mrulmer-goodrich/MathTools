@@ -17,6 +17,17 @@ const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){co
 
 // ⬇️ Guarded confetti to avoid duplicates from parallel modules
 function multiBurstConfetti() {
+
+// v8.3.0: auto-stop PTables confetti after a short celebration
+if (!window.__ptableConfettiStopper) {
+  window.__ptableConfettiStopper = true;
+  setTimeout(() => {
+    const host = document.querySelector('.sf-confetti,.confetti-fullpage');
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+    window.__ptableConfettiStopper = false;
+  }, 3000);
+}
+
   if (typeof window === "undefined") return;
 
   const now = Date.now();
