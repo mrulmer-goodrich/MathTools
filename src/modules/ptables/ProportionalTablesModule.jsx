@@ -1,9 +1,13 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.1.1
-// Full-file replacement (surgical extension of v8.1).
-// Changes vs v8.1:
-// - HeaderDrop renders placed label as a visible chip for clarity
-// - Keeps guided "What goes here?" flow and drag-disabled during label step
-// - No behavioral changes beyond visibility
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2
+// Full-file replacement per user request.
+// CHANGES vs v8.1.1:
+// - Much stronger blinking cue on target cells (CSS hooks)
+// - Header labels render as visible chips (kept)
+// - Guided "What goes here?" for BUILD (k = y/x) step — no dragging; tap correct chip (y then x)
+// - Guided "What goes here?" for FILL (row fractions): per-row numerator then denominator; tap correct value
+// - Drag is disabled during LABEL, BUILD, and FILL steps to avoid conflicts
+// - Removed prior instructional texts about dragging/reveal; replaced with concise "What goes here?" UI
+// - Larger in-table value chips for better readability
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -29,7 +33,7 @@ const _pickStore = {
   clear() { this.data = null; }
 };
 
-// Wrap Draggable for tap-pick
+// Wrap Draggable for tap-pick (kept for later steps; disabled when dragEnabled=false)
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
@@ -81,6 +85,13 @@ export default function ProportionalTablesModule() {
 
   // guided label step target: 'x' -> 'y' -> 'k'
   const [labelStepTarget, setLabelStepTarget] = useState('x');
+
+  // guided build step (k=y/x) target: 'num' -> 'den'
+  const [buildTarget, setBuildTarget] = useState('num');
+
+  // guided fill step: which row & part is blinking
+  const [fillRow, setFillRow] = useState(0);    // 0..2
+  const [fillPart, setFillPart] = useState('num'); // 'num' | 'den'
 
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({});
@@ -138,7 +149,11 @@ export default function ProportionalTablesModule() {
     setNumIsY(false); setDenIsX(false);
     setFractions({}); setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
-    setLabelStepTarget('x'); // restart guided label flow
+
+    setLabelStepTarget('x');
+    setBuildTarget('num');
+    setFillRow(0); setFillPart('num');
+
     Object.values(revealTimers.current).forEach(clearTimeout);
     revealTimers.current = {};
   };
@@ -185,16 +200,16 @@ export default function ProportionalTablesModule() {
 
   const currentStep = useMemo(() => {
     if (!xPlaced || !yPlaced || !kPlaced) return "label";
-    if (!headerEqCorrect) return "build";
-    if (!allRowsRevealed) return "fill";
+    if (!headerEqCorrect) return "build";      // place y then x into k = y/x
+    if (!allRowsRevealed) return "fill";       // guided per-row fill (num then den for row0..2)
     if (!conceptCorrect) return "concept";
     return "solve";
   }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsRevealed, conceptCorrect]);
 
-  // NOTE v8.1.1: Drag is intentionally disabled during the label step (guided flow).
-  const dragEnabled = currentStep !== "label";
+  // NOTE v8.2: Drag is intentionally disabled during label, build, and fill steps (guided flow).
+  const dragEnabled = currentStep === "concept" || currentStep === "solve";
 
-  // header drop (for X / Y) — renders lowercase chip when placed
+  // header drop (for X / Y) — renders lowercase chip when placed; supports blink
   const HeaderDrop = ({ placed, label, expectName, onPlaced, blink=false, canDrop=true }) => (
     <Slot
       accept={canDrop ? ACCEPT_HEADER : []}
@@ -203,53 +218,78 @@ export default function ProportionalTablesModule() {
         const want = (expectName ?? "").toString().trim().toLowerCase();
         if (got === want) onPlaced(true);
       }}
-      className={`ptable-thslot ${placed ? "placed" : "empty"} ${blink ? "ptable-blink" : ""}`}
+      className={`ptable-thslot ${placed ? "placed" : "empty"} ${blink ? "ptable-blink-hard" : ""}`}
     >
-      {placed ? <span className="chip chip-tiny">{label}</span> : <span className="visually-hidden">empty</span>}
+      {placed ? <span className="chip chip-med">{label}</span> : <span className="visually-hidden">empty</span>}
     </Slot>
   );
 
-  // header equation (under K header)
+  // header equation (under K header) — guided choices in BUILD step
   const HeaderEqArea = () => {
-    if (!kPlaced) return null;
+    const blinkNum = currentStep === "build" && buildTarget === "num";
+    const blinkDen = currentStep === "build" && buildTarget === "den";
+
     return (
       <div className="ptable-header-eq">
         <div className="ptable-eq-row nowrap">
           <div className="badge">k</div>
           <span>=</span>
           <div className="fraction mini-frac" aria-label="k equals Y over X">
+            {/* Numerator: y */}
             <Slot
-              accept={ACCEPT_HEADER}
+              accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
-              className={`slot ptable-fracslot tiny ${numIsY ? "filled" : ""}`}
+              className={`slot ptable-fracslot ${blinkNum ? "ptable-blink-hard" : ""} ${numIsY ? "filled" : ""}`}
             >
-              {numIsY ? <span className="chip chip-tiny">y</span> : <span className="muted">—</span>}
+              {numIsY ? <span className="chip chip-med">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
+            {/* Denominator: x */}
             <Slot
-              accept={ACCEPT_HEADER}
+              accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
-              className={`slot ptable-fracslot tiny ${denIsX ? "filled" : ""}`}
+              className={`slot ptable-fracslot ${blinkDen ? "ptable-blink-hard" : ""} ${denIsX ? "filled" : ""}`}
             >
-              {denIsX ? <span className="chip chip-tiny">x</span> : <span className="muted">—</span>}
+              {denIsX ? <span className="chip chip-med">x</span> : <span className="muted">—</span>}
             </Slot>
           </div>
         </div>
-        {numIsY && (
-          <div className="muted small" style={{ marginTop: 6 }}>
-            Now drag each row’s <b>y</b> and <b>x</b> into the spots. The result will appear after a moment.
-          </div>
-        )}
       </div>
     );
   };
 
+  // advance helpers for guided steps
+  const advanceLabel = () => {
+    if (!xPlaced) return setLabelStepTarget('x');
+    if (!yPlaced) return setLabelStepTarget('y');
+    return setLabelStepTarget('k');
+  };
+  useEffect(advanceLabel, [xPlaced, yPlaced, kPlaced]); // keep target in sync
+
+  const advanceBuild = () => {
+    if (!numIsY) return setBuildTarget('num');
+    return setBuildTarget('den');
+  };
+  useEffect(advanceBuild, [numIsY, denIsX]);
+
+  const advanceFill = () => {
+    // move through (row0 num -> row0 den -> row1 num -> ... -> row2 den)
+    const f = fractions[fillRow] || {};
+    if (fillPart === 'num' && f.num == null) return;     // wait
+    if (fillPart === 'num' && f.num != null) { setFillPart('den'); return; }
+    if (fillPart === 'den' && f.den == null) return;     // wait
+    if (fillPart === 'den' && f.den != null) {
+      if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart('num'); }
+    }
+  };
+  useEffect(advanceFill, [fractions, fillRow, fillPart]);
+
+  // Table
   const Table = useMemo(() => {
     const invis = !kPlaced ? "col3-invisible" : "";
     return (
       <div className={`ptable-wrap ${!dragEnabled ? 'disable-dnd' : ''}`}>
         <div className={`ptable-rel ptable-table dark ${invis}`}>
-          {/* overlay removed in v8.1; K target anchored in cell */}
           <table className="ptable" style={{ tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: "25%" }} />
@@ -285,7 +325,7 @@ export default function ProportionalTablesModule() {
                     <Slot
                       accept={dragEnabled ? ACCEPT_HEADER : []}
                       onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "k") { setKPlaced(true); } }}
-                      className={`ptable-thslot empty ${labelStepTarget === 'k' ? 'ptable-blink' : ''}`}
+                      className={`ptable-thslot empty ${labelStepTarget === 'k' ? 'ptable-blink-hard' : ''}`}
                     >
                       <span className="visually-hidden">empty</span>
                     </Slot>
@@ -296,6 +336,9 @@ export default function ProportionalTablesModule() {
             <tbody>
               {[0, 1, 2].map((idx) => {
                 const r = problem.rows[idx];
+                const isBlinkRow = currentStep === "fill" && idx === fillRow;
+                const blinkNum = isBlinkRow && fillPart === "num";
+                const blinkDen = isBlinkRow && fillPart === "den";
                 return (
                   <tr key={idx}>
                     <td>
@@ -317,21 +360,23 @@ export default function ProportionalTablesModule() {
                     <td>
                       {headerEqCorrect ? (
                         <div className="row-calc nowrap">
+                          {/* left: static y/x fraction */}
                           <div className="fraction mini-frac static">
                             <div><strong>y</strong></div>
                             <div className="frac-bar extra-narrow" />
                             <div><strong>x</strong></div>
                           </div>
                           <span className="eq">=</span>
+                          {/* right: y_i / x_i (guided during FILL) */}
                           <div className="fraction mini-frac">
                             <Slot
                               accept={ACCEPT_VALUE}
                               validator={(d) => d?.row === idx && d?.axis === "y"}
                               onDrop={(d) => onRowDrop(idx, "num", d)}
-                              className="slot ptable-fracslot tight"
+                              className={`slot ptable-fracslot tight ${blinkNum ? "ptable-blink-hard" : ""}`}
                             >
                               {fractions[idx]?.num != null
-                                ? <span className="chip chip-tiny">{fractions[idx].num}</span>
+                                ? <span className="chip chip-med">{fractions[idx].num}</span>
                                 : <span className="muted">—</span>}
                             </Slot>
                             <div className="frac-bar extra-narrow" />
@@ -339,13 +384,14 @@ export default function ProportionalTablesModule() {
                               accept={ACCEPT_VALUE}
                               validator={(d) => d?.row === idx && d?.axis === "x"}
                               onDrop={(d) => onRowDrop(idx, "den", d)}
-                              className="slot ptable-fracslot tight"
+                              className={`slot ptable-fracslot tight ${blinkDen ? "ptable-blink-hard" : ""}`}
                             >
                               {fractions[idx]?.den != null
-                                ? <span className="chip chip-tiny">{fractions[idx].den}</span>
+                                ? <span className="chip chip-med">{fractions[idx].den}</span>
                                 : <span className="muted">—</span>}
                             </Slot>
                           </div>
+                          {/* reveal result after delay */}
                           {Number.isFinite(kValues[idx]) && reveal[idx] && (
                             <span className="eq result">= <b>{fmt(kValues[idx])}</b></span>
                           )}
@@ -381,19 +427,85 @@ export default function ProportionalTablesModule() {
   }, [
     problem, xPlaced, yPlaced, kPlaced, headerEqCorrect,
     fractions, kValues, revealFourthRow, row4Answer, reveal,
-    labelStepTarget, 
+    labelStepTarget, buildTarget, fillRow, fillPart, dragEnabled
   ]);
 
-  const kDisplay = fmt(kValues[0]);
-  const solveOptions = useMemo(() => {
-    const options = [
-      { key: "dot", label: "y = k • x", correct: true },
-      { key: "div", label: "y = k ÷ x", correct: false },
-      { key: "add", label: "y = k + x", correct: false },
-      { key: "emd", label: "y = k – x", correct: false },
-    ];
-    return shuffle(options);
-  }, [kDisplay]);
+  // Right card content per step — all guided, no drag text
+  const renderLabelChoices = () => (
+    <div className="row" style={{ gap: 10, marginTop: 12 }}>
+      {["x","y","k"].map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          className="ptable-choice big"
+          onClick={() => {
+            if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
+            if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
+            if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
+            try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+          }}
+          aria-label={`choose ${opt}`}
+        >{opt}</button>
+      ))}
+    </div>
+  );
+
+  const renderBuildChoices = () => {
+    // We only need y then x
+    const order = buildTarget === "num" ? ["y","x"] : ["x","y"]; // keep both visible for consistency
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12 }}>
+        {order.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            className="ptable-choice big"
+            onClick={() => {
+              if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
+              if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${opt}`}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderFillChoices = () => {
+    // For numerator: pick correct y value for the current row among [y0,y1,y2]
+    // For denominator: pick correct x value for the current row among [x0,x1,x2]
+    const ys = problem.rows.map(r => r.y);
+    const xs = problem.rows.map(r => r.x);
+    const choices = (fillPart === "num") ? ys : xs;
+    const correct = (fillPart === "num") ? ys[fillRow] : xs[fillRow];
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
+        {choices.map((val, i) => (
+          <button
+            key={`${fillPart}-${i}`}
+            type="button"
+            className="ptable-choice big"
+            onClick={() => {
+              if (val === correct) {
+                if (fillPart === "num") {
+                  onRowDrop(fillRow, "num", { type:"value", axis:"y", row: fillRow, value: val });
+                  setFillPart("den");
+                  return;
+                } else {
+                  onRowDrop(fillRow, "den", { type:"value", axis:"x", row: fillRow, value: val });
+                  if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart("num"); }
+                  return;
+                }
+              }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${val}`}
+          >{val}</button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="panes ptables-layout">
@@ -418,41 +530,21 @@ export default function ProportionalTablesModule() {
         {currentStep === "label" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            <div className="muted bigger">Tap the correct value to fill the blinking spot. (Drag is disabled in this step.)</div>
-            <div className="row" style={{ gap: 10, marginTop: 12 }}>
-              {["x","y","k"].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  className="ptable-choice"
-                  onClick={() => {
-                    if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
-                    if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
-                    if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
-                    try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 400); } } catch {}
-                  }}
-                  aria-label={`choose ${opt}`}
-                >{opt}</button>
-              ))}
-            </div>
+            {renderLabelChoices()}
           </div>
         )}
 
         {currentStep === "build" && (
           <div className="section">
-            <div className="step-title">What’s the equation for k?</div>
-            <div className="muted bigger">Drag <b>y</b> and <b>x</b> into the fraction.</div>
-            <div className="chips with-borders" style={{ marginTop: 10 }}>
-              <Draggable id="chip-y2" label="y" payload={{ type: "chip", name: "Y" }} className="chip large" />
-              <Draggable id="chip-x2" label="x" payload={{ type: "chip", name: "X" }} className="chip large" />
-            </div>
+            <div className="step-title">What goes here?</div>
+            {renderBuildChoices()}
           </div>
         )}
 
         {currentStep === "fill" && (
           <div className="section">
-            <div className="step-title">Fill each row & calculate</div>
-            <div className="muted bigger">For each row, make <b>y/x = yᵢ/xᵢ</b>. The result will appear after a moment.</div>
+            <div className="step-title">What goes here?</div>
+            {renderFillChoices()}
           </div>
         )}
 
@@ -480,7 +572,12 @@ export default function ProportionalTablesModule() {
           <div className="section">
             <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
             <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              {solveOptions.map(({ key, label, correct }) => (
+              {shuffle([
+                { key: "dot", label: "y = k • x", correct: true },
+                { key: "div", label: "y = k ÷ x", correct: false },
+                { key: "add", label: "y = k + x", correct: false },
+                { key: "emd", label: "y = k – x", correct: false },
+              ]).map(({ key, label, correct }) => (
                 <button key={key} className="button"
                   onClick={() => {
                     if (correct) {
