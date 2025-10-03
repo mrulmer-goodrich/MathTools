@@ -435,7 +435,7 @@ export default function ProportionalTablesModule() {
                 >{opt}</button>
               ))}
             </div>
-          </div>
+ 
         )}
 
         {currentStep === "build" && (
