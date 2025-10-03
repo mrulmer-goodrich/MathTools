@@ -963,3 +963,53 @@ body{
 .ptable-rel, .ptable, .ptable-wrap, .ptable thead, .ptable tbody td, .slot { 
   overflow: visible !important; 
 }
+
+/* =========================
+   PTables v8.3.2 micro‑overrides (append at absolute bottom)
+   - Calm down legacy "force yellow" blink (wins by selector match + !important)
+   - Make 3rd-column HEADER visible during K step (body stays hidden)
+   - Ensure no clipping of halos
+   ========================= */
+
+/* 0) Unhide 3rd-column HEADER while col-3 is reserved */
+.col3-invisible .ptable thead th:nth-child(3){
+  visibility: visible !important;     /* body cells remain hidden by existing rule */
+}
+/* keep the actual slot visible in header, so the hint can blink */
+.col3-invisible .ptable thead th:nth-child(3) .ptable-thslot{
+  visibility: visible !important;
+}
+
+/* 1) Replace the STRONG yellow blink with soft blue for ALL cases */
+.slot.ptable-blink-hard,
+.slot.blink-bg,
+.ptable-thslot.ptable-blink-hard,
+.ptable-thslot.blink-bg,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-fracslot.blink-bg {
+  background: #fff !important;
+  border-color: #93c5fd !important;
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.15s ease-in-out infinite !important;
+}
+/* Remove rotating dashed ring if any */
+.ptable-blink-hard::after { content: none !important; display:none !important; }
+
+@keyframes ptableBlinkSoft {
+  0%,100% { transform: none; background: #fff; }
+  50%     { transform: translateY(-1px); background: #f5faff; }
+}
+
+/* 2) Ensure K header blink is above table chrome; avoid clipping */
+.ptable thead, .ptable thead *, .ptable-thslot, .slot { 
+  position: relative; 
+  z-index: 3; 
+  overflow: visible !important;
+}
+
+/* 3) Compact the small fractions slightly (safety for narrow screens) */
+.fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
+.fraction.mini-frac .frac-bar { width: 48px !important; }
+
