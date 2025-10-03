@@ -1,7 +1,8 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.5
-// Changes:
-// 1) Stabilize right-card choices during FILL: cache per (row, part) so they don't reshuffle on re-renders.
-// 2) No flow changes; blink classes unchanged (CSS append strengthens visuals).
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.6
+// Changes vs 8.2.5:
+// - Wrapper-level blink that does NOT depend on DropSlot's inner styles.
+//   New prop on our Slot wrapper: `blinkWrap` -> adds a wrapper class that renders a high-contrast animated outline.
+// - Keeps choice caching and all previous behavior. No logic flow changes.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -50,7 +51,8 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
   return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
 };
 
-const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, ...rest }) => {
+// NOTE: New `blinkWrap` prop. When true, we render wrapper-level animated outline.
+const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
@@ -67,7 +69,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
     onClick?.(e);
   };
   return (
-    <div onClick={handleClick} style={{ display:"inline-block", width:"100%" }}>
+    <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
       <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
     </div>
   );
@@ -95,8 +97,8 @@ export default function ProportionalTablesModule() {
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
 
-  // NEW: cache for choices per (row, part) so they don't reshuffle
-  const fillChoicesRef = useRef({}); // key: `${row}:${part}` -> number[]
+  // cache choices
+  const fillChoicesRef = useRef({});
 
   useEffect(()=>saveDifficulty(difficulty),[difficulty]);
   useEffect(()=>()=>{ Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current={}; }, []);
@@ -139,7 +141,7 @@ export default function ProportionalTablesModule() {
     setFractions({}); setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
     setLabelStepTarget('x'); setBuildTarget('num'); setFillRow(0); setFillPart('num');
-    fillChoicesRef.value = {}; // clear cache
+    fillChoicesRef.current = {};
     Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current = {};
   };
 
@@ -165,7 +167,6 @@ export default function ProportionalTablesModule() {
     if (part === "den" && d.axis !== "x") return;
     const val = Number(d.value ?? nameOf(d));
     if (!Number.isFinite(val)) return;
-
     if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
     setReveal(prev=>({...prev,[i]:false}));
     setFractions(prev=>({...prev,[i]:{...(prev[i]||{}),[part]:val}}));
@@ -195,6 +196,7 @@ export default function ProportionalTablesModule() {
         if (got===want) onPlaced(true);
       }}
       className={`ptable-thslot ${placed ? "placed" : "empty"} ${blink ? "ptable-blink-hard blink-bg" : ""}`}
+      blinkWrap={blink && !placed}
     >
       {blink && !placed ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
       {placed ? <span className="chip chip-lg">{label}</span> : <span className="visually-hidden">empty</span>}
@@ -212,14 +214,16 @@ export default function ProportionalTablesModule() {
           <div className="fraction mini-frac" aria-label="k equals Y over X">
             <Slot accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d)=>{ const got=(nameOf(d)??"").toString().trim().toUpperCase(); if (got==="Y") setNumIsY(true);}}
-              className={`slot ptable-fracslot ${blinkNum ? "ptable-blink-hard blink-bg" : ""} ${numIsY ? "filled" : ""}`}>
+              className={`slot ptable-fracslot ${blinkNum ? "ptable-blink-hard blink-bg" : ""} ${numIsY ? "filled" : ""}`}
+              blinkWrap={blinkNum && !numIsY}>
               {blinkNum && !numIsY ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
               {numIsY ? <span className="chip chip-lg">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
             <Slot accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d)=>{ const got=(nameOf(d)??"").toString().trim().toUpperCase(); if (got==="X") setDenIsX(true);}}
-              className={`slot ptable-fracslot ${blinkDen ? "ptable-blink-hard blink-bg" : ""} ${denIsX ? "filled" : ""}`}>
+              className={`slot ptable-fracslot ${blinkDen ? "ptable-blink-hard blink-bg" : ""} ${denIsX ? "filled" : ""}`}
+              blinkWrap={blinkDen && !denIsX}>
               {blinkDen && !denIsX ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
               {denIsX ? <span className="chip chip-lg">x</span> : <span className="muted">—</span>}
             </Slot>
@@ -237,7 +241,6 @@ export default function ProportionalTablesModule() {
     if (fillPart==='den' && f.den!=null) { if (fillRow<2) { setFillRow(fillRow+1); setFillPart('num'); } }
   }, [fractions,fillRow,fillPart]);
 
-  // Build four-option choices; cache per (row, part)
   const computeChoices = (rowIndex, part) => {
     const ys = problem.rows.map(r => r.y);
     const xs = problem.rows.map(r => r.x);
@@ -256,9 +259,7 @@ export default function ProportionalTablesModule() {
 
   const getFillChoices = (rowIndex, part) => {
     const key = `${rowIndex}:${part}`;
-    if (!fillChoicesRef.current[key]) {
-      fillChoicesRef.current[key] = computeChoices(rowIndex, part);
-    }
+    if (!fillChoicesRef.current[key]) fillChoicesRef.current[key] = computeChoices(rowIndex, part);
     return fillChoicesRef.current[key];
   };
 
@@ -268,9 +269,7 @@ export default function ProportionalTablesModule() {
       <div className={`ptable-wrap ${!dragEnabled ? 'disable-dnd' : ''}`}>
         <div className={`ptable-rel ptable-table dark ${invis}`}>
           <table className="ptable" style={{ tableLayout: "fixed" }}>
-            <colgroup>
-              <col style={{ width: "25%" }} /><col style={{ width: "25%" }} /><col style={{ width: "50%" }} />
-            </colgroup>
+            <colgroup><col style={{ width: "25%" }} /><col style={{ width: "25%" }} /><col style={{ width: "50%" }} /></colgroup>
             <thead>
               <tr>
                 <th><HeaderDrop placed={xPlaced} label="x" expectName="X" onPlaced={(ok)=>{if(ok)setXPlaced(true);}} blink={!xPlaced && labelStepTarget==='x'} canDrop={dragEnabled} /></th>
@@ -279,7 +278,8 @@ export default function ProportionalTablesModule() {
                   {kPlaced ? <HeaderEqArea /> : (
                     <Slot accept={dragEnabled ? ACCEPT_HEADER : []}
                       onDrop={(d)=>{ const got=(nameOf(d)??"").toString().trim().toLowerCase(); if (got==='k') setKPlaced(true);}}
-                      className={`ptable-thslot empty ${labelStepTarget==='k' ? 'ptable-blink-hard blink-bg' : ''}`}>
+                      className={`ptable-thslot empty ${labelStepTarget==='k' ? 'ptable-blink-hard blink-bg' : ''}`}
+                      blinkWrap={labelStepTarget==='k' && !kPlaced}>
                       {labelStepTarget==='k' && !kPlaced ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                       <span className="visually-hidden">empty</span>
                     </Slot>
@@ -306,13 +306,15 @@ export default function ProportionalTablesModule() {
                           <span className="eq">=</span>
                           <div className="fraction mini-frac">
                             <Slot accept={ACCEPT_VALUE} validator={(d)=>d?.row===idx && d?.axis==='y'} onDrop={(d)=>onRowDrop(idx,'num',d)}
-                              className={`slot ptable-fracslot tight ${blinkNum ? 'ptable-blink-hard blink-bg' : ''}`}>
+                              className={`slot ptable-fracslot tight ${blinkNum ? 'ptable-blink-hard blink-bg' : ''}`}
+                              blinkWrap={blinkNum && (fractions[idx]?.num==null)}>
                               {blinkNum && (fractions[idx]?.num==null) ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                               {fractions[idx]?.num!=null ? <span className="chip chip-lg">{fractions[idx].num}</span> : <span className="muted">—</span>}
                             </Slot>
                             <div className="frac-bar extra-narrow" />
                             <Slot accept={ACCEPT_VALUE} validator={(d)=>d?.row===idx && d?.axis==='x'} onDrop={(d)=>onRowDrop(idx,'den',d)}
-                              className={`slot ptable-fracslot tight ${blinkDen ? 'ptable-blink-hard blink-bg' : ''}`}>
+                              className={`slot ptable-fracslot tight ${blinkDen ? 'ptable-blink-hard blink-bg' : ''}`}
+                              blinkWrap={blinkDen && (fractions[idx]?.den==null)}>
                               {blinkDen && (fractions[idx]?.den==null) ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                               {fractions[idx]?.den!=null ? <span className="chip chip-lg">{fractions[idx].den}</span> : <span className="muted">—</span>}
                             </Slot>
