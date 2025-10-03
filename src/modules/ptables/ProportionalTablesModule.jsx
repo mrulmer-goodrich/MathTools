@@ -413,7 +413,7 @@ export default function ProportionalTablesModule() {
         <div className="center" style={{ marginTop: 18 }}>
           <BigButton onClick={() => resetAll()}>New Problem</BigButton>
         </div>
-      </div>
+
 
       <div className="card right-steps">
         {currentStep === "label" && (
@@ -435,7 +435,7 @@ export default function ProportionalTablesModule() {
                 >{opt}</button>
               ))}
             </div>
- 
+         </div>
         )}
 
         {currentStep === "build" && (
