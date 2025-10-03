@@ -1,13 +1,15 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2
-// Full-file replacement per user request.
-// CHANGES vs v8.1.1:
-// - Much stronger blinking cue on target cells (CSS hooks)
-// - Header labels render as visible chips (kept)
-// - Guided "What goes here?" for BUILD (k = y/x) step — no dragging; tap correct chip (y then x)
-// - Guided "What goes here?" for FILL (row fractions): per-row numerator then denominator; tap correct value
-// - Drag is disabled during LABEL, BUILD, and FILL steps to avoid conflicts
-// - Removed prior instructional texts about dragging/reveal; replaced with concise "What goes here?" UI
-// - Larger in-table value chips for better readability
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.1
+// Full-file replacement per user request (precision update on v8.2).
+// Changes vs v8.2:
+// - Strong visible blink via `.ptable-pulse` overlay + `.ptable-blink-hard`
+// - Larger in-cell chips (`chip-lg`) for header & row fraction placements
+// - BUILD step and FILL step remain guided "What goes here?" (tap-only)
+// - FILL step choices now show 4 options:
+//     * 2 from the correct row (only one correct: y for numerator, x for denominator)
+//     * 2 from other values in the table (mix of x/y from other rows)
+// - 4th row visuals: x and solved y render as chips to match other rows
+// - Confetti upgraded to multi-burst (tries canvas-confetti, falls back to DOM pieces)
+// - Drag disabled during label/build/fill; enabled for concept/solve as in v8.2
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -24,6 +26,36 @@ const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+// Simple confetti helper: try canvas-confetti if present, else DOM pieces
+function multiBurstConfetti() {
+  const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
+  if (c) {
+    const origins = [{x:0.2,y:0.2},{x:0.5,y:0.2},{x:0.8,y:0.2},{x:0.3,y:0.4},{x:0.7,y:0.4}];
+    let i=0; const timer=setInterval(()=>{
+      c({ particleCount: 120, spread: 70, startVelocity: 55, ticks: 200, origin: origins[i%origins.length] });
+      if(++i>=6){ clearInterval(timer); }
+    }, 220);
+    return;
+  }
+  // Fallback DOM confetti (banner-like, but repeat across screen)
+  const host = document.createElement("div");
+  host.className = "sf-confetti";
+  document.body.appendChild(host);
+  const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
+  for (let k=0;k<5;k++){
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("div");
+      p.className = "sf-confetti-piece";
+      p.style.left = (k*20 + Math.random()*20) + "vw";
+      p.style.width = "6px"; p.style.height = "10px";
+      p.style.background = colors[(Math.random() * colors.length) | 0];
+      p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
+      host.appendChild(p);
+    }
+  }
+  setTimeout(() => host.remove(), 2500);
+}
 
 // Tiny tap-to-place store (module-scoped; no shared edits)
 const _pickStore = {
@@ -83,15 +115,11 @@ export default function ProportionalTablesModule() {
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-  // guided label step target: 'x' -> 'y' -> 'k'
-  const [labelStepTarget, setLabelStepTarget] = useState('x');
-
-  // guided build step (k=y/x) target: 'num' -> 'den'
-  const [buildTarget, setBuildTarget] = useState('num');
-
-  // guided fill step: which row & part is blinking
-  const [fillRow, setFillRow] = useState(0);    // 0..2
-  const [fillPart, setFillPart] = useState('num'); // 'num' | 'den'
+  // guided targets
+  const [labelStepTarget, setLabelStepTarget] = useState('x');  // 'x' -> 'y' -> 'k'
+  const [buildTarget, setBuildTarget] = useState('num');        // 'num' -> 'den'
+  const [fillRow, setFillRow] = useState(0);                    // 0..2
+  const [fillPart, setFillPart] = useState('num');              // 'num' | 'den'
 
   // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({});
@@ -206,10 +234,10 @@ export default function ProportionalTablesModule() {
     return "solve";
   }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsRevealed, conceptCorrect]);
 
-  // NOTE v8.2: Drag is intentionally disabled during label, build, and fill steps (guided flow).
+  // NOTE v8.2.1: Drag is disabled during label, build, and fill steps (guided flow).
   const dragEnabled = currentStep === "concept" || currentStep === "solve";
 
-  // header drop (for X / Y) — renders lowercase chip when placed; supports blink
+  // header drop (for X / Y) — visible chip; strong blink + pulse child
   const HeaderDrop = ({ placed, label, expectName, onPlaced, blink=false, canDrop=true }) => (
     <Slot
       accept={canDrop ? ACCEPT_HEADER : []}
@@ -220,7 +248,8 @@ export default function ProportionalTablesModule() {
       }}
       className={`ptable-thslot ${placed ? "placed" : "empty"} ${blink ? "ptable-blink-hard" : ""}`}
     >
-      {placed ? <span className="chip chip-med">{label}</span> : <span className="visually-hidden">empty</span>}
+      {blink && !placed ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
+      {placed ? <span className="chip chip-lg">{label}</span> : <span className="visually-hidden">empty</span>}
     </Slot>
   );
 
@@ -241,7 +270,8 @@ export default function ProportionalTablesModule() {
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
               className={`slot ptable-fracslot ${blinkNum ? "ptable-blink-hard" : ""} ${numIsY ? "filled" : ""}`}
             >
-              {numIsY ? <span className="chip chip-med">y</span> : <span className="muted">—</span>}
+              {blinkNum && !numIsY ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
+              {numIsY ? <span className="chip chip-lg">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
             {/* Denominator: x */}
@@ -250,7 +280,8 @@ export default function ProportionalTablesModule() {
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
               className={`slot ptable-fracslot ${blinkDen ? "ptable-blink-hard" : ""} ${denIsX ? "filled" : ""}`}
             >
-              {denIsX ? <span className="chip chip-med">x</span> : <span className="muted">—</span>}
+              {blinkDen && !denIsX ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
+              {denIsX ? <span className="chip chip-lg">x</span> : <span className="muted">—</span>}
             </Slot>
           </div>
         </div>
@@ -284,9 +315,34 @@ export default function ProportionalTablesModule() {
   };
   useEffect(advanceFill, [fractions, fillRow, fillPart]);
 
+  // Build four-option choices for FILL step (per row/part)
+  const buildFillChoices = (rowIndex, part) => {
+    const ys = problem.rows.map(r => r.y);
+    const xs = problem.rows.map(r => r.x);
+    const row = problem.rows[rowIndex];
+
+    const correct = part === "num" ? row.y : row.x;
+    const sameRowDecoy = part === "num" ? row.x : row.y;
+
+    const otherYs = ys.filter((_, i) => i !== rowIndex);
+    const otherXs = xs.filter((_, i) => i !== rowIndex);
+    const otherY = otherYs[Math.floor(Math.random()*otherYs.length)];
+    const otherX = otherXs[Math.floor(Math.random()*otherXs.length)];
+
+    // Build unique set and shuffle
+    const set = Array.from(new Set([correct, sameRowDecoy, otherY, otherX]));
+    while (set.length < 4) {
+      // pad if duplicates collapsed
+      const pool = ys.concat(xs).filter(v => !set.includes(v));
+      set.push(pool[Math.floor(Math.random()*pool.length)]);
+    }
+    return shuffle(set);
+  };
+
   // Table
   const Table = useMemo(() => {
     const invis = !kPlaced ? "col3-invisible" : "";
+    const isFill = currentStep === "fill";
     return (
       <div className={`ptable-wrap ${!dragEnabled ? 'disable-dnd' : ''}`}>
         <div className={`ptable-rel ptable-table dark ${invis}`}>
@@ -327,6 +383,7 @@ export default function ProportionalTablesModule() {
                       onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toLowerCase(); if (got === "k") { setKPlaced(true); } }}
                       className={`ptable-thslot empty ${labelStepTarget === 'k' ? 'ptable-blink-hard' : ''}`}
                     >
+                      {labelStepTarget === 'k' && !kPlaced ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                       <span className="visually-hidden">empty</span>
                     </Slot>
                   )}
@@ -341,22 +398,8 @@ export default function ProportionalTablesModule() {
                 const blinkDen = isBlinkRow && fillPart === "den";
                 return (
                   <tr key={idx}>
-                    <td>
-                      <Draggable
-                        id={`x-${idx}`}
-                        label={`${r.x}`}
-                        payload={{ type: "value", axis: "x", row: idx, value: r.x }}
-                        className="chip"
-                      />
-                    </td>
-                    <td>
-                      <Draggable
-                        id={`y-${idx}`}
-                        label={`${r.y}`}
-                        payload={{ type: "value", axis: "y", row: idx, value: r.y }}
-                        className="chip"
-                      />
-                    </td>
+                    <td><span className="chip chip-lg">{r.x}</span></td>
+                    <td><span className="chip chip-lg">{r.y}</span></td>
                     <td>
                       {headerEqCorrect ? (
                         <div className="row-calc nowrap">
@@ -375,8 +418,9 @@ export default function ProportionalTablesModule() {
                               onDrop={(d) => onRowDrop(idx, "num", d)}
                               className={`slot ptable-fracslot tight ${blinkNum ? "ptable-blink-hard" : ""}`}
                             >
+                              {blinkNum && (fractions[idx]?.num == null) ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                               {fractions[idx]?.num != null
-                                ? <span className="chip chip-med">{fractions[idx].num}</span>
+                                ? <span className="chip chip-lg">{fractions[idx].num}</span>
                                 : <span className="muted">—</span>}
                             </Slot>
                             <div className="frac-bar extra-narrow" />
@@ -386,8 +430,9 @@ export default function ProportionalTablesModule() {
                               onDrop={(d) => onRowDrop(idx, "den", d)}
                               className={`slot ptable-fracslot tight ${blinkDen ? "ptable-blink-hard" : ""}`}
                             >
+                              {blinkDen && (fractions[idx]?.den == null) ? <span className="ptable-pulse" aria-hidden="true"></span> : null}
                               {fractions[idx]?.den != null
-                                ? <span className="chip chip-med">{fractions[idx].den}</span>
+                                ? <span className="chip chip-lg">{fractions[idx].den}</span>
                                 : <span className="muted">—</span>}
                             </Slot>
                           </div>
@@ -406,8 +451,8 @@ export default function ProportionalTablesModule() {
 
               {revealFourthRow && problem.revealRow4 && (
                 <tr>
-                  <td>{problem.revealRow4.x}</td>
-                  <td>{row4Answer == null ? "?" : row4Answer}</td>
+                  <td><span className="chip chip-lg">{problem.revealRow4.x}</span></td>
+                  <td><span className="chip chip-lg">{row4Answer == null ? "?" : row4Answer}</span></td>
                   <td>
                     <span className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>
                       k = {fmt(kValues[0])}
@@ -427,7 +472,7 @@ export default function ProportionalTablesModule() {
   }, [
     problem, xPlaced, yPlaced, kPlaced, headerEqCorrect,
     fractions, kValues, revealFourthRow, row4Answer, reveal,
-    labelStepTarget, buildTarget, fillRow, fillPart, dragEnabled
+    labelStepTarget, buildTarget, fillRow, fillPart, dragEnabled, currentStep
   ]);
 
   // Right card content per step — all guided, no drag text
@@ -451,8 +496,8 @@ export default function ProportionalTablesModule() {
   );
 
   const renderBuildChoices = () => {
-    // We only need y then x
-    const order = buildTarget === "num" ? ["y","x"] : ["x","y"]; // keep both visible for consistency
+    // We want y then x, but keep both visible
+    const order = buildTarget === "num" ? ["y","x"] : ["x","y"];
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {order.map((opt) => (
@@ -473,17 +518,13 @@ export default function ProportionalTablesModule() {
   };
 
   const renderFillChoices = () => {
-    // For numerator: pick correct y value for the current row among [y0,y1,y2]
-    // For denominator: pick correct x value for the current row among [x0,x1,x2]
-    const ys = problem.rows.map(r => r.y);
-    const xs = problem.rows.map(r => r.x);
-    const choices = (fillPart === "num") ? ys : xs;
-    const correct = (fillPart === "num") ? ys[fillRow] : xs[fillRow];
+    const choices = buildFillChoices(fillRow, fillPart);
+    const correct = (fillPart === "num") ? problem.rows[fillRow].y : problem.rows[fillRow].x;
     return (
       <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
         {choices.map((val, i) => (
           <button
-            key={`${fillPart}-${i}`}
+            key={`${fillPart}-${i}-${val}`}
             type="button"
             className="ptable-choice big"
             onClick={() => {
@@ -583,21 +624,11 @@ export default function ProportionalTablesModule() {
                     if (correct) {
                       solveRow4();
                       const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
-                      if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1500); }
-                      const host = document.createElement("div");
-                      host.className = "sf-confetti";
-                      document.body.appendChild(host);
-                      const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
-                      for (let i = 0; i < 80; i++) {
-                        const p = document.createElement("div");
-                        p.className = "sf-confetti-piece";
-                        p.style.left = Math.random() * 100 + "vw";
-                        p.style.width = "6px"; p.style.height = "10px";
-                        p.style.background = colors[(Math.random() * colors.length) | 0];
-                        p.style.animationDuration = 2 + Math.random() * 1.5 + "s";
-                        host.appendChild(p);
+                      if (el) {
+                        el.classList.add("flash");
+                        setTimeout(() => el.classList.remove("flash"), 1200);
                       }
-                      setTimeout(() => host.remove(), 2500);
+                      multiBurstConfetti();
                     } else {
                       alert("Not quite — try another.");
                     }
