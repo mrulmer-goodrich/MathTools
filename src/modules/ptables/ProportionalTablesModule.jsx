@@ -1,8 +1,7 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.6
-// Changes vs 8.2.5:
-// - Wrapper-level blink that does NOT depend on DropSlot's inner styles.
-//   New prop on our Slot wrapper: `blinkWrap` -> adds a wrapper class that renders a high-contrast animated outline.
-// - Keeps choice caching and all previous behavior. No logic flow changes.
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.7
+// Changes vs 8.2.6:
+// - Confetti: add singleton guard + cooldown to prevent double/continuous drops across modules.
+// - No logic flow changes for steps. Blink wrapper kept as in 8.2.6.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -16,8 +15,16 @@ const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+// ⬇️ Guarded confetti to avoid duplicates from parallel modules
 function multiBurstConfetti() {
-  const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
+  if (typeof window === "undefined") return;
+
+  const now = Date.now();
+  const last = window.__ptableConfettiLast || 0;
+  if (now - last < 2500) { return; }           // cooldown (2.5s) to prevent back-to-back runs
+  window.__ptableConfettiLast = now;
+
+  const c = window.confetti || window.canvasConfetti;
   if (c) {
     const origins = [{x:0.15,y:0.15},{x:0.5,y:0.15},{x:0.85,y:0.15},{x:0.25,y:0.35},{x:0.75,y:0.35}];
     let i=0; const timer=setInterval(()=>{
@@ -26,6 +33,11 @@ function multiBurstConfetti() {
     }, 200);
     return;
   }
+  // DOM fallback (single host, auto-removed)
+  try {
+    // remove any stray host first
+    document.querySelectorAll(".sf-confetti").forEach(n => n.remove());
+  } catch {}
   const host = document.createElement("div");
   host.className = "sf-confetti";
   document.body.appendChild(host);
@@ -51,7 +63,7 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
   return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
 };
 
-// NOTE: New `blinkWrap` prop. When true, we render wrapper-level animated outline.
+// NOTE: `blinkWrap` renders a wrapper-level animated outline.
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
