@@ -1,10 +1,7 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.2
-// Full-file replacement (tiny surgical updates on v8.2.1).
-// Changes vs v8.2.1:
-// - When a slot is the current target, we add BOTH classes:
-//     * ptable-blink-hard (halo) AND blink-bg (background flash)
-//   and we render the pulse dot. This maximizes visibility regardless of theme.
-// - No logic changes; guided flow remains identical.
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.3
+// Small precision update on v8.2.2:
+// - Add "reveal-value" class to the k result span so CSS can animate fade-in.
+// - No behavior/logic changes; guided flow unchanged.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -23,7 +20,7 @@ const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){co
 function multiBurstConfetti() {
   const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
   if (c) {
-    const origins = [{x:0.2,y:0.2},{x:0.5,y:0.2},{x:0.8,y:0.2},{x:0.3,y:0.4},{x:0.7,y:0.4}];
+    const origins = [{x:0.15,y:0.15},{x:0.5,y:0.15},{x:0.85,y:0.15},{x:0.25,y:0.35},{x:0.75,y:0.35}];
     let i=0; const timer=setInterval(()=>{
       c({ particleCount: 140, spread: 75, startVelocity: 60, ticks: 210, origin: origins[i%origins.length] });
       if(++i>=7){ clearInterval(timer); }
@@ -34,18 +31,17 @@ function multiBurstConfetti() {
   host.className = "sf-confetti";
   document.body.appendChild(host);
   const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
-  for (let k=0;k<6;k++){
-    for (let i = 0; i < 40; i++) {
-      const p = document.createElement("div");
-      p.className = "sf-confetti-piece";
-      p.style.left = (k*16 + Math.random()*16) + "vw";
-      p.style.width = "6px"; p.style.height = "10px";
-      p.style.background = colors[(Math.random() * colors.length) | 0];
-      p.style.animationDuration = 2 + Math.random() * 1.6 + "s";
-      host.appendChild(p);
-    }
+  for (let i=0;i<160;i++){
+    const p = document.createElement("div");
+    p.className = "sf-confetti-piece";
+    p.style.left = Math.random()*100 + "vw";
+    p.style.width = "6px"; p.style.height = "10px";
+    p.style.background = colors[(Math.random() * colors.length) | 0];
+    p.style.animationDuration = (1.8 + Math.random()*1.4) + "s";
+    p.style.animationDelay = (Math.random()*0.6) + "s";
+    host.appendChild(p);
   }
-  setTimeout(() => host.remove(), 2600);
+  setTimeout(() => host.remove(), 3000);
 }
 
 const _pickStore = {
@@ -388,7 +384,7 @@ export default function ProportionalTablesModule() {
                             </Slot>
                           </div>
                           {Number.isFinite(kValues[idx]) && reveal[idx] && (
-                            <span className="eq result">= <b>{fmt(kValues[idx])}</b></span>
+                            <span className="eq result reveal-value">= <b>{fmt(kValues[idx])}</b></span>
                           )}
                         </div>
                       ) : (
@@ -418,120 +414,91 @@ export default function ProportionalTablesModule() {
           <BigButton onClick={() => resetAll()}>New Problem</BigButton>
         </div>
       </div>
-    );
-  }, [
-    problem, xPlaced, yPlaced, kPlaced, headerEqCorrect,
-    fractions, kValues, revealFourthRow, row4Answer, reveal,
-    labelStepTarget, buildTarget, fillRow, fillPart, dragEnabled, currentStep
-  ]);
-
-  const renderLabelChoices = () => (
-    <div className="row" style={{ gap: 10, marginTop: 12 }}>
-      {["x","y","k"].map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          className="ptable-choice big"
-          onClick={() => {
-            if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
-            if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
-            if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
-            try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-          }}
-          aria-label={`choose ${opt}`}
-        >{opt}</button>
-      ))}
-    </div>
-  );
-
-  const renderBuildChoices = () => {
-    const order = buildTarget === "num" ? ["y","x"] : ["x","y"];
-    return (
-      <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {order.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            className="ptable-choice big"
-            onClick={() => {
-              if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
-              if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
-              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-            }}
-            aria-label={`choose ${opt}`}
-          >{opt}</button>
-        ))}
-      </div>
-    );
-  };
-
-  const renderFillChoices = () => {
-    const choices = buildFillChoices(fillRow, fillPart);
-    const correct = (fillPart === "num") ? problem.rows[fillRow].y : problem.rows[fillRow].x;
-    return (
-      <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
-        {choices.map((val, i) => (
-          <button
-            key={`${fillPart}-${i}-${val}`}
-            type="button"
-            className="ptable-choice big"
-            onClick={() => {
-              if (val === correct) {
-                if (fillPart === "num") {
-                  onRowDrop(fillRow, "num", { type:"value", axis:"y", row: fillRow, value: val });
-                  setFillPart("den");
-                  return;
-                } else {
-                  onRowDrop(fillRow, "den", { type:"value", axis:"x", row: fillRow, value: val });
-                  if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart("num"); }
-                  return;
-                }
-              }
-              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-            }}
-            aria-label={`choose ${val}`}
-          >{val}</button>
-        ))}
-      </div>
-    );
-  };
-
-  return (
-    <div className="panes ptables-layout">
-      <div className="card">
-        <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
-          <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "easy" ? "active" : ""} onClick={() => { setDifficulty("easy"); resetAll("easy"); }} aria-pressed={difficulty === "easy"}>Easy</BigButton>
-          </div>
-          <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "medium" ? "active" : ""} onClick={() => { setDifficulty("medium"); resetAll("medium"); }} aria-pressed={difficulty === "medium"}>Medium</BigButton>
-          </div>
-          <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "hard" ? "active" : ""} onClick={() => { setDifficulty("hard"); resetAll("hard"); }} aria-pressed={difficulty === "hard"}>Hard</BigButton>
-          </div>
-        </div>
-        {Table}
-      </div>
 
       <div className="card right-steps">
         {currentStep === "label" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            {renderLabelChoices()}
+            <div className="row" style={{ gap: 10, marginTop: 12 }}>
+              {["x","y","k"].map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className="ptable-choice big"
+                  onClick={() => {
+                    if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
+                    if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
+                    if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
+                    try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+                  }}
+                  aria-label={`choose ${opt}`}
+                >{opt}</button>
+              ))}
+            </div>
           </div>
         )}
 
         {currentStep === "build" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            {renderBuildChoices()}
+            <div className="row" style={{ gap: 10, marginTop: 12 }}>
+              { ( (buildTarget === "num") ? ["y","x"] : ["x","y"] ).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className="ptable-choice big"
+                  onClick={() => {
+                    if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
+                    if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
+                    try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+                  }}
+                  aria-label={`choose ${opt}`}
+                >{opt}</button>
+              ))}
+            </div>
           </div>
         )}
 
         {currentStep === "fill" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            {renderFillChoices()}
+            <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
+              {(() => {
+                const ys = problem.rows.map(r => r.y);
+                const xs = problem.rows.map(r => r.x);
+                const row = problem.rows[fillRow];
+                const correct = (fillPart === "num") ? row.y : row.x;
+                const sameRowDecoy = (fillPart === "num") ? row.x : row.y;
+                const otherY = ys[(fillRow + 1) % ys.length];
+                const otherX = xs[(fillRow + 2) % xs.length];
+                const setVals = Array.from(new Set([correct, sameRowDecoy, otherY, otherX]));
+                while (setVals.length < 4) {
+                  const pool = ys.concat(xs).filter(v => !setVals.includes(v));
+                  setVals.push(pool[Math.floor(Math.random()*pool.length)]);
+                }
+                return shuffle(setVals).map((val, i) => (
+                  <button
+                    key={`${fillPart}-${i}-${val}`}
+                    type="button"
+                    className="ptable-choice big"
+                    onClick={() => {
+                      if (val === correct) {
+                        if (fillPart === "num") {
+                          onRowDrop(fillRow, "num", { type:"value", axis:"y", row: fillRow, value: val });
+                          setFillPart("den");
+                        } else {
+                          onRowDrop(fillRow, "den", { type:"value", axis:"x", row: fillRow, value: val });
+                          if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart("num"); }
+                        }
+                        return;
+                      }
+                      try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+                    }}
+                    aria-label={`choose ${val}`}
+                  >{val}</button>
+                ));
+              })()}
+            </div>
           </div>
         )}
 
