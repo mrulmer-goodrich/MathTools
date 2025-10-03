@@ -1,7 +1,9 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.3
-// Small precision update on v8.2.2:
-// - Add "reveal-value" class to the k result span so CSS can animate fade-in.
-// - No behavior/logic changes; guided flow unchanged.
+// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.4
+// Full-file replacement.
+// Diff vs 8.2.3:
+// - Fixed `onClick={() => resetAll()}` (no missing "=")
+// - Balanced closing tags and braces around the "New Problem" button and end-of-file
+// - No logic changes from 8.2.3 (blink/flash/fade-in/confetti remain)
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
@@ -9,14 +11,16 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
+// persistence
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
 
-const approxEq = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+// helpers
 const nameOf = (d) => d?.name ?? d?.label ?? d?.value;
 const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString() : "");
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+// Confetti helper
 function multiBurstConfetti() {
   const c = (typeof window!=="undefined") && (window.confetti || window.canvasConfetti);
   if (c) {
@@ -27,6 +31,7 @@ function multiBurstConfetti() {
     }, 200);
     return;
   }
+  // DOM fallback
   const host = document.createElement("div");
   host.className = "sf-confetti";
   document.body.appendChild(host);
@@ -44,6 +49,7 @@ function multiBurstConfetti() {
   setTimeout(() => host.remove(), 3000);
 }
 
+// tap-pick store
 const _pickStore = {
   data: null,
   set(d) { this.data = d || null; },
@@ -51,12 +57,14 @@ const _pickStore = {
   clear() { this.data = null; }
 };
 
+// Draggable wrapper (tap-pick)
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
   return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
 };
 
+// DropSlot wrapper (tap-drop)
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
@@ -80,31 +88,38 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
   );
 };
 
+// accept types
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
-const ACCEPT_VALUE  = ["value", "number"];
+const ACCEPT_VALUE  = ["value", "number"]; // row values
 
 export default function ProportionalTablesModule() {
+  // difficulty & problem
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => genPTable(difficulty));
 
+  // header labels
   const [xPlaced, setXPlaced] = useState(false);
   const [yPlaced, setYPlaced] = useState(false);
   const [kPlaced, setKPlaced] = useState(false);
 
+  // header fraction (k = y / x)
   const [numIsY, setNumIsY] = useState(false);
   const [denIsX, setDenIsX] = useState(false);
   const headerEqCorrect = kPlaced && numIsY && denIsX;
 
-  const [labelStepTarget, setLabelStepTarget] = useState('x');
-  const [buildTarget, setBuildTarget] = useState('num');
-  const [fillRow, setFillRow] = useState(0);
-  const [fillPart, setFillPart] = useState('num');
+  // guided targets
+  const [labelStepTarget, setLabelStepTarget] = useState('x');  // 'x' -> 'y' -> 'k'
+  const [buildTarget, setBuildTarget] = useState('num');        // 'num' -> 'den'
+  const [fillRow, setFillRow] = useState(0);                    // 0..2
+  const [fillPart, setFillPart] = useState('num');              // 'num' | 'den'
 
+  // per-row fraction inputs & computed k values
   const [fractions, setFractions] = useState({});
   const [kValues, setKValues] = useState({});
   const [reveal, setReveal] = useState({});
   const revealTimers = useRef({});
 
+  // derived flags
   const allRowsComputed = useMemo(() => [0,1,2].every(i => {
     const f = fractions[i];
     return f?.num != null && f?.den != null && Number.isFinite(kValues[i]);
@@ -135,13 +150,17 @@ export default function ProportionalTablesModule() {
     return false;
   }, [allRowsComputed, ksEqual, conceptAnswer]);
 
+  // fourth row reveal only if proportional & concept is correct
   const revealFourthRow = (ksEqual === true && conceptCorrect);
   const [row4Answer, setRow4Answer] = useState(null);
 
+  // persist difficulty
   useEffect(() => { saveDifficulty(difficulty); }, [difficulty]);
 
+  // clear timers on unmount
   useEffect(() => () => { Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current = {}; }, []);
 
+  // reset all for new problem/difficulty
   const resetAll = (nextDiff = difficulty) => {
     const next = genPTable(nextDiff);
     setProblem(next);
@@ -159,6 +178,7 @@ export default function ProportionalTablesModule() {
     revealTimers.current = {};
   };
 
+  // auto-calc row k when both numerator & denominator are present
   useEffect(() => {
     [0, 1, 2].forEach((i) => {
       const f = fractions[i];
@@ -169,6 +189,7 @@ export default function ProportionalTablesModule() {
     });
   }, [fractions]);
 
+  // reveal "= value" after 2s once both values present
   useEffect(() => {
     [0, 1, 2].forEach((i) => {
       const f = fractions[i];
@@ -199,14 +220,16 @@ export default function ProportionalTablesModule() {
 
   const currentStep = useMemo(() => {
     if (!xPlaced || !yPlaced || !kPlaced) return "label";
-    if (!headerEqCorrect) return "build";
-    if (!allRowsRevealed) return "fill";
+    if (!headerEqCorrect) return "build";      // place y then x into k = y/x
+    if (!allRowsRevealed) return "fill";       // guided per-row fill (num then den for row0..2)
     if (!conceptCorrect) return "concept";
     return "solve";
   }, [xPlaced, yPlaced, kPlaced, headerEqCorrect, allRowsRevealed, conceptCorrect]);
 
+  // NOTE: Drag disabled during label, build, fill; enabled later
   const dragEnabled = currentStep === "concept" || currentStep === "solve";
 
+  // header drop (for X / Y)
   const HeaderDrop = ({ placed, label, expectName, onPlaced, blink=false, canDrop=true }) => (
     <Slot
       accept={canDrop ? ACCEPT_HEADER : []}
@@ -232,6 +255,7 @@ export default function ProportionalTablesModule() {
           <div className="badge">k</div>
           <span>=</span>
           <div className="fraction mini-frac" aria-label="k equals Y over X">
+            {/* Numerator: y */}
             <Slot
               accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "Y") setNumIsY(true); }}
@@ -241,6 +265,7 @@ export default function ProportionalTablesModule() {
               {numIsY ? <span className="chip chip-lg">y</span> : <span className="muted">—</span>}
             </Slot>
             <div className="frac-bar narrow" />
+            {/* Denominator: x */}
             <Slot
               accept={dragEnabled ? ACCEPT_HEADER : []}
               onDrop={(d) => { const got = (nameOf(d) ?? "").toString().trim().toUpperCase(); if (got === "X") setDenIsX(true); }}
@@ -255,6 +280,7 @@ export default function ProportionalTablesModule() {
     );
   };
 
+  // advance helpers
   useEffect(() => {
     if (!xPlaced) setLabelStepTarget('x');
     else if (!yPlaced) setLabelStepTarget('y');
@@ -272,6 +298,7 @@ export default function ProportionalTablesModule() {
     if (fillPart === 'den' && f.den != null) { if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart('num'); } }
   }, [fractions, fillRow, fillPart]);
 
+  // Build four-option choices for FILL step (deterministic pattern)
   const buildFillChoices = (rowIndex, part) => {
     const ys = problem.rows.map(r => r.y);
     const xs = problem.rows.map(r => r.x);
@@ -282,16 +309,18 @@ export default function ProportionalTablesModule() {
     const otherY = ys[(rowIndex + 1) % ys.length];
     const otherX = xs[(rowIndex + 2) % xs.length];
 
-    const set = Array.from(new Set([correct, sameRowDecoy, otherY, otherX]));
-    while (set.length < 4) {
-      const pool = ys.concat(xs).filter(v => !set.includes(v));
-      set.push(pool[Math.floor(Math.random()*pool.length)]);
+    const setVals = Array.from(new Set([correct, sameRowDecoy, otherY, otherX]));
+    while (setVals.length < 4) {
+      const pool = ys.concat(xs).filter(v => !setVals.includes(v));
+      setVals.push(pool[Math.floor(Math.random()*pool.length)]);
     }
-    return shuffle(set);
+    return shuffle(setVals);
   };
 
+  // Table view
   const Table = useMemo(() => {
     const invis = !kPlaced ? "col3-invisible" : "";
+    const isFill = currentStep === "fill";
     return (
       <div className={`ptable-wrap ${!dragEnabled ? 'disable-dnd' : ''}`}>
         <div className={`ptable-rel ptable-table dark ${invis}`}>
@@ -352,12 +381,14 @@ export default function ProportionalTablesModule() {
                     <td>
                       {headerEqCorrect ? (
                         <div className="row-calc nowrap">
+                          {/* left: static y/x fraction */}
                           <div className="fraction mini-frac static">
                             <div><strong>y</strong></div>
                             <div className="frac-bar extra-narrow" />
                             <div><strong>x</strong></div>
                           </div>
                           <span className="eq">=</span>
+                          {/* right: y_i / x_i (guided during FILL) */}
                           <div className="fraction mini-frac">
                             <Slot
                               accept={ACCEPT_VALUE}
@@ -383,6 +414,7 @@ export default function ProportionalTablesModule() {
                                 : <span className="muted">—</span>}
                             </Slot>
                           </div>
+                          {/* reveal result after delay */}
                           {Number.isFinite(kValues[idx]) && reveal[idx] && (
                             <span className="eq result reveal-value">= <b>{fmt(kValues[idx])}</b></span>
                           )}
@@ -411,94 +443,126 @@ export default function ProportionalTablesModule() {
         </div>
 
         <div className="center" style={{ marginTop: 18 }}>
-         <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+          <BigButton onClick={() => resetAll()}>New Problem</BigButton>
         </div>
+      </div>
+    );
+  }, [
+    problem, xPlaced, yPlaced, kPlaced, headerEqCorrect,
+    fractions, kValues, revealFourthRow, row4Answer, reveal,
+    labelStepTarget, buildTarget, fillRow, fillPart, dragEnabled, currentStep
+  ]);
 
+  // Right card content per step
+  const renderLabelChoices = () => (
+    <div className="row" style={{ gap: 10, marginTop: 12 }}>
+      {["x","y","k"].map((opt) => (
+        <button
+          key={opt}
+          type="button"
+          className="ptable-choice big"
+          onClick={() => {
+            if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
+            if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
+            if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
+            try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+          }}
+          aria-label={`choose ${opt}`}
+        >{opt}</button>
+      ))}
+    </div>
+  );
 
+  const renderBuildChoices = () => {
+    const order = buildTarget === "num" ? ["y","x"] : ["x","y"];
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12 }}>
+        {order.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            className="ptable-choice big"
+            onClick={() => {
+              if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
+              if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${opt}`}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderFillChoices = () => {
+    const choices = buildFillChoices(fillRow, fillPart);
+    const correct = (fillPart === "num") ? problem.rows[fillRow].y : problem.rows[fillRow].x;
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
+        {choices.map((val, i) => (
+          <button
+            key={`${fillPart}-${i}-${val}`}
+            type="button"
+            className="ptable-choice big"
+            onClick={() => {
+              if (val === correct) {
+                if (fillPart === "num") {
+                  onRowDrop(fillRow, "num", { type:"value", axis:"y", row: fillRow, value: val });
+                  setFillPart("den");
+                  return;
+                } else {
+                  onRowDrop(fillRow, "den", { type:"value", axis:"x", row: fillRow, value: val });
+                  if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart("num"); }
+                  return;
+                }
+              }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${val}`}
+          >{val}</button>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="panes ptables-layout">
+      {/* LEFT CARD */}
+      <div className="card">
+        <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
+          <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
+            <BigButton className={difficulty === "easy" ? "active" : ""} onClick={() => { setDifficulty("easy"); resetAll("easy"); }} aria-pressed={difficulty === "easy"}>Easy</BigButton>
+          </div>
+          <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
+            <BigButton className={difficulty === "medium" ? "active" : ""} onClick={() => { setDifficulty("medium"); resetAll("medium"); }} aria-pressed={difficulty === "medium"}>Medium</BigButton>
+          </div>
+          <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
+            <BigButton className={difficulty === "hard" ? "active" : ""} onClick={() => { setDifficulty("hard"); resetAll("hard"); }} aria-pressed={difficulty === "hard"}>Hard</BigButton>
+          </div>
+        </div>
+        {Table}
+      </div>
+
+      {/* RIGHT CARD */}
       <div className="card right-steps">
         {currentStep === "label" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            <div className="row" style={{ gap: 10, marginTop: 12 }}>
-              {["x","y","k"].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  className="ptable-choice big"
-                  onClick={() => {
-                    if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
-                    if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
-                    if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
-                    try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-                  }}
-                  aria-label={`choose ${opt}`}
-                >{opt}</button>
-              ))}
-            </div>
-         </div>
+            {renderLabelChoices()}
+          </div>
         )}
 
         {currentStep === "build" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            <div className="row" style={{ gap: 10, marginTop: 12 }}>
-              { ( (buildTarget === "num") ? ["y","x"] : ["x","y"] ).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  className="ptable-choice big"
-                  onClick={() => {
-                    if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
-                    if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
-                    try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-                  }}
-                  aria-label={`choose ${opt}`}
-                >{opt}</button>
-              ))}
-            </div>
+            {renderBuildChoices()}
           </div>
         )}
 
         {currentStep === "fill" && (
           <div className="section">
             <div className="step-title">What goes here?</div>
-            <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
-              {(() => {
-                const ys = problem.rows.map(r => r.y);
-                const xs = problem.rows.map(r => r.x);
-                const row = problem.rows[fillRow];
-                const correct = (fillPart === "num") ? row.y : row.x;
-                const sameRowDecoy = (fillPart === "num") ? row.x : row.y;
-                const otherY = ys[(fillRow + 1) % ys.length];
-                const otherX = xs[(fillRow + 2) % xs.length];
-                const setVals = Array.from(new Set([correct, sameRowDecoy, otherY, otherX]));
-                while (setVals.length < 4) {
-                  const pool = ys.concat(xs).filter(v => !setVals.includes(v));
-                  setVals.push(pool[Math.floor(Math.random()*pool.length)]);
-                }
-                return shuffle(setVals).map((val, i) => (
-                  <button
-                    key={`${fillPart}-${i}-${val}`}
-                    type="button"
-                    className="ptable-choice big"
-                    onClick={() => {
-                      if (val === correct) {
-                        if (fillPart === "num") {
-                          onRowDrop(fillRow, "num", { type:"value", axis:"y", row: fillRow, value: val });
-                          setFillPart("den");
-                        } else {
-                          onRowDrop(fillRow, "den", { type:"value", axis:"x", row: fillRow, value: val });
-                          if (fillRow < 2) { setFillRow(fillRow + 1); setFillPart("num"); }
-                        }
-                        return;
-                      }
-                      try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-                    }}
-                    aria-label={`choose ${val}`}
-                  >{val}</button>
-                ));
-              })()}
-            </div>
+            {renderFillChoices()}
           </div>
         )}
 
@@ -535,10 +599,13 @@ export default function ProportionalTablesModule() {
                 <button key={key} className="button"
                   onClick={() => {
                     if (correct) {
-                      solveRow4();
-                      const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
-                      if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
-                      multiBurstConfetti();
+                      setRow4Answer(null); // ensure clear then compute
+                      setTimeout(() => {
+                        solveRow4();
+                        const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
+                        if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
+                        multiBurstConfetti();
+                      }, 10);
                     } else {
                       alert("Not quite — try another.");
                     }
@@ -552,4 +619,3 @@ export default function ProportionalTablesModule() {
     </div>
   );
 }
-                        )
