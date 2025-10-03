@@ -753,3 +753,29 @@ body{
   50%  { transform: translate(-50%,-50%) scale(1.08); opacity: 0.9; }
   100% { transform: translate(-50%,-50%) scale(0.95); opacity: 1; }
 }
+
+   /* styles.css — PTables v8.2.2 appends (stack on top) */
+/* Make blinking unmissable + keep table height stable while chips get larger */
+
+.ptable-thslot, .slot.ptable-fracslot { overflow: visible; } /* allow pulse to draw outside if needed */
+
+/* Background flashing to complement halo/pulse (works even if effects are subtle on theme) */
+.blink-bg{
+  animation: ptableBlinkBG 0.9s linear infinite;
+}
+@keyframes ptableBlinkBG{
+  0%,100% { background: #ffffff; }
+  50%     { background: #fff7cc; } /* pale yellow flash */
+}
+
+/* Make the pulse scale relative to container size for visibility */
+.ptable-pulse{
+  width: clamp(26px, 45%, 40px);
+  height: clamp(26px, 45%, 40px);
+  border-width: 4px;
+}
+
+/* Keep table layout steady even as chips grow */
+.pTable td, .pTable th { vertical-align: middle; }
+.pTable .chip-lg{ line-height: 1; }
+/* If your table uses a fixed row height elsewhere, this keeps chips centered without expanding rows */
