@@ -917,3 +917,49 @@ body{
   background: transparent;
 }
 .col3-invisible .ptable-k-overlay { visibility: visible !important; }
+
+
+/* =======================
+   PTables v8.3.1 micro‑overrides
+   - Neutralize old strong yellow blink (v8.2.5 "force" block)
+   - Ensure K target blinks even when column 3 is invisible
+   - Raise overlay z-index to sit above header
+   ======================= */
+
+/* 1) Calm down ALL strong blink variants within PTables scope */
+.ptables .ptable-thslot.ptable-blink-hard,
+.ptables .ptable-fracslot.ptable-blink-hard,
+.ptables .slot.ptable-blink-hard,
+.ptables .ptable-thslot.blink-bg,
+.ptables .ptable-fracslot.blink-bg,
+.ptables .slot.blink-bg,
+.ptables .ptable-blink-hard,
+.ptables .blink-bg {
+  background: #fff !important;
+  border-color: #93c5fd !important;
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite !important;
+}
+
+/* Remove the rotating dashed ring entirely */
+.ptables .ptable-blink-hard::after { content: none !important; display:none !important; }
+
+/* 2) Make the K drop target blink visibly while the third column is reserved */
+.ptable-k-overlay { z-index: 12 !important; } /* higher than header */
+.col3-invisible .ptable-k-target::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18);
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 3) Safety: ensure no clipping anywhere around the target */
+.ptable-rel, .ptable, .ptable-wrap, .ptable thead, .ptable tbody td, .slot { 
+  overflow: visible !important; 
+}
