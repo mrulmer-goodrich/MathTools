@@ -647,3 +647,21 @@ body{
 
 /* Disable all chip interactions during label step */
 .ptable-wrap.disable-dnd .chip{ pointer-events:none; opacity:.7; }
+
+   /* styles.css — PTables v8.1.1 appends */
+/* Stronger blink; ensure placed header labels are visible and prominent */
+
+.ptable-thslot.placed { background:#e8f1ff; border-color:#93c5fd; color:#0b1220; }
+.ptable-thslot.placed .chip { background:#fff; border-color:#93c5fd; font-weight:900; }
+.ptable-thslot.empty { color:#64748b; }
+
+/* Stronger blink: border + subtle scale + glow */
+.ptable-blink{
+  animation: ptableBlinkStrong 1.05s ease-in-out infinite;
+}
+@keyframes ptableBlinkStrong{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(59,130,246,.0); transform:none; border-color:#cbd5e1; }
+  50%{ box-shadow: 0 0 0 5px rgba(59,130,246,.25) inset, 0 0 14px rgba(59,130,246,.25);
+       transform: translateY(-1px) scale(1.01); border-color:#93c5fd; }
+}
+
