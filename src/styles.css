@@ -565,6 +565,7 @@ body{
   border-top:1.5px solid #94a3b8;
   padding:10px;
   height:60px;
+
 }
 /* styles.css — UG Math Tools v8.1 (PTables patches)
    PATCH SUMMARY:
@@ -856,41 +857,63 @@ body{
   0%,100% { opacity: 0.25; }
   50% { opacity: 1; }
 }
-/* === styles.css — PTables v8.2.7 APPEND (place at absolute bottom) ===
-Forces ultra-high-contrast blink that cannot be hidden by stacking/overflow.
-Also bumps chip text size slightly for readability.
-*/
 
-/* Ensure wrapper exists above table clipping/stacking */
-.slot-wrap{ position: relative !important; overflow: visible !important; isolation: isolate !important; }
 
-/* Nuclear blink: thick animated outline + glow. Uses !important to win. */
-.slot-wrap.ptable-blink-wrap::after{
-  content:"";
-  position:absolute;
-  inset:-8px;
-  border-radius:12px;
-  outline: 4px solid #111 !important;                /* dark outline for white UIs */
-  box-shadow:
-    0 0 0 8px rgba(59,130,246,0.45) !important,      /* blue halo */
-    0 0 22px rgba(59,130,246,0.55) !important;       /* outer glow */
-  animation: wrapBlinkV27 0.6s steps(2,end) infinite !important; /* hard blink */
-  pointer-events:none;
-  z-index: 2147483647 !important; /* on top of everything */
-}
-@keyframes wrapBlinkV27{
-  0% { opacity: 0.15; }
-  50%{ opacity: 1; }
-  100%{ opacity: 0.15; }
+
+/* === v8.3.0 PTables: soften blink, keep guidance clear === */
+.ptable-blink-hard,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-thslot.ptable-blink-hard,
+.slot.ptable-blink-hard {
+  /* softer outline + smaller halo + slower */
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite !important;
 }
 
-/* Pulse marker: make larger by default */
-.ptable-pulse{
-  width: clamp(34px, 55%, 52px) !important;
-  height: clamp(34px, 55%, 52px) !important;
-  border-width: 5px !important;
-  z-index: 2147483646 !important;
+@keyframes ptableBlinkSoft {
+  0%,100% { transform: none; background: #fff; }
+  50%     { transform: translateY(-1px); background: #f5faff; }
 }
 
-/* Chip readability bump */
-.chip.chip-lg, .chip.chip-med{ font-size: 20px !important; font-weight: 900 !important; }
+/* remove the strong yellow flash variant */
+.blink-bg {
+  animation: ptableBlinkBGSoft 1.2s ease-in-out infinite !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.18) !important;
+}
+@keyframes ptableBlinkBGSoft {
+  0%,100% { background: #fff; }
+  50%     { background: #f0f7ff; }
+}
+
+/* === v8.3.0 PTables: prevent clipping in col 3 === */
+.ptable-wrap { overflow: visible !important; }
+.ptable { overflow: visible; }
+.ptable tbody td { overflow: visible !important; }
+
+.row-calc { 
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow: visible; 
+}
+
+/* compact the mini fractions slightly to fit nicer */
+.fraction.mini-frac { width: 60px !important; }
+.fraction.mini-frac .frac-bar { width: 44px !important; }
+
+/* === v8.3.0 PTables: make the K drop target visible & above === */
+.ptable-rel { position: relative; overflow: visible; }
+.ptable-k-overlay { 
+  position: absolute; top: 0; left: 66.6667%; right: 0; height: 88px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.ptable-k-target { 
+  pointer-events: auto; width: 95%; height: 64px; border: 0; border-radius: 12px; 
+  background: transparent;
+}
+.col3-invisible .ptable-k-overlay { visibility: visible !important; }
