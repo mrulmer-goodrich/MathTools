@@ -565,3 +565,85 @@ body{
   border-top:1.5px solid #94a3b8;
   padding:10px;
   height:60px;
+
+/* styles.css — UG Math Tools v8.1 (PTables patches)
+   PATCH SUMMARY:
+   - Larger header slots
+   - Fun-but-subtle blink effect for guided label step
+   - Wrong-answer micro-shake
+   - Button-like choice style for "What goes here?" chips
+   - Keep all rules scoped to PTables to avoid leaks
+*/
+
+:root{
+  --eastway-blue: #0B4B8C;
+  --eastway-green:#0C6B4D;
+  --cms-light:    #DAE9F6;
+
+  --ink:          #0F172A;
+  --ink-2:        #334155;
+  --ink-3:        #64748B;
+  --border:       #CBD5E1;
+  --border-2:     #E2E8F0;
+  --bg-subtle:    #F1F5F9;
+  --card:         #FFFFFF;
+
+  --t-green:  #10B981;
+  --t-yellow: #F59E0B;
+  --t-red:    #EF4444;
+}
+
+/* --- Keep user's existing styles (v8.0) by importing them into this file --- */
+/* For this downloadable file, we include only the incremental overrides and additions. */
+/* Apply these at the BOTTOM of your existing styles to reach v8.1 behavior. */
+
+/* ==== Overrides ==== */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:52px; /* v8.1: larger target */
+  border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
+  font-weight:700;
+}
+
+/* ==== Additions (append) ==== */
+
+/* Guided label step: fun-but-subtle blink */
+.ptable-blink{
+  animation: ptableBlink 1.2s ease-in-out infinite;
+}
+@keyframes ptableBlink{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(37,99,235,.0); transform:none; }
+  50%{ box-shadow: 0 0 0 4px rgba(37,99,235,.20) inset, 0 0 12px rgba(37,99,235,.25); transform: translateY(-1px); }
+}
+
+/* Wrong-answer micro-shake */
+.shake{ animation: ptableShake .35s ease both; }
+@keyframes ptableShake{
+  0%,100%{ transform: translateX(0); }
+  20%{ transform: translateX(-3px); }
+  40%{ transform: translateX(3px); }
+  60%{ transform: translateX(-2px); }
+  80%{ transform: translateX(2px); }
+}
+
+/* Choice buttons (button-like, but not the same as .button) */
+.ptable-choice{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+.ptable-choice:hover{ transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,.10); }
+
+/* Accessibility helper text only for screen readers */
+.visually-hidden{ position:absolute!important; width:1px; height:1px; margin:-1px; border:0; padding:0; clip:rect(0 0 0 0); clip-path:inset(50%); overflow:hidden; }
+
+/* Disable all chip interactions during label step */
+.ptable-wrap.disable-dnd .chip{ pointer-events:none; opacity:.7; }
