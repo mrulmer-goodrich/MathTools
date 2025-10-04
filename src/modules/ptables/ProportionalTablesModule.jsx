@@ -119,7 +119,7 @@ export default function ProportionalTablesModule() {
   const [reveal, setReveal] = useState({});
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
-  const [finished, setFinished] = useState(false);
+  
 
   // cache choices
   const fillChoicesRef = useRef({});
@@ -164,7 +164,7 @@ export default function ProportionalTablesModule() {
     setNumIsY(false); setDenIsX(false);
     setFractions({});
 
-  useEffect(()=>{ if (conceptCorrect && ksEqual===false) { try{ multiBurstConfetti(); }catch{} setFinished(true); } }, [conceptCorrect, ksEqual]);
+  
  setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
     setLabelStepTarget('x'); setBuildTarget('num'); setFillRow(0); setFillPart('num');
@@ -209,9 +209,8 @@ export default function ProportionalTablesModule() {
     if (!headerEqCorrect) return "build";
     if (!allRowsRevealed) return "fill";
     if (!conceptCorrect) return "concept";
-    if (conceptCorrect && ksEqual===false) return "done";
     return "solve";
-  }, [xPlaced,yPlaced,kPlaced,headerEqCorrect,allRowsRevealed,conceptCorrect,ksEqual]);
+  }, [xPlaced,yPlaced,kPlaced,headerEqCorrect,allRowsRevealed,conceptCorrect]);
 
   const dragEnabled = currentStep==="concept" || currentStep==="solve";
 
@@ -442,7 +441,7 @@ export default function ProportionalTablesModule() {
 
   return (
     <>
-      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #cbd5e1;border-bottom:3px solid #cbd5e1;height:72px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:20px}`}</style>
+      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:96px;font-size:22px;color:#0f172a;font-weight:800;padding:8px 12px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
     <div className="panes ptables-layout">
       <div className="card">
         <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
@@ -498,14 +497,6 @@ export default function ProportionalTablesModule() {
                 )}
               </div>
             )}
-          </div>
-        )}
-        {currentStep === "done" && (
-          <div className="section">
-            <div className="step-title">Correct — this table is NOT proportional.</div>
-            <div className="row" style={{justifyContent:"center"}}>
-              <BigButton onClick={()=>resetAll()}>New Problem</BigButton>
-            </div>
           </div>
         )}
         {currentStep === "solve" && (
