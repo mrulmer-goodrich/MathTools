@@ -704,7 +704,7 @@ const handleUnitChipClick = (chip) => {
                 {headerChoicesCol1.map(h => <Draggable key={h.id} id={h.id} label={h.label} data={h} />)}
               </div>
             )}
-            {step===3 && (
+            {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {headerChoicesCol2.map(h => <Draggable key={h.id} id={h.id} label={h.label} data={h} />)}
               </div>
