@@ -269,15 +269,77 @@ export default function HTableModule(){
 
   // accept tests (gate by step/type only; row correctness enforced in onDropContent)
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
-  const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
-  const acceptUnitTop    = d => step===2 && d.kind==='unit'
-  const acceptUnitBottom = d => step===2 && d.kind==='unit'
+  const acceptCol2 = d => step===2 && d.kind==='col' && d.v==='ScaleNumbers'
+  const acceptUnitTop    = d => step===3 && d.kind==='unit'
+  const acceptUnitBottom = d => step===3 && d.kind==='unit'
   const acceptScaleTop    = d => step===4 && d.kind==='num'
   const acceptScaleBottom = d => step===4 && d.kind==='num'
-  const acceptValueTop    = d => step===5 && d.kind==='num'
-  const acceptValueBottom = d => step===5 && d.kind==='num'
+  const acceptValueTop    = d => step===7 && d.kind==='num'
+  const acceptValueBottom = d => step===7 && d.kind==='num'
 
-  // geometry
+  
+// --- Ste
+// --- Step 7/8: pick OTHER value (the given value) then TAP destination cell ---
+const [pickedOther, setPickedOther] = useState(null);
+const otherValueChoices = useMemo(()=>{
+  const correct = Number(problem?.given?.value);
+  const pool = new Set([correct]);
+  const sA = Number(problem?.scale?.[0]); const sB = Number(problem?.scale?.[1]);
+  let tries = 0;
+  while (pool.size < 4 && tries < 50){
+    const cand = Math.max(1, Math.round(correct + (Math.random()*6 - 3)));
+    if (cand!==sA && cand!==sB) pool.add(cand);
+    tries++;
+  }
+  const arr = Array.from(pool).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correct }));
+  return shuffle(arr);
+},[problem?.id]);
+const chooseOtherValue = (choice) => {
+  if (step!==6) return;
+  if (!choice?.correct){ miss(6); return; }
+  setPickedOther(choice);
+  setDone(6);
+  setStep(7);
+};
+const tapPlaceValueTop = () => {
+  if (step!==7) return;
+  const ok = pickedOther && rowIsGivenUnit(table.uTop);
+  if (!ok){ miss(7); return; }
+  setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
+  setDone(7); next();
+};
+const tapPlaceValueBottom = () => {
+  if (step!==7) return;
+  const ok = pickedOther && rowIsGivenUnit(table.uBottom);
+  if (!ok){ miss(7); return; }
+  setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
+  setDone(7); next();
+};
+p 4: two-click unit selection (auto-place with ~2s blink) ---
+const [pickedUnits, setPickedUnits] = useState([]);
+const isCanonicalUnit = (uLabel) => {
+  const s = (uLabel||'').toLowerCase();
+  return s===canonicalTopUnit || s===canonicalBottomUnit;
+};
+const handleUnitChipClick = (chip) => {
+  if (step!==3) return; // only at Step 4
+  if (!chip || !isCanonicalUnit(chip.label)) { miss(2); return; }
+  setPickedUnits(prev => {
+    const labels = new Set(prev.map(x => (x.label||'').toLowerCase()));
+    const low = (chip.label||'').toLowerCase();
+    if (labels.has(low)) return prev;
+    const next = [...prev, chip];
+    if (next.length===2){
+      const topObj = next.find(x => (x.label||'').toLowerCase()===canonicalTopUnit);
+      const botObj = next.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
+      setTable(t => ({ ...t, uTop: topObj?.label||'', uBottom: botObj?.label||'' }));
+      // blink for ~2s then advance
+      setTimeout(()=>{ setDone(2); next(); }, 2000);
+    }
+    return next;
+  });
+};
+// geometry
   const gridRef = useRef(null)
   const refs = { uTop: useRef(null), sTop: useRef(null), vTop: useRef(null), uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null) }
   const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 })
@@ -503,6 +565,8 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uTop ? "empty" : ""}`}
                     test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
+                      const isRight = isCanonicalUnit(d.label);
+                      if(!isRight){ miss(2); return t; }
                       const t2={...t,uTop:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
                       if(placed.size===2){ setDone(2); next(); }
@@ -531,7 +595,7 @@ export default function HTableModule(){
                 <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
-                    onDropContent={(d)=>setTable(t=>{
+                    onDropContent={(d)= onClick={tapPlaceValueTop}>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uTop);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
@@ -550,6 +614,8 @@ export default function HTableModule(){
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uBottom ? "empty" : ""}`}
                     test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
+                      const isRight = isCanonicalUnit(d.label);
+                      if(!isRight){ miss(2); return t; }
                       const t2={...t,uBottom:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
                       if(placed.size===2){ setDone(2); next(); }
@@ -578,7 +644,7 @@ export default function HTableModule(){
                 <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
-                    onDropContent={(d)=>setTable(t=>{
+                    onDropContent={(d)= onClick={tapPlaceValueBottom}>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uBottom);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
@@ -644,9 +710,9 @@ export default function HTableModule(){
               </div>
             )}
 
-            {step===2 && (
+            {step===3 && (
               <div className="chips center mt-8">
-                {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
+                {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} onClick={()=>handleUnitChipClick(c)} />)}
               </div>
             )}
 
