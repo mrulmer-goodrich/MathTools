@@ -1190,3 +1190,6 @@ body{
 }
 /* === End Confetti Styles v9.0.1 === */
 
+/* === H-Table v9.1.1 — uses existing PTables blink classes (.ptable-blink-hard, .blink-bg) === */
+/* No new selectors added to avoid regressions. Ensure HTableModule wraps Slot with blinkWrap={...}. */
+
