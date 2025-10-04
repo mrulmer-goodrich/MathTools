@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — v9.1.2 (tap-to-place + 12-step flow) — Rebuilt (spec v3.1)
+// src/modules/htable/HTableModule.jsx — v9.1.2 (tap+blink, 12-step, cell-click)
 // • Step 4 only accepts the exact scale values that match the unit placed in that row
 // • Red oval tweaked, triple-underline & full-screen confetti kept
 // • Given value (Step 6) must go in the row that matches its unit
@@ -48,6 +48,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
 };
 // --- end local shim ---
 
+
 const STEP_TITLES = [
   'Step 1: What’s the first step to solve the problem?',
   'Step 2: What goes in the first column?',
@@ -62,7 +63,112 @@ const STEP_TITLES = [
   'Step 11: What do we do next?',
   'Step 12: Calculate',
 ];
-const setMiss = (idx)=> setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c })
+
+
+const STEP1_CHOICES = [
+  { id:'drawH', label:'Draw an H-Table', correct:true },
+  { id:'proportion', label:'Make a Proportion', correct:false },
+  { id:'convert', label:'Convert Units First', correct:false },
+  { id:'guess', label:'Just Guess', correct:false },
+]
+
+/* ---------- unit categories ---------- */
+const UNIT_CATS = {
+  length: [
+    'mm','millimeter','millimeters',
+    'cm','centimeter','centimeters',
+    'm','meter','meters',
+    'km','kilometer','kilometers',
+    'in','inch','inches',
+    'ft','foot','feet',
+    'yd','yard','yards',
+    'mi','mile','miles'
+  ],
+  time: [
+    'sec','secs','second','seconds',
+    'min','mins','minute','minutes',
+    'hour','hours',
+    'day','days','week','weeks','year','years'
+  ],
+  volume: [
+    'tsp','tsps','teaspoon','teaspoons',
+    'tbsp','tbsps','tablespoon','tablespoons',
+    'cup','cups',
+    'quart','quarts','qt','qts',
+    'gallon','gallons',
+    'liter','liters','l',
+    'milliliter','milliliters','ml'
+  ],
+  mass: [
+    'gram','grams','g',
+    'kilogram','kilograms','kg',
+    'pound','pounds','lb','lbs'
+  ],
+  count: ['item','items','page','pages','point','points'],
+  money: ['dollar','dollars','$','euro','euros']
+}
+const unitCategory = (u='') => {
+  const s = (u||'').toLowerCase()
+  for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
+  return null
+}
+
+const saneProblem = (p) => {
+  try{
+    const [u1,u2] = p.units || []
+    const c1 = unitCategory(u1), c2 = unitCategory(u2)
+    if (!c1 || !c2 || c1!==c2) return false
+    return true
+  }catch{ return false }
+}
+const genSaneHProblem = () => {
+  let tries = 0, p = genHProblem()
+  while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++ }
+  return p
+}
+const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5)
+
+export default function HTableModule(){
+  const H_SNAP_VERSION = 13
+  const __persisted = loadSession() || {}
+  const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
+
+  const [session, setSession] = useState(loadSession() || { attempts: [] })
+  const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem())
+  const [table, setTable] = useState(() => (H_PERSIST?.table) || {
+    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
+    product:null, divisor:null, result:null
+  })
+  const [step, setStep] = useState(H_PERSIST?.step ?? 0)
+  const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_TITLES.map(()=>({misses:0,done:false})))
+  const [openSum, setOpenSum] = useState(false)
+  const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false })
+  const [confettiOn, setConfettiOn] = useState(false)
+
+  // --- Row <-> canonical unit helpers (unit-aware validation) ---
+  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
+  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
+  const givenUnitLabel = (problem?.given?.row === 'top'
+    ? problem?.units?.[0]
+    : problem?.units?.[1]) || '';
+
+  const toLower = (s)=> (s||'').toLowerCase();
+  const expectedScaleForRowUnit = (rowUnitLabel) => {
+    const u = toLower(rowUnitLabel);
+    if (!u) return null;
+    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
+    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
+    return null;
+  };
+  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
+
+  // persist
+  useEffect(()=>{
+    const next = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } }
+    saveSession(next); setSession(next)
+  },[problem, table, step, steps])
+
+  const miss = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].misses++; return c})
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
@@ -581,7 +687,7 @@ const setMiss = (idx)=> setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++
               </div>
             )}
 
-            {step===10 && (
+            {step===7 && (
               <div className="chips center mt-8">
                 {numbersStep6.map(c => (
                   <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
