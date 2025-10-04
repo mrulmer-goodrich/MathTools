@@ -402,8 +402,7 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
         ))}
       </div>
     );
-  }, [shuffleKey]);
-    return (
+  return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {labelOpts.map((opt) => (
           <button key={opt} type="button" className="answer-btn"
