@@ -91,7 +91,6 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
     }
     onClick?.(e);
   };
-  if (!table) { return (<div className="panes ptables-layout"><div className="panel"><div className="section">Loading…</div></div></div>); }
   return (
     <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
       <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
@@ -120,37 +119,10 @@ export default function ProportionalTablesModule() {
   const [reveal, setReveal] = useState({});
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
-  // v8.4.2: freeze randomized option orders per problem
-  const [shuffleKey, setShuffleKey] = useState(0);
-  const [table, setTable] = useState(null);
-  // v8.4.2 SAFE: initialize table on mount or difficulty change if missing
-  useEffect(() => {
-    if (!table) {
-      try {
-        const t = typeof genPTable === 'function'
-          ? genPTable(difficulty)
-          : (typeof genPTable === 'function' ? genPTable() : {});
-        setTable(t || {});
-      } catch (e) {
-        setTable({});
-      }
-    }
-  }, [table, difficulty]);
-
-  // v8.4.2 SAFE: ensure table state exists
-  // v8.4.2: memoized choice orders (must be top-level hooks, not inside render helpers)
-  
-  // v8.4.2 SAFE: placeholder initializer (no generator available)
-
-  const labelOpts = React.useMemo(() => shuffle(["x","y","k","?"]), [shuffleKey]);
-  const buildCore = buildTarget === "num" ? ["y","x"] : ["x","y"];
-const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffleKey, buildTarget]);
-
   
 
   // cache choices
   const fillChoicesRef = useRef({});
-  const fillOrderRef = useRef({ key: -1, opts: [] });
 
   useEffect(()=>saveDifficulty(difficulty),[difficulty]);
   useEffect(()=>()=>{ Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current={}; }, []);
@@ -402,11 +374,11 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
     );
   }, [problem,xPlaced,yPlaced,kPlaced,headerEqCorrect,fractions,kValues,revealFourthRow,row4Answer,reveal,labelStepTarget,buildTarget,fillRow,fillPart,dragEnabled,currentStep]);
 
-  const 
-  renderLabelChoices = () => {
+  const renderLabelChoices = () => {
+    const opts = ["x","y","k","?"];
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {labelOpts.map((opt) => (
+        {shuffle(opts).map((opt) => (
           <button key={opt} type="button" className="answer-btn"
             onClick={() => {
               if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
@@ -421,12 +393,12 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
     );
   };
 
-
-  
   const renderBuildChoices = () => {
+    const core = buildTarget === "num" ? ["y","x"] : ["x","y"];
+    const opts = shuffle([...core, "k", "?"]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {buildOpts.map((opt) => (
+        {opts.map((opt) => (
           <button key={opt} type="button" className="answer-btn"
             onClick={() => {
               if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
@@ -440,12 +412,7 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
     );
   };
 
-
   const renderFillChoices = () => {
-    if (fillOrderRef.current.key !== shuffleKey) {
-      fillOrderRef.current = { key: shuffleKey, opts: shuffle(getFillChoices()) };
-    }
-    const fillOpts = fillOrderRef.current.opts;
     const choices = getFillChoices(fillRow, fillPart);
     const correct = (fillPart === "num") ? problem.rows[fillRow].y : problem.rows[fillRow].x;
     return (
@@ -474,7 +441,7 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
 
   return (
     <>
-      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:92px;line-height:1.1;box-sizing:border-box;font-size:22px;color:#0f172a;font-weight:800;padding:6px 12px;text-align:center;vertical-align:middle;overflow:hidden}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable td *{margin:0;} .ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
+      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:96px;font-size:22px;color:#0f172a;font-weight:800;padding:8px 12px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
     <div className="panes ptables-layout">
       <div className="card">
         <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
