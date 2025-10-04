@@ -1,4 +1,4 @@
-// src/components/BigButton.jsx — v8.4.0 (forwards className safely)
+// src/components/BigButton.jsx — v8.4.0 (canonical class + forwards className)
 export default function BigButton({ children, className = '', ...props }) {
   return (
     <button
