@@ -6,60 +6,24 @@
 // • Uniform drop-zones; randomized chips; inline fraction; calculate fills unknown cell
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
-import DraggableBase from '../../components/DraggableChip.jsx'
-import DropSlotBase from '../../components/DropSlot.jsx'
+import Draggable from '../../components/DraggableChip.jsx'
+import Slot from '../../components/DropSlot.jsx'
 import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-// === PTables tap-to-place shim (verbatim pattern) ===
-const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
-
-const Draggable = ({ payload, data, onClick, ...rest }) => {
-  const merged = data ?? payload ?? undefined;
-  const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
-};
-
-const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
-  const testFn = test ?? ((d) => {
-    const t = (d?.type ?? d?.kind ?? "").toString();
-    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
-    const valOk = typeof validator === "function" ? !!validator(d) : true;
-    return listOk && valOk;
-  });
-  const onDropContentFn = onDropContent ?? onDrop;
-  const handleClick = (e) => {
-    const picked = _pickStore.peek();
-    if (picked && testFn(picked)) {
-      try { onDropContentFn?.(picked); } catch {}
-      _pickStore.clear();
-    }
-    onClick?.(e);
-  };
-  return (
-    <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
-      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
-    </div>
-  );
-};
-// === end shim ===
-
-
 const STEP_TITLES = [
-  'Step 1: What’s the first step to solve the problem?',
-  'Step 2: What goes in the first column?',
-  'Step 3: What goes in the next column?',
-  'Step 4: What are the two units in the problem? (click two)',
-  'Step 5: What value goes here? (top row scale)',
-  'Step 6: What value goes here? (bottom row scale)',
-  'Step 7: What’s the other value from the problem?',
-  'Step 8: Where should this value go? (click cell in table)',
-  'Step 9: What do we do now?',
-  'Step 10: Which numbers are we multiplying?',
-  'Step 11: What do we do next?',
-  'Step 12: Calculate',
-];
+  'Step 1: What do we do first?',
+  'Step 2: What do we put in the first column? (drag onto header)',
+  'Step 3: Place the units (drag onto left cells)',
+  'Step 4: What goes in the second column? (drag onto header)',
+  'Step 5: Drop the correct scale numbers into the H-table',
+  'Step 6: Where does the other number in the problem go? Drag to the H-table.',
+  'Step 7: What do we do next?',
+  'Step 8: Which numbers are we multiplying?',
+  'Step 9: Which number are we dividing by?',
+  'Step 10: Calculate',
+]
 
 const STEP1_CHOICES = [
   { id:'drawH', label:'Draw an H-Table', correct:true },
