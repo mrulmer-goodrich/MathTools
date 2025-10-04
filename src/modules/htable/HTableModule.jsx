@@ -315,7 +315,7 @@ const tapPlaceValueBottom = () => {
   setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
   setDone(7); next();
 };
-p 4: two-click unit selection (auto-place with ~2s blink) ---
+// --- Step 4: two-click unit selection (auto-place with ~2s blink) ---
 const [pickedUnits, setPickedUnits] = useState([]);
 const isCanonicalUnit = (uLabel) => {
   const s = (uLabel||'').toLowerCase();
