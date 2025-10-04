@@ -122,6 +122,7 @@ export default function ProportionalTablesModule() {
   const [conceptAnswer, setConceptAnswer] = useState(null);
   // v8.4.2: freeze randomized option orders per problem
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [table, setTable] = useState(null);
   // v8.4.2 SAFE: initialize table on mount or difficulty change if missing
   useEffect(() => {
     if (!table) {
@@ -137,11 +138,9 @@ export default function ProportionalTablesModule() {
   }, [table, difficulty]);
 
   // v8.4.2 SAFE: ensure table state exists
-  const [table, setTable] = useState(null);
   // v8.4.2: memoized choice orders (must be top-level hooks, not inside render helpers)
   
   // v8.4.2 SAFE: placeholder initializer (no generator available)
-  useEffect(() => { if (!table) setTable({}); }, [table]);
 
   const labelOpts = React.useMemo(() => shuffle(["x","y","k","?"]), [shuffleKey]);
   const buildCore = buildTarget === "num" ? ["y","x"] : ["x","y"];
