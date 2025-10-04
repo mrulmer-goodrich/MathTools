@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — v9.1.2-minimal (PTables tap shim + step titles)
+// src/modules/htable/HTableModule.jsx — v9.1.2-minimal2 (PTables tap shim + step titles, hardened)
 // • Step 4 only accepts the exact scale values that match the unit placed in that row
 // • Red oval tweaked, triple-underline & full-screen confetti kept
 // • Given value (Step 6) must go in the row that matches its unit
@@ -58,7 +58,7 @@ const STEP_TITLES = [
   'Step 10: Which numbers are we multiplying?',
   'Step 11: What do we do next?',
   'Step 12: Calculate',
-]; if(c[idx]) c[idx].misses++; return c})
+];
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
