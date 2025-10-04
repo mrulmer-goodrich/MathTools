@@ -595,7 +595,7 @@ const handleUnitChipClick = (chip) => {
                 <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
                     test={acceptValueTop}
-                    onDropContent={(d)= onClick={tapPlaceValueTop}>setTable(t=>{
+                    onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uTop);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
@@ -644,7 +644,7 @@ const handleUnitChipClick = (chip) => {
                 <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
                     test={acceptValueBottom}
-                    onDropContent={(d)= onClick={tapPlaceValueBottom}>setTable(t=>{
+                    onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uBottom);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
