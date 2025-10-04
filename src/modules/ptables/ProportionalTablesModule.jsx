@@ -121,6 +121,15 @@ export default function ProportionalTablesModule() {
   const [conceptAnswer, setConceptAnswer] = useState(null);
   // v8.4.2: freeze randomized option orders per problem
   const [shuffleKey, setShuffleKey] = useState(0);
+  // v8.4.2: memoized choice orders (must be top-level hooks, not inside render helpers)
+  const labelOpts = React.useMemo(() => shuffle(["x","y","k","?"]), [shuffleKey]);
+  const buildCore = buildTarget === "num" ? ["y","x"] : ["x","y"];
+  
+  // Memoized fill choices; will reshuffle on new problem or when visible blanks change
+  const fillBaseKey = JSON.stringify({ sTop: table?.sTop, sBottom: table?.sBottom, row4: table?.row4blank });
+  const fillOpts = React.useMemo(() => shuffle(getFillChoices()), [shuffleKey, fillBaseKey]);
+const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffleKey, buildTarget]);
+
   
 
   // cache choices
@@ -378,8 +387,7 @@ export default function ProportionalTablesModule() {
 
   const 
   renderLabelChoices = () => {
-    const labelOpts = React.useMemo(() => {
-      return shuffle(["x","y","k","?"]);
+    return shuffle(["x","y","k","?"]);
     }, [shuffleKey]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
@@ -401,8 +409,6 @@ export default function ProportionalTablesModule() {
 
   
   const renderBuildChoices = () => {
-    const core = buildTarget === "num" ? ["y","x"] : ["x","y"];
-    const buildOpts = React.useMemo(() => shuffle([...core, "k", "?"]), [shuffleKey, buildTarget]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {buildOpts.map((opt) => (
