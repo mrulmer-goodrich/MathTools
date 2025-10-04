@@ -8,8 +8,9 @@ import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
-import ugConfetti from "../../lib/confetti.js";
 
+
+import ugConfetti from "../../lib/confetti.js";
 
 /** UG Math Tools
  * Module: ProportionalTablesModule.jsx
@@ -19,7 +20,35 @@ import ugConfetti from "../../lib/confetti.js";
  */
 
 // Shared, lightweight confetti (same as ScaleFactor)
-
+function Confetti({ show }) {
+  if (!show) return null;
+  const COUNT = 90;
+  const pieces = Array.from({ length: COUNT }).map((_, i) => {
+    const left = Math.random() * 100;
+    const delay = Math.random() * 2;
+    const duration = 3.8 + Math.random() * 2.2;
+    const size = 6 + Math.floor(Math.random() * 8);
+    const rot = Math.floor(Math.random() * 360);
+    const colors = ['#16a34a', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
+    const color = colors[i % colors.length];
+    return (
+      <div
+        key={i}
+        className="sf-confetti-piece"
+        style={{
+          left: left + 'vw',
+          width: size + 'px',
+          height: size + 4 + 'px',
+          background: color,
+          transform: `rotate(${rot}deg)`,
+          animationDuration: duration + 's',
+          animationDelay: delay + 's',
+        }}
+      />
+    );
+  });
+  return <div className="sf-confetti">{pieces}</div>;
+}
 
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
@@ -28,7 +57,10 @@ const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString(
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 // ⬇️ Guarded confetti to avoid duplicates from parallel modules
+function multiBurstConfetti() {
+  try { ugConfetti.burst(); } catch {}
 
+}
 
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
@@ -112,7 +144,6 @@ export default function ProportionalTablesModule() {
   ]), [problem]);
 
   const conceptCorrect = useMemo(()=>{
-  useEffect(()=>{ try { if (conceptCorrect && ksEqual===true) ugConfetti.burst(); } catch {} }, [conceptCorrect, ksEqual]);
     if (!allRowsComputed || ksEqual==null || !conceptAnswer) return false;
     if (ksEqual && conceptAnswer==="yes_same") return true;
     if (!ksEqual && conceptAnswer==="no_diff") return true;
@@ -482,7 +513,7 @@ export default function ProportionalTablesModule() {
                         solveRow4();
                         const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
                         if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
-                        try { ugConfetti.burst(); } catch {}
+                        multiBurstConfetti();
                       }, 10);
                     } else {
                       alert("Not quite — try another.");
