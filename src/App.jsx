@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx — v8.4.0 (landing cleanup)
 import React, {useState} from 'react'
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -14,13 +14,13 @@ export default function App(){
         <>
           <div className="header landing-header">
             <div className="brand landing-title">UG Math Tools</div>
-            <div className="subtitle landing-subtitle">Scale Factor + H-Table Trainer</div>
+            {/* Subtitle removed per v8.4.0 */}
           </div>
 
           <div className="row home-buttons">
-            <BigButton onClick={()=>setRoute('scale')}>Scale Factor</BigButton>
-            <BigButton onClick={()=>setRoute('htable')}>H-Table</BigButton>
-            <BigButton onClick={()=>setRoute('ptables')}>Proportional Tables</BigButton>
+            <BigButton className="tile-btn" onClick={()=>setRoute('scale')}>Scale Factor</BigButton>
+            <BigButton className="tile-btn" onClick={()=>setRoute('htable')}>H-Table</BigButton>
+            <BigButton className="tile-btn" onClick={()=>setRoute('ptables')}>Proportional Tables</BigButton>
           </div>
         </>
       )}
