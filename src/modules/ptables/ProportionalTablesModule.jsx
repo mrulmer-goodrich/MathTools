@@ -119,6 +119,7 @@ export default function ProportionalTablesModule() {
   const [reveal, setReveal] = useState({});
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
+  const [finished, setFinished] = useState(false);
 
   // cache choices
   const fillChoicesRef = useRef({});
@@ -161,7 +162,10 @@ export default function ProportionalTablesModule() {
     setProblem(next);
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
     setNumIsY(false); setDenIsX(false);
-    setFractions({}); setKValues({}); setReveal({});
+    setFractions({});
+
+  useEffect(()=>{ if (conceptCorrect && ksEqual===false) { try{ multiBurstConfetti(); }catch{} setFinished(true); } }, [conceptCorrect, ksEqual]);
+ setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
     setLabelStepTarget('x'); setBuildTarget('num'); setFillRow(0); setFillPart('num');
     fillChoicesRef.current = {};
@@ -205,8 +209,9 @@ export default function ProportionalTablesModule() {
     if (!headerEqCorrect) return "build";
     if (!allRowsRevealed) return "fill";
     if (!conceptCorrect) return "concept";
+    if (conceptCorrect && ksEqual===false) return "done";
     return "solve";
-  }, [xPlaced,yPlaced,kPlaced,headerEqCorrect,allRowsRevealed,conceptCorrect]);
+  }, [xPlaced,yPlaced,kPlaced,headerEqCorrect,allRowsRevealed,conceptCorrect,ksEqual]);
 
   const dragEnabled = currentStep==="concept" || currentStep==="solve";
 
@@ -370,28 +375,32 @@ export default function ProportionalTablesModule() {
     );
   }, [problem,xPlaced,yPlaced,kPlaced,headerEqCorrect,fractions,kValues,revealFourthRow,row4Answer,reveal,labelStepTarget,buildTarget,fillRow,fillPart,dragEnabled,currentStep]);
 
-  const renderLabelChoices = () => (
-    <div className="row" style={{ gap: 10, marginTop: 12 }}>
-      {["x","y","k"].map((opt) => (
-        <button key={opt} type="button" className="ptable-choice big"
-          onClick={() => {
-            if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
-            if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
-            if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
-            try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
-          }}
-          aria-label={`choose ${opt}`}
-        >{opt}</button>
-      ))}
-    </div>
-  );
-
-  const renderBuildChoices = () => {
-    const order = buildTarget === "num" ? ["y","x"] : ["x","y"];
+  const renderLabelChoices = () => {
+    const opts = ["x","y","k","?"];
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {order.map((opt) => (
-          <button key={opt} type="button" className="ptable-choice big"
+        {shuffle(opts).map((opt) => (
+          <button key={opt} type="button" className="answer-btn"
+            onClick={() => {
+              if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
+              if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
+              if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${opt}`}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderBuildChoices = () => {
+    const core = buildTarget === "num" ? ["y","x"] : ["x","y"];
+    const opts = shuffle([...core, "k", "?"]);
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12 }}>
+        {opts.map((opt) => (
+          <button key={opt} type="button" className="answer-btn"
             onClick={() => {
               if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
               if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
@@ -403,6 +412,7 @@ export default function ProportionalTablesModule() {
       </div>
     );
   };
+  };
 
   const renderFillChoices = () => {
     const choices = getFillChoices(fillRow, fillPart);
@@ -410,7 +420,7 @@ export default function ProportionalTablesModule() {
     return (
       <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
         {choices.map((val, i) => (
-          <button key={`${fillPart}-${i}-${val}`} type="button" className="ptable-choice big"
+          <button key={`${fillPart}-${i}-${val}`} type="button" className="answer-btn"
             onClick={() => {
               if (val === correct) {
                 if (fillPart === "num") {
@@ -432,6 +442,8 @@ export default function ProportionalTablesModule() {
   };
 
   return (
+    <>
+      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #cbd5e1;border-bottom:3px solid #cbd5e1;height:72px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:20px}`}</style>
     <div className="panes ptables-layout">
       <div className="card">
         <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
@@ -475,7 +487,7 @@ export default function ProportionalTablesModule() {
             <div className="step-title">Is this table proportional?</div>
             <div className="row" style={{ gap: 8, justifyContent: "center" }}>
               {randomizedConcept.map(({ key, label }) => (
-                <button key={key} className="button" onClick={() => setConceptAnswer(key)}>{label}</button>
+                <button key={key} className="answer-btn" onClick={() => setConceptAnswer(key)}>{label}</button>
               ))}
             </div>
             {conceptAnswer && (
@@ -489,6 +501,14 @@ export default function ProportionalTablesModule() {
             )}
           </div>
         )}
+        {currentStep === "done" && (
+          <div className="section">
+            <div className="step-title">Correct — this table is NOT proportional.</div>
+            <div className="row" style={{justifyContent:"center"}}>
+              <BigButton onClick={()=>resetAll()}>New Problem</BigButton>
+            </div>
+          </div>
+        )}
         {currentStep === "solve" && (
           <div className="section">
             <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
@@ -499,7 +519,7 @@ export default function ProportionalTablesModule() {
                 { key: "add", label: "y = k + x", correct: false },
                 { key: "emd", label: "y = k – x", correct: false },
               ]).map(({ key, label, correct }) => (
-                <button key={key} className="button"
+                <button key={key} className="answer-btn"
                   onClick={() => {
                     if (correct) {
                       setRow4Answer(null);
