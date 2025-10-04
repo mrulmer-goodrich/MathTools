@@ -61,7 +61,8 @@ const STEP_TITLES = [
   'Step 10: Which numbers are we multiplying?',
   'Step 11: What do we do next?',
   'Step 12: Calculate',
-]; if(c[idx]) c[idx].misses++; return c})
+];
+const setMiss = (idx)=> setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c })
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
