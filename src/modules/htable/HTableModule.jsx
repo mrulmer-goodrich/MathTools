@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — v9.1.1 (tap-to-place + 12-step flow)
+// src/modules/htable/HTableModule.jsx — v9.1.2 (tap-to-place + 12-step flow) — Rebuilt (spec v3.1)
 // • Step 4 only accepts the exact scale values that match the unit placed in that row
 // • Red oval tweaked, triple-underline & full-screen confetti kept
 // • Given value (Step 6) must go in the row that matches its unit
@@ -12,7 +12,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-// --- Local tap-to-place shim (mirrors PTables) ---
+// --- Local tap-to-place shim (PTables-compatible) ---
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
 const Draggable = ({ payload, data, onClick, ...rest }) => {
@@ -47,7 +47,6 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
   );
 };
 // --- end local shim ---
-
 
 const STEP_TITLES = [
   'Step 1: What’s the first step to solve the problem?',
@@ -168,19 +167,17 @@ const STEP_TITLES = [
   // accept tests (gate by step/type only; row correctness enforced in onDropContent)
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
   const acceptCol2 = d => step===2 && d.kind==='col' && d.v==='ScaleNumbers'
-  const acceptUnitTop    = d => step===3 && d.kind==='unit'
+  const acceptUnitTop = d => step===3 && d.kind==='unit'
   const acceptUnitBottom = d => step===3 && d.kind==='unit'
-  const acceptScaleTop    = d => step===4 && d.kind==='num'
-  const acceptScaleBottom = d => step===5 && d.kind==='num'
-  const acceptValueTop    = d => step===8 && d.kind==='num'
+  const acceptScaleTop = d => step===5 && d.kind==='num'
+  const acceptScaleBottom = d => step===6 && d.kind==='num'
+  const acceptValueTop = d => step===8 && d.kind==='num'
   const acceptValueBottom = d => step===8 && d.kind==='num'
-
   // Step 7 (choose 'other value') and Step 8 (click destination cell)
   const [selectedOther, setSelectedOther] = useState(null);
   const chooseOtherValue = (nObj) => {
     const val = Number(nObj?.value ?? nObj?.v ?? nObj?.label);
     if (!Number.isFinite(val)) { miss(6); return; }
-    // 'other value' is the problem's given numeric value that is NOT part of the scale pair
     const givenVal = Number(problem?.given?.value);
     if (val !== givenVal) { miss(6); return; }
     setSelectedOther(val);
@@ -197,6 +194,7 @@ const STEP_TITLES = [
     setDone(7);
     next(); // advance to Step 9
   };
+
 
   // geometry
   const gridRef = useRef(null)
@@ -400,7 +398,7 @@ const STEP_TITLES = [
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers */}
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot blinkWrap={step===3} style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
+                  <Slot blinkWrap={step===2} style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -409,7 +407,7 @@ const STEP_TITLES = [
                   </Slot>
                 </div>
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot blinkWrap={step===2} style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
+                  <Slot blinkWrap={step===3} style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
                     onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -576,29 +574,20 @@ const STEP_TITLES = [
                 {(numbersStep5 && numbersStep5.length ? numbersStep5 : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
-            {step===6 && (
-            {step===7 && (
-              <div className="chips center mt-8">
-                {numbersStep6.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-    
+            {step===5 && (
               <div className="chips center mt-8">
                 {(numbersStep6 && numbersStep6.length ? numbersStep6 : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
 
-            {step===6 && (
-            {step===7 && (
+            {step===10 && (
               <div className="chips center mt-8">
                 {numbersStep6.map(c => (
                   <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
                 ))}
               </div>
             )}
-    
+            {step===6 && (
               <div className="chips with-borders center mt-8">
                 {[
                   { id:'op_x', label:'Cross Multiply', good:true },
