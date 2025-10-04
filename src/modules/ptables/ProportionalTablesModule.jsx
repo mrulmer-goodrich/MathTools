@@ -1,9 +1,3 @@
-/** UG Math Tools
- * Module: src/modules/ptables/ProportionalTablesModule.jsx
- * Version: v9.0.4-confetti (2025-10-04)
- * Change: Centralize confetti via ugConfetti.burst(); remove per-file confetti impl; keep all logic/UX intact.
- * Notes: Full-file replacement; no refactors/moves; QA/QC per Baseline v9.0.4.
- */
 // src/modules/ptables/ProportionalTablesModule.jsx — v8.2.7
 // Changes vs 8.2.6:
 // - Confetti: add singleton guard + cooldown to prevent double/continuous drops across modules.
@@ -14,7 +8,7 @@ import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
-import ugConfetti from '../../lib/confetti.js'
+import ugConfetti from "../../lib/confetti.js";
 
 
 /** UG Math Tools
@@ -25,21 +19,7 @@ import ugConfetti from '../../lib/confetti.js'
  */
 
 // Shared, lightweight confetti (same as ScaleFactor)
-        className="sf-confetti-piece"
-        style={{
-          left: left + 'vw',
-          width: size + 'px',
-          height: size + 4 + 'px',
-          background: color,
-          transform: `rotate(${rot}deg)`,
-          animationDuration: duration + 's',
-          animationDelay: delay + 's',
-        }}
-      />
-    );
-  });
-  return <div className="sf-confetti">{pieces}</div>;
-}
+
 
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
@@ -48,47 +28,7 @@ const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 1000) / 1000).toString(
 const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
 // ⬇️ Guarded confetti to avoid duplicates from parallel modules
-// confetti bursts routed via ugConfetti.burst()
-, 3000);
-}
 
-  if (typeof window === "undefined") return;
-
-  const now = Date.now();
-  const last = window.__ptableConfettiLast || 0;
-  if (now - last < 2500) { return; }           // cooldown (2.5s) to prevent back-to-back runs
-  window.__ptableConfettiLast = now;
-
-  const c = window.confetti || window.canvasConfetti;
-  if (c) {
-    const origins = [{x:0.15,y:0.15},{x:0.5,y:0.15},{x:0.85,y:0.15},{x:0.25,y:0.35},{x:0.75,y:0.35}];
-    let i=0; const timer=setInterval(()=>{
-      c({ particleCount: 140, spread: 75, startVelocity: 60, ticks: 210, origin: origins[i%origins.length] });
-      if(++i>=7){ clearInterval(timer); }
-    }, 200);
-    return;
-  }
-  // DOM fallback (single host, auto-removed)
-  try {
-    // remove any stray host first
-    document.querySelectorAll(".sf-confetti").forEach(n => n.remove());
-  } catch {}
-  const host = document.createElement("div");
-  host.className = "sf-confetti";
-  document.body.appendChild(host);
-  const colors = ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"];
-  for (let i=0;i<160;i++){
-    const p = document.createElement("div");
-    p.className = "sf-confetti-piece";
-    p.style.left = Math.random()*100 + "vw";
-    p.style.width = "6px"; p.style.height = "10px";
-    p.style.background = colors[(Math.random() * colors.length) | 0];
-    p.style.animationDuration = (1.8 + Math.random()*1.4) + "s";
-    p.style.animationDelay = (Math.random()*0.6) + "s";
-    host.appendChild(p);
-  }
-  setTimeout(() => host.remove(), 3000);
-}
 
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
@@ -172,6 +112,7 @@ export default function ProportionalTablesModule() {
   ]), [problem]);
 
   const conceptCorrect = useMemo(()=>{
+  useEffect(()=>{ try { if (conceptCorrect && ksEqual===true) ugConfetti.burst(); } catch {} }, [conceptCorrect, ksEqual]);
     if (!allRowsComputed || ksEqual==null || !conceptAnswer) return false;
     if (ksEqual && conceptAnswer==="yes_same") return true;
     if (!ksEqual && conceptAnswer==="no_diff") return true;
@@ -179,13 +120,6 @@ export default function ProportionalTablesModule() {
   }, [allRowsComputed, ksEqual, conceptAnswer]);
 
   const revealFourthRow = (ksEqual===true && conceptCorrect);
-  // Fire confetti when concept check passes with matching k values
-  useEffect(()=>{
-    try{
-      if (conceptCorrect && ksEqual===true) ugConfetti.burst();
-    }catch{}
-  }, [conceptCorrect, ksEqual]);
-
   const [row4Answer, setRow4Answer] = useState(null);
 
   const resetAll = (nextDiff = difficulty) => {
@@ -214,7 +148,7 @@ export default function ProportionalTablesModule() {
     const f = fractions[i];
     if (f?.num!=null && f?.den!=null && Number.isFinite(kValues[i]) && !reveal[i]) {
       if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
-      revealTimers.current[i]=setTimeout(()=>{ setReveal(prev=>({...prev,[i]:true})); try{ ugConfetti.burst(); }catch{} },2000);
+      revealTimers.current[i]=setTimeout(()=>{ setReveal(prev=>({...prev,[i]:true})); try { ugConfetti.burst(); } catch {} },2000);
     }
   })},[fractions,kValues,reveal]);
 
@@ -548,7 +482,7 @@ export default function ProportionalTablesModule() {
                         solveRow4();
                         const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
                         if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
-                        multiBurstConfetti();
+                        try { ugConfetti.burst(); } catch {}
                       }, 10);
                     } else {
                       alert("Not quite — try another.");
