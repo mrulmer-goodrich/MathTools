@@ -10,43 +10,43 @@ import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 
 
-+ /** UG Math Tools
-+  * Module: ProportionalTablesModule.jsx
-+  * Version: 8.5.1.0  (2025-10-04)
-+  * Change: Unify confetti with ScaleFactor (continuous while win); add smoke route (?smoke=ptables)
-+  * Notes: Surgical patch only; no renames/moves. Uses shared .sf-confetti CSS already present.
-+  */
-+
-+ // Shared, lightweight confetti (same as ScaleFactor)
-+ function Confetti({ show }) {
-+   if (!show) return null;
-+   const COUNT = 90;
-+   const pieces = Array.from({ length: COUNT }).map((_, i) => {
-+     const left = Math.random() * 100;
-+     const delay = Math.random() * 2;
-+     const duration = 3.8 + Math.random() * 2.2;
-+     const size = 6 + Math.floor(Math.random() * 8);
-+     const rot = Math.floor(Math.random() * 360);
-+     const colors = ['#16a34a','#06b6d4','#f59e0b','#ef4444','#8b5cf6','#0ea5e9'];
-+     const color = colors[i % colors.length];
-+     return (
-+       <div key={i}
-+         className="sf-confetti-piece"
-+         style={{
-+           left: left + 'vw',
-+           width: size + 'px',
-+           height: (size + 4) + 'px',
-+           background: color,
-+           transform: `rotate(${rot}deg)`,
-+           animationDuration: duration + 's',
-+           animationDelay: delay + 's'
-+         }}
-+       />
-+     );
-+   });
-+   return <div className="sf-confetti">{pieces}</div>;
-+ }
+/** UG Math Tools
+ * Module: ProportionalTablesModule.jsx
+ * Version: 8.5.1.1  (2025-10-04)
+ * Change: Hotfix — remove diff markers; unify confetti with ScaleFactor; add smoke route (?smoke=ptables)
+ * Notes: Surgical patch only; no renames/moves. Uses shared .sf-confetti CSS.
+ */
 
+// Shared, lightweight confetti (same as ScaleFactor)
+function Confetti({ show }) {
+  if (!show) return null;
+  const COUNT = 90;
+  const pieces = Array.from({ length: COUNT }).map((_, i) => {
+    const left = Math.random() * 100;
+    const delay = Math.random() * 2;
+    const duration = 3.8 + Math.random() * 2.2;
+    const size = 6 + Math.floor(Math.random() * 8);
+    const rot = Math.floor(Math.random() * 360);
+    const colors = ['#16a34a', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
+    const color = colors[i % colors.length];
+    return (
+      <div
+        key={i}
+        className="sf-confetti-piece"
+        style={{
+          left: left + 'vw',
+          width: size + 'px',
+          height: size + 4 + 'px',
+          background: color,
+          transform: `rotate(${rot}deg)`,
+          animationDuration: duration + 's',
+          animationDelay: delay + 's',
+        }}
+      />
+    );
+  });
+  return <div className="sf-confetti">{pieces}</div>;
+}
 
 const loadDifficulty = () => localStorage.getItem("ptables-difficulty") || "easy";
 const saveDifficulty = (d) => localStorage.setItem("ptables-difficulty", d);
