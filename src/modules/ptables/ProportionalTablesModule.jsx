@@ -412,7 +412,6 @@ export default function ProportionalTablesModule() {
       </div>
     );
   };
-  };
 
   const renderFillChoices = () => {
     const choices = getFillChoices(fillRow, fillPart);
