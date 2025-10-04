@@ -175,6 +175,29 @@ const STEP_TITLES = [
   const acceptValueTop    = d => step===8 && d.kind==='num'
   const acceptValueBottom = d => step===8 && d.kind==='num'
 
+  // Step 7 (choose 'other value') and Step 8 (click destination cell)
+  const [selectedOther, setSelectedOther] = useState(null);
+  const chooseOtherValue = (nObj) => {
+    const val = Number(nObj?.value ?? nObj?.v ?? nObj?.label);
+    if (!Number.isFinite(val)) { miss(6); return; }
+    // 'other value' is the problem's given numeric value that is NOT part of the scale pair
+    const givenVal = Number(problem?.given?.value);
+    if (val !== givenVal) { miss(6); return; }
+    setSelectedOther(val);
+    setDone(6);
+    next(); // advance to Step 8
+  };
+  const placeOtherByClick = (row) => {
+    if (step !== 8 || selectedOther == null) return;
+    const isTop = (row === 'top');
+    const rowUnit = isTop ? table.uTop : table.uBottom;
+    if (!rowIsGivenUnit(rowUnit)) { miss(7); return; }
+    const t2 = isTop ? { ...table, vTop: selectedOther } : { ...table, vBottom: selectedOther };
+    setTable(t2);
+    setDone(7);
+    next(); // advance to Step 9
+  };
+
   // geometry
   const gridRef = useRef(null)
   const refs = { uTop: useRef(null), sTop: useRef(null), vTop: useRef(null), uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null) }
@@ -377,7 +400,7 @@ const STEP_TITLES = [
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers */}
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot blinkWrap={step===1} style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
+                  <Slot blinkWrap={step===3} style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -411,7 +434,7 @@ const STEP_TITLES = [
                 </div>
                 <div ref={refs.sTop} className="hcell ptable-blink-area" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sTop==null ? "empty" : ""}`}
-                    blinkWrap={step===4} test={acceptScaleTop}
+                    blinkWrap={step===5} test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
                       const expected = expectedScaleForRowUnit(t.uTop);
                       if (expected == null || Number(d.value) !== Number(expected)) {
@@ -458,7 +481,7 @@ const STEP_TITLES = [
                 </div>
                 <div ref={refs.sBottom} className="hcell ptable-blink-area" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sBottom==null ? "empty" : ""}`}
-                    blinkWrap={step===5} test={acceptScaleBottom}
+                    blinkWrap={step===6} test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const expected = expectedScaleForRowUnit(t.uBottom);
                       if (expected == null || Number(d.value) !== Number(expected)) {
