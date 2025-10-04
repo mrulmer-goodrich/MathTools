@@ -1,4 +1,4 @@
-// src/modules/htable/HTableModule.jsx — v9.1.2 (tap+blink, 12-step, cell-click)
+// src/modules/htable/HTableModule.jsx — v9.1.2-minimal (PTables tap shim + step titles)
 // • Step 4 only accepts the exact scale values that match the unit placed in that row
 // • Red oval tweaked, triple-underline & full-screen confetti kept
 // • Given value (Step 6) must go in the row that matches its unit
@@ -12,7 +12,7 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-// --- Local tap-to-place shim (PTables-compatible) ---
+// === PTables tap-to-place shim (verbatim pattern) ===
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
 const Draggable = ({ payload, data, onClick, ...rest }) => {
@@ -21,11 +21,11 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
   return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
 };
 
-const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, className='', style, ...rest }) => {
+const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
   const testFn = test ?? ((d) => {
-    const t = (d?.type ?? d?.kind ?? '').toString();
+    const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
-    const valOk = typeof validator === 'function' ? !!validator(d) : true;
+    const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
   const onDropContentFn = onDropContent ?? onDrop;
@@ -37,17 +37,13 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
     }
     onClick?.(e);
   };
-  const wrapCls = blinkWrap ? 'ptable-blink-hard blink-bg' : '';
   return (
-    <div className={wrapCls} style={{ overflow: 'visible' }}>
-      <DropSlotBase accept={accept} onDrop={onDrop} validator={validator} test={test} onDropContent={onDropContentFn} onClick={handleClick} className={className} style={style} {...rest}>
-        {children}
-      </DropSlotBase>
+    <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
+      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
     </div>
   );
 };
-// --- end local shim ---
-
+// === end shim ===
 
 const STEP_TITLES = [
   'Step 1: What’s the first step to solve the problem?',
@@ -62,113 +58,7 @@ const STEP_TITLES = [
   'Step 10: Which numbers are we multiplying?',
   'Step 11: What do we do next?',
   'Step 12: Calculate',
-];
-
-
-const STEP1_CHOICES = [
-  { id:'drawH', label:'Draw an H-Table', correct:true },
-  { id:'proportion', label:'Make a Proportion', correct:false },
-  { id:'convert', label:'Convert Units First', correct:false },
-  { id:'guess', label:'Just Guess', correct:false },
-]
-
-/* ---------- unit categories ---------- */
-const UNIT_CATS = {
-  length: [
-    'mm','millimeter','millimeters',
-    'cm','centimeter','centimeters',
-    'm','meter','meters',
-    'km','kilometer','kilometers',
-    'in','inch','inches',
-    'ft','foot','feet',
-    'yd','yard','yards',
-    'mi','mile','miles'
-  ],
-  time: [
-    'sec','secs','second','seconds',
-    'min','mins','minute','minutes',
-    'hour','hours',
-    'day','days','week','weeks','year','years'
-  ],
-  volume: [
-    'tsp','tsps','teaspoon','teaspoons',
-    'tbsp','tbsps','tablespoon','tablespoons',
-    'cup','cups',
-    'quart','quarts','qt','qts',
-    'gallon','gallons',
-    'liter','liters','l',
-    'milliliter','milliliters','ml'
-  ],
-  mass: [
-    'gram','grams','g',
-    'kilogram','kilograms','kg',
-    'pound','pounds','lb','lbs'
-  ],
-  count: ['item','items','page','pages','point','points'],
-  money: ['dollar','dollars','$','euro','euros']
-}
-const unitCategory = (u='') => {
-  const s = (u||'').toLowerCase()
-  for (const [cat, list] of Object.entries(UNIT_CATS)) if (list.includes(s)) return cat
-  return null
-}
-
-const saneProblem = (p) => {
-  try{
-    const [u1,u2] = p.units || []
-    const c1 = unitCategory(u1), c2 = unitCategory(u2)
-    if (!c1 || !c2 || c1!==c2) return false
-    return true
-  }catch{ return false }
-}
-const genSaneHProblem = () => {
-  let tries = 0, p = genHProblem()
-  while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++ }
-  return p
-}
-const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5)
-
-export default function HTableModule(){
-  const H_SNAP_VERSION = 13
-  const __persisted = loadSession() || {}
-  const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null
-
-  const [session, setSession] = useState(loadSession() || { attempts: [] })
-  const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem())
-  const [table, setTable] = useState(() => (H_PERSIST?.table) || {
-    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
-    product:null, divisor:null, result:null
-  })
-  const [step, setStep] = useState(H_PERSIST?.step ?? 0)
-  const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_TITLES.map(()=>({misses:0,done:false})))
-  const [openSum, setOpenSum] = useState(false)
-  const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false })
-  const [confettiOn, setConfettiOn] = useState(false)
-
-  // --- Row <-> canonical unit helpers (unit-aware validation) ---
-  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
-  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
-  const givenUnitLabel = (problem?.given?.row === 'top'
-    ? problem?.units?.[0]
-    : problem?.units?.[1]) || '';
-
-  const toLower = (s)=> (s||'').toLowerCase();
-  const expectedScaleForRowUnit = (rowUnitLabel) => {
-    const u = toLower(rowUnitLabel);
-    if (!u) return null;
-    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
-    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
-    return null;
-  };
-  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
-
-  // persist
-  useEffect(()=>{
-    const next = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } }
-    saveSession(next); setSession(next)
-  },[problem, table, step, steps])
-
-  const miss = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].misses++; return c})
+]; if(c[idx]) c[idx].misses++; return c})
   const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c})
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1))
 
@@ -273,35 +163,13 @@ export default function HTableModule(){
 
   // accept tests (gate by step/type only; row correctness enforced in onDropContent)
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units'
-  const acceptCol2 = d => step===2 && d.kind==='col' && d.v==='ScaleNumbers'
-  const acceptUnitTop = d => step===3 && d.kind==='unit'
-  const acceptUnitBottom = d => step===3 && d.kind==='unit'
-  const acceptScaleTop = d => step===5 && d.kind==='num'
-  const acceptScaleBottom = d => step===6 && d.kind==='num'
-  const acceptValueTop = d => step===8 && d.kind==='num'
-  const acceptValueBottom = d => step===8 && d.kind==='num'
-  // Step 7 (choose 'other value') and Step 8 (click destination cell)
-  const [selectedOther, setSelectedOther] = useState(null);
-  const chooseOtherValue = (nObj) => {
-    const val = Number(nObj?.value ?? nObj?.v ?? nObj?.label);
-    if (!Number.isFinite(val)) { miss(6); return; }
-    const givenVal = Number(problem?.given?.value);
-    if (val !== givenVal) { miss(6); return; }
-    setSelectedOther(val);
-    setDone(6);
-    next(); // advance to Step 8
-  };
-  const placeOtherByClick = (row) => {
-    if (step !== 8 || selectedOther == null) return;
-    const isTop = (row === 'top');
-    const rowUnit = isTop ? table.uTop : table.uBottom;
-    if (!rowIsGivenUnit(rowUnit)) { miss(7); return; }
-    const t2 = isTop ? { ...table, vTop: selectedOther } : { ...table, vBottom: selectedOther };
-    setTable(t2);
-    setDone(7);
-    next(); // advance to Step 9
-  };
-
+  const acceptCol2 = d => step===3 && d.kind==='col' && d.v==='ScaleNumbers'
+  const acceptUnitTop    = d => step===2 && d.kind==='unit'
+  const acceptUnitBottom = d => step===2 && d.kind==='unit'
+  const acceptScaleTop    = d => step===4 && d.kind==='num'
+  const acceptScaleBottom = d => step===4 && d.kind==='num'
+  const acceptValueTop    = d => step===5 && d.kind==='num'
+  const acceptValueBottom = d => step===5 && d.kind==='num'
 
   // geometry
   const gridRef = useRef(null)
@@ -505,7 +373,7 @@ export default function HTableModule(){
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers */}
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot blinkWrap={step===2} style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
+                  <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     test={acceptCol1}
                     onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -514,7 +382,7 @@ export default function HTableModule(){
                   </Slot>
                 </div>
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot blinkWrap={step===3} style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
+                  <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     test={acceptCol2}
                     onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -525,9 +393,9 @@ export default function HTableModule(){
                 <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
 
                 {/* Row 1 */}
-                <div ref={refs.uTop} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uTop ? "empty" : ""}`}
-                    blinkWrap={step===3} test={acceptUnitTop}
+                    test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uTop:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
@@ -537,9 +405,9 @@ export default function HTableModule(){
                     <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.sTop} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sTop==null ? "empty" : ""}`}
-                    blinkWrap={step===5} test={acceptScaleTop}
+                    test={acceptScaleTop}
                     onDropContent={(d)=>setTable(t=>{
                       const expected = expectedScaleForRowUnit(t.uTop);
                       if (expected == null || Number(d.value) !== Number(expected)) {
@@ -554,9 +422,9 @@ export default function HTableModule(){
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.vTop} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
-                    blinkWrap={step===8} test={acceptValueTop}
+                    test={acceptValueTop}
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uTop);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
@@ -572,9 +440,9 @@ export default function HTableModule(){
                 <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
                 {/* Row 2 */}
-                <div ref={refs.uBottom} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uBottom ? "empty" : ""}`}
-                    blinkWrap={step===3} test={acceptUnitBottom}
+                    test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const t2={...t,uBottom:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
@@ -584,9 +452,9 @@ export default function HTableModule(){
                     <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.sBottom} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sBottom==null ? "empty" : ""}`}
-                    blinkWrap={step===6} test={acceptScaleBottom}
+                    test={acceptScaleBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const expected = expectedScaleForRowUnit(t.uBottom);
                       if (expected == null || Number(d.value) !== Number(expected)) {
@@ -601,9 +469,9 @@ export default function HTableModule(){
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
-                <div ref={refs.vBottom} className="hcell ptable-blink-area" style={{height:ROW_H}}>
+                <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
-                    blinkWrap={step===8} test={acceptValueBottom}
+                    test={acceptValueBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uBottom);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
@@ -664,13 +532,13 @@ export default function HTableModule(){
                 {headerChoicesCol1.map(h => <Draggable key={h.id} id={h.id} label={h.label} data={h} />)}
               </div>
             )}
-            {step===2 && (
+            {step===3 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {headerChoicesCol2.map(h => <Draggable key={h.id} id={h.id} label={h.label} data={h} />)}
               </div>
             )}
 
-            {step===3 && (
+            {step===2 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
@@ -687,13 +555,6 @@ export default function HTableModule(){
               </div>
             )}
 
-            {step===7 && (
-              <div className="chips center mt-8">
-                {numbersStep6.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {[
@@ -707,7 +568,7 @@ export default function HTableModule(){
               </div>
             )}
 
-            {step===10 && (
+            {step===7 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).map((p,idx)=>(
                   <button key={idx} className="chip" onClick={()=>{ chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
@@ -734,14 +595,14 @@ export default function HTableModule(){
               </div>
             )}
 
-            {step===11 && (
+            {step===8 && (
               <div className="chips with-borders center mt-8">
                 <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sTop))}>Divide by {table.sTop ?? '—'}</button>
                 <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sBottom))}>Divide by {table.sBottom ?? '—'}</button>
               </div>
             )}
 
-            {step>=12 && (
+            {step>=9 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
