@@ -91,6 +91,7 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
     }
     onClick?.(e);
   };
+  if (!table) { return (<div className="panes ptables-layout"><div className="panel"><div className="section">Loading…</div></div></div>); }
   return (
     <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
       <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
@@ -121,7 +122,27 @@ export default function ProportionalTablesModule() {
   const [conceptAnswer, setConceptAnswer] = useState(null);
   // v8.4.2: freeze randomized option orders per problem
   const [shuffleKey, setShuffleKey] = useState(0);
+  // v8.4.2 SAFE: initialize table on mount or difficulty change if missing
+  useEffect(() => {
+    if (!table) {
+      try {
+        const t = typeof genPTable === 'function'
+          ? genPTable(difficulty)
+          : (typeof genPTable === 'function' ? genPTable() : {});
+        setTable(t || {});
+      } catch (e) {
+        setTable({});
+      }
+    }
+  }, [table, difficulty]);
+
+  // v8.4.2 SAFE: ensure table state exists
+  const [table, setTable] = useState(null);
   // v8.4.2: memoized choice orders (must be top-level hooks, not inside render helpers)
+  
+  // v8.4.2 SAFE: placeholder initializer (no generator available)
+  useEffect(() => { if (!table) setTable({}); }, [table]);
+
   const labelOpts = React.useMemo(() => shuffle(["x","y","k","?"]), [shuffleKey]);
   const buildCore = buildTarget === "num" ? ["y","x"] : ["x","y"];
   
