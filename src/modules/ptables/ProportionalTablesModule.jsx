@@ -540,5 +540,6 @@ export default function ProportionalTablesModule() {
         )}
       </div>
     </div>
+  </>
   );
 }
