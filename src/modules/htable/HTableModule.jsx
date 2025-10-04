@@ -329,19 +329,19 @@ export default function HTableModule(){
       )}
 
       {/* H Table (always displayed per baseline visuals) */}
-      <div className="htable" style={{display:'grid', gridTemplateColumns:'160px 160px 160px', gap:'8px', marginTop:'12px'}}>
+      <div className="hwrap">\n      <div className="hgrid" style={{display:'grid', gridTemplateColumns:'160px 160px 160px', gap:'8px', marginTop:'12px'}}>
         {/* Header Row */}
-        <div className="hcell header" style={{height:40}}>
+        <div className="hhead" style={{height:40}}>
           <Slot className={`header-slot ${h1Blink ? 'ptable-blink-wrap' : ''}`} accept={['header']} onDropContent={dropHeader1}>
             <span>{table.head1 || ''}</span>
           </Slot>
         </div>
-        <div className="hcell header" style={{height:40}}>
+        <div className="hhead" style={{height:40}}>
           <Slot className={`header-slot ${h2Blink ? 'ptable-blink-wrap' : ''}`} accept={['header']} onDropContent={dropHeader2}>
             <span>{table.head2 || ''}</span>
           </Slot>
         </div>
-        <div className="hcell header" style={{height:40}}>
+        <div className="hhead" style={{height:40}}>
           <span>Values</span>
         </div>
 
