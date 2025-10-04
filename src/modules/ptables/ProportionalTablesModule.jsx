@@ -387,8 +387,22 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
 
   const 
   renderLabelChoices = () => {
-    return shuffle(["x","y","k","?"]);
-    }, [shuffleKey]);
+    return (
+      <div className="row" style={{ gap: 10, marginTop: 12 }}>
+        {labelOpts.map((opt) => (
+          <button key={opt} type="button" className="answer-btn"
+            onClick={() => {
+              if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
+              if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
+              if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${opt}`}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  }, [shuffleKey]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {labelOpts.map((opt) => (
@@ -411,6 +425,19 @@ const buildOpts = React.useMemo(() => shuffle([...buildCore, "k", "?"]), [shuffl
   const renderBuildChoices = () => {
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
+        {buildOpts.map((opt) => (
+          <button key={opt} type="button" className="answer-btn"
+            onClick={() => {
+              if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
+              if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
+              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+            }}
+            aria-label={`choose ${opt}`}
+          >{opt}</button>
+        ))}
+      </div>
+    );
+  }}>
         {buildOpts.map((opt) => (
           <button key={opt} type="button" className="answer-btn"
             onClick={() => {
