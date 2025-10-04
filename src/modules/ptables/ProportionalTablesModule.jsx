@@ -119,6 +119,8 @@ export default function ProportionalTablesModule() {
   const [reveal, setReveal] = useState({});
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
+  // v8.4.2: freeze randomized option orders per problem
+  const [shuffleKey, setShuffleKey] = useState(0);
   
 
   // cache choices
@@ -374,11 +376,14 @@ export default function ProportionalTablesModule() {
     );
   }, [problem,xPlaced,yPlaced,kPlaced,headerEqCorrect,fractions,kValues,revealFourthRow,row4Answer,reveal,labelStepTarget,buildTarget,fillRow,fillPart,dragEnabled,currentStep]);
 
-  const renderLabelChoices = () => {
-    const opts = ["x","y","k","?"];
+  const 
+  renderLabelChoices = () => {
+    const labelOpts = React.useMemo(() => {
+      return shuffle(["x","y","k","?"]);
+    }, [shuffleKey]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {shuffle(opts).map((opt) => (
+        {labelOpts.map((opt) => (
           <button key={opt} type="button" className="answer-btn"
             onClick={() => {
               if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
@@ -393,12 +398,14 @@ export default function ProportionalTablesModule() {
     );
   };
 
+
+  
   const renderBuildChoices = () => {
     const core = buildTarget === "num" ? ["y","x"] : ["x","y"];
-    const opts = shuffle([...core, "k", "?"]);
+    const buildOpts = React.useMemo(() => shuffle([...core, "k", "?"]), [shuffleKey, buildTarget]);
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
-        {opts.map((opt) => (
+        {buildOpts.map((opt) => (
           <button key={opt} type="button" className="answer-btn"
             onClick={() => {
               if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
@@ -411,6 +418,7 @@ export default function ProportionalTablesModule() {
       </div>
     );
   };
+
 
   const renderFillChoices = () => {
     const choices = getFillChoices(fillRow, fillPart);
@@ -441,7 +449,7 @@ export default function ProportionalTablesModule() {
 
   return (
     <>
-      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:96px;font-size:22px;color:#0f172a;font-weight:800;padding:8px 12px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
+      <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:92px;line-height:1.1;box-sizing:border-box;font-size:22px;color:#0f172a;font-weight:800;padding:4px 10px;display:flex;align-items:center;justify-content:center;overflow:hidden}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable td *{margin:0;} .ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
     <div className="panes ptables-layout">
       <div className="card">
         <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
