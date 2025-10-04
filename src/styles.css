@@ -1155,6 +1155,33 @@ body{
   .home-buttons .bigbtn { min-width: 100%; min-height: 100px; }
 }
 
+
+/* ==== v8.4.1 — Shared answer button (used by PTables) ==== */
+.answer-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 0;
+  font-weight: 900;
+  font-size: 18px;
+  color: #0b2140;
+  background: #dceaf8;
+  box-shadow: 0 8px 20px rgba(11, 33, 64, .12);
+  cursor: pointer;
+  user-select: none;
+}
+.answer-btn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(11, 33, 64, .18);
+}
+.answer-btn:active{
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(11, 33, 64, .12);
+}
+
+
+//************************WERE THE BELOW CONCEPTS MADE TO THE htABLE FILE, AS REQUESTED******************/
+
 /* ==== v8.4.1 — H-Table chrome, typography, and option buttons ==== */
 
 /* A) Table outline + interior grid (left card)
