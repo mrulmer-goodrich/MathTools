@@ -473,7 +473,16 @@ const tapUnit = (d)=>{
   const ROW_H = 88;
   const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
-  const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''}`;
+  const needWildBlink = (key)=> {
+    if (step===4 && key==='sTop'    && table.sTop==null) return true;
+    if (step===5 && key==='sBottom' && table.sBottom==null) return true;
+    if (step===7) {
+      if (rowIsGivenUnit(table.uTop)    && key==='vTop'    && table.vTop==null) return true;
+      if (rowIsGivenUnit(table.uBottom) && key==='vBottom' && table.vBottom==null) return true;
+    }
+    return false;
+  };
+  const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''} ${needWildBlink(key) ? 'ptable-blink-wild' : ''}`;
 
   // ──────────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -490,6 +499,16 @@ const tapUnit = (d)=>{
           10%, 30%, 50%, 70%, 90%    { box-shadow: 0 0 0 4px rgba(59,130,246,.35); }
         }
         .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
+
+        /* Wild, continuous blink for 'What goes here?' prompts */
+        @keyframes ptable-blink-wild-kf {
+          0%   { box-shadow: 0 0 0 0 rgba(255,0,90,.50); transform: scale(1.00); }
+          25%  { box-shadow: 0 0 0 6px rgba(59,130,246,.45); transform: scale(1.03); }
+          50%  { box-shadow: 0 0 0 0 rgba(255,0,90,.60); transform: scale(1.00); }
+          75%  { box-shadow: 0 0 0 8px rgba(59,130,246,.45); transform: scale(1.03); }
+          100% { box-shadow: 0 0 0 0 rgba(255,0,90,.50); transform: scale(1.00); }
+        }
+        .ptable-blink-wild { animation: ptable-blink-wild-kf 1.2s ease-in-out 0s infinite; border-radius:10px; }
 
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
@@ -671,59 +690,7 @@ const tapUnit = (d)=>{
             )}
 
             {/* Step 7 */}
-            {step===7 && (
-              <div className="section">
-                <div className="muted bigger">Tap the correct cell in the table to place the value.</div>
-              </div>
-            )}
-
-            {/* Step 8 */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x',  label:'Cross Multiply',      good:true  },
-                  { id:'op_add',label:'Add the numbers',     good:false },
-                  { id:'op_sub',label:'Subtract the numbers',good:false },
-                  { id:'op_avg',label:'Average the numbers', good:false },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 9 */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 10 */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                {divideChoices.map((choice, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 11 */}
-            {step>=11 && (
-              <div className="toolbar mt-10 center">
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>{/* end .panes */}
-
-      {/* Confetti */}
-      {confettiOn && (
-        <div className="htable-confetti" aria-hidden="true">
-          {Array.from({length:120}).map((_,i)=>{
+            {step===7 && (<div className="section" />)}.map((_,i)=>{
             const left = Math.random()*100;
             const dur = 5 + Math.random()*4;
             const delay = Math.random()*2;
