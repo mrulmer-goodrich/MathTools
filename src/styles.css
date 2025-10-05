@@ -931,3 +931,21 @@ export default function HTableModule(){
     </div>
   );
 }
+/* === H-Table v9.6.0 additions (append to end of styles.css) === */
+
+/* Highlight class for cross-multiply cell pairs (OpSpec §6) */
+.ugx-htable-hl {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border: 2px solid #3b82f6 !important;
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Ensure H-table slots are positioned for absolute overlays */
+.hwrap .hcell,
+.hwrap .hhead {
+  position: relative;
+  overflow: visible;
+}
+
+/* === End H-Table v9.6.0 additions === */
