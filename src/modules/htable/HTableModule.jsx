@@ -665,8 +665,6 @@ export default function HTableModule(){
         <div className="card">
           {/* Step title and controls on LEFT per OpSpec visual layout */}
           <div className="section">
-            {
-            {
             {/* Problem banner (verbatim from generator.js) */}
             <div className="problem-banner">
               <div className="problem-title">Problem</div>
