@@ -1,13 +1,9 @@
-// src/modules/htable/HTableModule.jsx — OpSpec v9.5.1.g–aligned, full-file replacement
-// Notes:
-// - Corrected step index parity (setDone/miss) across all handlers
-// - H-table graphic renders at ALL steps (removed step>=11 gate)
-// - Added Right-Panel fenced anchors for steps 6–11 (and 7), per OpSpec
-// - Units (step 3) now auto-place both canonical units and blink ~2s before advancing
-// - Scales (steps 4 & 5) both marked done before single next(), per Accounting Rule
-// - Tap-to-place works via Slot.onClick; drag remains supported by base components
-// - Calculate (step 11) is hidden until step>=11 and marks step 11 done on click
-// - Confetti fires on Summary open and auto-cleans; SummaryOverlay displayed after Calculate
+// src/modules/htable/HTableModule.jsx — OpSpec v9.5.1.g aligned
+// Update: Grid appears after Step 0 is answered correctly (step >= 1).
+// Click-to-place fixed: Draggable supports both drag AND click-to-pick; Slot click drops picked chip.
+// Blink-on-correct + auto-advance implemented at each placement choice.
+//
+// Scope: surgical, local to this module only.
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import DraggableBase from '../../components/DraggableChip.jsx'
@@ -16,40 +12,40 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-// === Canonical tap-to-place shim (must be defined exactly once) ===
+/** ---------------- Tap-to-place shared store ---------------- **/
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} draggable={false} onDragStart={(e)=>e.preventDefault()} role="button" tabIndex={0} {...rest} />;
+  // allow drag + click
+  return <DraggableBase data={merged} onClick={handleClick} {...rest} />;
 };
 
-const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
+const Slot = ({ accept, test, validator, onDrop, onDropContent, onClick, children, className='', ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
-  const onDropContentFn = onDropContent ?? onDrop;
+  const onDropFn = onDropContent ?? onDrop;
   const handleClick = (e) => {
     const picked = _pickStore.peek();
     if (picked && testFn(picked)) {
-      try { onDropContentFn?.(picked); } catch {}
+      try { onDropFn?.(picked); } catch {}
       _pickStore.clear();
     }
     onClick?.(e);
   };
   return (
-    <div className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''}`} onClick={handleClick}>
-      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>{children}</DropSlotBase>
+    <div className={`slot-wrap ${className}`} onClick={handleClick}>
+      <DropSlotBase test={testFn} onDropContent={onDropFn} {...rest}>{children}</DropSlotBase>
     </div>
   );
 };
-// === end shim ===
 
-// ---- Step titles (sentinel text for step 0 must appear once) ----
+/** ---------------- Spec scaffolding ---------------- **/
 const STEP_TITLES = [
   "What’s the first step to solve the problem?",
   "What goes in the first column?",
@@ -67,43 +63,17 @@ const STEP_TITLES = [
 
 const STEP1_CHOICES = [
   { id:'drawH', label:'Draw an H-Table', correct:true },
-  { id:'proportion', label:'Make a Proportion', correct:false },
-  { id:'convert', label:'Convert Units First', correct:false },
-  { id:'guess', label:'Just Guess', correct:false },
+  { id:'proportion', label:'Make a Proportion' },
+  { id:'convert', label:'Convert Units First' },
+  { id:'guess', label:'Just Guess' },
 ];
 
-/* ---------- unit categories ---------- */
+/** ---------------- Unit categories ---------------- **/
 const UNIT_CATS = {
-  length: [
-    'mm','millimeter','millimeters',
-    'cm','centimeter','centimeters',
-    'm','meter','meters',
-    'km','kilometer','kilometers',
-    'in','inch','inches',
-    'ft','foot','feet',
-    'yd','yard','yards',
-    'mi','mile','miles'
-  ],
-  time: [
-    'sec','secs','second','seconds',
-    'min','mins','minute','minutes',
-    'hour','hours',
-    'day','days','week','weeks','year','years'
-  ],
-  volume: [
-    'tsp','tsps','teaspoon','teaspoons',
-    'tbsp','tbsps','tablespoon','tablespoons',
-    'cup','cups',
-    'quart','quarts','qt','qts',
-    'gallon','gallons',
-    'liter','liters','l',
-    'milliliter','milliliters','ml'
-  ],
-  mass: [
-    'gram','grams','g',
-    'kilogram','kilograms','kg',
-    'pound','pounds','lb','lbs'
-  ],
+  length: ['mm','millimeter','millimeters','cm','centimeter','centimeters','m','meter','meters','km','kilometer','kilometers','in','inch','inches','ft','foot','feet','yd','yard','yards','mi','mile','miles'],
+  time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours','day','days','week','weeks','year','years'],
+  volume: ['tsp','tsps','teaspoon','teaspoons','tbsp','tbsps','tablespoon','tablespoons','cup','cups','quart','quarts','qt','qts','gallon','gallons','liter','liters','l','milliliter','milliliters','ml'],
+  mass: ['gram','grams','g','kilogram','kilograms','kg','pound','pounds','lb','lbs'],
   count: ['item','items','page','pages','point','points'],
   money: ['dollar','dollars','$','euro','euros']
 };
@@ -117,8 +87,7 @@ const saneProblem = (p) => {
   try{
     const [u1,u2] = p.units || [];
     const c1 = unitCategory(u1), c2 = unitCategory(u2);
-    if (!c1 || !c2 || c1!==c2) return false;
-    return true;
+    return !!(c1 && c2 && c1===c2);
   }catch{ return false }
 };
 const genSaneHProblem = () => {
@@ -128,53 +97,45 @@ const genSaneHProblem = () => {
 };
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 
+/** ---------------- Component ---------------- **/
 export default function HTableModule(){
-  const H_SNAP_VERSION = 14; // bump
+  const H_SNAP_VERSION = 15;
 
-  const __persisted = loadSession() || {};
-  const H_PERSIST = (__persisted.hSnap && __persisted.hSnap.version === H_SNAP_VERSION) ? __persisted.hSnap : null;
+  const persisted = loadSession() || {};
+  const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
 
-  const [session, setSession] = useState(loadSession() || { attempts: [] });
-  const [problem, setProblem] = useState(() => (H_PERSIST?.problem) || genSaneHProblem());
-  const [table, setTable] = useState(() => (H_PERSIST?.table) || {
-    head1:'', head2:'', uTop:'', uBottom:'', sTop:null, sBottom:null, vTop:null, vBottom:null,
+  const [session, setSession] = useState(persisted || { attempts: [] });
+  const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
+  const [table, setTable] = useState(() => (snap?.table) || {
+    head1:'', head2:'',
+    uTop:'', uBottom:'',
+    sTop:null, sBottom:null,
+    vTop:null, vBottom:null,
     product:null, divisor:null, result:null, solvedRow:null
   });
-  const [step, setStep] = useState(H_PERSIST?.step ?? 0);
-  const [steps, setSteps] = useState(H_PERSIST?.steps || STEP_TITLES.map(()=>({misses:0,done:false})));
+  const [step, setStep] = useState(snap?.step ?? 0);
+  const [steps, setSteps] = useState(snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false})));
   const [openSum, setOpenSum] = useState(false);
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
-  const [blinkUnits, setBlinkUnits] = useState(false); // ~2s blink after units
 
-  // --- unit awareness helpers ---
-  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
-  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
-  const givenUnitLabel = (problem?.given?.row === 'top'
-    ? problem?.units?.[0]
-    : problem?.units?.[1]) || '';
-
-  const toLower = (s)=> (s||'').toLowerCase();
-  const expectedScaleForRowUnit = (rowUnitLabel) => {
-    const u = toLower(rowUnitLabel);
-    if (!u) return null;
-    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
-    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
-    return null;
+  // blink-on-correct for any single cell key
+  const [blinkKey, setBlinkKey] = useState(null);
+  const flashCell = (key, nextStepIdx=null, delay=700) => {
+    setBlinkKey(key);
+    setTimeout(()=>{
+      setBlinkKey(null);
+      if (nextStepIdx!==null){
+        setDone(nextStepIdx);
+        next();
+      }
+    }, delay);
   };
-  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
 
-  // persist
-  useEffect(()=>{
-    const next = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
-    saveSession(next); setSession(next);
-  },[problem, table, step, steps]);
+  // unit blink when both selected
+  const [blinkUnits, setBlinkUnits] = useState(false);
 
-  const miss = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].misses++; return c});
-  const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c});
-  const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
-
-  // language
+  // language / story
   const FALLBACK_LANGS = ['Spanish','Vietnamese','French','Chinese','Arabic','Korean'];
   const [showEnglish,setShowEnglish]=useState(true);
   const [mode,setMode]=useState('English');
@@ -226,16 +187,47 @@ export default function HTableModule(){
     return ()=>{ stopTimer(); clearTimeout(t) };
   },[problem?.id, allowedModes.length]);
 
-  // pools
+  // persist
+  useEffect(()=>{
+    const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
+    saveSession(nextState); setSession(nextState);
+  },[problem, table, step, steps]);
+
+  const miss = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].misses++; return c});
+  const setDone = (idx)=>setSteps(s=>{const c=[...s]; if(c[idx]) c[idx].done=true; return c});
+  const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
+
+  /** ---------- helpers based on problem ---------- */
+  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
+  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
+  const givenUnitLabel = (problem?.given?.row === 'top'
+    ? problem?.units?.[0]
+    : problem?.units?.[1]) || '';
+
+  const toLower = (s)=> (s||'').toLowerCase();
+  const expectedScaleForRowUnit = (rowUnitLabel) => {
+    const u = toLower(rowUnitLabel);
+    if (!u) return null;
+    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
+    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
+    return null;
+  };
+  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
+  const isCanonicalUnit = (uLabel) => {
+    const s = (uLabel||'').toLowerCase();
+    return s===canonicalTopUnit || s===canonicalBottomUnit;
+  };
+
+  /** ---------- pools ---------- */
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2);
     const cat = unitCategory(correct[0] || '');
     const allUnitsFlat = Object.entries(UNIT_CATS).flatMap(([k,v]) => v.map(u=>({u,cat:k})));
     const pool = allUnitsFlat.filter(x => x.cat !== cat && !correct.includes(x.u));
     const picks = [];
-    for (let i=0; i<pool.length && picks.length<2; i++){
+    while(picks.length<2 && pool.length){
       const candidate = pool[Math.floor(Math.random()*pool.length)];
-      if(!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
+      if (!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
     }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
@@ -273,7 +265,7 @@ export default function HTableModule(){
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
   ]),[problem?.id]);
 
-  // accept tests (gate by step/type only; row correctness enforced in onDropContent)
+  /** ---------- accept tests ---------- */
   const acceptCol1 = d => step===1 && d.kind==='col' && d.v==='Units';
   const acceptCol2 = d => step===2 && d.kind==='col' && d.v==='ScaleNumbers';
   const acceptUnitTop    = d => step===3 && d.kind==='unit';
@@ -283,7 +275,7 @@ export default function HTableModule(){
   const acceptValueTop    = d => step===7 && d.kind==='num';
   const acceptValueBottom = d => step===7 && d.kind==='num';
 
-  // --- Step 6/7: pick OTHER value, then TAP destination cell ---
+  /** ---------- step 6/7 other-value flow ---------- */
   const [pickedOther, setPickedOther] = useState(null);
   const otherValueChoices = useMemo(()=>{
     const correct = Number(problem?.given?.value);
@@ -312,46 +304,17 @@ export default function HTableModule(){
     const ok = pickedOther && rowIsGivenUnit(table.uTop);
     if (!ok){ miss(7); return; }
     setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-    setDone(7); next();
+    flashCell('vTop', 7);
   };
   const tapPlaceValueBottom = () => {
     if (step!==7) return;
     const ok = pickedOther && rowIsGivenUnit(table.uBottom);
     if (!ok){ miss(7); return; }
     setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-    setDone(7); next();
+    flashCell('vBottom', 7);
   };
 
-  // --- Step 3: two-tap canonical unit selection, auto-place + ~2s blink then advance ---
-  const [pickedUnits, setPickedUnits] = useState([]);
-  const isCanonicalUnit = (uLabel) => {
-    const s = (uLabel||'').toLowerCase();
-    return s===canonicalTopUnit || s===canonicalBottomUnit;
-  };
-  const handleUnitChipClick = (chip) => {
-    if (step!==3) return;
-    if (!chip || !isCanonicalUnit(chip.label)) { miss(3); return; }
-    setPickedUnits(prev => {
-      const labels = new Set(prev.map(x => (x.label||'').toLowerCase()));
-      const low = (chip.label||'').toLowerCase();
-      if (labels.has(low)) return prev;
-      const nextSel = [...prev, chip];
-      if (nextSel.length===2){
-        const topObj = nextSel.find(x => (x.label||'').toLowerCase()===canonicalTopUnit);
-        const botObj = nextSel.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
-        setTable(t => ({ ...t, uTop: topObj?.label||'', uBottom: botObj?.label||'' }));
-        setBlinkUnits(true);
-        setTimeout(()=>{
-          setBlinkUnits(false);
-          setDone(3);
-          next();
-        }, 2000);
-      }
-      return nextSel;
-    });
-  };
-
-  // geometry
+  /** ---------- geometry for H lines & highlights ---------- */
   const gridRef = useRef(null);
   const refs = { uTop: useRef(null), sTop: useRef(null), vTop: useRef(null), uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null) };
   const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 });
@@ -432,7 +395,7 @@ export default function HTableModule(){
     const product = pair.a * pair.b;
     setTable(t=>({ ...t, product }));
     setMathStrip(s=>({ ...s, a: pair.a, b: pair.b }));
-    setDone(9); next();
+    flashCell(pair.keys?.[0] || 'vTop', 9); // blink then advance
   };
 
   const chooseDivideByNumber = (num)=>{
@@ -450,11 +413,10 @@ export default function HTableModule(){
     const result = table.product / div;
     setTable(t=>({ ...t, divisor: div, result }));
     setMathStrip(s=>({ ...s, divisor: div, result }));
-    setDone(10); next();
+    flashCell(key || 'sTop', 10);
   };
 
   const onCalculate = ()=>{
-    // Fill the unknown cell in the H-table so no gray slot remains
     setTable(t=>{
       const r = t.result;
       if (r == null) return t;
@@ -465,10 +427,10 @@ export default function HTableModule(){
       return t;
     });
     setMathStrip(s=>({ ...s, showResult: true }));
-    setDone(11); // mark Calculate complete
+    setDone(11);
     setOpenSum(true);
     setConfettiOn(true);
-    setTimeout(()=>setConfettiOn(False), 3500);
+    setTimeout(()=>setConfettiOn(false), 3500);
   };
 
   const resetProblem = ()=>{
@@ -477,17 +439,21 @@ export default function HTableModule(){
     setStep(0);
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
     setShowEnglish(true); setMode('English');
-    setHighlightKeys([]);
-    setOval(null); setTripleUL(null);
+    setHighlightKeys([]); setOval(null); setTripleUL(null);
     setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
-    setConfettiOn(false);
-    setOpenSum(false);
-    setPickedUnits([]);
+    setConfettiOn(false); setOpenSum(false);
+    setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
-    setBlinkUnits(false);
   };
 
-  const handleStep1 = (choice)=>{ if(choice?.correct){ setDone(0); setStep(1); } else { miss(0) } };
+  const handleStep0 = (choice)=>{
+    if(choice?.correct){
+      setDone(0);
+      setStep(1); // now grid will render
+    } else {
+      miss(0);
+    }
+  };
 
   const Story = ()=>{
     const p = problem;
@@ -508,17 +474,12 @@ export default function HTableModule(){
         </div>
         <div className="toolbar" style={{justifyContent:'center', marginTop:4, gap:12, display:'flex'}}>
           <button
-            className={`button big-under ${confettiOn ? 'blink' : ''}`}
-            style={confettiOn ? { animation: 'htable-blink 1s linear infinite' } : undefined}
+            className="button big-under"
             onPointerDown={()=>{ setShowEnglish(true) }}
             onPointerUp={()=>{ setShowEnglish(false) }}
             aria-label="Hold English"
           >Hold: English</button>
-          <button
-            className={`button primary big-under ${confettiOn ? 'blink' : ''}`}
-            style={confettiOn ? { animation: 'htable-blink 1s linear infinite' } : undefined}
-            onClick={resetProblem}
-          >New Problem</button>
+          <button className="button primary big-under" onClick={resetProblem}>New Problem</button>
         </div>
       </>
     );
@@ -526,25 +487,20 @@ export default function HTableModule(){
 
   const ROW_H = 88;
   const lineColor = '#0f172a';
-  const cellCls = (key)=> highlightKeys.includes(key) ? 'hl' : '';
+  const isBlink = (k)=> blinkKey === k;
+  const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''}`;
 
   return (
     <div className="container" style={{position:'relative'}}>
       <style>{`
-        @keyframes htable-blink { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.3); } }
+        @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
+        .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
         @keyframes confettiFall { 0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(120vh) rotate(720deg); opacity: 1; } }
         .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
         .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
-        .blink-win { animation: blinkWin 0.9s linear infinite; }
-        @keyframes blinkWin { 50% { opacity: 0.25; } }
         .math-strip { margin-top: 14px; text-align: center; }
         .math-strip .big { font-size: 26px; font-weight: 700; }
-        .math-strip .fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
-        .math-strip .numerator { font-size: 24px; font-weight: 700; }
-        .math-strip .bar { width: 100%; height: 4px; background: #0f172a; margin: 6px 0; }
-        .math-strip .denominator { font-size: 24px; font-weight: 700; }
-        .math-strip .eqline { display: inline-flex; align-items: center; gap: 16px; white-space: nowrap; }
-        /* Ensure large dropzones regardless of globals */
+        /* Ensure large dropzones */
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
           min-height: ${ROW_H}px !important;
           height: ${ROW_H}px !important;
@@ -555,154 +511,160 @@ export default function HTableModule(){
         <div className="card">
           <Story />
 
-          {/* H-table graphic is ALWAYS visible */}
-          <div className="hwrap" style={{position:'relative', marginTop:12}}>
-            <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-              {/* Headers */}
-              <div className="hhead" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
-                  accept={["header","col"]} test={acceptCol1}
-                  onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next(); } else miss(1) }}>
-                  <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                    <span className="hhead-text">{table.head1 || ''}</span>
-                  </div>
-                </Slot>
-              </div>
-              <div className="hhead" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
-                  accept={["header","col"]} test={acceptCol2}
-                  onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(2); next(); } else miss(2) }}>
-                  <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                    <span className="hhead-text">{table.head2 || ''}</span>
-                  </div>
-                </Slot>
-              </div>
-              <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
-
-              {/* Row 1 */}
-              <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                <Slot blinkWrap={blinkUnits} style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uTop ? "empty" : ""}`}
-                  test={acceptUnitTop}
-                  onDropContent={(d)=>setTable(t=>{
-                    const isRight = isCanonicalUnit(d.label);
-                    if(!isRight){ miss(3); return t; }
-                    const t2={...t,uTop:d.label};
-                    const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean));
-                    if(placed.size===2){ /* handled in chip-click path for blink */ }
-                    return t2;
-                  })}>
-                  <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
-                </Slot>
-              </div>
-              <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sTop==null ? "empty" : ""}`}
-                  test={acceptScaleTop}
-                  onDropContent={(d)=>setTable(t=>{
-                    const expected = expectedScaleForRowUnit(t.uTop);
-                    if (expected == null || Number(d.value) !== Number(expected)) {
-                      miss(4);
-                      return t;
-                    }
-                    const t2 = { ...t, sTop: Number(d.value) };
-                    const both = (t2.sTop!=null && t2.sBottom!=null);
-                    if (both) { setDone(4); setDone(5); next(); }
-                    return t2;
-                  })}>
-                  <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
-                </Slot>
-              </div>
-              <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vTop==null ? "empty" : ""}`}
-                  test={acceptValueTop}
-                  onDropContent={(d)=>setTable(t=>{
-                    const isRightRow = rowIsGivenUnit(t.uTop);
-                    const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                    if (!isRightRow || !isRightNumber) { miss(7); return t; }
-                    const t2 = { ...t, vTop: Number(d.value) };
-                    return t2;
-                  })}>
-                  <span className={table.solvedRow==='top' ? 'blink-win' : ''}>{table.vTop ?? ''}</span>
-                </Slot>
-              </div>
-
-              <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
-
-              {/* Row 2 */}
-              <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                <Slot blinkWrap={blinkUnits} style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${!table.uBottom ? "empty" : ""}`}
-                  test={acceptUnitBottom}
-                  onDropContent={(d)=>setTable(t=>{
-                    const isRight = isCanonicalUnit(d.label);
-                    if(!isRight){ miss(3); return t; }
-                    const t2={...t,uBottom:d.label};
-                    const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean));
-                    if(placed.size===2){ /* handled in chip-click path for blink */ }
-                    return t2;
-                  })}>
-                  <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
-                </Slot>
-              </div>
-              <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.sBottom==null ? "empty" : ""}`}
-                  test={acceptScaleBottom}
-                  onDropContent={(d)=>setTable(t=>{
-                    const expected = expectedScaleForRowUnit(t.uBottom);
-                    if (expected == null || Number(d.value) !== Number(expected)) {
-                      miss(5);
-                      return t;
-                    }
-                    const t2 = { ...t, sBottom: Number(d.value) };
-                    const both = (t2.sTop!=null && t2.sBottom!=null);
-                    if (both) { setDone(4); setDone(5); next(); }
-                    return t2;
-                  })}>
-                  <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
-                </Slot>
-              </div>
-              <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                <Slot style={{height:ROW_H, display:'flex', alignItems:'center', justifyContent:'center'}} className={`${table.vBottom==null ? "empty" : ""}`}
-                  test={acceptValueBottom}
-                  onDropContent={(d)=>setTable(t=>{
-                    const isRightRow = rowIsGivenUnit(t.uBottom);
-                    const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                    if (!isRightRow || !isRightNumber) { miss(7); return t; }
-                    const t2 = { ...t, vBottom: Number(d.value) };
-                    return t2;
-                  })}>
-                  <span className={table.solvedRow==='bottom' ? 'blink-win' : ''}>{table.vBottom ?? ''}</span>
-                </Slot>
-              </div>
-
-              {/* Solid H lines */}
-              <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-              <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-              <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-
-              {/* Red oval */}
-              {oval && (
-                <div
-                  style={{
-                    position:'absolute',
-                    left: oval.left, top: oval.top, width: oval.len, height: 62,
-                    transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                    border: '5px solid #ef4444', borderRadius: 9999,
-                    pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                  }}
-                />
-              )}
-              {/* Red triple underline */}
-              {tripleUL && (
-                <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
-                  <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
-                  <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                  <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+          {/* H-table graphic is visible AFTER step 0 is correct */}
+          {step>=1 && (
+            <div className="hwrap" style={{position:'relative', marginTop:12}}>
+              <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+                {/* Headers */}
+                <div ref={refs.uTop} className="hhead" style={{height:ROW_H}}>
+                  <Slot className={`${!table.head1 ? "empty" : ""}`}
+                    test={acceptCol1}
+                    onDropContent={(d)=>{
+                      if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); flashCell('uTop', 1); }
+                      else miss(1);
+                    }}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+                      <span className="hhead-text">{table.head1 || ''}</span>
+                    </div>
+                  </Slot>
                 </div>
-              )}
+                <div ref={refs.sTop} className="hhead" style={{height:ROW_H}}>
+                  <Slot className={`${!table.head2 ? "empty" : ""}`}
+                    test={acceptCol2}
+                    onDropContent={(d)=>{
+                      if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); flashCell('sTop', 2); }
+                      else miss(2);
+                    }}>
+                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+                      <span className="hhead-text">{table.head2 || ''}</span>
+                    </div>
+                  </Slot>
+                </div>
+                <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
+
+                {/* Row 1 */}
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}
+                    test={acceptUnitTop}
+                    onDropContent={(d)=>setTable(t=>{
+                      const isRight = isCanonicalUnit(d.label);
+                      if(!isRight){ miss(3); return t; }
+                      const t2={...t,uTop:d.label};
+                      const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean));
+                      if(placed.size===2){ setBlinkUnits(true); setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 900); }
+                      return t2;
+                    })}>
+                    <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
+                  </Slot>
+                </div>
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${table.sTop==null ? "empty" : ""}`}
+                    test={acceptScaleTop}
+                    onDropContent={(d)=>setTable(t=>{
+                      const expected = expectedScaleForRowUnit(t.uTop);
+                      if (expected == null || Number(d.value) !== Number(expected)) { miss(4); return t; }
+                      const t2 = { ...t, sTop: Number(d.value) };
+                      const both = (t2.sTop!=null && t2.sBottom!=null);
+                      if (both) { setDone(4); setDone(5); flashCell('sTop', 5); }
+                      return t2;
+                    })}>
+                    <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
+                  </Slot>
+                </div>
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${table.vTop==null ? "empty" : ""}`}
+                    test={acceptValueTop}
+                    onDropContent={(d)=>setTable(t=>{
+                      const isRightRow = rowIsGivenUnit(t.uTop);
+                      const isRightNumber = Number(d.value) === Number(problem?.given?.value);
+                      if (!isRightRow || !isRightNumber) { miss(7); return t; }
+                      const t2 = { ...t, vTop: Number(d.value) };
+                      flashCell('vTop', 7);
+                      return t2;
+                    })}
+                    onClick={tapPlaceValueTop}>
+                    <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
+                  </Slot>
+                </div>
+
+                <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
+
+                {/* Row 2 */}
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}
+                    test={acceptUnitBottom}
+                    onDropContent={(d)=>setTable(t=>{
+                      const isRight = isCanonicalUnit(d.label);
+                      if(!isRight){ miss(3); return t; }
+                      const t2={...t,uBottom:d.label};
+                      const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean));
+                      if(placed.size===2){ setBlinkUnits(true); setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 900); }
+                      return t2;
+                    })}>
+                    <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
+                  </Slot>
+                </div>
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${table.sBottom==null ? "empty" : ""}`}
+                    test={acceptScaleBottom}
+                    onDropContent={(d)=>setTable(t=>{
+                      const expected = expectedScaleForRowUnit(t.uBottom);
+                      if (expected == null || Number(d.value) !== Number(expected)) { miss(5); return t; }
+                      const t2 = { ...t, sBottom: Number(d.value) };
+                      const both = (t2.sTop!=null && t2.sBottom!=null);
+                      if (both) { setDone(4); setDone(5); flashCell('sBottom', 5); }
+                      return t2;
+                    })}>
+                    <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
+                  </Slot>
+                </div>
+                <div className="hcell" style={{height:ROW_H}}>
+                  <Slot className={`${table.vBottom==null ? "empty" : ""}`}
+                    test={acceptValueBottom}
+                    onDropContent={(d)=>setTable(t=>{
+                      const isRightRow = rowIsGivenUnit(t.uBottom);
+                      const isRightNumber = Number(d.value) === Number(problem?.given?.value);
+                      if (!isRightRow || !isRightNumber) { miss(7); return t; }
+                      const t2 = { ...t, vBottom: Number(d.value) };
+                      flashCell('vBottom', 7);
+                      return t2;
+                    })}
+                    onClick={tapPlaceValueBottom}>
+                    <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
+                  </Slot>
+                </div>
+
+                {/* Solid H lines */}
+                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+
+                {/* Red oval */}
+                {oval && (
+                  <div
+                    style={{
+                      position:'absolute',
+                      left: oval.left, top: oval.top, width: oval.len, height: 62,
+                      transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
+                      border: '5px solid #ef4444', borderRadius: 9999,
+                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
+                    }}
+                  />
+                )}
+                {/* Red triple underline */}
+                {tripleUL && (
+                  <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE */}
         <div className="card right-steps">
           <div className="section">
             <div className="step-title">{STEP_TITLES[step]}</div>
@@ -710,7 +672,7 @@ export default function HTableModule(){
             {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep1(c)}>{c.label}</button>
+                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
             )}
@@ -725,13 +687,11 @@ export default function HTableModule(){
                 {headerChoicesCol2.map((h, idx) => <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} />)}
               </div>
             )}
-
             {step===3 && (
               <div className="chips center mt-8">
-                {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} onClick={()=>handleUnitChipClick(c)} />)}
+                {unitChoices.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
-
             {step===4 && (
               <div className="chips center mt-8">
                 {(numbersStep5 && numbersStep5.length ? numbersStep5 : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
@@ -742,24 +702,17 @@ export default function HTableModule(){
                 {(numbersStep6 && numbersStep6.length ? numbersStep6 : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} />)}
               </div>
             )}
-
-            {/* RIGHT-PANEL: STEP 6 — START */}
+            {/* step 6 options */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
-                  <button
-                    key={c.id}
-                    className="chip"
-                    onClick={() => { chooseOtherValue(c); }}
-                  >
+                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>
                     {c.label}
                   </button>
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 6 — END */}
-
-            {/* RIGHT-PANEL: STEP 8 — START */}
+            {/* step 8 fence */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
                 {[
@@ -778,50 +731,33 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 8 — END */}
-
-            {/* RIGHT-PANEL: STEP 9 — START */}
+            {/* step 9 fence */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
-                  <button
-                    key={idx}
-                    className="chip"
-                    onClick={() => { chooseMultiply(p); setTripleUL(null); }}
-                  >
+                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>
                     {p.label}
                   </button>
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 9 — END */}
-
-            {/* RIGHT-PANEL: STEP 10 — START */}
+            {/* step 10 fence */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
-                <button
-                  className="chip"
-                  onClick={() => chooseDivideByNumber(Number(table.sTop))}
-                >
+                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sTop))}>
                   Divide by {table.sTop ?? '—'}
                 </button>
-                <button
-                  className="chip"
-                  onClick={() => chooseDivideByNumber(Number(table.sBottom))}
-                >
+                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sBottom))}>
                   Divide by {table.sBottom ?? '—'}
                 </button>
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 10 — END */}
-
-            {/* RIGHT-PANEL: STEP 11 — START */}
+            {/* step 11 Calculate */}
             {step>=11 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 11 — END */}
           </div>
         </div>
       </div>
