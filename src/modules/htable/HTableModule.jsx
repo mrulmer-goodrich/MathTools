@@ -181,6 +181,28 @@ export default function HTableModule(){
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
+  // Step 0: first action
+  const handleStep0 = (choice) => {
+    if (!choice?.correct) { miss(0); return; }
+    setDone(0); next(); // H-table becomes visible at step>=1
+  };
+
+  // Step 1: first column must be Units
+  const tapHeader1 = (d) => {
+    if (step !== 1) return;
+    if (d?.v !== 'Units'){ miss(1); return; }
+    setTable(t => ({ ...t, head1: 'Units' }));
+    setDone(1); next();
+  };
+
+  // Step 2: second column must be Scale Numbers
+  const tapHeader2 = (d) => {
+    if (step !== 2) return;
+    if (d?.v !== 'ScaleNumbers'){ miss(2); return; }
+    setTable(t => ({ ...t, head2: 'Scale Numbers' }));
+    setDone(2); next();
+  };
+
   // Choice pools
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2);
@@ -211,29 +233,7 @@ export default function HTableModule(){
   },[problem?.id]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
-  
-  // Step 0: first action
-  const handleStep0 = (choice) => {
-    if (!choice?.correct) { miss(0); return; }
-    setDone(0); next(); // H-table becomes visible at step>=1
-  };
-
-  // Step 1: first column must be Units
-  const tapHeader1 = (d) => {
-    if (step !== 1) return;
-    if (d?.v !== 'Units'){ miss(1); return; }
-    setTable(t => ({ ...t, head1: 'Units' }));
-    setDone(1); next();
-  };
-
-  // Step 2: second column must be Scale Numbers
-  const tapHeader2 = (d) => {
-    if (step !== 2) return;
-    if (d?.v !== 'ScaleNumbers'){ miss(2); return; }
-    setTable(t => ({ ...t, head2: 'Scale Numbers' }));
-    setDone(2); next();
-  };
-const tapUnit = (d)=>{
+  const tapUnit = (d)=>{
     const label = d?.label ?? d?.u ?? '';
     if (!isCanonicalUnit(label)) { miss(3); return; }
     setPickedUnits(prev=>{
@@ -406,8 +406,8 @@ const tapUnit = (d)=>{
 
   const divideChoices = useMemo(()=>{
     if (table.sTop==null || table.sBottom==null) return [];
-    const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;
-    const wrongScale = (givenRow==='top') ? table.sBottom : table.sTop;
+    const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;   // same-row scale
+    const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;   // opposite-row scale
     return shuffle([
       { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
       { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
@@ -473,6 +473,8 @@ const tapUnit = (d)=>{
   const ROW_H = 88;
   const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
+
+  // wild blink cue logic
   const needWildBlink = (key)=> {
     if (step===4 && key==='sTop'    && table.sTop==null) return true;
     if (step===5 && key==='sBottom' && table.sBottom==null) return true;
@@ -482,7 +484,11 @@ const tapUnit = (d)=>{
     }
     return false;
   };
-  const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''} ${needWildBlink(key) ? 'ptable-blink-wild' : ''}`;
+  const cellCls = (key)=> [
+    (highlightKeys.includes(key) ? 'hl' : ''),
+    (isBlink(key) ? 'ptable-blink' : ''),
+    (needWildBlink(key) ? 'ptable-blink-wild' : ''),
+  ].filter(Boolean).join(' ');
 
   // ──────────────────────────────────────────────────────────────────────────────
   // RENDER
@@ -502,13 +508,13 @@ const tapUnit = (d)=>{
 
         /* Wild, continuous blink for 'What goes here?' prompts */
         @keyframes ptable-blink-wild-kf {
-          0%   { box-shadow: 0 0 0 0 rgba(255,0,90,.50); transform: scale(1.00); }
-          25%  { box-shadow: 0 0 0 6px rgba(59,130,246,.45); transform: scale(1.03); }
-          50%  { box-shadow: 0 0 0 0 rgba(255,0,90,.60); transform: scale(1.00); }
-          75%  { box-shadow: 0 0 0 8px rgba(59,130,246,.45); transform: scale(1.03); }
-          100% { box-shadow: 0 0 0 0 rgba(255,0,90,.50); transform: scale(1.00); }
+          0%   { box-shadow: 0 0 0 0 rgba(255,0,90,.55); transform: scale(1.00); }
+          25%  { box-shadow: 0 0 0 6px rgba(255,0,90,.35); transform: scale(1.03); }
+          50%  { box-shadow: 0 0 0 0 rgba(255,0,90,.10); transform: scale(1.00); }
+          75%  { box-shadow: 0 0 0 8px rgba(255,0,90,.45); transform: scale(1.04); }
+          100% { box-shadow: 0 0 0 0 rgba(255,0,90,.20); transform: scale(1.00); }
         }
-        .ptable-blink-wild { animation: ptable-blink-wild-kf 1.2s ease-in-out 0s infinite; border-radius:10px; }
+        .ptable-blink-wild { animation: ptable-blink-wild-kf 1.6s ease-in-out 0s infinite; }
 
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
@@ -689,8 +695,64 @@ const tapUnit = (d)=>{
               </div>
             )}
 
-            {/* Step 7 */}
-            {step===7 && (<div className="section" />)}}
+            {/* Step 7 – no text; blinking cell cues the action */}
+            {step===7 && (<div className="section" />)}
+
+            {/* Step 8 */}
+            {step===8 && (
+              <div className="chips with-borders center mt-8">
+                {[
+                  { id:'op_x',  label:'Cross Multiply',      good:true  },
+                  { id:'op_add',label:'Add the numbers',     good:false },
+                  { id:'op_sub',label:'Subtract the numbers',good:false },
+                  { id:'op_avg',label:'Average the numbers', good:false },
+                ].map(o => (
+                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
+                ))}
+              </div>
+            )}
+
+            {/* Step 9 */}
+            {step===9 && (
+              <div className="chips with-borders center mt-8">
+                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
+                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+                ))}
+              </div>
+            )}
+
+            {/* Step 10 */}
+            {step===10 && (
+              <div className="chips with-borders center mt-8">
+                {divideChoices.map((choice, idx) => (
+                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
+                ))}
+              </div>
+            )}
+
+            {/* Step 11 */}
+            {step>=11 && (
+              <div className="toolbar mt-10 center" style={{display:'flex', gap:12, justifyContent:'center'}}>
+                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
+                <button className="button" onClick={resetProblem}>New Problem</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>{/* end .panes */}
+
+      {/* Confetti */}
+      {confettiOn && (
+        <div className="htable-confetti" aria-hidden="true">
+          {Array.from({length:120}).map((_,i)=>{
+            const left = Math.random()*100;
+            const dur = 5 + Math.random()*4;
+            const delay = Math.random()*2;
+            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
+            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
+            return <div key={i} className="piece" style={style} />;
+          })}
         </div>
       )}
 
@@ -705,7 +767,6 @@ const tapUnit = (d)=>{
           onNewProblem={()=>resetProblem()}
         />
       )}
-
-    </div>
+    </div> {/* end .container */}
   );
 }
