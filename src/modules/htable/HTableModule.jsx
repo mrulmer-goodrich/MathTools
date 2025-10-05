@@ -1,7 +1,7 @@
 // HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
-//Ulmer-Goodrich Productions!
+//Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
@@ -644,10 +644,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
         /* Lock blink look to the first-step style; remove stray center stripes */
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
-        .ptable-blink-hard.blink-bg::after { display: none !important; }
-    `}
-
-/* v10.0.2 — Force uniform centering across ALL H-table cells */
+        .ptable-blink-hard.blink-bg::after { display: none !important; }/
 .hcell, .hhead {
   display: flex !important;
   align-items: center !important;
