@@ -1,3 +1,5 @@
+// generator.js — UG Math Tools v10.0.2 (replaces v10.0.1)
+// SpecOp Sync: Apply SpecOp v10.0.1; enforce unique numbers and '=' in SCALE_LINES
 // src/lib/generator.js — Scene-aware, humorous H-Table generator (v3.0)
 // - Keeps genScaleProblem (unchanged for your ScaleFactor module)
 // - Upgrades genHProblem with:
@@ -299,7 +301,7 @@ const LEX = {
       hamster_parade_map: 'bản đồ diễu hành của câu lạc bộ chuột hamster',
       rubber_duck_regatta: 'đường đua vịt cao su khổng lồ',
       pizza_box_diagram: 'sơ đồ kỹ thuật trên hộp pizza',
-      cardboard_rollercoaster: 'bản vẽ tàu lượn bằng bìa cứng',
+      cardboard_rollercoaster: 'bản vẽ tàu lượn = bìa cứng',
       marble_run_manual: 'sổ tay đường chạy bi siêu tốc',
       bake_sale_recipe: 'thẻ công thức cho buổi bán bánh',
       art_poster_resize: 'áp phích nghệ thuật cần đổi kích thước',
@@ -362,11 +364,11 @@ const OPENERS = {
 const SCALE_LINES = {
   English: [
     o => `A sticky note yells: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `The margin scribble claims: ${o.a} ${o.u1} equals ${o.b} ${o.u2}.`,
+    o => `The margin scribble claims: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `A faded caption reads: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Blueprint footer states: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `There’s a QR label that decodes to ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Someone wrote in marker: ${o.a} ${o.u1} ↔ ${o.b} ${o.u2}.`,
+    o => `Someone wrote in marker: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Top corner note insists: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `The legend spells out ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `A bold caption announces ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -374,7 +376,7 @@ const SCALE_LINES = {
   ],
   Spanish: [
     o => `Una nota pegada grita: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Un garabato en el margen dice: ${o.a} ${o.u1} equivale a ${o.b} ${o.u2}.`,
+    o => `Un garabato en el margen dice: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Un pie de plano indica: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Una etiqueta QR revela ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `En la esquina se lee: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -382,7 +384,7 @@ const SCALE_LINES = {
   ],
   French: [
     o => `Un post-it hurle : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Un gribouillage en marge affirme : ${o.a} ${o.u1} équivaut à ${o.b} ${o.u2}.`,
+    o => `Un gribouillage en marge affirme : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `La légende précise : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Une étiquette QR révèle ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `En pied de plan : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -390,7 +392,7 @@ const SCALE_LINES = {
   ],
   German: [
     o => `Ein Klebezettel ruft: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Ein Randkritzel behauptet: ${o.a} ${o.u1} entspricht ${o.b} ${o.u2}.`,
+    o => `Ein Randkritzel behauptet: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Die Legende zeigt: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Ein QR-Label entschlüsselt ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Unten steht: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -398,7 +400,7 @@ const SCALE_LINES = {
   ],
   Swahili: [
     o => `Kijikaratasi kinasema: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Mwandiko pembezoni unaeleza: ${o.a} ${o.u1} ni sawa na ${o.b} ${o.u2}.`,
+    o => `Mwandiko pembezoni unaeleza: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Maelezo ya chini yanasema: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Lebo ya QR inaonyesha ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Kona ya juu imeandika ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -406,7 +408,7 @@ const SCALE_LINES = {
   ],
   Vietnamese: [
     o => `Tờ giấy nhớ la lên: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Dòng ghi chú ở mép nói rằng: ${o.a} ${o.u1} bằng ${o.b} ${o.u2}.`,
+    o => `Dòng ghi chú ở mép nói rằng: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Chú thích mờ ghi: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Nhãn QR giải mã thành: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
     o => `Góc bản vẽ ghi rõ: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
@@ -529,7 +531,7 @@ const QUESTIONS = {
     length: [
       o => `Trong ${o.place}, một ${o.noun} là ${o.g} ${o.uGiven}. Bao nhiêu ${o.uOther}?`,
       o => `Nếu ${o.noun} dài ${o.g} ${o.uGiven}, đổi sang ${o.uOther}.`,
-      o => `Bản vẽ ghi ${o.g} ${o.uGiven} ở ${o.noun}. Vậy bằng bao nhiêu ${o.uOther}?`
+      o => `Bản vẽ ghi ${o.g} ${o.uGiven} ở ${o.noun}. Vậy = bao nhiêu ${o.uOther}?`
     ],
     time: [
       o => `Với ${o.place}, ${o.noun} kéo dài ${o.g} ${o.uGiven}. Đổi sang ${o.uOther}.`,
@@ -617,7 +619,19 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
 
   const answer = computeAnswer({ a, b, g, gRow })
 
-  return {
+  
+
+// SpecOp v10.0.1: Enforce unique scale numbers (a,b,g)
+{
+  let _attempts = 0;
+  while ((a === b || a === g || b === g) && _attempts++ < 50) {
+    if (a === b) b = (b % 20) + 1;
+    if (a === g) g = (g % 20) + 1;
+    if (b === g) g = (g % 20) + 1;
+  }
+}
+
+return {
     id: uuid(),
     text: { english, alts },
     units: [u1, u2],
