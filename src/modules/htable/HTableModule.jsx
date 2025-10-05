@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.3 (replaces 9.7.2)
+// HTableModule — UG Math Tools v9.7.4 (replaces 9.7.3)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -290,7 +290,7 @@ export default function HTableModule(){
     // add a couple distractors near the range
     const base = Number(problem?.given?.value) || 3;
     let tries = 0;
-    while (set.size < Math.max(3, allProblemNumbers.length + 2) && tries < 50){
+    while (set.size < 4 && tries < 50){
       set.add(Math.max(1, Math.round(base + (Math.random()*6 - 3))));
       tries++;
     }
@@ -550,6 +550,20 @@ export default function HTableModule(){
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
+        /* === v9.7.4 typography + centering (module-local) === */
+        .card.hgrid-card { font-size: 1.06rem; }
+        .card.hgrid-card .hhead-text,
+        .card.hgrid-card .hcell span { 
+          font-family: inherit;
+          line-height: 1.25;
+        }
+        .hcell .slot-wrap, .hhead .slot-wrap {
+          display:flex; align-items:center; justify-content:center;
+        }
+        /* Keep stripe artifacts off blinked cells */
+        .ptable-blink-hard.blink-bg { background: transparent !important; }
+        .ptable-blink-hard.blink-bg::before,
+        .ptable-blink-hard.blink-bg::after { display: none !important; }
     `}</style>
 
       <div className="panes">
@@ -728,7 +742,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
+                {otherValueChoices.slice(0,4).map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -741,7 +755,10 @@ export default function HTableModule(){
 
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="problem-body">What do we do now?</div>
+              <div className="chips with-borders center mt-8">
+                {[{ id:'cross', label:'Cross Multiply', correct:true }, { id:'add', label:'Add' }, { id:'divide', label:'Divide' }, { id:'guess', label:'Just Guess' }]
+                  .map(opt => (<button key={opt.id} className="chip" onClick={()=>chooseStep8Action(opt)}>{opt.label}</button>))}
+              </div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
