@@ -742,138 +742,132 @@ const numbersStep6 = useMemo(()=>{
           )}
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="card right-steps">
-          <div className="section">
-<div className="step-title">{STEP_TITLES[step]}</div>
 
-            {step===0 && (
-              <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
+          {/* RIGHT SIDE */}
+<div className="card right-steps">
+  <div className="section">
+    <div className="step-title">{STEP_TITLES[step]}</div>
 
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol1.map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
-                ))}
-              </div>
-            )}
+    {step===0 && (
+      <div className="chips with-borders center">
+        {STEP1_CHOICES.map(c => (
+          <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
+        ))}
+      </div>
+    )}
 
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol2.map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
-                ))}
-              </div>
-            )}
+    {step===1 && (
+      <div className="chips with-borders center" style={{marginTop:8}}>
+        {headerChoicesCol1.map((h, idx) => (
+          <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
+        ))}
+      </div>
+    )}
 
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
-                ))}
-              </div>
-            )}
+    {step===2 && (
+      <div className="chips with-borders center" style={{marginTop:8}}>
+        {headerChoicesCol2.map((h, idx) => (
+          <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
+        ))}
+      </div>
+    )}
 
-            {step===4 && (
-              <div className="chips center mt-8">
-                {(numbersTopScale && numbersTopScale.length
-                  ? numbersTopScale
-                  : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />
-                ))}
-              </div>
-            )} />
-                ))}
-              </div>
-            )}
+    {step===3 && (
+      <div className="chips center mt-8">
+        {unitChoices.map(c => (
+          <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
+        ))}
+      </div>
+    )}
 
-            {step===5 && (
-              <div className="chips center mt-8">
-                {(numbersBottomScale && numbersBottomScale.length
-                  ? numbersBottomScale
-                  : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />
-                ))}
-              </div>
-            )} />
-                ))}
-              </div>
-            )}
+    {step===4 && (
+      <div className="chips center mt-8">
+        {(numbersTopScale && numbersTopScale.length
+          ? numbersTopScale
+          : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))
+        ).map(c => (
+          <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />
+        ))}
+      </div>
+    )}
 
-            {/* RIGHT-PANEL: STEP 6 – START */}
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 6 – END */}
+    {step===5 && (
+      <div className="chips center mt-8">
+        {(numbersBottomScale && numbersBottomScale.length
+          ? numbersBottomScale
+          : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))
+        ).map(c => (
+          <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />
+        ))}
+      </div>
+    )}
 
-            {/* RIGHT-PANEL: STEP 7 – START */}
-            {step===7 && (
-              <div className="section">
-                <div className="muted bigger">Tap the correct cell in the table to place the value.</div>
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 7 – END */}
+    {/* RIGHT-PANEL: STEP 6 – START */}
+    {step===6 && (
+      <div className="chips with-borders center mt-8">
+        {otherValueChoices.map(c => (
+          <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
+        ))}
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 6 – END */}
 
-            {/* RIGHT-PANEL: STEP 8 – START */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x', label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers', good:false },
-                  { id:'op_sub', label:'Subtract the numbers', good:false },
-                  { id:'op_avg', label:'Average the numbers', good:false },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 8 – END */}
+    {/* RIGHT-PANEL: STEP 7 – START */}
+    {step===7 && (
+      <div className="section">
+        <div className="muted bigger">Tap the correct cell in the table to place the value.</div>
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 7 – END */}
 
-            {/* RIGHT-PANEL: STEP 9 – START */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 9 – END */}
+    {/* RIGHT-PANEL: STEP 8 – START */}
+    {step===8 && (
+      <div className="chips with-borders center mt-8">
+        {[
+          { id:'op_x',  label:'Cross Multiply',     good:true  },
+          { id:'op_add',label:'Add the numbers',    good:false },
+          { id:'op_sub',label:'Subtract the numbers',good:false },
+          { id:'op_avg',label:'Average the numbers', good:false },
+        ].map(o => (
+          <button key={o.id} className="chip" onClick={() => {
+            if (o.good) { setDone(8); next(); } else { miss(8); }
+          }}>{o.label}</button>
+        ))}
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 8 – END */}
 
-            {/* RIGHT-PANEL: STEP 10 – START */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                {divideChoices.map((choice, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 10 – END */}
+    {/* RIGHT-PANEL: STEP 9 – START */}
+    {step===9 && (
+      <div className="chips with-borders center mt-8">
+        {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
+          <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+        ))}
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 9 – END */}
 
-            {/* RIGHT-PANEL: STEP 11 – START */}
-            {step>=11 && (
-              <div className="toolbar mt-10 center">
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 11 – END */}
-          </div>
+    {/* RIGHT-PANEL: STEP 10 – START */}
+    {step===10 && (
+      <div className="chips with-borders center mt-8">
+        {divideChoices.map((choice, idx) => (
+          <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
+        ))}
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 10 – END */}
+
+    {/* RIGHT-PANEL: STEP 11 – START */}
+    {step>=11 && (
+      <div className="toolbar mt-10 center">
+        <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
+      </div>
+    )}
+    {/* RIGHT-PANEL: STEP 11 – END */}
+  </div>
+</div>
 
           
-          </div>
-        </div>
-      </div>
-
       {/* Confetti */}
       {confettiOn && (
         <div className="htable-confetti" aria-hidden="true">
