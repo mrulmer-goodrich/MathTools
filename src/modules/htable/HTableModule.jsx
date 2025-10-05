@@ -1,4 +1,5 @@
-// HTableModule — UG Math Tools v9.8.1 (replaces 9.7.6)
+// HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
+// HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -104,6 +105,22 @@ const STEP_TITLES = [
   "What value goes here?",
   "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
+// STEP 8 data: conceptual next step (Cross multiply is correct)
+const next8Choices = [
+  { id: 'cm', label: 'Cross multiply', correct: true },
+  { id: 'add', label: 'Add all the numbers', correct: false },
+  { id: 'avg', label: 'Find the average', correct: false },
+  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
+];
+const chooseNext8 = (choice)=>{
+  if (choice?.correct) {
+    setDone?.(8, true);
+    typeof next === 'function' && next();
+  } else {
+    incMiss?.(8);
+  }
+};
+
   "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
@@ -317,26 +334,18 @@ export default function HTableModule(){
 
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
-  
   const otherValueChoices = useMemo(()=>{
-    const correctVal = Number(problem?.given?.value);
-    const pool = new Set(allProblemNumbers);
-    // add nearby distractors
+    const set = new Set(allProblemNumbers);
+    // add a couple distractors near the range
     const base = Number(problem?.given?.value) || 3;
     let tries = 0;
-    while (pool.size < Math.max(4, allProblemNumbers.length + 2) && tries < 60){
-      pool.add(Math.max(1, Math.round(base + (Math.random()*6 - 3))));
+    while (set.size < Math.max(3, allProblemNumbers.length + 2) && tries < 50){
+      set.add(Math.max(1, Math.round(base + (Math.random()*6 - 3))));
       tries++;
     }
-    const arrAll = Array.from(pool).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correctVal }));
-    // guarantee exactly 4 choices and include the correct one
-    const correctOption = arrAll.find(a=>a.correct) || { id:'ov_c', value:correctVal, label:String(correctVal), correct:true };
-    const distractors = arrAll.filter(a=>!a.correct);
-    // pick 3 distractors
-    const picks = shuffle(distractors).slice(0,3);
-    return shuffle([correctOption, ...picks]);
+    const arr = Array.from(set).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===Number(problem?.given?.value) }));
+    return shuffle(arr);
   },[problem?.id, allProblemNumbers]);
-
 
   const chooseOtherValue = (choice) => {
     if (step!==6) return;
@@ -458,21 +467,7 @@ export default function HTableModule(){
     setDone(9); next();
   };
 
-  
-  // Step 8 — Next action concept check
-  const next8Choices = useMemo(()=> shuffle([
-    { id:'cross',  label:'Cross multiply', correct:true },
-    { id:'add',    label:'Add all the numbers', correct:false },
-    { id:'avg',    label:'Find the average', correct:false },
-    { id:'subtract', label:'Subtract the smaller from the larger', correct:false },
-  ]), [table.vTop, table.vBottom, table.sTop, table.sBottom]);
-
-  const chooseNext8 = (choice)=>{
-    if (step!==8) return;
-    if (!choice?.correct) { miss(8); return; }
-    setDone(8); next();
-  };
-const divideChoices = useMemo(()=>{
+  const divideChoices = useMemo(()=>{
     if (table.sTop==null || table.sBottom==null) return [];
     const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;   // same-row scale
     const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;   // opposite-row scale
@@ -716,7 +711,8 @@ const divideChoices = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {shuffle(STEP1_CHOICES).map(c => ( <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
+                {shuffle(_assertFour(STEP1_CHOICES,"Step0"))\.map(c => (
+                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
             )}
@@ -725,7 +721,7 @@ const divideChoices = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {shuffle([
+                {[
                   { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
@@ -740,7 +736,7 @@ const divideChoices = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 2 — START */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {shuffle([
+                {[
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
                   { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
@@ -780,7 +776,7 @@ const divideChoices = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
+                {shuffle(_assertFour(otherValueChoices,"Step0"))\.map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -793,18 +789,14 @@ const divideChoices = useMemo(()=>{
 
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {next8Choices.map((c)=>(
-                  <button key={c.id} className="chip" onClick={()=>chooseNext8(c)}>{c.label}</button>
-                ))}
-              </div>
-            )})}
+              <div className="problem-body">What do we do next?</div>
+            )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {shuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
+                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
                 ))}
               </div>
