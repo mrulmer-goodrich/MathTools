@@ -211,7 +211,29 @@ export default function HTableModule(){
   },[problem?.id]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
-  const tapUnit = (d)=>{
+  
+  // Step 0: first action
+  const handleStep0 = (choice) => {
+    if (!choice?.correct) { miss(0); return; }
+    setDone(0); next(); // H-table becomes visible at step>=1
+  };
+
+  // Step 1: first column must be Units
+  const tapHeader1 = (d) => {
+    if (step !== 1) return;
+    if (d?.v !== 'Units'){ miss(1); return; }
+    setTable(t => ({ ...t, head1: 'Units' }));
+    setDone(1); next();
+  };
+
+  // Step 2: second column must be Scale Numbers
+  const tapHeader2 = (d) => {
+    if (step !== 2) return;
+    if (d?.v !== 'ScaleNumbers'){ miss(2); return; }
+    setTable(t => ({ ...t, head2: 'Scale Numbers' }));
+    setDone(2); next();
+  };
+const tapUnit = (d)=>{
     const label = d?.label ?? d?.u ?? '';
     if (!isCanonicalUnit(label)) { miss(3); return; }
     setPickedUnits(prev=>{
