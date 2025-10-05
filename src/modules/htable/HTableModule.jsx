@@ -536,7 +536,7 @@ const handleUnitChipClick = (chip) => {
         <div className="card">
           <Story />
 
-          {step>=1 && (
+          {step>=11 && (
             <div className="hwrap" style={{position:'relative', marginTop:12}}>
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers */}
@@ -741,14 +741,22 @@ const handleUnitChipClick = (chip) => {
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).map((p,idx)=>(
-                  <button key={idx} className="chip" onClick={()=>{ chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+                  <button
+                    key={idx}
+                    className="chip"
+                    onClick={() => { chooseMultiply(p); setTripleUL(null); }}
+                  >
+                    {p.label}
+                  </button>
                 ))}
               </div>
             )}
               </div>
             )}
+              </div>
+            )}
 
-            {step>=7 && (
+            {step>=11 && (
               <div className="math-strip">
                 {!mathStrip.divisor ? (
                   <div className="big">{(mathStrip.a!=null && mathStrip.b!=null) ? `${mathStrip.a} × ${mathStrip.b}` : ''}</div>
@@ -775,7 +783,16 @@ const handleUnitChipClick = (chip) => {
                   { id:'op_sub', label:'Subtract the numbers' },
                   { id:'op_avg', label:'Average the numbers' },
                 ].map(o => (
-                  <button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(8), next()) : miss(8) }}>{o.label}</button>
+                  <button
+                    key={o.id}
+                    className="chip"
+                    onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            )}}>{o.label}</button>
                 ))}
               </div>
             )}>Divide by {table.sTop ?? '—'}</button>
