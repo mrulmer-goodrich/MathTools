@@ -306,14 +306,14 @@ const tapPlaceValueTop = () => {
   const ok = pickedOther && rowIsGivenUnit(table.uTop);
   if (!ok){ miss(7); return; }
   setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-  setDone(7); next();
+  setDone(10); next();
 };
 const tapPlaceValueBottom = () => {
   if (step!==7) return;
   const ok = pickedOther && rowIsGivenUnit(table.uBottom);
   if (!ok){ miss(7); return; }
   setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-  setDone(7); next();
+  setDone(10); next();
 };
 // --- Step 4: two-click unit selection (auto-place with ~2s blink) ---
 const [pickedUnits, setPickedUnits] = useState([]);
@@ -334,7 +334,7 @@ const handleUnitChipClick = (chip) => {
       const botObj = next.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
       setTable(t => ({ ...t, uTop: topObj?.label||'', uBottom: botObj?.label||'' }));
       // blink for ~2s then advance
-      setTimeout(()=>{ setDone(2); next(); }, 2000);
+      setTimeout(()=>{ setDone(10); next(); }, 2000);
     }
     return next;
   });
@@ -413,19 +413,19 @@ const handleUnitChipClick = (chip) => {
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom])
 
   const chooseMultiply = (pair)=>{
-    if(!pair || !crossPair){ miss(7); return }
+    if(!pair || !crossPair){ miss(9); return }
     const correct = (pair.a===crossPair.a && pair.b===crossPair.b)
     setHighlightKeys(pair.keys || [])
-    if(!correct){ miss(7); return }
+    if(!correct){ miss(9); return }
     const product = pair.a * pair.b
     setTable(t=>({ ...t, product }))
     setMathStrip(s=>({ ...s, a: pair.a, b: pair.b }))
-    setDone(7); next()
+    setDone(10); next()
   }
 
   const chooseDivideByNumber = (num)=>{
     const div = Number(num)
-    if (table.product==null || !Number.isFinite(div) || div===0) { miss(8); return }
+    if (table.product==null || !Number.isFinite(div) || div===0) { miss(10); return }
     const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null)
     const g = gridRef.current
     if (g && key){
@@ -438,7 +438,7 @@ const handleUnitChipClick = (chip) => {
     const result = table.product / div
     setTable(t=>({ ...t, divisor: div, result }))
     setMathStrip(s=>({ ...s, divisor: div, result }))
-    setDone(8); next()
+    setDone(10); next()
   }
 
   const onCalculate = ()=>{
@@ -543,7 +543,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol1}
-                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
+                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(10); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
@@ -552,7 +552,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol2}
-                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3) }}>
+                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(10); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
@@ -566,10 +566,10 @@ const handleUnitChipClick = (chip) => {
                     test={acceptUnitTop}
                     onDropContent={(d)=>setTable(t=>{
                       const isRight = isCanonicalUnit(d.label);
-                      if(!isRight){ miss(2); return t; }
+                      if(!isRight){ miss(3); return t; }
                       const t2={...t,uTop:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                      if(placed.size===2){ setDone(2); next(); }
+                      if(placed.size===2){ setDone(10); next(); }
                       return t2
                     })}>
                     <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
@@ -586,7 +586,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sTop: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(4); next(); }
+                      if (both) { setDone(10); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
@@ -600,7 +600,7 @@ const handleUnitChipClick = (chip) => {
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
                       const t2 = { ...t, vTop: Number(d.value) };
-                      if (t2.vTop!=null && t2.vBottom==null) { setDone(5); next(); }
+                      if (t2.vTop!=null && t2.vBottom==null) { setDone(10); next(); }
                       return t2;
                     })}>
                     <span className={table.solvedRow==='top' ? 'blink-win' : ''}>{table.vTop ?? ''}</span>
@@ -615,10 +615,10 @@ const handleUnitChipClick = (chip) => {
                     test={acceptUnitBottom}
                     onDropContent={(d)=>setTable(t=>{
                       const isRight = isCanonicalUnit(d.label);
-                      if(!isRight){ miss(2); return t; }
+                      if(!isRight){ miss(3); return t; }
                       const t2={...t,uBottom:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                      if(placed.size===2){ setDone(2); next(); }
+                      if(placed.size===2){ setDone(10); next(); }
                       return t2
                     })}>
                     <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
@@ -635,7 +635,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sBottom: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(4); next(); }
+                      if (both) { setDone(10); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
@@ -649,7 +649,7 @@ const handleUnitChipClick = (chip) => {
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
                       if (!isRightRow || !isRightNumber) { miss(5); return t; }
                       const t2 = { ...t, vBottom: Number(d.value) };
-                      if (t2.vBottom!=null && t2.vTop==null) { setDone(5); next(); }
+                      if (t2.vBottom!=null && t2.vTop==null) { setDone(10); next(); }
                       return t2;
                     })}>
                     <span className={table.solvedRow==='bottom' ? 'blink-win' : ''}>{table.vBottom ?? ''}</span>
@@ -729,22 +729,22 @@ const handleUnitChipClick = (chip) => {
 
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x', label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers' },
-                  { id:'op_sub', label:'Subtract the numbers' },
-                  { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(6), next()) : miss(6) }}>{o.label}</button>
+                {otherValueChoices.map(c => (
+                  <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
+                ))}
+              </div>
+            )}}>{o.label}</button>
                 ))}
               </div>
             )}
 
-            {step===7 && (
+            {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).map((p,idx)=>(
                   <button key={idx} className="chip" onClick={()=>{ chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
                 ))}
+              </div>
+            )}
               </div>
             )}
 
@@ -769,12 +769,21 @@ const handleUnitChipClick = (chip) => {
 
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sTop))}>Divide by {table.sTop ?? '—'}</button>
+                {[
+                  { id:'op_x', label:'Cross Multiply', good:true },
+                  { id:'op_add', label:'Add the numbers' },
+                  { id:'op_sub', label:'Subtract the numbers' },
+                  { id:'op_avg', label:'Average the numbers' },
+                ].map(o => (
+                  <button key={o.id} className="chip" onClick={()=>{ o.good ? (setDone(8), next()) : miss(8) }}>{o.label}</button>
+                ))}
+              </div>
+            )}>Divide by {table.sTop ?? '—'}</button>
                 <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sBottom))}>Divide by {table.sBottom ?? '—'}</button>
               </div>
             )}
 
-            {step>=9 && (
+            {step>=11 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
