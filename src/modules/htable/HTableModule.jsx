@@ -1,4 +1,16 @@
-// HTableModule v9.8.5 — hotfix for stray backslash before .map
+
+
+/** Guard: enforce 4-choice render without crashing */
+const _assertFour = (arr, tag) => {
+  try {
+    if (!Array.isArray(arr) || arr.length !== 4) {
+      console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr);
+    }
+  } catch {}
+  return arr;
+};
+
+// HTableModule v9.8.6 — hotfix for stray backslash before .map
 // HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
 // HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
