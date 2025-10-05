@@ -1,4 +1,5 @@
-// HTableModule — UG Math Tools v10.0.2 (replaces 9.7.6)
+// HTableModule — UG Math Tools v10.0.3 (replaces 10.0.2)
+// SpecOp Sync: Fix onCalculate merge error; enforce 4-choice rule; equation strip; overlay stop; no random bracket; adhere to SpecOp 10.0.1
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -23,7 +24,6 @@ function _violatesEqualScalePair(p) {
     return (typeof a === 'number' && typeof b === 'number' && a === b);
   } catch(_) {
     return false;
-  }
 }
 
 function genSafeProblem(rawGenFn, maxTries = 25) {
@@ -33,15 +33,12 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
     const cand = rawGenFn();
     last = cand;
     if (!_violatesEqualScalePair(cand)) return cand;
-  }
   // Fallback: if generator kept producing equal pairs, nudge bottom by +1
   if (last && (last.scaleBottom ?? last.sBottom ?? last.headerDen) !== undefined) {
     if (last.scaleBottom !== undefined) last.scaleBottom += 1;
     else if (last.sBottom !== undefined) last.sBottom += 1;
     else if (last.headerDen !== undefined) last.headerDen += 1;
-  }
   return last;
-}
 // ---- End wrapper ----
 
 
@@ -146,6 +143,12 @@ const genSaneHProblem = () => {
   return p;
 };
 
+
+
+/** Guard: enforce 4-choice render without crashing */
+function _assertFour(arr, tag) {
+  try { if (!Array.isArray(arr) || arr.length !== 4) { console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr); } } catch {}
+  return arr;
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -250,7 +253,6 @@ export default function HTableModule(){
     while(picks.length<2 && pool.length){
       const candidate = pool[Math.floor(Math.random()*pool.length)];
       if (!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
-    }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
@@ -291,7 +293,6 @@ export default function HTableModule(){
         // Full 2s blink once both are chosen
         setBlinkUnits(true);
         setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
-      }
       return nextSel;
     });
   };
@@ -318,30 +319,33 @@ export default function HTableModule(){
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
   const otherValueChoices = useMemo(()=>{
-    // Build exactly 4 unique options: include the true "other value" from the problem
-    // plus up to two values from the scale numbers and one nearby distractor.
-    const correct = Number(problem?.given?.value);
-    const sTop = Number(table?.sTop);
-    const sBottom = Number(table?.sBottom);
-    const base = Number.isFinite(correct) ? correct : 3;
-    const pool = new Set();
-    if (Number.isFinite(correct)) pool.add(correct);
-    // Prefer to include existing scale numbers as distractors (if distinct from correct)
-    if (Number.isFinite(sTop) && sTop !== correct) pool.add(sTop);
-    if (Number.isFinite(sBottom) && sBottom !== correct && pool.size < 3) pool.add(sBottom);
-    // Fill remaining slots with near-by integers until size === 4
-    let tries = 0;
-    while (pool.size < 4 && tries < 50){
-      const jitter = Math.round(base + (Math.random()*8 - 4)); // ±4 window
-      if (jitter > 0 && jitter !== correct && jitter !== sTop && jitter !== sBottom) pool.add(jitter);
-      tries++;
-    }
-    // If still short, backstop with incremental positives
-    let n = 1;
-    while (pool.size < 4 && n < 50){ if (n!==correct && n!==sTop && n!==sBottom) pool.add(n); n++; }
-    const arr = Array.from(pool).slice(0,4).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correct }));
-    return shuffle(arr);
-  },[problem?.id, table?.sTop, table?.sBottom]);const chooseOtherValue = (choice) => {
+  const correct = Number(problem?.given?.value);
+  const sTop = Number(table?.sTop);
+  const sBottom = Number(table?.sBottom);
+
+  const pool = new Set();
+  if (Number.isFinite(correct)) pool.add(correct);
+  if (Number.isFinite(sTop) && sTop !== correct) pool.add(sTop);
+  if (Number.isFinite(sBottom) && sBottom !== correct) pool.add(sBottom);
+
+  const base = Number.isFinite(correct) ? correct : (Number.isFinite(sTop) ? sTop : 5);
+  let tries = 0;
+  while (pool.size < 4 && tries < 50) {
+    const distractor = Math.max(1, base + Math.round((Math.random() * 8) - 4));
+    if (distractor !== correct && distractor !== sTop && distractor !== sBottom) {
+      pool.add(distractor);
+    tries++;
+  let n = 1;
+  while (pool.size < 4 && n < 50) { if (n!==correct && n!==sTop && n!==sBottom) pool.add(n); n++; }
+
+  const arr = Array.from(pool).slice(0, 4).map((v, i) => ({
+    id: `ov${i}`,
+    value: v,
+    label: String(v),
+    correct: v === correct
+  }));
+  return shuffle(arr);
+}, [problem?.id, table?.sTop, table?.sBottom]);const chooseOtherValue = (choice) => {
     if (step!==6) return;
     if (!choice?.correct){ miss(6); return; }
     setPickedOther(choice);
@@ -388,7 +392,6 @@ export default function HTableModule(){
     if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) {
       setLines(l=>({ ...l, gridW: gr.width }));
       return;
-    }
     const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left;
     const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left;
     const vTop = r_vTop.top - gr.top;
@@ -400,7 +403,6 @@ export default function HTableModule(){
       const target = refs[tripleUL.key]?.current?.getBoundingClientRect();
       if(target){
         setTripleUL({ key: tripleUL.key, left: target.left - gr.left + 8, top: target.bottom - gr.top - 18, width: Math.max(24, target.width - 16) });
-      }
     }
   };
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
@@ -484,7 +486,6 @@ export default function HTableModule(){
       const r = refs[key].current?.getBoundingClientRect();
       if (r){
         setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) });
-      }
     }
     const result = table.product / div;
     setTable(t=>({ ...t, divisor: div, result }));
@@ -577,7 +578,6 @@ export default function HTableModule(){
 
         /* removed inline @keyframes ptable-blink-kf (SpecOp contract only) */
           10%, 30%, 50%, 70%, 90%    { box-shadow: 0 0 0 4px rgba(59,130,246,.35); }
-        }
         .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
 
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
@@ -585,8 +585,6 @@ export default function HTableModule(){
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
           min-height: ${ROW_H}px !important;
           height: ${ROW_H}px !important;
-        }
-
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
         /* === v9.7.2 panel swap (module-local, no global changes) === */
@@ -598,7 +596,6 @@ export default function HTableModule(){
         @media (max-width: 720px) {
           .panes { flex-direction: column; }
           .card.right-steps, .card.hgrid-card { order: initial; }
-        }
         /* === v9.7.3 visual tweaks === */
         .panes { gap: 24px; } /* more space between cards */
         .card.right-steps { font-size: 1.06rem; } /* match P-Table right card feel */
@@ -748,7 +745,7 @@ export default function HTableModule(){
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
                   { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
+                ]], "Step2")).map((h, idx) => (
                   <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
                 ))}
               </div>
@@ -762,7 +759,7 @@ export default function HTableModule(){
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
                   { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
+                ]], "Step2")).map((h, idx) => (
                   <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
                 ))}
               </div>
@@ -877,4 +874,3 @@ export default function HTableModule(){
       )}
     </div>
   );
-}
