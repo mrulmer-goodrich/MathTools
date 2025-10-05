@@ -679,7 +679,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
 }
 .eq-display .eq { font-weight: 800; }
 .eq-display .res { font-weight: 900; }
-</style>
+`}</style>
 
       <div className="panes">
         {/* H-GRID RENDER */}
