@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.4 (replaces 9.7.3)
+// HTableModule — UG Math Tools v9.7.5 (replaces 9.7.4)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -564,6 +564,25 @@ export default function HTableModule(){
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
+        /* === v9.7.5 typography + centering (module-local, strong specificity) === */
+        .card.hgrid-card,
+        .card.hgrid-card .problem-banner,
+        .card.hgrid-card .hhead-text,
+        .card.hgrid-card .hcell span,
+        .card.hgrid-card .hcell .slot-wrap,
+        .card.hgrid-card .hhead .slot-wrap {
+          font-size: 1.06rem !important;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji" !important;
+          line-height: 1.25 !important;
+        }
+        /* Center everything inside headers and cells */
+        .card.hgrid-card .hcell .slot-wrap,
+        .card.hgrid-card .hhead .slot-wrap {
+          display:flex !important; align-items:center !important; justify-content:center !important;
+          width:100% !important; height:100% !important;
+        }
+        .card.hgrid-card .hcell span,
+        .card.hgrid-card .hhead .hhead-text { display:inline-block !important; text-align:center !important; }
     `}</style>
 
       <div className="panes">
@@ -756,8 +775,12 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                {[{ id:'cross', label:'Cross Multiply', correct:true }, { id:'add', label:'Add' }, { id:'divide', label:'Divide' }, { id:'guess', label:'Just Guess' }]
-                  .map(opt => (<button key={opt.id} className="chip" onClick={()=>chooseStep8Action(opt)}>{opt.label}</button>))}
+                <button className="chip" onClick={()=>{ if(step===8){ setDone(8); next(); } }}>Cross Multiply</button>
+                <button className="chip" onClick={()=>{ miss(8); }}>Add</button>
+                <button className="chip" onClick={()=>{ miss(8); }}>Divide</button>
+                <button className="chip" onClick={()=>{ miss(8); }}>Just Guess</button>
+              </div>
+            )}>{opt.label}</button>))}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
