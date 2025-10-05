@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.2 (replaces 9.7.1)
+// HTableModule — UG Math Tools v9.7.3 (replaces 9.7.2)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -227,15 +227,15 @@ export default function HTableModule(){
   const numbersTopScale = useMemo(()=>{
     const v = Number(problem?.scale?.[0]);
     const set = new Set([v, ...allProblemNumbers]);
-    let i=0; while(set.size<6 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
-    return shuffle([...set]).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
+    let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
+    return shuffle([...set]).slice(0,4).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
   },[problem?.id, allProblemNumbers]);
 
   const numbersBottomScale = useMemo(()=>{
     const v = Number(problem?.scale?.[1]);
     const set = new Set([v, ...allProblemNumbers]);
-    let i=0; while(set.size<6 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
-    return shuffle([...set]).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
+    let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
+    return shuffle([...set]).slice(0,4).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
   },[problem?.id, allProblemNumbers]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
@@ -482,6 +482,7 @@ export default function HTableModule(){
     setConfettiOn(false); setOpenSum(false);
     setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
+    setPickedUnits([]);
   };
 
   const ROW_H = 88;
@@ -538,10 +539,21 @@ export default function HTableModule(){
           .panes { flex-direction: column; }
           .card.right-steps, .card.hgrid-card { order: initial; }
         }
+        /* === v9.7.3 visual tweaks === */
+        .panes { gap: 24px; } /* more space between cards */
+        .card.right-steps { font-size: 1.06rem; } /* match P-Table right card feel */
+        .card.right-steps .chip,
+        .card.right-steps .button { font-size: 1.06rem; }
+        .right-footer { margin-top: 12px; }
+
+        /* Lock blink look to the first-step style; remove stray center stripes */
+        .ptable-blink-hard.blink-bg { background: transparent !important; }
+        .ptable-blink-hard.blink-bg::before,
+        .ptable-blink-hard.blink-bg::after { display: none !important; }
     `}</style>
 
       <div className="panes">
-        // H-GRID RENDER
+        {/* H-GRID RENDER */}
 {/* LEFT CARD: Problem + H-table */}
         <div className="card hgrid-card">
           <div className="section">
