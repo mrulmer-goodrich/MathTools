@@ -869,7 +869,7 @@ const numbersStep6 = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 11 – END */}
           </div>
 
-          {
+          
           </div>
         </div>
       </div>
