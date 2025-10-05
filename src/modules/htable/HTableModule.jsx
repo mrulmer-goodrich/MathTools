@@ -1,3 +1,4 @@
+// HTableModule — UG Math Tools v9.7.2 (replaces 9.7.1)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -15,6 +16,7 @@ import { loadSession, saveSession } from '../../lib/localStorage.js'
 // ────────────────────────────────────────────────────────────────────────────────
 // TAP-ONLY WRAPPERS
 // ────────────────────────────────────────────────────────────────────────────────
+// TAP-ONLY WRAPPERS — SLOT/DRAG
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => {
@@ -60,6 +62,7 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 // ────────────────────────────────────────────────────────────────────────────────
 // Spec scaffolding & helpers
 // ────────────────────────────────────────────────────────────────────────────────
+// STEP TITLES
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
@@ -116,6 +119,7 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // ────────────────────────────────────────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
+// STEP LOGIC (0–11)
 export default function HTableModule(){
   const H_SNAP_VERSION = 22;
 
@@ -524,11 +528,22 @@ export default function HTableModule(){
 
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
-      `}</style>
+        /* === v9.7.2 panel swap (module-local, no global changes) === */
+        .panes { display: flex; gap: 12px; align-items: flex-start; }
+        .card { flex: 1 1 0; min-width: 0; }
+        .card.right-steps { order: 1; } /* prompts appear visually on the LEFT */
+        .card.hgrid-card  { order: 2; } /* H-table appears visually on the RIGHT */
+
+        @media (max-width: 720px) {
+          .panes { flex-direction: column; }
+          .card.right-steps, .card.hgrid-card { order: initial; }
+        }
+    `}</style>
 
       <div className="panes">
-        {/* LEFT CARD: Problem + H-table */}
-        <div className="card">
+        // H-GRID RENDER
+{/* LEFT CARD: Problem + H-table */}
+        <div className="card hgrid-card">
           <div className="section">
 
             {/* Problem (natural text only) */}
