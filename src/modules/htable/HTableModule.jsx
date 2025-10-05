@@ -1,5 +1,5 @@
-// HTableModule — UG Math Tools v10.0.4 (replaces 10.0.1)
-// SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
+// HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
+// SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -142,11 +142,32 @@ const saneProblem = (p) => {
 const genSaneHProblem = () => {
   let tries = 0;
   let p = genHProblem();
-  while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++; }
+  const uniqueTriple = (q)=>{
+    try{
+      const a = Number(q?.scale?.[0]);
+      const b = Number(q?.scale?.[1]);
+      const c = Number(q?.given?.value);
+      if([a,b,c].some(n=>Number.isNaN(n))) return false;
+      const set = new Set([a,b,c]);
+      return set.size===3; // all three numbers must be unique
+    }catch{ return false }
+  };
+  while(tries<50 && (!saneProblem(p) || !uniqueTriple(p))){ p = genHProblem(); tries++; }
   return p;
 };
 
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
+
+
+/** Guard: enforce 4-choice render without crashing */
+const _assertFour = (arr, tag) => {
+  try {
+    if (!Array.isArray(arr) || arr.length !== 4) {
+      console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr);
+    }
+  } catch {}
+  return arr;
+};
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Component
@@ -158,7 +179,21 @@ export default function HTableModule(){
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
 
-  const [session, setSession] = useState(persisted || { attempts: [] });
+  
+  // STEP 8: four-choice conceptual prompt
+  const STEP8_CHOICES = [
+    { id: 'cm', label: 'Cross Multiply', correct: true },
+    { id: 'add', label: 'Add all the numbers', correct: false },
+    { id: 'avg', label: 'Find the average', correct: false },
+    { id: 'sub', label: 'Subtract the smaller from larger', correct: false },
+  ];
+
+  const chooseNext8 = (choice) => {
+    if (!choice || !choice.correct) { miss(8); return; }
+    setDone(8);
+    next();
+  };
+const [session, setSession] = useState(persisted || { attempts: [] });
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
   const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
@@ -318,30 +353,36 @@ export default function HTableModule(){
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
   const otherValueChoices = useMemo(()=>{
-    // Build exactly 4 unique options: include the true "other value" from the problem
-    // plus up to two values from the scale numbers and one nearby distractor.
-    const correct = Number(problem?.given?.value);
-    const sTop = Number(table?.sTop);
-    const sBottom = Number(table?.sBottom);
-    const base = Number.isFinite(correct) ? correct : 3;
-    const pool = new Set();
-    if (Number.isFinite(correct)) pool.add(correct);
-    // Prefer to include existing scale numbers as distractors (if distinct from correct)
-    if (Number.isFinite(sTop) && sTop !== correct) pool.add(sTop);
-    if (Number.isFinite(sBottom) && sBottom !== correct && pool.size < 3) pool.add(sBottom);
-    // Fill remaining slots with near-by integers until size === 4
-    let tries = 0;
-    while (pool.size < 4 && tries < 50){
-      const jitter = Math.round(base + (Math.random()*8 - 4)); // ±4 window
-      if (jitter > 0 && jitter !== correct && jitter !== sTop && jitter !== sBottom) pool.add(jitter);
-      tries++;
+  const correct = Number(problem?.given?.value);
+  const sTop = Number(problem?.scale?.[0]);
+  const sBottom = Number(problem?.scale?.[1]);
+
+  const pool = new Set();
+  if (Number.isFinite(correct)) pool.add(correct);
+  if (Number.isFinite(sTop) && sTop !== correct) pool.add(sTop);
+  if (Number.isFinite(sBottom) && sBottom !== correct) pool.add(sBottom);
+
+  const base = Number.isFinite(correct) ? correct : 5;
+  let tries = 0;
+  while (pool.size < 4 && tries < 60) {
+    const distractor = Math.max(1, base + Math.round((Math.random() * 8) - 4));
+    if (distractor !== correct && distractor !== sTop && distractor !== sBottom) {
+      pool.add(distractor);
     }
-    // If still short, backstop with incremental positives
-    let n = 1;
-    while (pool.size < 4 && n < 50){ if (n!==correct && n!==sTop && n!==sBottom) pool.add(n); n++; }
-    const arr = Array.from(pool).slice(0,4).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correct }));
-    return shuffle(arr);
-  },[problem?.id, table?.sTop, table?.sBottom]);const chooseOtherValue = (choice) => {
+    tries++;
+  }
+
+  const arr = Array.from(pool).slice(0, 4).map((v, i) => ({
+    id: `ov${i}`,
+    value: v,
+    label: String(v),
+    correct: v === correct
+  }));
+
+  return shuffle(_assertFour(arr, "Step6-OtherValue"));
+}, [problem?.id, problem?.scale, problem?.given]);
+
+  const chooseOtherValue = (choice) => {
     if (step!==6) return;
     if (!choice?.correct){ miss(6); return; }
     setPickedOther(choice);
@@ -447,7 +488,7 @@ export default function HTableModule(){
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
     // ensure a "random multiple combo"
     if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
-    return shuffle(list).slice(0,4);
+    const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return shuffle(uniq).slice(0,4);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -493,23 +534,30 @@ export default function HTableModule(){
   };
 
   const onCalculate = ()=>{
-    setTable(t=>{
-      const r = t.result;
-      if (r == null) return t;
-      const unknownTop    = t.vTop == null  && t.vBottom != null;
-      const unknownBottom = t.vBottom == null && t.vTop != null;
-      const nt = unknownTop ? { ...t, vTop: Number(r), solvedRow:'top' } :
-                 (unknownBottom ? { ...t, vBottom: Number(r), solvedRow:'bottom' } : t);
-      return nt;
-    });
-    // stop overlays and prior blinks; blink the solved cell
-    setOval(null);
-    setTripleUL(null);
-    setBlinkUnits(false);
-    setBlinkKey(k=>{
-      if (table?.vTop == null && table?.vBottom != null) return 'vTop';
-      if (table?.vBottom == null && table?.vTop != null) return 'vBottom';
-      return null;
+  setTable(t=>{
+    const r = t.result;
+    if (r == null) return t;
+    const unknownTop    = t.vTop == null  && t.vBottom != null;
+    const unknownBottom = t.vBottom == null && t.vTop != null;
+    const nt = unknownTop
+      ? { ...t, vTop: Number(r), solvedRow:'top' }
+      : (unknownBottom ? { ...t, vBottom: Number(r), solvedRow:'bottom' } : t);
+    return nt;
+  });
+
+  // Stop overlays and blink only the solved cell
+  setOval(null);
+  setTripleUL(null);
+  setBlinkUnits(false);
+  setBlinkKey(prev => prev); // keep stable; solved cell will animate via result blink
+  setMathStrip(s=>({ ...s, showResult: true }));
+  setDone(11);
+  setOpenSum(true);
+  setConfettiOn(true);
+  setTimeout(()=>setConfettiOn(false), 3500);
+};
+      if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
+      return t;
     });
     setMathStrip(s=>({ ...s, showResult: true }));
     setDone(11);
@@ -578,6 +626,12 @@ export default function HTableModule(){
           height: ${ROW_H}px !important;
         }
 
+        /* v10.0.1 — HTable cell centering & uniform text */
+        .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
+        .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
+        .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; }
+
+
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
         /* === v9.7.2 panel swap (module-local, no global changes) === */
@@ -602,15 +656,42 @@ export default function HTableModule(){
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
     `}
-.eq-display{font-size:1.6rem; font-weight:700; display:flex; align-items:center; justify-content:center; gap:.6rem; padding:.5rem 0;}
-.eq-display .frac{display:inline-grid; grid-template-rows:auto 2px auto; align-items:center; justify-items:center;}
-.eq-display .frac .bar{width:100%; height:2px; background:#0f172a; margin:.15rem 0;}
-.eq-display .eq{font-weight:800;}
-.eq-display .res{font-weight:900;}
 
-
-/* Center content inside all slots (H-table cells) */
-.slot-wrap { display:flex; align-items:center; justify-content:center; }
+/* v10.0.2 — Force uniform centering across ALL H-table cells */
+.hcell, .hhead {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+.hcell > *, .hhead > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eq-display {
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+.eq-display .frac {
+  display: inline-grid;
+  grid-template-rows: auto 2px auto;
+  align-items: center;
+  justify-items: center;
+}
+.eq-display .frac .bar {
+  width: 100%;
+  height: 2px;
+  background: #0f172a;
+  margin: 0.15rem 0;
+}
+.eq-display .eq { font-weight: 800; }
+.eq-display .res { font-weight: 900; }
 </style>
 
       <div className="panes">
@@ -630,7 +711,20 @@ export default function HTableModule(){
             {/* H-table visible AFTER step 0 */}
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
-                <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+                
+{/* Equation display (Step 11+ when result shown) */}
+{step >= 11 && mathStrip?.showResult && (
+  <div className="eq-display">
+    <span className="frac">
+      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
+      <span className="bar"></span>
+      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
+    </span>
+    <span className="eq"> = </span>
+    <span className="res">{String(mathStrip?.result ?? '')}</span>
+  </div>
+)}
+<div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
                     <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
@@ -800,9 +894,15 @@ export default function HTableModule(){
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
             {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {/* RIGHT-PANEL: STEP 8 — START */}
+            {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="problem-body">What do we do next?</div>
+              <div className="chips with-borders center mt-8">
+                {shuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
+                  <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
@@ -829,19 +929,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
-                {mathStrip?.showResult ? (
-                  <div className="eq-display">
-                    <span className="frac">
-                      <span className="num">{mathStrip?.a} &times; {mathStrip?.b}</span>
-                      <span className="bar"></span>
-                      <span className="den">{mathStrip?.divisor}</span>
-                    </span>
-                    <span className="eq"> = </span>
-                    <span className="res">{mathStrip?.result}</span>
-                  </div>
-                ) : (
-                  <button className="button primary" onClick={onCalculate}>Calculate</button>
-                )}
+                <button className="button primary" onClick={onCalculate}>Calculate</button>
               </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
