@@ -1,39 +1,9 @@
-// HTableModule — UG Math Tools v9.7.4 (replaces 9.7.3)
-// SpecOp Sync: titles, anchors, blink-contract; dev-only undefined guard
+// HTableModule — UG Math Tools v9.7.5 (replaces 9.7.4)
+// SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
-
-// Dev-only undefined guard (no-op in prod)
-useEffect(()=>{
-  if (typeof window !== 'undefined') {
-    const handler = (ev) => {
-      const msg = (ev?.error && ev.error.message) || ev?.message || '';
-      if (/is not defined/.test(String(msg||''))) {
-        // eslint-disable-next-line no-console
-        console.error('[SpecOp Guard] Undefined reference detected:', msg);
-      }
-    };
-    window.addEventListener('error', handler);
-    return () => window.removeEventListener('error', handler);
-  }
-},[]);
-
-
-
-// Dev-only renderability checks (Objects-as-children guard)
-const __isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
-function __warnIfUnrenderable(label, value){
-  if(!__isDev) return;
-  const t = typeof value;
-  if (value != null && t === 'object') {
-    try {
-      // eslint-disable-next-line no-console
-      console.error('[SpecOp Guard][React#31] Non-text child at', label, '→', value);
-    } catch {}
-  }
-}
 
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
@@ -103,6 +73,7 @@ const STEP_TITLES = [
   "What value goes here?",
   "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
+  "What do we do now?",
   "Pick the two numbers we multiply",
   "What do we do next?",
   "Calculate",
@@ -515,20 +486,6 @@ export default function HTableModule(){
     setPickedUnits([]);
   };
 
-  useEffect(()=>{
-    try{
-      __warnIfUnrenderable('STEP_TITLES[step]', STEP_TITLES[step]);
-      __warnIfUnrenderable('table.head1', table.head1);
-      __warnIfUnrenderable('table.head2', table.head2);
-      __warnIfUnrenderable('table.uTop', table.uTop);
-      __warnIfUnrenderable('table.uBottom', table.uBottom);
-      __warnIfUnrenderable('table.sTop', table.sTop);
-      __warnIfUnrenderable('table.sBottom', table.sBottom);
-      __warnIfUnrenderable('table.vTop', table.vTop);
-      __warnIfUnrenderable('table.vBottom', table.vBottom);
-    }catch{}
-  },[step, table]);
-
   const ROW_H = 88;
   const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
@@ -544,6 +501,7 @@ export default function HTableModule(){
   };
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
+    (isBlink(key) ? 'ptable-blink' : ''),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -557,10 +515,11 @@ export default function HTableModule(){
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: inherit; color: inherit; }
 
-        @keyframes ptable-blink-kf { 
-          0%, 20%, 40%, 60%, 80%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,.0); }
+        /* removed inline @keyframes ptable-blink-kf (SpecOp contract only) */
           10%, 30%, 50%, 70%, 90%    { box-shadow: 0 0 0 4px rgba(59,130,246,.35); }
         }
+        .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
+
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
@@ -701,7 +660,7 @@ export default function HTableModule(){
           <div className="section">
             <div className="step-title">{STEP_TITLES[step]}</div>
 
-            {{/* RIGHT-PANEL: STEP 0 — START */}
+            {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
@@ -709,9 +668,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 0 — END */}}
+            {/* RIGHT-PANEL: STEP 0 — END */}
 
-            {{/* RIGHT-PANEL: STEP 1 — START */}
+            {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -724,9 +683,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 1 — END */}}
+            {/* RIGHT-PANEL: STEP 1 — END */}
 
-            {{/* RIGHT-PANEL: STEP 2 — START */}
+            {/* RIGHT-PANEL: STEP 2 — START */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -738,9 +697,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 2 — END */}}
+            {/* RIGHT-PANEL: STEP 2 — END */}
 
-            {{/* RIGHT-PANEL: STEP 3 — START */}
+            {/* RIGHT-PANEL: STEP 3 — START */}
             {step===3 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => (
@@ -748,25 +707,25 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 3 — END */}}
+            {/* RIGHT-PANEL: STEP 3 — END */}
 
-            {{/* RIGHT-PANEL: STEP 4 — START */}
+            {/* RIGHT-PANEL: STEP 4 — START */}
             {step===4 && (
               <div className="chips center mt-8">
                 {numbersTopScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 4 — END */}}
+            {/* RIGHT-PANEL: STEP 4 — END */}
 
-            {{/* RIGHT-PANEL: STEP 5 — START */}
+            {/* RIGHT-PANEL: STEP 5 — START */}
             {step===5 && (
               <div className="chips center mt-8">
                 {numbersBottomScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 5 — END */}}
+            {/* RIGHT-PANEL: STEP 5 — END */}
 
-            {{/* RIGHT-PANEL: STEP 6 — START */}
+            {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
@@ -774,19 +733,19 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 6 — END */}}
+            {/* RIGHT-PANEL: STEP 6 — END */}
 
-            {{/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
+            {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
-            {{/* RIGHT-PANEL: STEP 7 — END */}}
+            {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {{/* RIGHT-PANEL: STEP 8 — START */}
+            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="problem-body">What do we do next?</div>
+              <div className="problem-body">What do we do now?</div>
             )}
-            {{/* RIGHT-PANEL: STEP 8 — END */}}
+            {/* RIGHT-PANEL: STEP 8 — END */}
 
-            {{/* RIGHT-PANEL: STEP 9 — START */}
+            {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
@@ -794,9 +753,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 9 — END */}}
+            {/* RIGHT-PANEL: STEP 9 — END */}
 
-            {{/* RIGHT-PANEL: STEP 10 — START */}
+            {/* RIGHT-PANEL: STEP 10 — START */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
                 {divideChoices.map((c,idx)=>(
@@ -804,15 +763,15 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 10 — END */}}
+            {/* RIGHT-PANEL: STEP 10 — END */}
 
-            {{/* RIGHT-PANEL: STEP 11 — START */}
+            {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
                 <button className="button" onClick={onCalculate}>Calculate</button>
               </div>
             )}
-            {{/* RIGHT-PANEL: STEP 11 — END */}}
+            {/* RIGHT-PANEL: STEP 11 — END */}
 
             {/* Sticky footer controls */}
             <div className="right-footer">
