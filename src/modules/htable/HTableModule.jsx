@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
+// HTableModule — UG Math Tools v10.0.1 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -142,7 +142,17 @@ const saneProblem = (p) => {
 const genSaneHProblem = () => {
   let tries = 0;
   let p = genHProblem();
-  while(!saneProblem(p) && tries<50){ p = genHProblem(); tries++; }
+  const uniqueTriple = (q)=>{
+    try{
+      const a = Number(q?.scale?.[0]);
+      const b = Number(q?.scale?.[1]);
+      const c = Number(q?.given?.value);
+      if([a,b,c].some(n=>Number.isNaN(n))) return false;
+      const set = new Set([a,b,c]);
+      return set.size===3; // all three numbers must be unique
+    }catch{ return false }
+  };
+  while(tries<50 && (!saneProblem(p) || !uniqueTriple(p))){ p = genHProblem(); tries++; }
   return p;
 };
 
@@ -461,7 +471,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
     // ensure a "random multiple combo"
     if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
-    return shuffle(list).slice(0,4);
+    const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return shuffle(uniq).slice(0,4);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -582,6 +592,12 @@ const [session, setSession] = useState(persisted || { attempts: [] });
           min-height: ${ROW_H}px !important;
           height: ${ROW_H}px !important;
         }
+
+        /* v10.0.1 — HTable cell centering & uniform text */
+        .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
+        .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
+        .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; }
+
 
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
@@ -805,7 +821,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 8 — END */}/* RIGHT-PANEL: STEP 8 — END */}
+            {/* RIGHT-PANEL: STEP 8 — END */}}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
@@ -830,7 +846,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
-                <button className="button" onClick={onCalculate}>Calculate</button>
+                <button className="button primary" onClick={onCalculate}>Calculate</button>
               </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
