@@ -18,7 +18,7 @@ const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} draggable={false} onDragStart={(e)=>e.preventDefault()} role="button" tabIndex={0} {...rest} />;
+  return <DraggableBase data={merged} onClick={handleClick} draggable={true} onDragStart={undefined} role="button" tabIndex={0} {...rest} />;
 };
 
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
@@ -306,14 +306,14 @@ const tapPlaceValueTop = () => {
   const ok = pickedOther && rowIsGivenUnit(table.uTop);
   if (!ok){ miss(7); return; }
   setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-  setDone(10); next();
+  setDone( 7 ); next();
 };
 const tapPlaceValueBottom = () => {
   if (step!==7) return;
   const ok = pickedOther && rowIsGivenUnit(table.uBottom);
   if (!ok){ miss(7); return; }
   setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-  setDone(10); next();
+  setDone( 7 ); next();
 };
 // --- Step 4: two-click unit selection (auto-place with ~2s blink) ---
 const [pickedUnits, setPickedUnits] = useState([]);
@@ -328,15 +328,15 @@ const handleUnitChipClick = (chip) => {
     const labels = new Set(prev.map(x => (x.label||'').toLowerCase()));
     const low = (chip.label||'').toLowerCase();
     if (labels.has(low)) return prev;
-    const next = [...prev, chip];
-    if (next.length===2){
-      const topObj = next.find(x => (x.label||'').toLowerCase()===canonicalTopUnit);
-      const botObj = next.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
+    const nextSel = [...prev, chip];
+    if (nextSel.length===2){
+      const topObj = nextSel.find(x => (x.label||'').toLowerCase()===canonicalTopUnit);
+      const botObj = nextSel.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
       setTable(t => ({ ...t, uTop: topObj?.label||'', uBottom: botObj?.label||'' }));
       // blink for ~2s then advance
-      setTimeout(()=>{ setDone(10); next(); }, 2000);
+      setTimeout(()=>{ setDone(7); next(); }, 2000);
     }
-    return next;
+    return nextSel;
   });
 };
 // geometry
@@ -543,7 +543,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol1}
-                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(10); next() } else miss(1) }}>
+                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
@@ -552,7 +552,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol2}
-                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(10); next() } else miss(3) }}>
+                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(2); next() } else miss(2) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
@@ -569,7 +569,7 @@ const handleUnitChipClick = (chip) => {
                       if(!isRight){ miss(3); return t; }
                       const t2={...t,uTop:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                      if(placed.size===2){ setDone(10); next(); }
+                      if(placed.size===2){ setDone(7); next(); }
                       return t2
                     })}>
                     <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
@@ -586,7 +586,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sTop: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(10); next(); }
+                      if (both) { setDone(7); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
@@ -598,9 +598,9 @@ const handleUnitChipClick = (chip) => {
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uTop);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                      if (!isRightRow || !isRightNumber) { miss(5); return t; }
+                      if (!isRightRow || !isRightNumber) { miss( 7 ); return t; }
                       const t2 = { ...t, vTop: Number(d.value) };
-                      if (t2.vTop!=null && t2.vBottom==null) { setDone(10); next(); }
+                      if (t2.vTop!=null && t2.vBottom==null) { setDone(7); next(); }
                       return t2;
                     })}>
                     <span className={table.solvedRow==='top' ? 'blink-win' : ''}>{table.vTop ?? ''}</span>
@@ -618,7 +618,7 @@ const handleUnitChipClick = (chip) => {
                       if(!isRight){ miss(3); return t; }
                       const t2={...t,uBottom:d.label}
                       const placed=new Set([t2.uTop,t2.uBottom].filter(Boolean))
-                      if(placed.size===2){ setDone(10); next(); }
+                      if(placed.size===2){ setDone(7); next(); }
                       return t2
                     })}>
                     <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
@@ -635,7 +635,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sBottom: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(10); next(); }
+                      if (both) { setDone(7); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
@@ -647,9 +647,9 @@ const handleUnitChipClick = (chip) => {
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uBottom);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                      if (!isRightRow || !isRightNumber) { miss(5); return t; }
+                      if (!isRightRow || !isRightNumber) { miss( 7 ); return t; }
                       const t2 = { ...t, vBottom: Number(d.value) };
-                      if (t2.vBottom!=null && t2.vTop==null) { setDone(10); next(); }
+                      if (t2.vBottom!=null && t2.vTop==null) { setDone(7); next(); }
                       return t2;
                     })}>
                     <span className={table.solvedRow==='bottom' ? 'blink-win' : ''}>{table.vBottom ?? ''}</span>
