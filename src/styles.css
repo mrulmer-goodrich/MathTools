@@ -1,951 +1,1113 @@
-// src/modules/htable/HTableModule.jsx
-// Build: v9.5.2‑tap
-// -----------------------------------------------------------------------------
-// This file implements the H‑Table learning module with **tap‑only** interaction,
-// aligned to the user's "H Table Steps update for 9.1.1" and OpSpec v9.5.1.g,
-// superseded by Appendix 9.1.1 Tap‑Only. Changes are SURGICAL and annotated.
-//
-// Interaction model (OpSpec 9.1.1 — Tap‑Only):
-//  - No drag & drop anywhere (OpSpec §9.1.1‑A).
-//  - No chip→slot double‑selection (OpSpec §9.1.1‑B).
-//  - Single‑tap completes each step’s action (OpSpec §9.1.1‑C).
-//  - Blink‑then‑advance on specified steps (OpSpec §9.1.1‑D).
-//  - H‑Table renders after Step 0 is answered (OpSpec §9.1.1‑E).
-//
-// Step parity (OpSpec Table B.3, preserved here):
-//  0: Draw H Table  |  1: Header Units  |  2: Header Scale Numbers
-//  3: Units (tap two)  |  4: sTop  |  5: sBottom
-//  6: Other value (choice) | 7: Place other value (tap cell)
-//  8: Cross Multiply | 9: Choose multiply pair | 10: Divide by remaining scale
-//  11: Calculate
-// -----------------------------------------------------------------------------
-
-import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
-
-// NOTE: We retain component imports for styling/structure parity with OpSpec UI.
-// Drag source/target components are retained for visuals but made inert.
-import DraggableBase from '../../components/DraggableChip.jsx'     // OpSpec §UI: chip visuals
-import DropSlotBase from '../../components/DropSlot.jsx'           // OpSpec §UI: slot visuals
-import SummaryOverlay from '../../components/SummaryOverlay.jsx'   // OpSpec §UI: summary
-
-import { genHProblem } from '../../lib/generator.js'               // OpSpec §Data: problem generator
-import { loadSession, saveSession } from '../../lib/localStorage.js' // OpSpec §Data: persistence
-
-// =============================================================================
-//  Tap‑Only Chip Wrapper
-// =============================================================================
-// OpSpec §9.1.1‑A/B/C: NO DRAG, NO DOUBLE‑SELECTION. Chips act as buttons.
-// - We keep DraggableBase for consistent look/feel, but disable drag entirely.
-// - A 'tapAction' prop executes the step‑specific action on a single tap.
-// - No pick store, no slot drop, no onDropContent wiring.
-
-const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
-  const merged = data ?? payload ?? undefined;                           // OpSpec §Data
-  const handleClick = (e) => {                                           // OpSpec §9.1.1‑C
-    if (typeof tapAction === 'function') { tapAction(e, merged); return; }
-    onClick?.(e);
-  };
-  return (
-    <DraggableBase
-      data={merged}
-      label={label ?? merged?.label}
-      draggable={false}                                                  // OpSpec §9.1.1‑A
-      onDragStart={(e)=>{ e.preventDefault(); return false; }}           // OpSpec §9.1.1‑A
-      onClick={handleClick}                                              // OpSpec §9.1.1‑C
-      role="button"
-      tabIndex={0}
-      {...rest}
-    />
-  );
-};
-
-// =============================================================================
-//  Slot Wrapper (Visual Only; No Drops Accepted)
-// =============================================================================
-// OpSpec §9.1.1‑A/B: slots remain for layout but do not accept drops.
-
-const Slot = ({ children, className='', onClick, ...rest }) => {
-  const handleClick = (e) => { onClick?.(e); };
-  return (
-    <div
-      className={`slot-wrap ${className}`}
-      onClick={handleClick}
-      onDragOver={(e)=>e.preventDefault()}                               // inert; keeps browser quiet
-    >
-      <DropSlotBase test={()=>false} onDropContent={()=>{}} {...rest}>
-        {children}
-      </DropSlotBase>
-    </div>
-  );
-};
-
-// =============================================================================
-//  Spec Scaffolding
-// =============================================================================
-
-const STEP_TITLES = [
-  "What’s the first step to solve the problem?",       // 0
-  "What goes in the first column?",                    // 1
-  "What goes in the next column?",                     // 2
-  "What are the two units in the problem? (tap two)",  // 3
-  "What value goes here? (top row scale)",             // 4
-  "What value goes here? (bottom row scale)",          // 5
-  "What’s the other value from the problem? (4 options)", // 6
-  "Where should this value go? (tap a cell)",          // 7
-  "What do we do now?",                                // 8
-  "Which numbers are we multiplying?",                 // 9
-  "What do we do next?",                               // 10
-  "Calculate",                                         // 11
-];
-
-const STEP1_CHOICES = [
-  { id:'drawH',   label:'Draw an H Table', correct:true },  // OpSpec §0
-  { id:'proportion', label:'Make a Proportion' },
-  { id:'convert',    label:'Convert Units First' },
-  { id:'guess',      label:'Just Guess' },
-];
-
-// =============================================================================
-//  Units / Categories (OpSpec §Validation)
-// =============================================================================
-
-const UNIT_CATS = {
-  length: ['mm','millimeter','millimeters','cm','centimeter','centimeters','m','meter','meters','km','kilometer','kilometers','in','inch','inches','ft','foot','feet','yd','yard','yards','mi','mile','miles'],
-  time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours','day','days','week','weeks','year','years'],
-  volume: ['tsp','tsps','teaspoon','teaspoons','tbsp','tbsps','tablespoon','tablespoons','cup','cups','quart','quarts','qt','qts','gallon','gallons','liter','liters','l','milliliter','milliliters','ml'],
-  mass: ['gram','grams','g','kilogram','kilograms','kg','pound','pounds','lb','lbs'],
-  count: ['item','items','page','pages','point','points'],
-  money: ['dollar','dollars','$','euro','euros']
-};
-
-const unitCategory = (u='') => {
-  const s = (u||'').toLowerCase();
-  for (const [cat, list] of Object.entries(UNIT_CATS)) {
-    if (list.includes(s)) return cat;
-  }
-  return null;
-};
-
-const saneProblem = (p) => {
-  try{
-    const [u1,u2] = p.units || [];
-    const c1 = unitCategory(u1), c2 = unitCategory(u2);
-    return !!(c1 && c2 && c1===c2);  // OpSpec §Validation: category consistency
-  }catch{ return false }
-};
-
-const genSaneHProblem = () => {
-  let tries = 0;
-  let p = genHProblem();
-  while(!saneProblem(p) && tries<50){
-    p = genHProblem(); tries++;
-  }
-  return p;
-};
-
-const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
-
-// =============================================================================
-//  Component
-// =============================================================================
-
-export default function HTableModule(){
-  const H_SNAP_VERSION = 18; // bump for tap‑only revision
-
-  // ---------------------------------------------------------------------------
-  // Persisted session (OpSpec §Data: persistence rules)
-  // ---------------------------------------------------------------------------
-  const persisted = loadSession() || {};
-  const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
-
-  const [session, setSession] = useState(persisted || { attempts: [] });
-
-  const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
-
-  const [table, setTable] = useState(() => (snap?.table) || {
-    head1:'', head2:'',
-    uTop:'', uBottom:'',
-    sTop:null, sBottom:null,
-    vTop:null, vBottom:null,
-    product:null, divisor:null, result:null, solvedRow:null
-  });
-
-  const [step, setStep] = useState(snap?.step ?? 0);
-
-  const [steps, setSteps] = useState(
-    snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
-  );
-
-  const [openSum, setOpenSum] = useState(false);
-
-  const [mathStrip, setMathStrip] = useState({
-    a:null, b:null, divisor:null, result:null, showResult:false
-  });
-
-  const [confettiOn, setConfettiOn] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // Blink helpers (OpSpec §9.1.1‑D)
-  // ---------------------------------------------------------------------------
-  const [blinkKey, setBlinkKey] = useState(null);
-
-  const flashCell = (key, nextStepIdx=null, delay=700) => {
-    setBlinkKey(key);
-    setTimeout(()=>{
-      setBlinkKey(null);
-      if (nextStepIdx!==null){
-        setDone(nextStepIdx);
-        next();
-      }
-    }, delay);
-  };
-
-  const [blinkUnits, setBlinkUnits] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // Persist current snapshot
-  // ---------------------------------------------------------------------------
-  useEffect(()=>{
-    const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
-    saveSession(nextState); setSession(nextState);
-  },[problem, table, step, steps]);
-
-  // ---------------------------------------------------------------------------
-  // Step helpers
-  // ---------------------------------------------------------------------------
-  const miss = (idx)=>setSteps(s=>{
-    const c=[...s]; if(c[idx]) c[idx].misses++; return c;
-  });
-
-  const setDone = (idx)=>setSteps(s=>{
-    const c=[...s]; if(c[idx]) c[idx].done=true; return c;
-  });
-
-  const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
-
-  // ---------------------------------------------------------------------------
-  // Problem helpers
-  // ---------------------------------------------------------------------------
-  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
-  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
-
-  const givenUnitLabel = (problem?.given?.row === 'top'
-    ? problem?.units?.[0]
-    : problem?.units?.[1]) || '';
-
-  const toLower = (s)=> (s||'').toLowerCase();
-
-  const expectedScaleForRowUnit = (rowUnitLabel) => {
-    const u = toLower(rowUnitLabel);
-    if (!u) return null;
-    if (u === canonicalTopUnit)    return problem?.scale?.[0] ?? null;
-    if (u === canonicalBottomUnit) return problem?.scale?.[1] ?? null;
-    return null;
-  };
-
-  const rowIsGivenUnit = (rowUnitLabel) => toLower(rowUnitLabel) === toLower(givenUnitLabel);
-
-  const isCanonicalUnit = (uLabel) => {
-    const s = (uLabel||'').toLowerCase();
-    return s===canonicalTopUnit || s===canonicalBottomUnit;
-  };
-
-  // ---------------------------------------------------------------------------
-  // Choice pools
-  // ---------------------------------------------------------------------------
-  const unitChoices = useMemo(()=>{
-    const correct = Array.from(new Set(problem.units || [])).slice(0,2);
-    const cat = unitCategory(correct[0] || '');
-    const allUnitsFlat = Object.entries(UNIT_CATS).flatMap(([k,v]) => v.map(u=>({u,cat:k})));
-    const pool = allUnitsFlat.filter(x => x.cat !== cat && !correct.includes(x.u));
-    const picks = [];
-    while(picks.length<2 && pool.length){
-      const candidate = pool[Math.floor(Math.random()*pool.length)];
-      if (!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
-    }
-    const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
-    return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
-  },[problem]);
-
-  const makeNumberSet = (baseNums, needCount=6)=>{
-    const set = new Set(baseNums.filter(x=>Number.isFinite(Number(x))).map(Number));
-    const approx = [...set];
-    const base = approx.length ? approx : [5,10,12,15,18,20];
-    const min = Math.max(1, Math.min(...base)-5);
-    const max = Math.max(...base)+10;
-    while(set.size < needCount){
-      set.add(Math.floor(Math.random()*(max-min+1))+min);
-    }
-    return Array.from(set);
-  };
-
-  const numbersStep5 = useMemo(()=>{
-    const base = [problem.scale?.[0], problem.scale?.[1], problem.given?.value];
-    return shuffle(makeNumberSet(base, 7).map((n,i)=>({ id:'n5_'+i, label:String(n), kind:'num', value:Number(n) })));
-  },[problem]);
-
-  const numbersStep6 = useMemo(()=>{
-    const base = [problem.given?.value];
-    return shuffle(makeNumberSet(base, 4).map((n,i)=>({ id:'n6_'+i, label:String(n), kind:'num', value:Number(n) })));
-  },[problem]);
-
-  const headerChoicesCol1 = useMemo(()=>shuffle([
-    { id:'col_units', label:'Units', kind:'col', v:'Units' },
-    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-  ]),[problem?.id]);
-
-  const headerChoicesCol2 = useMemo(()=>shuffle([
-    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-  ]),[problem?.id]);
-
-  // ---------------------------------------------------------------------------
-  // Step 6 / 7 flow (other value & placement)
-  // ---------------------------------------------------------------------------
-  const [pickedOther, setPickedOther] = useState(null);
-
-  const otherValueChoices = useMemo(()=>{
-    const correct = Number(problem?.given?.value);
-    const pool = new Set([correct]);
-    const sA = Number(problem?.scale?.[0]); const sB = Number(problem?.scale?.[1]);
-    let tries = 0;
-    while (pool.size < 4 && tries < 50){
-      const cand = Math.max(1, Math.round(correct + (Math.random()*6 - 3)));
-      if (cand!==sA && cand!==sB) pool.add(cand);
-      tries++;
-    }
-    const arr = Array.from(pool).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correct }));
-    return shuffle(arr);
-  },[problem?.id]);
-
-  const chooseOtherValue = (choice) => {
-    if (step!==6) return;
-    if (!choice?.correct){ miss(6); return; }
-    setPickedOther(choice);
-    setDone(6);
-    setStep(7);
-  };
-
-  const tapPlaceValueTop = () => {
-    if (step!==7) return;
-    const ok = pickedOther && rowIsGivenUnit(table.uTop);
-    if (!ok){ miss(7); return; }
-    setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-    flashCell('vTop', 7);
-  };
-
-  const tapPlaceValueBottom = () => {
-    if (step!==7) return;
-    const ok = pickedOther && rowIsGivenUnit(table.uBottom);
-    if (!ok){ miss(7); return; }
-    setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-    flashCell('vBottom', 7);
-  };
-
-  // ---------------------------------------------------------------------------
-  // Geometry for H Lines & Annotations (unchanged visuals)
-  // ---------------------------------------------------------------------------
-  const gridRef = useRef(null);
-
-  const refs = {
-    uTop: useRef(null),
-    sTop: useRef(null),
-    vTop: useRef(null),
-    uBottom: useRef(null),
-    sBottom: useRef(null),
-    vBottom: useRef(null)
-  };
-
-  const [lines, setLines] = useState({
-    v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0
-  });
-
-  const [oval, setOval] = useState(null);
-  const [tripleUL, setTripleUL] = useState(null);
-
-  const measure = ()=>{
-    const g = gridRef.current;
-    if(!g) return;
-
-    const gr = g.getBoundingClientRect();
-
-    const r_uTop    = refs.uTop.current?.getBoundingClientRect();
-    const r_sTop    = refs.sTop.current?.getBoundingClientRect();
-    const r_vTop    = refs.vTop.current?.getBoundingClientRect();
-    const r_uBottom = refs.uBottom.current?.getBoundingClientRect();
-    const r_sBottom = refs.sBottom.current?.getBoundingClientRect();
-    const r_vBottom = refs.vBottom.current?.getBoundingClientRect();
-
-    if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) {
-      setLines(l=>({ ...l, gridW: gr.width }));
-      return;
-    }
-
-    const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left;
-    const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left;
-    const vTop = r_vTop.top - gr.top;
-    const vBottom = r_vBottom.bottom - gr.top;
-    const vHeight = (vBottom - vTop);
-    const hTop = (r_vTop.bottom + r_vBottom.top)/2 - gr.top;
-
-    setLines({
-      v1Left: v1,
-      v2Left: v2,
-      vTop: r_vTop.top - gr.top,
-      vHeight,
-      hTop,
-      gridW: gr.width
-    });
-
-    if (tripleUL && tripleUL.key){
-      const target = refs[tripleUL.key]?.current?.getBoundingClientRect();
-      if(target){
-        setTripleUL({
-          key: tripleUL.key,
-          left: target.left - gr.left + 8,
-          top: target.bottom - gr.top - 18,
-          width: Math.max(24, target.width - 16)
-        });
-      }
-    }
-  };
-
-  useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-  useEffect(()=>{
-    const onResize = ()=>measure();
-    window.addEventListener('resize', onResize);
-    return ()=>window.removeEventListener('resize', onResize);
-  },[]);
-
-  const [highlightKeys, setHighlightKeys] = useState([]);
-
-  useLayoutEffect(()=>{
-    if(!highlightKeys.length){ setOval(null); return }
-    const g = gridRef.current; if(!g) return;
-    const gr = g.getBoundingClientRect();
-    const centers = highlightKeys.map(k=>{
-      const r = refs[k].current?.getBoundingClientRect();
-      if(!r) return null;
-      return { x: (r.left + r.right)/2 - gr.left, y: (r.top + r.bottom)/2 - gr.top };
-    }).filter(Boolean);
-    if(centers.length!==2){ setOval(null); return }
-    const [a,b] = centers;
-    const midX = (a.x + b.x)/2;
-    const midY = (a.y + b.y)/2;
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const len = Math.sqrt(dx*dx + dy*dy) + 140;
-    const rot = Math.atan2(dy, dx) * 180/Math.PI;
-    setOval({ left: midX, top: midY, len, rot });
-  },[highlightKeys]);
-
-  const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
-
-  const crossPair = useMemo(()=>{
-    if(!givenRow || table.sTop==null || table.sBottom==null) return null;
-    const v = (givenRow==='top') ? table.vTop : table.vBottom;
-    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop;
-    if (v==null || sOpp==null) return null;
-    return {
-      a:v, b:sOpp,
-      label:`${v} × ${sOpp}`,
-      keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sBottom':'sTop']
-    };
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-
-  const wrongPairs = useMemo(()=>{
-    const list = [];
-    const v = (givenRow==='top') ? table.vTop : table.vBottom;
-    const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
-    if (v!=null && sSame!=null) list.push({
-      a:v, b:sSame, label:`${v} × ${sSame}`,
-      keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom']
-    });
-    if (table.sTop!=null && table.sBottom!=null) list.push({
-      a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`,
-      keys:['sTop','sBottom']
-    });
-    return shuffle(list);
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-
-  const chooseMultiply = (pair)=>{
-    if(!pair || !crossPair){ miss(9); return; }
-    const correct = (pair.a===crossPair.a && pair.b===crossPair.b);
-    setHighlightKeys(pair.keys || []);
-    if(!correct){ miss(9); return; }
-    const product = pair.a * pair.b;
-    setTable(t=>({ ...t, product }));
-    setMathStrip(s=>({ ...s, a: pair.a, b: pair.b }));
-    setDone(9); next();
-  };
-
-  const chooseDivideByNumber = (num)=>{
-    const div = Number(num);
-    if (table.product==null || !Number.isFinite(div) || div===0) { miss(10); return; }
-    const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null);
-
-    const g = gridRef.current;
-    if (g && key){
-      const gr = g.getBoundingClientRect();
-      const r = refs[key].current?.getBoundingClientRect();
-      if (r){
-        setTripleUL({
-          key,
-          left: r.left - gr.left + 8,
-          top: r.bottom - gr.top - 18,
-          width: Math.max(24, r.width - 16)
-        });
-      }
-    }
-
-    const result = table.product / div;
-    setTable(t=>({ ...t, divisor: div, result }));
-    setMathStrip(s=>({ ...s, divisor: div, result }));
-    setDone(10); next();
-  };
-
-  const onCalculate = ()=>{
-    setTable(t=>{
-      const r = t.result;
-      if (r == null) return t;
-      const unknownTop    = t.vTop == null  && t.vBottom != null;
-      const unknownBottom = t.vBottom == null && t.vTop != null;
-      if (unknownTop)    return { ...t, vTop: Number(r),   solvedRow:'top' };
-      if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
-      return t;
-    });
-    setMathStrip(s=>({ ...s, showResult: true }));
-    setDone(11);
-    setOpenSum(true);
-    setConfettiOn(true);
-    setTimeout(()=>setConfettiOn(false), 3500);
-  };
-
-  const resetProblem = ()=>{
-    setProblem(genSaneHProblem());
-    setTable({
-      head1:'', head2:'',
-      uTop:'', uBottom:'',
-      sTop:null, sBottom:null,
-      vTop:null, vBottom:null,
-      product:null, divisor:null, result:null, solvedRow:null
-    });
-    setStep(0);
-    setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
-    setHighlightKeys([]); setOval(null); setTripleUL(null);
-    setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
-    setConfettiOn(false); setOpenSum(false);
-    setBlinkKey(null); setBlinkUnits(false);
-    setPickedOther(null);
-  };
-
-  const handleStep0 = (choice)=>{
-    if(choice?.correct){
-      setDone(0);
-      setStep(1); // H‑table rendering gate (OpSpec §9.1.1‑E)
-    } else {
-      miss(0);
-    }
-  };
-
-  // ---------------------------------------------------------------------------
-  // Tap handlers for steps 1–5 (OpSpec 9.1.1)
-  // ---------------------------------------------------------------------------
-  const tapHeader1 = (d)=>{
-    if (d?.v==='Units'){
-      setTable(t=>({...t, head1:'Units'}));
-      setDone(1); next();
-    } else {
-      miss(1);
-    }
-  };
-
-  const tapHeader2 = (d)=>{
-    if (d?.v==='ScaleNumbers'){
-      setTable(t=>({...t, head2:'Scale Numbers'}));
-      setDone(2); next();
-    } else {
-      miss(2);
-    }
-  };
-
-  const [pickedUnits, setPickedUnits] = useState([]);
-
-  const tapUnit = (d)=>{
-    const label = d?.label ?? d?.u ?? '';
-    if (!isCanonicalUnit(label)) { miss(3); return; }
-
-    setPickedUnits(prev=>{
-      const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
-      if (exists) return prev;
-
-      const nextSel = [...prev, d];                     // avoid shadowing 'next()'
-
-      if (nextSel.length===2){
-        const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
-        const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
-
-        setTable(t=>({
-          ...t,
-          uTop:    (topObj?.label||topObj?.u||''),
-          uBottom: (botObj?.label||botObj?.u||'')
-        }));
-
-        setBlinkUnits(true);
-        setTimeout(()=>{
-          setBlinkUnits(false);
-          setDone(3); next();
-        }, 900);
-      }
-
-      return nextSel;
-    });
-  };
-
-  const tapScaleTop = (d)=>{
-    setTable(t=>{
-      const expected = expectedScaleForRowUnit(t.uTop);
-      if (expected == null || Number(d?.value) !== Number(expected)) { miss(4); return t; }
-
-      const t2 = { ...t, sTop: Number(d.value) };
-      if (t2.sBottom!=null){ setDone(4); setDone(5); next(); } else { setDone(4); next(); }
-      return t2;
-    });
-  };
-
-  const tapScaleBottom = (d)=>{
-    setTable(t=>{
-      const expected = expectedScaleForRowUnit(t.uBottom);
-      if (expected == null || Number(d?.value) !== Number(expected)) { miss(5); return t; }
-
-      const t2 = { ...t, sBottom: Number(d.value) };
-      if (t2.sTop!=null){ setDone(4); setDone(5); next(); } else { setDone(5); next(); }
-      return t2;
-    });
-  };
-
-  // ---------------------------------------------------------------------------
-  // UI
-  // ---------------------------------------------------------------------------
-  const ROW_H = 88;
-  const lineColor = '#0f172a';
-
-  const isBlink = (k)=> blinkKey === k;
-  const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''}`;
-
-  return (
-    <div className="container" style={{position:'relative'}}>
-      {/* OpSpec §UI: animations / confetti */}
-      <style>{`
-        .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
-        .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
-        .problem-body { font-size: 14px; color: #0f172a; }
-    
-        @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
-        .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
-
-        @keyframes confettiFall {
-          0%   { transform: translateY(-120vh) rotate(0deg);   opacity: 1; }
-          100% { transform: translateY(120vh) rotate(720deg);  opacity: 1; }
-        }
-        .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
-        .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
-
-        /* Ensure large dropzones (visual parity with DnD-era UI) */
-        .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
-          min-height: ${ROW_H}px !important;
-          height: ${ROW_H}px !important;
-        }
-      `}</style>
-
-      
-      <div className="panes">
-        <div className="card">
-          {/* Step title and controls on LEFT per OpSpec visual layout */}
-          <div className="section">
-            {/* Problem banner (verbatim from generator.js) */}
-            <div className="problem-banner">
-              <div className="problem-title">Problem</div>
-              <div className="problem-body">
-                {(() => {
-                  const en = (problem && problem.text && (typeof problem.text.english === 'string')) ? problem.text.english : null;
-                  const alts = (problem && problem.text && problem.text.alts) ? problem.text.alts : null;
-                  return (
-                    <div>
-                      <div style={{whiteSpace:'pre-wrap'}}>{en || ''}</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-
-
-                      <div><strong>Scale:</strong></div>
-                      <div>{String(sTop)} {topU} ⇄ {String(sBot)} {botU}</div>
-                      <div><strong>Given:</strong></div>
-                      <div>{String(givenVal)} {givenU}</div>
-                      <div><strong>Unknown:</strong></div>
-                      <div>(?) {targetU}</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-    
-            <div className="step-title">{STEP_TITLES[step]}</div>
-
-            {step===0 && (
-              <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol1.map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
-                ))}
-              </div>
-            )}
-
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol2.map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
-                ))}
-              </div>
-            )}
-
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
-                ))}
-              </div>
-            )}
-
-            {step===4 && (
-              <div className="chips center mt-8">
-                {(numbersStep5 && numbersStep5.length
-                  ? numbersStep5
-                  : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />
-                ))}
-              </div>
-            )}
-
-            {step===5 && (
-              <div className="chips center mt-8">
-                {(numbersStep6 && numbersStep6.length
-                  ? numbersStep6
-                  : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />
-                ))}
-              </div>
-            )}
-
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
-                ))}
-              </div>
-            )}
-
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x', label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers' },
-                  { id:'op_sub', label:'Subtract the numbers' },
-                  { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}>{o.label}</button>
-                ))}
-              </div>
-            )}
-
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 10 — Divide by ... */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sTop))}>
-                  Divide by {table.sTop ?? '—'}
-                </button>
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sBottom))}>
-                  Divide by {table.sBottom ?? '—'}
-                </button>
-              </div>
-            )}
-
-            {/* Step 11 — Calculate */}
-            {step>=11 && (
-              <div className="toolbar mt-10 center">
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
-              </div>
-            )}
-
-            {/* H-table visible AFTER step 0 is correct */}
-              {/* H‑table visible AFTER step 0 is correct */}
-          {step>=1 && (
-            <div className="hwrap" style={{position:'relative', marginTop:12}}>
-              <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-                {/* Headers */}
-                <div className="hhead" style={{height:ROW_H}}>
-                  <Slot className={`${!table.head1 ? "empty" : ""}`}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                      <span className="hhead-text">{table.head1 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead" style={{height:ROW_H}}>
-                  <Slot className={`${!table.head2 ? "empty" : ""}`}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                      <span className="hhead-text">{table.head2 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
-
-                {/* Row 1 */}
-                <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                    <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.sTop==null ? "empty" : ""}`}>
-                    <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
-                    <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
-                  </Slot>
-                </div>
-
-                <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
-
-                {/* Row 2 */}
-                <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                    <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
-                    <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
-                    <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
-                  </Slot>
-                </div>
-
-                {/* H lines */}
-                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-
-                {/* Red oval */}
-                {oval && (
-                  <div
-                    style={{
-                      position:'absolute',
-                      left: oval.left, top: oval.top, width: oval.len, height: 62,
-                      transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '5px solid #ef4444', borderRadius: 9999,
-                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                    }}
-                  />
-                )}
-                {/* Red triple underline */}
-                {tripleUL && (
-                  <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT SIDE becomes auxiliary (kept for layout parity) */}
-        <div className="card right-steps">
-          <div className="section">
-            <div className="muted">Tap-only mode enabled. Follow the prompt on the left.</div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Confetti (OpSpec §UI) */}
-      {confettiOn && (
-        <div className="htable-confetti">
-          {Array.from({length:120}).map((_,i)=>{
-            const left = Math.random()*100;
-            const dur = 5 + Math.random()*4;
-            const delay = Math.random()*2;
-            const bg = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4'][i%6];
-            return (
-              <div
-                key={i}
-                className="piece"
-                style={{
-                  left: `${left}%`,
-                  background: bg,
-                  animationDuration: `${dur}s`,
-                  animationDelay: `${delay}s`
-                }}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {/* Summary overlay */}
-      {openSum && (
-        <SummaryOverlay
-          open={openSum}
-          onClose={()=>setOpenSum(false)}
-          table={table}
-          problem={problem}
-        />
-      )}
-    </div>
-  );
-}
-/* === H-Table v9.6.0 additions (append to end of styles.css) === */
-
-/* Highlight class for cross-multiply cell pairs (OpSpec §6) */
-.ugx-htable-hl {
-  background: rgba(59, 130, 246, 0.12) !important;
-  border: 2px solid #3b82f6 !important;
-  border-radius: 8px;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+/* styles.css — UG Math Tools (v3.6.3 SAFE, cleaned)
+   - Keeps all 3.6.2 rules, original values intact
+   - Removes duplicate blocks
+   - Adds minimal PTABLE helpers at the end
+*/
+
+/* -------- Brand color tokens -------- */
+:root{
+  --eastway-blue: #0B4B8C;
+  --eastway-green:#0C6B4D;
+  --cms-light:    #DAE9F6;
+
+  --ink:          #0F172A;
+  --ink-2:        #334155;
+  --ink-3:        #64748B;
+  --border:       #CBD5E1;
+  --border-2:     #E2E8F0;
+  --bg-subtle:    #F1F5F9;
+  --card:         #FFFFFF;
+
+  --t-green:  #10B981;
+  --t-yellow: #F59E0B;
+  --t-red:    #EF4444;
 }
 
-/* Ensure H-table slots are positioned for absolute overlays */
-.hwrap .hcell,
-.hwrap .hhead {
+*{ box-sizing: border-box; }
+
+html, body, #root{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color: var(--ink);
+  background: #f7fafc;
+}
+
+/* ---------- Header & Landing ---------- */
+.container{ max-width:1100px; margin: 24px auto; padding: 0 16px; }
+.header{
+  background: linear-gradient(90deg, var(--eastway-blue), var(--eastway-green));
+  color:white;
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15,42,67,.12);
+  margin-bottom: 18px;
+}
+.brand{ font-weight: 900; font-size: 28px; }
+.subtitle{ font-weight: 700; opacity: .9; margin-top: 4px; }
+
+.row{ display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap: wrap; }
+
+/* ---------- Big Buttons ---------- */
+.big-button,
+.row > button,
+.row > .button{
+  font-size: 18px;
+  font-weight: 900;
+  padding: 16px 22px;
+  border-radius: 14px;
+  border: none;
+  background: var(--cms-light);
+  color: #05223c;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(15,42,67,.10);
+}
+.big-button:hover,
+.row > button:hover,
+.row > .button:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(15,42,67,.15);
+}
+.BigButton, .bigBtn, .big-button{ display:inline-flex; align-items:center; justify-content:center; }
+
+/* ---------- Cards & Panes ---------- */
+.panes{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; }
+.card{
+  background: var(--card);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+  min-width: 0;
+}
+
+/* ---------- Buttons ---------- */
+.button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
+.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
+.button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
+.button.big-under{ margin-top:12px; }
+.button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
+.floating-summary{ position:fixed; right:16px; bottom:16px; }
+
+/* ---------- Text helpers ---------- */
+.muted{ color: var(--ink-3); }
+.muted.small{ font-size: .9rem; }
+.mt-8{ margin-top:8px; } .mt-10{ margin-top:10px; } .ml-6{ margin-left:6px; } .ml-12{ margin-left:12px; }
+.center{ justify-content:center; display:flex; }
+.chips{ display:flex; flex-wrap:wrap; gap:10px; }
+.chips.center{ justify-content:center; }
+
+/* ---------- Scale Factor visuals ---------- */
+.shape-area{ position:relative; }
+.rects{
+  display:flex; gap:32px; align-items:flex-start; justify-content:center; margin-bottom:12px;
+  max-width: 100%;
+  overflow: visible; /* ensure pills never clip */
+}
+.rect{ position:relative; background:#ffffff; border:2px solid #111827; border-radius:10px; overflow:visible; }
+.rect.copy{ background:#F5FAFF; }
+
+.shape-label-center{
+  position:absolute; top:50%; left:50%; transform: translate(-50%, -50%);
+  font-weight: 900; color: #b91c1c; font-size: clamp(22px, 3.8vw, 36px);
+}
+
+/* Side number tags — dynamic offset */
+.side-tag{
+  position:absolute; font-weight:900; background:#fff; border-radius:999px;
+  border:2px solid #111827; box-shadow: 0 2px 0 rgba(0,0,0,.10); z-index:40; user-select:none; color:#0b1220;
+}
+.side-tag.top{    top:    calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.bottom{ bottom: calc(var(--badge-offset, 24px) * -1); left:50%; transform:translateX(-50%); padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.left{   left:   calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+.side-tag.right{  right:  calc(var(--badge-offset, 24px) * -1); top:50%;  transform:translateY(-50%);  padding: var(--badge-pad-v) var(--badge-pad-h); font-size: var(--badge-font); }
+
+/* Wide click targets (Step 1 only) */
+.rect .side-hit{ position:absolute; background: transparent; z-index: 20; }
+.rect .side-hit.top{    top:-10px; left:0; right:0; height:34px; cursor:pointer; }
+.rect .side-hit.left{   left:-10px; top:0; bottom:0; width:34px;  cursor:pointer; }
+.rect .side-hit.chosen{ background: rgba(16,185,129,.18); }
+.rect .side-hit.good{   background: rgba(16,185,129,.18); }
+
+/* ---------- Fractions, chips, etc. ---------- */
+.error.big-red{ color:#b91c1c; font-weight:800; font-size:1.06rem; }
+.fraction-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.fraction{ display:grid; grid-template-rows: auto auto; align-items:center; justify-items:center; min-width: 120px; }
+.fraction.mini-frac{ width:96px; } /* narrower to avoid wraps */
+.fraction > div:first-child{ grid-row:1; }
+.fraction > .frac-bar{ grid-row:2; width:100%; height:3px; background:#111827; border-radius:2px; }
+.fraction > .frac-bar.narrow{ height:2px; }
+.fraction > div:last-child{ grid-row:3; }
+.slot{ display:inline-flex; min-width:80px; justify-content:center; border:1px dashed var(--border); border-radius:8px; padding:8px 12px; }
+
+/* New: single-row calc alignment */
+.calc-row{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow-x:auto; }
+.stack-op{ display:grid; grid-template-rows:auto auto; row-gap:10px; justify-items:center; min-width:72px; }
+.chip-tiny{ padding:6px 10px !important; } /* tighter chips used in narrow calc row */
+
+/* Compute grid */
+.compute-grid{
+  display:grid;
+  grid-template-columns: minmax(120px,1fr) 24px minmax(140px,1fr) 24px minmax(140px,1fr);
+  align-items:end;
+  gap: 16px;
+}
+.compute-grid .op{ text-align:center; font-weight:900; font-size:1.2rem; }
+.compute-grid .col .slot, .compute-grid .col .chip{ justify-self:center; }
+
+.right-steps .step-title.question-xl{ font-size: 1.4rem; line-height:1.2; }
+.right-steps .muted.bigger{ font-size: 1.08rem; }
+.section{ margin-bottom: 20px; }
+
+/* Chips with borders */
+.chips.with-borders > *{
+  border: 2px solid var(--border) !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+.chips.with-borders > *:active{ cursor: grabbing; }
+
+.chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px 12px; border: 2px solid var(--border); border-radius: 12px;
+  background: #fff; font-weight: 800; cursor: grab; user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06); line-height: 1;
+}
+.chip:active { cursor: grabbing; }
+.slot .chip { border-color: #333; border-radius: 12px; background: #fff; font-weight: 800; }
+
+/* Misc */
+.fraction-row.nowrap { flex-wrap:nowrap; }
+.big-fraction .frac-bar { height: 3px; }
+.result-big{
+  font-weight: 900; font-size: 1.6rem; color:var(--eastway-green);
+  background: #fff4d6; border: 2px solid #f2c14e; border-radius: 12px; padding: 10px 14px;
+}
+
+@media (max-width: 980px){
+  .panes{ grid-template-columns: 1fr; }
+}
+
+/* Flashing buttons */
+.flash { animation: sfFlashBtn 1s infinite; }
+@keyframes sfFlashBtn {
+  0%,100%{ filter:none; transform:none; }
+  50%{ filter: drop-shadow(0 0 6px rgba(245,158,11,.55)); transform: translateY(-1px); }
+}
+
+/* --- fade-in helpers for staged calc --- */
+.sf-hidden{ opacity:0; pointer-events:none; }
+.sf-fade{ animation: sfFadeIn .6s ease-out both; }
+@keyframes sfFadeIn{ from{ opacity:0; transform: translateY(4px); } to{ opacity:1; transform:none; } }
+
+/* --- continuous confetti --- */
+.sf-confetti{ position:fixed; inset:0; pointer-events:none; z-index:1000; overflow:hidden; }
+.sf-confetti-piece{
+  position:absolute; top:-10vh; border-radius:2px; opacity:.95;
+  animation-name: sfConfettiFall; animation-timing-function: linear; animation-fill-mode: forwards;
+}
+@keyframes sfConfettiFall{ to{ transform: translateY(110vh) rotate(360deg); opacity:.25; } }
+
+/* ---- Restored utility & landing styles ---- */
+.landing-header{ text-align:center; }
+.landing-title{ font-size: clamp(36px, 6vw, 54px); margin-bottom: 6px; }
+.landing-subtitle{ font-size: clamp(18px, 3vw, 22px); font-weight: 800; }
+.home-buttons > *{
+  font-size: 22px !important; padding: 20px 28px !important; border-radius: 16px !important;
+  min-width: 240px; justify-content:center; text-align:center;
+}
+
+/* ---- H-Table grid & visuals ---- */
+.hwrap{ margin-top:12px; position: relative; border: none !important; background: transparent; }
+.hgrid{
+  display:grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(64px, auto);
+  gap:0; background:#fff;
+}
+.hhead, .hcell{ padding:10px; }
+.hhead{ font-weight:800; display:flex; align-items:center; justify-content:center; }
+.hcell{ position:relative; display:flex; align-items:center; justify-content:center; }
+.hgrid .hstroke { pointer-events: none; }
+
+.hwrap .hline { position: absolute; pointer-events: none; }
+.hwrap .hline.horiz { left: 0; right: 0; top: 50%; border-top: 4px solid #334155; transform: translateY(-2px); }
+.hwrap .hline.vert1 { top: 0; bottom: 0; left: 33.333%; border-left: 4px solid #334155; transform: translateX(-2px); }
+.hwrap .hline.vert2 { top: 0; bottom: 0; left: 66.666%; border-left: 4px solid #334155; transform: translateX(-2px); }
+
+/* H-Table drop affordance */
+.hwrap .empty { outline: 2px dashed #94a3b8; outline-offset: -6px; border-radius: 10px; }
+.hwrap .hhead .empty, .hwrap .hcell .empty {
+  background: repeating-linear-gradient(45deg, rgba(148,163,184,.15), rgba(148,163,184,.15) 6px, transparent 6px, transparent 12px);
+}
+
+/* Toolbar row parity & language badge */
+.htable-toolbar { justify-content: center; margin-top: 10px; gap: 12px; display:flex; }
+.lang-badge{
+  margin-top: 8px; display: inline-block; font-size: 12px; color: var(--ink-2);
+  background: var(--bg-subtle); border: 1px solid var(--border-2); border-radius: 10px; padding: 4px 8px;
+}
+
+/* Minimal helpers to restore expected layout */
+.section { margin-top: 16px; }
+.right-steps { padding: 12px; }
+.step-title { font-weight: 700; margin-bottom: 8px; }
+.bigger { font-size: 15px; }
+.hhead-text { font-weight: 600; } /* used in H-table headings */
+
+/* ---------- Proportional Tables (PTABLE) ---------- */
+/* Darker table chrome */
+.ptable-wrap{ border:1px solid var(--border-2); border-radius:12px; overflow:hidden; background:#fff; }
+.ptable{ width:100%; border-collapse:collapse; }
+.ptable thead th{
+  background:#e5e7eb; /* darker */
+  border-bottom:2px solid #cbd5e1;
+  padding:10px;
+  text-align:center; font-weight:800; font-size:15px;
+}
+.ptable tbody td{ border-top:1px solid #cbd5e1; padding:10px; text-align:center; height:60px; }
+.ptable th, .ptable td{ border-right:1px solid #cbd5e1; }
+.ptable tr > *:last-child{ border-right:none; }
+
+/* Header drop slots */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:44px; border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
+  font-weight:700;
+}
+.ptable-thslot.placed{ background:#e8f1ff; border-color:#cbd5e1; font-style:normal; }
+.ptable-thslot.empty{ color:#94a3b8; font-style:italic; }
+
+/* Header equation area (below K header) */
+.ptable-header-eq{ margin-top:8px; }
+.ptable-eq-row{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.ptable-eq-slot{
+  min-width:56px; height:40px; border:1px dashed var(--border);
+  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.ptable-eq-slot.filled{ border-style:solid; }
+.ptable-frac-template-slot{
+  min-width:100px; height:40px; border:1px dashed var(--border);
+  border-radius:8px; display:flex; align-items:center; justify-content:center; background:#fff;
+}
+
+/* Fraction slots (header & rows) */
+.ptable-fracslot{
+  min-width:64px; min-height:40px; border:2px solid var(--border);
+  background:#fff; border-radius:8px;
+}
+
+/* Keep the 3rd column width before K is dropped (reserve space without content) */
+.col3-invisible .ptable thead th:nth-child(3),
+.col3-invisible .ptable tbody td:nth-child(3){ visibility: hidden; }
+
+/* (Legacy) If needed elsewhere: hide third column entirely */
+.col3-hidden .ptable thead th:nth-child(3),
+.col3-hidden .ptable tbody td:nth-child(3){ display:none; }
+
+/* Generous invisible dropzone for K (no label) */
+.ptable-rel{ position:relative; }
+.ptable-k-overlay{ position:absolute; top:0; left:66.6667%; right:0; height:88px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.ptable-k-target{ pointer-events:auto; width:95%; height:64px; border:0; border-radius:12px; background:transparent; }
+.ptable-k-target *{ display:none !important; }
+
+/* Proportional overlay between columns 1 & 2 */
+.ptable-overlay{
+  position:absolute; top:50%; left:8%; right:8%; transform:translateY(-50%);
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.ptable-overlay-inner{
+  background: rgba(255,255,255,.9); border:2px solid #f2c14e; border-radius:14px;
+  padding: 10px 14px; box-shadow:0 6px 18px rgba(0,0,0,.08);
+  display:flex; gap:10px; align-items:center;
+}
+
+/* Larger chips for right-pane */
+.chip.large{ padding: 12px 16px; font-size: 18px; }
+
+/* Active difficulty helpers */
+.big-button.active{ outline:3px solid var(--eastway-blue); } /* if BigButton forwards className */
+.press.is-active > .big-button{ outline:3px solid var(--eastway-blue); outline-offset:2px; } /* wrapper fallback */
+
+/* Reserve space for the 3rd column but hide all visuals until K is placed */
+.col3-invisible .ptable thead th:nth-child(3),
+.col3-invisible .ptable tbody td:nth-child(3){
+  visibility: hidden;
+  background: transparent;
+  border-color: transparent;   /* hide the “outlines” */
+}
+
+/* Make the K-reveal dropzone truly invisible (no label or border) */
+.ptable-k-target { background: transparent; border: 0; }
+.ptable-k-target * { display: none !important; }
+
+/* Active difficulty look (works if BigButton forwards className) */
+.big-button.active{ outline:3px solid var(--eastway-blue); }
+
+/* Fallback active look if BigButton doesn't forward className */
+.press.is-active > .big-button{
+  outline:3px solid var(--eastway-blue);
+  outline-offset:2px;
+}
+
+/* Equal column widths even when K column is visually hidden */
+.ptable { table-layout: fixed; }
+.ptable col { width: 33.3333%; }
+
+/* Guarantee header drop targets get the event */
+.ptable thead, .ptable thead * {
+  pointer-events: auto;
   position: relative;
-  overflow: visible;
+  z-index: 2;
 }
 
-/* === End H-Table v9.6.0 additions === */
+/* Stacked fraction: numerator | bar | denominator */
+.fraction{
+  display: grid;
+  grid-template-rows: auto auto auto; /* was: auto auto */
+  align-items: center;
+  justify-items: center;
+  min-width: 120px;
+}
+
+/* DropSlot visual cue */
+.slot.glow {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset;
+  border-color: #93c5fd;
+}
+
+/* Keep the K header on one horizontal line */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Smaller button in row cells to avoid overflow */
+.button.sm { padding: 6px 10px; font-size: 12px; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* Stacked fraction grid explicit (avoids odd wraps) */
+.fraction { grid-template-rows: auto auto auto; }
+
+/* Optional: subtle glow cue when a slot is a valid drop target */
+.slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
+
+/* Keep header equation on one line, compact */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Compact slots for the header fraction so it never wraps */
+.ptable .ptable-fracslot.tiny { min-width: 42px; min-height: 30px; }
+
+/* Explicit 3-row grid for stacked fractions (prevents odd wrapping) */
+.fraction { grid-template-rows: auto auto auto; }
+
+/* Make table cells show everything; avoid clipping and cut-off buttons */
+.ptable tbody td { overflow: visible; }
+
+/* Small button used inside cells */
+.button.sm { padding: 6px 10px; font-size: 12px; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* Optional: subtle glow when a slot is an active drop target */
+.slot.glow { box-shadow: 0 0 0 3px rgba(37, 99, 235, .25) inset; border-color: #93c5fd; }
+
+/* Keep header equation on one line, compact */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Compact header fraction slots so the K header never wraps */
+.ptable .ptable-fracslot.tiny { min-width: 42px; min-height: 30px; padding: 4px 6px; }
+
+/* Explicit 3-row grid for stacked fractions (prevents odd wrapping) */
+.fraction { grid-template-rows: auto auto auto; }
+
+/* Row calc group stays inside the third column and wraps nicely */
+.row-calc { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; max-width:100%; }
+.row-calc .fraction.mini-frac { width:72px; }           /* compact fractions */
+.ptable .ptable-fracslot { min-width: 36px; min-height: 28px; padding:4px 6px; } /* tighter slots in rows */
+
+/* Buttons fit and never look disabled */
+.button.sm { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* Optional: subtle glow when a slot is an active drop target */
+.slot.glow { box-shadow: 0 0 0 3px rgba(37,99,235,.25) inset; border-color: #93c5fd; }
+
+/* Keep header equation on one line, compact */
+.ptable-eq-row.nowrap { flex-wrap: nowrap; gap: 6px; }
+.ptable .calc-inline { white-space: nowrap; }
+
+/* Header fraction: small slots so it never wraps */
+.ptable .ptable-fracslot.tiny { min-width: 38px; min-height: 28px; padding: 3px 6px; }
+
+/* Row calc: force single line, compact; stay inside col 3 */
+.row-calc.nowrap { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap: nowrap; max-width:100%; overflow:hidden; }
+
+/* Compact fractions & thin divisor bars */
+.fraction { grid-template-rows: auto auto auto; }
+.fraction.mini-frac { width: 64px; }
+.frac-bar.narrow { height: 2px; }
+.row-calc .frac-bar.extra-narrow { height: 1px; }
+
+/* Tight row slots so y_i / x_i aren't wide */
+.ptable .ptable-fracslot.tight { min-width: 32px; min-height: 28px; padding: 3px 6px; }
+
+/* Keep chip look when dropped into slots */
+.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
+.chip-tiny { padding: 6px 10px !important; font-size: 14px; }
+
+/* Make left Y/X bold (when not chips) */
+.fraction.static strong { font-weight: 900; }
+
+/* Ensure header drop targets always receive events */
+.ptable thead, .ptable thead * { pointer-events: auto; position: relative; z-index: 2; }
+
+/* === Short, fixed-length fraction bars (header + rows) === */
+/* Make the compact fractions truly compact (override the generic min-width) */
+.fraction.mini-frac { width: 72px !important; min-width: 0 !important; }
+
+/* Bar length ~3 digits wide */
+.fraction.mini-frac .frac-bar { width: 52px !important; }
+
+/* Extra insurance: keep header version short too */
+.ptable-header-eq .fraction.mini-frac { width: 72px !important; }
+.ptable-header-eq .fraction.mini-frac .frac-bar { width: 52px !important; }
+
+/* Keep the third-column calc content on one line */
+.row-calc.nowrap { flex-wrap: nowrap !important; }
+
+/* (Optional) if any row still stretches, limit the whole group width */
+.ptable tbody td:nth-child(3) .row-calc.nowrap { max-width: 100%; overflow: hidden; }
+
+/* ---- PTables layout + fraction compacting (append to end of CSS) ---- */
+.ptables-layout { grid-template-columns: 3fr 2fr; }
+
+/* Compact fractions (~3 digits) */
+.fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
+.fraction.mini-frac .frac-bar { width: 48px !important; }
+
+/* Keep calc row on one line inside col 3 */
+.row-calc.nowrap { flex-wrap: nowrap !important; gap: 8px; max-width: 100%; overflow: hidden; }
+
+/* Tiny header slots so K header doesn't wrap */
+.ptable .ptable-fracslot.tiny { min-width: 34px; min-height: 26px; padding: 2px 6px; }
+
+/* Keep dropped chips styled as chips */
+.slot .chip { border-color: var(--border); background:#fff; font-weight:800; line-height:1; }
+
+/* Very thin divisor */
+.frac-bar.extra-narrow { height: 1px; }
+
+/* Tap-to-place: show focus when a chip is tapped (optional) */
+.chip:focus { outline: 2px solid var(--eastway-blue); outline-offset: 2px; }
+
+/* ==== APPEND to styles.css (PTables scoped additions) — v7.6 ==== */
+.ptables-layout .visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;border:0;padding:0;white-space:nowrap;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden}
+
+/* Concept answers: always display as 2×2 grid */
+.ptables-layout .concept-grid{
+  display:grid; grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap:10px; justify-content:center; align-items:start; max-width:520px; margin:0 auto;
+}
+.ptables-layout .concept-grid .button{ width:100%; }
+
+/* Header slots look empty (no literal text) when not placed */
+.ptables-layout .ptable-thslot.empty{ color: #94a3b8; font-style: italic; }
+.ptables-layout .ptable-thslot.empty > *{ pointer-events:none; }
+
+
+
+/* ==== APPEND (PTables) v7.8: concept grid & minor fixes ==== */
+.ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;justify-content:center;max-width:420px;margin:0 auto}
+.ptables .ptable-concept-choices .button{width:100%}
+
+
+/* === ptables v7.8.3 append: ensure lowercase rendering + 2x2 concept grid === */
+.ptable-module .chip, .ptables .chip, .ptable .chip { text-transform: none; }
+.ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:12px;justify-content:center;max-width:480px;margin:0 auto}
+.ptables .ptable-concept-choices .button{width:100%}
+
+/* styles.append.ptables.v7.9.css */
+/* Append to bottom of your styles.css */
+/* Scoped to .ptable-module */
+
+.ptable-module table, 
+.ptable-module th, 
+.ptable-module td {
+  border: 2px solid #444; /* thicker/darker borders */
+}
+
+.ptable-module .confetti-fullpage {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+
+/* ==== APPEND (PTables) v7.9: borders + concept grid + last-row parity ==== */
+.ptables .ptable th,
+.ptables .ptable td{
+  border-color:#94a3b8!important;
+  border-width:1.5px!important;
+}
+.ptables .ptable-concept-choices{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:10px;justify-content:center;max-width:420px;margin:0 auto}
+.ptables .ptable-concept-choices .button{width:100%}
+.ptables .ptable tbody tr:last-child td{
+  border-top:1.5px solid #94a3b8;
+  padding:10px;
+  height:60px;
+
+}
+/* styles.css — UG Math Tools v8.1 (PTables patches)
+   PATCH SUMMARY:
+   - Larger header slots
+   - Fun-but-subtle blink effect for guided label step
+   - Wrong-answer micro-shake
+   - Button-like choice style for "What goes here?" chips
+   - Keep all rules scoped to PTables to avoid leaks
+*/
+
+:root{
+  --eastway-blue: #0B4B8C;
+  --eastway-green:#0C6B4D;
+  --cms-light:    #DAE9F6;
+
+  --ink:          #0F172A;
+  --ink-2:        #334155;
+  --ink-3:        #64748B;
+  --border:       #CBD5E1;
+  --border-2:     #E2E8F0;
+  --bg-subtle:    #F1F5F9;
+  --card:         #FFFFFF;
+
+  --t-green:  #10B981;
+  --t-yellow: #F59E0B;
+  --t-red:    #EF4444;
+}
+
+/* --- Keep user's existing styles (v8.0) by importing them into this file --- */
+/* For this downloadable file, we include only the incremental overrides and additions. */
+/* Apply these at the BOTTOM of your existing styles to reach v8.1 behavior. */
+
+/* ==== Overrides ==== */
+.ptable-thslot{
+  display:flex; align-items:center; justify-content:center;
+  height:52px; /* v8.1: larger target */
+  border:1px dashed var(--border); border-radius:10px; background:#f8fafc;
+  font-weight:700;
+}
+
+/* ==== Additions (append) ==== */
+
+/* Guided label step: fun-but-subtle blink */
+.ptable-blink{
+  animation: ptableBlink 1.2s ease-in-out infinite;
+}
+@keyframes ptableBlink{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(37,99,235,.0); transform:none; }
+  50%{ box-shadow: 0 0 0 4px rgba(37,99,235,.20) inset, 0 0 12px rgba(37,99,235,.25); transform: translateY(-1px); }
+}
+
+/* Wrong-answer micro-shake */
+.shake{ animation: ptableShake .35s ease both; }
+@keyframes ptableShake{
+  0%,100%{ transform: translateX(0); }
+  20%{ transform: translateX(-3px); }
+  40%{ transform: translateX(3px); }
+  60%{ transform: translateX(-2px); }
+  80%{ transform: translateX(2px); }
+}
+
+/* Choice buttons (button-like, but not the same as .button) */
+.ptable-choice{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+.ptable-choice:hover{ transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,.10); }
+
+/* Accessibility helper text only for screen readers */
+.visually-hidden{ position:absolute!important; width:1px; height:1px; margin:-1px; border:0; padding:0; clip:rect(0 0 0 0); clip-path:inset(50%); overflow:hidden; }
+
+/* Disable all chip interactions during label step */
+.ptable-wrap.disable-dnd .chip{ pointer-events:none; opacity:.7; }
+
+   /* styles.css — PTables v8.1.1 appends */
+/* Stronger blink; ensure placed header labels are visible and prominent */
+
+.ptable-thslot.placed { background:#e8f1ff; border-color:#93c5fd; color:#0b1220; }
+.ptable-thslot.placed .chip { background:#fff; border-color:#93c5fd; font-weight:900; }
+.ptable-thslot.empty { color:#64748b; }
+
+/* Stronger blink: border + subtle scale + glow */
+.ptable-blink{
+  animation: ptableBlinkStrong 1.05s ease-in-out infinite;
+}
+@keyframes ptableBlinkStrong{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(59,130,246,.0); transform:none; border-color:#cbd5e1; }
+  50%{ box-shadow: 0 0 0 5px rgba(59,130,246,.25) inset, 0 0 14px rgba(59,130,246,.25);
+       transform: translateY(-1px) scale(1.01); border-color:#93c5fd; }
+}
+
+   /* styles.css — PTables v8.2 appends */
+/* Strong, unmistakable blink; larger table chips; larger choice buttons */
+
+.ptable-thslot{
+  /* keep previous overrides; ensure visibility */
+  font-size: 18px;
+}
+
+.ptable-thslot.placed { background:#e8f1ff; border-color:#93c5fd; color:#0b1220; }
+.ptable-thslot.placed .chip { background:#fff; border-color:#93c5fd; font-weight:900; }
+.ptable-thslot.empty { color:#64748b; }
+
+/* VERY STRONG blink used across label/build/fill target slots */
+.ptable-blink-hard{
+  animation: ptableBlinkHard .85s ease-in-out infinite;
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  position: relative;
+}
+.ptable-blink-hard::after{
+  content:"";
+  position:absolute; inset:-6px;
+  border:3px dashed rgba(59,130,246,.75);
+  border-radius:12px;
+  animation: ptableDash 1.2s linear infinite;
+  pointer-events:none;
+}
+@keyframes ptableBlinkHard{
+  0%,100%{ box-shadow: 0 0 0 0 rgba(59,130,246,.0); transform:none; background:#fff; }
+  50%{ box-shadow: 0 0 0 8px rgba(59,130,246,.25) inset, 0 0 18px rgba(59,130,246,.30);
+       transform: translateY(-1px) scale(1.02); background:#f0f7ff; }
+}
+@keyframes ptableDash{
+  to { transform: rotate(1turn); }
+}
+
+/* Larger in-cell chips for header/rows */
+.chip.chip-med{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 8px 12px; border-radius: 12px;
+  border: 2px solid var(--border);
+  background:#fff; font-weight:900; font-size: 18px; line-height:1;
+}
+
+/* Choice buttons: big size */
+.ptable-choice.big{
+  padding: 14px 20px;
+  font-size: 20px;
+  border-width: 2px;
+  border-radius: 14px;
+  box-shadow: 0 3px 0 rgba(0,0,0,.08);
+}
+.ptable-choice.big:hover{ transform: translateY(-1px); box-shadow: 0 10px 16px rgba(0,0,0,.12); }
+
+/* Disable all chip interactions during guided steps */
+.ptable-wrap.disable-dnd .chip{ pointer-events:none; opacity:.7; }
+
+/* styles.css — PTables v8.2.1 appends (stack on top of v8.2) */
+/* Strong pulsating marker + bigger chips + ensure slots are positioned relative */
+
+.ptable-thslot{ position: relative; }               /* allow pulse overlay */
+.slot.ptable-fracslot{ position: relative; }        /* allow pulse overlay */
+
+.chip.chip-lg{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background:#fff;
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Pulsing target marker (very obvious) */
+.ptable-pulse{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 4px solid rgba(59,130,246,.9);
+  box-shadow: 0 0 0 6px rgba(59,130,246,.25), 0 0 18px rgba(59,130,246,.4);
+  animation: ptablePulseRing 0.9s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes ptablePulseRing{
+  0%   { transform: translate(-50%,-50%) scale(0.95); opacity: 1; }
+  50%  { transform: translate(-50%,-50%) scale(1.08); opacity: 0.9; }
+  100% { transform: translate(-50%,-50%) scale(0.95); opacity: 1; }
+}
+
+   /* styles.css — PTables v8.2.2 appends (stack on top) */
+/* Make blinking unmissable + keep table height stable while chips get larger */
+
+.ptable-thslot, .slot.ptable-fracslot { overflow: visible; } /* allow pulse to draw outside if needed */
+
+/* Background flashing to complement halo/pulse (works even if effects are subtle on theme) */
+.blink-bg{
+  animation: ptableBlinkBG 0.9s linear infinite;
+}
+@keyframes ptableBlinkBG{
+  0%,100% { background: #ffffff; }
+  50%     { background: #fff7cc; } /* pale yellow flash */
+}
+
+/* Make the pulse scale relative to container size for visibility */
+.ptable-pulse{
+  width: clamp(26px, 45%, 40px);
+  height: clamp(26px, 45%, 40px);
+  border-width: 4px;
+}
+
+/* Keep table layout steady even as chips grow */
+.pTable td, .pTable th { vertical-align: middle; }
+.pTable .chip-lg{ line-height: 1; }
+/* If your table uses a fixed row height elsewhere, this keeps chips centered without expanding rows */
+
+   /* styles.css — PTables v8.2.3 appends */
+/* Enforce blink visibility & layering; restore fade-in on revealed k; full-screen confetti fallback */
+
+.ptable-thslot, .slot.ptable-fracslot { position: relative !important; overflow: visible !important; }
+
+/* Make halos & pulses sit above contents, regardless of other shadows */
+.ptable-blink-hard, .blink-bg { z-index: 2 !important; }
+.ptable-pulse { z-index: 3 !important; }
+
+/* Stronger background flash (even on bright themes) */
+.blink-bg{
+  animation: ptableBlinkBG 0.8s linear infinite !important;
+}
+@keyframes ptableBlinkBG{
+  0%,100% { background: #ffffff; }
+  50%     { background: #fff0b3; } /* brighter pale yellow */
+}
+
+/* Fade-in for revealed k values */
+.eq.result.reveal-value{
+  opacity: 0;
+  animation: kReveal 0.5s ease-out forwards;
+}
+@keyframes kReveal { to { opacity: 1; } }
+
+/* Full-screen confetti fallback */
+.sf-confetti{ position: fixed; inset: 0; pointer-events:none; overflow: visible; z-index: 9999; }
+.sf-confetti-piece{
+  position:absolute; top:-8vh;
+  animation: confFall linear forwards;
+  transform: translateY(0) rotate(0);
+}
+@keyframes confFall{
+  to { transform: translateY(108vh) rotate(720deg); }
+}
+/* styles.css — PTables v8.2.5 append: make blink unmistakable */
+.ptable-thslot, .slot.ptable-fracslot { position: relative !important; overflow: visible !important; }
+.ptable-blink-hard, .blink-bg { z-index: 5 !important; }
+.ptable-pulse{ z-index: 6 !important; width: clamp(28px, 50%, 44px); height: clamp(28px, 50%, 44px); border-width: 4px; }
+
+/* very visible background flash + outline */
+.blink-bg{ animation: ptableBlinkBG 0.8s linear infinite !important; outline: 3px solid #f59e0b !important; outline-offset: 2px !important; box-shadow: 0 0 0 6px rgba(245,158,11,0.25) !important; }
+@keyframes ptableBlinkBG{ 0%,100% { background:#fff; } 50% { background:#fff0b3; } }
+
+   /* === Force blink styles to win (append to bottom of styles.css) === */
+.slot.ptable-blink-hard,
+.slot.blink-bg,
+.ptable-thslot.ptable-blink-hard,
+.ptable-thslot.blink-bg,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-fracslot.blink-bg {
+  background: #fff0b3 !important; /* pale yellow flash */
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 6px rgba(245,158,11,0.45) !important;
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  z-index: 10 !important;
+}
+
+/* styles.css — v8.2.6 append: wrapper-level blink that overrides everything */
+.slot-wrap{ position: relative !important; overflow: visible !important; }
+.slot-wrap.ptable-blink-wrap::after{
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 10px;
+  border: 4px solid #f59e0b;
+  box-shadow: 0 0 0 6px rgba(245,158,11,0.45);
+  animation: wrapBlink 0.7s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+@keyframes wrapBlink{
+  0%,100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+
+
+/* === v8.3.0 PTables: soften blink, keep guidance clear === */
+.ptable-blink-hard,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-thslot.ptable-blink-hard,
+.slot.ptable-blink-hard {
+  /* softer outline + smaller halo + slower */
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite !important;
+}
+
+@keyframes ptableBlinkSoft {
+  0%,100% { transform: none; background: #fff; }
+  50%     { transform: translateY(-1px); background: #f5faff; }
+}
+
+/* remove the strong yellow flash variant */
+.blink-bg {
+  animation: ptableBlinkBGSoft 1.2s ease-in-out infinite !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.18) !important;
+}
+@keyframes ptableBlinkBGSoft {
+  0%,100% { background: #fff; }
+  50%     { background: #f0f7ff; }
+}
+
+/* === v8.3.0 PTables: prevent clipping in col 3 === */
+.ptable-wrap { overflow: visible !important; }
+.ptable { overflow: visible; }
+.ptable tbody td { overflow: visible !important; }
+
+.row-calc { 
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow: visible; 
+}
+
+/* compact the mini fractions slightly to fit nicer */
+.fraction.mini-frac { width: 60px !important; }
+.fraction.mini-frac .frac-bar { width: 44px !important; }
+
+/* === v8.3.0 PTables: make the K drop target visible & above === */
+.ptable-rel { position: relative; overflow: visible; }
+.ptable-k-overlay { 
+  position: absolute; top: 0; left: 66.6667%; right: 0; height: 88px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.ptable-k-target { 
+  pointer-events: auto; width: 95%; height: 64px; border: 0; border-radius: 12px; 
+  background: transparent;
+}
+.col3-invisible .ptable-k-overlay { visibility: visible !important; }
+
+
+/* =======================
+   PTables v8.3.1 micro‑overrides
+   - Neutralize old strong yellow blink (v8.2.5 "force" block)
+   - Ensure K target blinks even when column 3 is invisible
+   - Raise overlay z-index to sit above header
+   ======================= */
+
+/* 1) Calm down ALL strong blink variants within PTables scope */
+.ptables .ptable-thslot.ptable-blink-hard,
+.ptables .ptable-fracslot.ptable-blink-hard,
+.ptables .slot.ptable-blink-hard,
+.ptables .ptable-thslot.blink-bg,
+.ptables .ptable-fracslot.blink-bg,
+.ptables .slot.blink-bg,
+.ptables .ptable-blink-hard,
+.ptables .blink-bg {
+  background: #fff !important;
+  border-color: #93c5fd !important;
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite !important;
+}
+
+/* Remove the rotating dashed ring entirely */
+.ptables .ptable-blink-hard::after { content: none !important; display:none !important; }
+
+/* 2) Make the K drop target blink visibly while the third column is reserved */
+.ptable-k-overlay { z-index: 12 !important; } /* higher than header */
+.col3-invisible .ptable-k-target::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18);
+  animation: ptableBlinkSoft 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 3) Safety: ensure no clipping anywhere around the target */
+.ptable-rel, .ptable, .ptable-wrap, .ptable thead, .ptable tbody td, .slot { 
+  overflow: visible !important; 
+}
+
+/* =========================
+   PTables v8.3.2 micro‑overrides (append at absolute bottom)
+   - Calm down legacy "force yellow" blink (wins by selector match + !important)
+   - Make 3rd-column HEADER visible during K step (body stays hidden)
+   - Ensure no clipping of halos
+   ========================= */
+
+/* 0) Unhide 3rd-column HEADER while col-3 is reserved */
+.col3-invisible .ptable thead th:nth-child(3){
+  visibility: visible !important;     /* body cells remain hidden by existing rule */
+}
+/* keep the actual slot visible in header, so the hint can blink */
+.col3-invisible .ptable thead th:nth-child(3) .ptable-thslot{
+  visibility: visible !important;
+}
+
+/* 1) Replace the STRONG yellow blink with soft blue for ALL cases */
+.slot.ptable-blink-hard,
+.slot.blink-bg,
+.ptable-thslot.ptable-blink-hard,
+.ptable-thslot.blink-bg,
+.ptable-fracslot.ptable-blink-hard,
+.ptable-fracslot.blink-bg {
+  background: #fff !important;
+  border-color: #93c5fd !important;
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.18) !important;
+  animation: ptableBlinkSoft 1.15s ease-in-out infinite !important;
+}
+/* Remove rotating dashed ring if any */
+.ptable-blink-hard::after { content: none !important; display:none !important; }
+
+@keyframes ptableBlinkSoft {
+  0%,100% { transform: none; background: #fff; }
+  50%     { transform: translateY(-1px); background: #f5faff; }
+}
+
+/* 2) Ensure K header blink is above table chrome; avoid clipping */
+.ptable thead, .ptable thead *, .ptable-thslot, .slot { 
+  position: relative; 
+  z-index: 3; 
+  overflow: visible !important;
+}
+
+/* 3) Compact the small fractions slightly (safety for narrow screens) */
+.fraction.mini-frac { width: 64px !important; min-width: 0 !important; }
+.fraction.mini-frac .frac-bar { width: 48px !important; }
+
+/* =========================
+   PTables v8.3.3 micro‑overrides (append at bottom of styles.css)
+   - Precisely center the blue pulse ring
+   - Avoid clipping in header/row cells
+   - Remove blink-induced vertical jitter
+   ========================= */
+
+/* Ensure slots are the positioning context for the pulse ring */
+.ptable-thslot,
+.slot.ptable-fracslot,
+.slot {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Centered pulse ring sized to fit *inside* the slot padding box */
+.ptable-pulse {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  /* Stay inside the slot to avoid cut-off by borders/radii */
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 12px) !important;
+  max-width: 44px !important;
+  max-height: 36px !important;
+  border-radius: 999px !important;
+  pointer-events: none !important;
+  box-shadow: 0 0 0 6px rgba(59,130,246,.22) !important;
+}
+
+/* Remove the subtle Y-translation that could make the pulse appear off-center */
+.ptable-blink-hard,
+.blink-bg {
+  transform: none !important;
+}
+
+/* Keep fraction areas from clipping the ring */
+.row-calc, .fraction, .ptable tbody td, .ptable thead th {
+  overflow: visible !important;
+}
+
+/* ==== v8.4.0 Landing Tiles (scoped) ===================================== */
+.home-buttons { gap: 22px; }
+
+/* Ensure we can precisely target only the landing tiles */
+.home-buttons .big-button,
+.home-buttons .tile-btn {
+  /* Tile look */
+  min-width: 260px;
+  min-height: 140px;        /* square-ish without going full card */
+  border-radius: 18px;
+
+  /* Color: match header vibe with gradient */
+  color: #fff;
+  background: linear-gradient(135deg, var(--eastway-blue) 0%, var(--eastway-green) 100%);
+
+  /* Stronger float/elevation + smoother transitions */
+  box-shadow: 0 16px 34px rgba(11, 75, 140, 0.24), 0 6px 16px rgba(12, 107, 77, 0.18);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+
+  /* Center contents nicely for taller tiles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Hover: clearer visual confirmation (addressing “I can barely see it change”) */
+.home-buttons .big-button:hover,
+.home-buttons .tile-btn:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 26px 56px rgba(11, 75, 140, 0.34), 0 10px 28px rgba(12, 107, 77, 0.26);
+  filter: saturate(1.05);
+}
+
+/* Active/press: quick depth pop without sticking */
+.home-buttons .big-button:active,
+.home-buttons .tile-btn:active {
+  transform: translateY(-1px) scale(0.997);
+  box-shadow: 0 16px 30px rgba(11, 75, 140, 0.28), 0 6px 16px rgba(12, 107, 77, 0.22);
+}
+
+/* Responsive sizing so tiles don’t become comically huge/small */
+@media (max-width: 980px){
+  .home-buttons .big-button,
+  .home-buttons .tile-btn {
+    min-width: 220px;
+    min-height: 120px;
+  }
+}
+@media (max-width: 640px){
+  .home-buttons .big-button,
+  .home-buttons .tile-btn {
+    min-width: 100%;
+    min-height: 100px;
+  }
+}
