@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.7 (replaces 9.7.6)
+// HTableModule — UG Math Tools v9.7.6 (replaces 9.7.3)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -483,6 +483,7 @@ export default function HTableModule(){
     setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
     setPickedUnits([]);
+    setPickedUnits([]);
   };
 
   const ROW_H = 88;
@@ -550,39 +551,23 @@ export default function HTableModule(){
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
-        /* === v9.7.4 typography + centering (module-local) === */
-        .card.hgrid-card { font-size: 1.06rem; }
-        .card.hgrid-card .hhead-text,
-        .card.hgrid-card .hcell span { 
-          font-family: inherit;
-          line-height: 1.25;
-        }
-        .hcell .slot-wrap, .hhead .slot-wrap {
-          display:flex; align-items:center; justify-content:center;
-        }
-        /* Keep stripe artifacts off blinked cells */
-        .ptable-blink-hard.blink-bg { background: transparent !important; }
-        .ptable-blink-hard.blink-bg::before,
-        .ptable-blink-hard.blink-bg::after { display: none !important; }
-        /* === v9.7.5 typography + centering (module-local, strong specificity) === */
+        /* === v9.7.6 module-local visual fixes === */
         .card.hgrid-card,
-        .card.hgrid-card .problem-banner,
         .card.hgrid-card .hhead-text,
-        .card.hgrid-card .hcell span,
-        .card.hgrid-card .hcell .slot-wrap,
-        .card.hgrid-card .hhead .slot-wrap {
+        .card.hgrid-card .hcell span {
           font-size: 1.06rem !important;
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji" !important;
           line-height: 1.25 !important;
         }
-        /* Center everything inside headers and cells */
         .card.hgrid-card .hcell .slot-wrap,
         .card.hgrid-card .hhead .slot-wrap {
           display:flex !important; align-items:center !important; justify-content:center !important;
           width:100% !important; height:100% !important;
         }
-        .card.hgrid-card .hcell span,
-        .card.hgrid-card .hhead .hhead-text { display:inline-block !important; text-align:center !important; }
+        /* Remove stray center stripe artifacts from blinked cells */
+        .ptable-blink-hard.blink-bg { background: transparent !important; }
+        .ptable-blink-hard.blink-bg::before,
+        .ptable-blink-hard.blink-bg::after { display: none !important; }
     `}</style>
 
       <div className="panes">
