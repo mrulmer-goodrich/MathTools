@@ -4,6 +4,15 @@
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  window.addEventListener('error', (e) => {
+    if (e && e.message && /is not defined/.test(e.message)) {
+      console.error('[SpecOp Guard] Undefined identifier caught:', e.message);
+    }
+  });
+}
+
+
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
 import DropSlotBase from '../../components/DropSlot.jsx'
@@ -63,20 +72,7 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 // Spec scaffolding & helpers
 // ────────────────────────────────────────────────────────────────────────────────
 // STEP TITLES
-const STEP_TITLES = [
-  "What's the first step to solve the problem?",
-  "What always goes in the first column?",
-  "What always goes in the second column?",
-  "What are the two units in the problem? (tap two)",
-  "What value goes here?",
-  "What value goes here?",
-  "What’s the other value from the problem?",
-  "Where should this value go? (tap a cell)",
-  "What do we do now?",
-  "Pick the two numbers we multiply",
-  "What do we do next?",
-  "Calculate",
-];
+const STEP_TITLES = ["What\u2019s the first step to solve the problem?", "What always goes in the first column?", "What always goes in the second column?", "What are the two units in the problem? (tap two)", "What value goes here?", "What value goes here?", "What\u2019s the other value from the problem?", "Where should this value go? (tap a cell)", "Pick the two numbers we multiply", "What do we do next?", "What do we do next?", "Calculate"];
 
 const STEP1_CHOICES = [
   { id:'drawH',   label:'Draw an H Table', correct:true },
@@ -500,7 +496,7 @@ export default function HTableModule(){
   };
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'ptable-blink' : ''),
+    (isBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -660,7 +656,7 @@ export default function HTableModule(){
           <div className="section">
             <div className="step-title">{STEP_TITLES[step]}</div>
 
-            {/* RIGHT-PANEL: STEP 0 — START */}
+            {{/* RIGHT-PANEL: STEP 0 — START  */}}
             {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
@@ -668,9 +664,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 0 — END */}
+            {{/* RIGHT-PANEL: STEP 0 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 1 — START */}
+            {{/* RIGHT-PANEL: STEP 1 — START  */}}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -683,9 +679,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 1 — END */}
+            {{/* RIGHT-PANEL: STEP 1 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 2 — START */}
+            {{/* RIGHT-PANEL: STEP 2 — START  */}}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -697,9 +693,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 2 — END */}
+            {{/* RIGHT-PANEL: STEP 2 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 3 — START */}
+            {{/* RIGHT-PANEL: STEP 3 — START  */}}
             {step===3 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => (
@@ -707,25 +703,25 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 3 — END */}
+            {{/* RIGHT-PANEL: STEP 3 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 4 — START */}
+            {{/* RIGHT-PANEL: STEP 4 — START  */}}
             {step===4 && (
               <div className="chips center mt-8">
                 {numbersTopScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 4 — END */}
+            {{/* RIGHT-PANEL: STEP 4 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 5 — START */}
+            {{/* RIGHT-PANEL: STEP 5 — START  */}}
             {step===5 && (
               <div className="chips center mt-8">
                 {numbersBottomScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 5 — END */}
+            {{/* RIGHT-PANEL: STEP 5 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 6 — START */}
+            {{/* RIGHT-PANEL: STEP 6 — START  */}}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
@@ -733,19 +729,19 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 6 — END */}
+            {{/* RIGHT-PANEL: STEP 6 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
+            {{/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink)  */}}
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
-            {/* RIGHT-PANEL: STEP 7 — END */}
+            {{/* RIGHT-PANEL: STEP 7 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 8 — START */}
+            {{/* RIGHT-PANEL: STEP 8 — START  */}}
             {step===8 && (
               <div className="problem-body">What do we do now?</div>
             )}
-            {/* RIGHT-PANEL: STEP 8 — END */}
+            {{/* RIGHT-PANEL: STEP 8 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 9 — START */}
+            {{/* RIGHT-PANEL: STEP 9 — START  */}}
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
@@ -753,9 +749,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 9 — END */}
+            {{/* RIGHT-PANEL: STEP 9 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 10 — START */}
+            {{/* RIGHT-PANEL: STEP 10 — START  */}}
             {step===10 && (
               <div className="chips with-borders center mt-8">
                 {divideChoices.map((c,idx)=>(
@@ -763,15 +759,15 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 10 — END */}
+            {{/* RIGHT-PANEL: STEP 10 — END  */}}
 
-            {/* RIGHT-PANEL: STEP 11 — START */}
+            {{/* RIGHT-PANEL: STEP 11 — START  */}}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
                 <button className="button" onClick={onCalculate}>Calculate</button>
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 11 — END */}
+            {{/* RIGHT-PANEL: STEP 11 — END  */}}
 
             {/* Sticky footer controls */}
             <div className="right-footer">
