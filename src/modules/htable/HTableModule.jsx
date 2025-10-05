@@ -1,6 +1,5 @@
 // src/modules/htable/HTableModule.jsx
-// OpSpec v9.6.1 – Tap-only, prompts on RIGHT, problem+H-table on LEFT
-
+// OpSpec v9.6.2 – Tap-only, prompts on RIGHT, problem+H-table on LEFT
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
@@ -14,7 +13,7 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Tap-only wrappers (OpSpec §3, §7.4)
+// TAP-ONLY WRAPPERS  (OpSpec §2, §8)
 // ────────────────────────────────────────────────────────────────────────────────
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
@@ -36,6 +35,7 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
+// blinkWrap default prevents No-Undef (QA #12)
 const Slot = ({ accept, children, className='', blinkWrap=false, onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
   const testFn = test ?? ((d) => {
@@ -58,7 +58,7 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Spec scaffolding & helpers
+// Spec scaffolding & helpers (OpSpec §4–§6)
 // ────────────────────────────────────────────────────────────────────────────────
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
@@ -141,7 +141,7 @@ export default function HTableModule(){
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
 
-  // OpSpec §6 – 2s blink
+  // OpSpec §3 – 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const flashCell = (key, nextStepIdx=null, delay=2000) => {
     setBlinkKey(key);
@@ -474,7 +474,7 @@ export default function HTableModule(){
   const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
 
-  // wild blink cue logic
+  // Blink cue logic: align to spec classes/hooks
   const needWildBlink = (key)=> {
     if (step===4 && key==='sTop'    && table.sTop==null) return true;
     if (step===5 && key==='sBottom' && table.sBottom==null) return true;
@@ -482,16 +482,18 @@ export default function HTableModule(){
       if (rowIsGivenUnit(table.uTop)    && key==='vTop'    && table.vTop==null) return true;
       if (rowIsGivenUnit(table.uBottom) && key==='vBottom' && table.vBottom==null) return true;
     }
+    if (step===9 && Array.isArray(highlightKeys) && highlightKeys.includes(key)) return true;
     return false;
   };
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
     (isBlink(key) ? 'ptable-blink' : ''),
-    (needWildBlink(key) ? 'ptable-blink-wild' : ''),
+    // Spec class mapping: use hard+bg instead of legacy 'wild'
+    (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
   // ──────────────────────────────────────────────────────────────────────────────
-  // RENDER
+  // UI  (OpSpec §6: gating) + RIGHT PANEL
   // ──────────────────────────────────────────────────────────────────────────────
   return (
     <div className="container" style={{position:'relative'}}>
@@ -506,16 +508,6 @@ export default function HTableModule(){
         }
         .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
 
-        /* Wild, continuous blink for 'What goes here?' prompts */
-        @keyframes ptable-blink-wild-kf {
-          0%   { box-shadow: 0 0 0 0 rgba(255,0,90,.55); transform: scale(1.00); }
-          25%  { box-shadow: 0 0 0 6px rgba(255,0,90,.35); transform: scale(1.03); }
-          50%  { box-shadow: 0 0 0 0 rgba(255,0,90,.10); transform: scale(1.00); }
-          75%  { box-shadow: 0 0 0 8px rgba(255,0,90,.45); transform: scale(1.04); }
-          100% { box-shadow: 0 0 0 0 rgba(255,0,90,.20); transform: scale(1.00); }
-        }
-        .ptable-blink-wild { animation: ptable-blink-wild-kf 1.6s ease-in-out 0s infinite; }
-
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
@@ -529,7 +521,7 @@ export default function HTableModule(){
         <div className="card">
           <div className="section">
 
-            {/* Problem (just the natural text; no labels) */}
+            {/* Problem (natural text only) */}
             <div className="problem-banner">
               <div className="problem-title">Problem</div>
               <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
@@ -543,14 +535,14 @@ export default function HTableModule(){
                 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} className={`${!table.head1 ? "empty" : ""}`}>
+                    <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                         <span className="hhead-text">{table.head1 || ''}</span>
                       </div>
                     </Slot>
                   </div>
                   <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} className={`${!table.head2 ? "empty" : ""}`}>
+                    <Slot accept={["header"]} blinkWrap={step===2 && !table.head2} className={`${!table.head2 ? "empty" : ""}`}>
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                         <span className="hhead-text">{table.head2 || ''}</span>
                       </div>
@@ -560,17 +552,17 @@ export default function HTableModule(){
 
                   {/* Row 1 */}
                   <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
+                    <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
                       <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.sTop==null ? "empty" : ""}`}>
+                    <Slot blinkWrap={needWildBlink('sTop') || highlightKeys.includes('sTop')} className={`${table.sTop==null ? "empty" : ""}`}>
                       <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+                    <Slot blinkWrap={needWildBlink('vTop') || highlightKeys.includes('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
                       <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
                     </Slot>
                   </div>
@@ -579,17 +571,17 @@ export default function HTableModule(){
 
                   {/* Row 2 */}
                   <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
+                    <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
                       <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
+                    <Slot blinkWrap={needWildBlink('sBottom') || highlightKeys.includes('sBottom')} className={`${table.sBottom==null ? "empty" : ""}`}>
                       <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+                    <Slot blinkWrap={needWildBlink('vBottom') || highlightKeys.includes('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
                       <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
                     </Slot>
                   </div>
@@ -599,7 +591,7 @@ export default function HTableModule(){
                   <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
                   <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
 
-                  {/* Red oval */}
+                  {/* Red oval (Step 9) */}
                   {oval && (
                     <div
                       style={{
@@ -611,7 +603,7 @@ export default function HTableModule(){
                       }}
                     />
                   )}
-                  {/* Red triple underline */}
+                  {/* Red triple underline (Step 10) */}
                   {tripleUL && (
                     <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
                       <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
@@ -631,6 +623,7 @@ export default function HTableModule(){
           <div className="section">
             <div className="step-title">{STEP_TITLES[step]}</div>
 
+            {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
@@ -638,7 +631,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 0 — END */}
 
+            {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -651,7 +646,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 1 — END */}
 
+            {/* RIGHT-PANEL: STEP 2 — START */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {[
@@ -663,7 +660,9 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 2 — END */}
 
+            {/* RIGHT-PANEL: STEP 3 — START */}
             {step===3 && (
               <div className="chips center mt-8">
                 {unitChoices.map(c => (
@@ -671,22 +670,27 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 3 — END */}
 
+            {/* RIGHT-PANEL: STEP 4 — START */}
             {step===4 && (
               <div className="chips center mt-8">
                 {(numbersTopScale?.length ? numbersTopScale : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n})))
                   .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 4 — END */}
 
+            {/* RIGHT-PANEL: STEP 5 — START */}
             {step===5 && (
               <div className="chips center mt-8">
                 {(numbersBottomScale?.length ? numbersBottomScale : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n})))
                   .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 5 — END */}
 
-            {/* Step 6 */}
+            {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
@@ -694,77 +698,62 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 6 — END */}
 
-            {/* Step 7 – no text; blinking cell cues the action */}
+            {/* RIGHT-PANEL: STEP 7 — START (no prompt UI; tap a cell on left) */}
             {step===7 && (<div className="section" />)}
+            {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {/* Step 8 */}
+            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x',  label:'Cross Multiply',      good:true  },
-                  { id:'op_add',label:'Add the numbers',     good:false },
-                  { id:'op_sub',label:'Subtract the numbers',good:false },
-                  { id:'op_avg',label:'Average the numbers', good:false },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
-                ))}
+                <div className="problem-body">Tap the two numbers we multiply.</div>
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 8 — END */}
 
-            {/* Step 9 */}
+            {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+                {[crossPair, ...wrongPairs].filter(Boolean).sort(()=>Math.random()-0.5).map((pair,idx)=>(
+                  <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 9 — END */}
 
-            {/* Step 10 */}
+            {/* RIGHT-PANEL: STEP 10 — START */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
-                {divideChoices.map((choice, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
+                {divideChoices.map((c,idx)=>(
+                  <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 10 — END */}
 
-            {/* Step 11 */}
+            {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
-              <div className="toolbar mt-10 center" style={{display:'flex', gap:12, justifyContent:'center'}}>
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
-                <button className="button" onClick={resetProblem}>New Problem</button>
+              <div className="center" style={{marginTop:12}}>
+                <button className="button" onClick={onCalculate}>Calculate</button>
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 11 — END */}
+
           </div>
         </div>
+      </div>
 
-      </div>{/* end .panes */}
-
-      {/* Confetti */}
-      {confettiOn && (
-        <div className="htable-confetti" aria-hidden="true">
-          {Array.from({length:120}).map((_,i)=>{
-            const left = Math.random()*100;
-            const dur = 5 + Math.random()*4;
-            const delay = Math.random()*2;
-            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
-            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
-            return <div key={i} className="piece" style={style} />;
-          })}
-        </div>
-      )}
-
-      {/* Summary */}
+      {/* Summary overlay + confetti (single burst per summary) */}
       {openSum && (
         <SummaryOverlay
-          isOpen={openSum}
+          open={openSum}
           onClose={()=>setOpenSum(false)}
           problem={problem}
           table={table}
           mathStrip={mathStrip}
-          onNewProblem={()=>resetProblem()}
+          confettiOn={confettiOn}
+          onNewProblem={resetProblem}
         />
       )}
     </div>
