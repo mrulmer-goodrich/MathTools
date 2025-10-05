@@ -774,8 +774,6 @@ const handleUnitChipClick = (chip) => {
   </div>
 )}
 
-  </div>
-)}
 
 {step===10 && (
   <div className="chips with-borders center mt-8">
