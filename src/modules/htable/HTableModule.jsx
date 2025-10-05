@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.6 (replaces 9.7.3)
+// HTableModule — UG Math Tools v9.7.3 (replaces 9.7.2)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -290,7 +290,7 @@ export default function HTableModule(){
     // add a couple distractors near the range
     const base = Number(problem?.given?.value) || 3;
     let tries = 0;
-    while (set.size < 4 && tries < 50){
+    while (set.size < Math.max(3, allProblemNumbers.length + 2) && tries < 50){
       set.add(Math.max(1, Math.round(base + (Math.random()*6 - 3))));
       tries++;
     }
@@ -483,7 +483,6 @@ export default function HTableModule(){
     setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
     setPickedUnits([]);
-    setPickedUnits([]);
   };
 
   const ROW_H = 88;
@@ -548,23 +547,6 @@ export default function HTableModule(){
         .right-footer { margin-top: 12px; }
 
         /* Lock blink look to the first-step style; remove stray center stripes */
-        .ptable-blink-hard.blink-bg { background: transparent !important; }
-        .ptable-blink-hard.blink-bg::before,
-        .ptable-blink-hard.blink-bg::after { display: none !important; }
-        /* === v9.7.6 module-local visual fixes === */
-        .card.hgrid-card,
-        .card.hgrid-card .hhead-text,
-        .card.hgrid-card .hcell span {
-          font-size: 1.06rem !important;
-          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji" !important;
-          line-height: 1.25 !important;
-        }
-        .card.hgrid-card .hcell .slot-wrap,
-        .card.hgrid-card .hhead .slot-wrap {
-          display:flex !important; align-items:center !important; justify-content:center !important;
-          width:100% !important; height:100% !important;
-        }
-        /* Remove stray center stripe artifacts from blinked cells */
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
@@ -746,7 +728,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {otherValueChoices.slice(0,4).map(c => (
+                {otherValueChoices.map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -757,16 +739,11 @@ export default function HTableModule(){
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
             {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {{/* RIGHT-PANEL: STEP 8 — START */}
+            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={()=>{ if (step===8) { setDone(8); next(); } }}>Cross Multiply</button>
-                <button className="chip" onClick={()=>{ miss(8); }}>Add</button>
-                <button className="chip" onClick={()=>{ miss(8); }}>Divide</button>
-                <button className="chip" onClick={()=>{ miss(8); }}>Just Guess</button>
-              </div>
+              <div className="problem-body">What do we do now?</div>
             )}
-{/* RIGHT-PANEL: STEP 8 — END */}}
+            {/* RIGHT-PANEL: STEP 8 — END */}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
