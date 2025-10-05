@@ -1,47 +1,26 @@
 // src/modules/htable/HTableModule.jsx
-// Build: v9.5.2‑tap
+// Build: v9.6.0-compliant
 // -----------------------------------------------------------------------------
-// This file implements the H‑Table learning module with **tap‑only** interaction,
-// aligned to the user's "H Table Steps update for 9.1.1" and OpSpec v9.5.1.g,
-// superseded by Appendix 9.1.1 Tap‑Only. Changes are SURGICAL and annotated.
-//
-// Interaction model (OpSpec 9.1.1 — Tap‑Only):
-//  - No drag & drop anywhere (OpSpec §9.1.1‑A).
-//  - No chip→slot double‑selection (OpSpec §9.1.1‑B).
-//  - Single‑tap completes each step’s action (OpSpec §9.1.1‑C).
-//  - Blink‑then‑advance on specified steps (OpSpec §9.1.1‑D).
-//  - H‑Table renders after Step 0 is answered (OpSpec §9.1.1‑E).
-//
-// Step parity (OpSpec Table B.3, preserved here):
-//  0: Draw H Table  |  1: Header Units  |  2: Header Scale Numbers
-//  3: Units (tap two)  |  4: sTop  |  5: sBottom
-//  6: Other value (choice) | 7: Place other value (tap cell)
-//  8: Cross Multiply | 9: Choose multiply pair | 10: Divide by remaining scale
-//  11: Calculate
+// OpSpec v9.6.0 compliant implementation with tap-only interaction.
+// All 11 blockers from audit fixed.
 // -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
-// NOTE: We retain component imports for styling/structure parity with OpSpec UI.
-// Drag source/target components are retained for visuals but made inert.
-import DraggableBase from '../../components/DraggableChip.jsx'     // OpSpec §UI: chip visuals
-import DropSlotBase from '../../components/DropSlot.jsx'           // OpSpec §UI: slot visuals
-import SummaryOverlay from '../../components/SummaryOverlay.jsx'   // OpSpec §UI: summary
+import DraggableBase from '../../components/DraggableChip.jsx'
+import DropSlotBase from '../../components/DropSlot.jsx'
+import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 
-import { genHProblem } from '../../lib/generator.js'               // OpSpec §Data: problem generator
-import { loadSession, saveSession } from '../../lib/localStorage.js' // OpSpec §Data: persistence
+import { genHProblem } from '../../lib/generator.js'
+import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 // =============================================================================
-//  Tap‑Only Chip Wrapper
+//  Tap-Only Chip Wrapper (OpSpec §3)
 // =============================================================================
-// OpSpec §9.1.1‑A/B/C: NO DRAG, NO DOUBLE‑SELECTION. Chips act as buttons.
-// - We keep DraggableBase for consistent look/feel, but disable drag entirely.
-// - A 'tapAction' prop executes the step‑specific action on a single tap.
-// - No pick store, no slot drop, no onDropContent wiring.
 
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
-  const merged = data ?? payload ?? undefined;                           // OpSpec §Data
-  const handleClick = (e) => {                                           // OpSpec §9.1.1‑C
+  const merged = data ?? payload ?? undefined;
+  const handleClick = (e) => {
     if (typeof tapAction === 'function') { tapAction(e, merged); return; }
     onClick?.(e);
   };
@@ -49,9 +28,9 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
     <DraggableBase
       data={merged}
       label={label ?? merged?.label}
-      draggable={false}                                                  // OpSpec §9.1.1‑A
-      onDragStart={(e)=>{ e.preventDefault(); return false; }}           // OpSpec §9.1.1‑A
-      onClick={handleClick}                                              // OpSpec §9.1.1‑C
+      draggable={false}
+      onDragStart={(e)=>{ e.preventDefault(); return false; }}
+      onClick={handleClick}
       role="button"
       tabIndex={0}
       {...rest}
@@ -60,19 +39,27 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
 };
 
 // =============================================================================
-//  Slot Wrapper (Visual Only; No Drops Accepted)
+//  Slot Wrapper (OpSpec §3 + §7.4: includes accept handling)
 // =============================================================================
-// OpSpec §9.1.1‑A/B: slots remain for layout but do not accept drops.
 
-const Slot = ({ children, className='', onClick, ...rest }) => {
+const Slot = ({ accept, children, className='', onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
+  
+  // OpSpec §7.4: Header slots must validate 'header' in accept array
+  const testFn = test ?? ((d) => {
+    const t = (d?.type ?? d?.kind ?? "").toString();
+    const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
+    const valOk = typeof validator === "function" ? !!validator(d) : true;
+    return listOk && valOk;
+  });
+  
   return (
     <div
       className={`slot-wrap ${className}`}
       onClick={handleClick}
-      onDragOver={(e)=>e.preventDefault()}                               // inert; keeps browser quiet
+      onDragOver={(e)=>e.preventDefault()}
     >
-      <DropSlotBase test={()=>false} onDropContent={()=>{}} {...rest}>
+      <DropSlotBase test={testFn} onDropContent={()=>{}} {...rest}>
         {children}
       </DropSlotBase>
     </div>
@@ -84,29 +71,29 @@ const Slot = ({ children, className='', onClick, ...rest }) => {
 // =============================================================================
 
 const STEP_TITLES = [
-  "What’s the first step to solve the problem?",       // 0
-  "What goes in the first column?",                    // 1
-  "What goes in the next column?",                     // 2
-  "What are the two units in the problem? (tap two)",  // 3
-  "What value goes here? (top row scale)",             // 4
-  "What value goes here? (bottom row scale)",          // 5
-  "What’s the other value from the problem? (4 options)", // 6
-  "Where should this value go? (tap a cell)",          // 7
-  "What do we do now?",                                // 8
-  "Which numbers are we multiplying?",                 // 9
-  "What do we do next?",                               // 10
-  "Calculate",                                         // 11
+  "What's the first step to solve the problem?",
+  "What goes in the first column?",
+  "What goes in the next column?",
+  "What are the two units in the problem? (tap two)",
+  "What value goes here? (top row scale)",
+  "What value goes here? (bottom row scale)",
+  "What's the other value from the problem? (4 options)",
+  "Where should this value go? (tap a cell)",
+  "What do we do now?",
+  "Which numbers are we multiplying?",
+  "What do we do next?",
+  "Calculate",
 ];
 
 const STEP1_CHOICES = [
-  { id:'drawH',   label:'Draw an H Table', correct:true },  // OpSpec §0
+  { id:'drawH',   label:'Draw an H Table', correct:true },
   { id:'proportion', label:'Make a Proportion' },
   { id:'convert',    label:'Convert Units First' },
   { id:'guess',      label:'Just Guess' },
 ];
 
 // =============================================================================
-//  Units / Categories (OpSpec §Validation)
+//  Units / Categories
 // =============================================================================
 
 const UNIT_CATS = {
@@ -130,7 +117,7 @@ const saneProblem = (p) => {
   try{
     const [u1,u2] = p.units || [];
     const c1 = unitCategory(u1), c2 = unitCategory(u2);
-    return !!(c1 && c2 && c1===c2);  // OpSpec §Validation: category consistency
+    return !!(c1 && c2 && c1===c2);
   }catch{ return false }
 };
 
@@ -150,18 +137,13 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // =============================================================================
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 18; // bump for tap‑only revision
+  const H_SNAP_VERSION = 19; // bumped for v9.6.0 compliance
 
-  // ---------------------------------------------------------------------------
-  // Persisted session (OpSpec §Data: persistence rules)
-  // ---------------------------------------------------------------------------
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
 
   const [session, setSession] = useState(persisted || { attempts: [] });
-
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
-
   const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
     uTop:'', uBottom:'',
@@ -171,25 +153,20 @@ export default function HTableModule(){
   });
 
   const [step, setStep] = useState(snap?.step ?? 0);
-
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
 
   const [openSum, setOpenSum] = useState(false);
-
   const [mathStrip, setMathStrip] = useState({
     a:null, b:null, divisor:null, result:null, showResult:false
   });
-
   const [confettiOn, setConfettiOn] = useState(false);
 
-  // ---------------------------------------------------------------------------
-  // Blink helpers (OpSpec §9.1.1‑D)
-  // ---------------------------------------------------------------------------
+  // Blink helpers (OpSpec §6: 2s duration)
   const [blinkKey, setBlinkKey] = useState(null);
 
-  const flashCell = (key, nextStepIdx=null, delay=700) => {
+  const flashCell = (key, nextStepIdx=null, delay=2000) => {
     setBlinkKey(key);
     setTimeout(()=>{
       setBlinkKey(null);
@@ -202,17 +179,13 @@ export default function HTableModule(){
 
   const [blinkUnits, setBlinkUnits] = useState(false);
 
-  // ---------------------------------------------------------------------------
-  // Persist current snapshot
-  // ---------------------------------------------------------------------------
+  // Persist
   useEffect(()=>{
     const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
     saveSession(nextState); setSession(nextState);
   },[problem, table, step, steps]);
 
-  // ---------------------------------------------------------------------------
   // Step helpers
-  // ---------------------------------------------------------------------------
   const miss = (idx)=>setSteps(s=>{
     const c=[...s]; if(c[idx]) c[idx].misses++; return c;
   });
@@ -223,9 +196,7 @@ export default function HTableModule(){
 
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
 
-  // ---------------------------------------------------------------------------
   // Problem helpers
-  // ---------------------------------------------------------------------------
   const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
   const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
 
@@ -250,9 +221,7 @@ export default function HTableModule(){
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
-  // ---------------------------------------------------------------------------
   // Choice pools
-  // ---------------------------------------------------------------------------
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2);
     const cat = unitCategory(correct[0] || '');
@@ -302,9 +271,7 @@ export default function HTableModule(){
     { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
   ]),[problem?.id]);
 
-  // ---------------------------------------------------------------------------
-  // Step 6 / 7 flow (other value & placement)
-  // ---------------------------------------------------------------------------
+  // Step 6 / 7 flow
   const [pickedOther, setPickedOther] = useState(null);
 
   const otherValueChoices = useMemo(()=>{
@@ -326,7 +293,7 @@ export default function HTableModule(){
     if (!choice?.correct){ miss(6); return; }
     setPickedOther(choice);
     setDone(6);
-    setStep(7);
+    next(); // OpSpec §7.15: use next() not setStep()
   };
 
   const tapPlaceValueTop = () => {
@@ -345,9 +312,7 @@ export default function HTableModule(){
     flashCell('vBottom', 7);
   };
 
-  // ---------------------------------------------------------------------------
-  // Geometry for H Lines & Annotations (unchanged visuals)
-  // ---------------------------------------------------------------------------
+  // Geometry
   const gridRef = useRef(null);
 
   const refs = {
@@ -455,19 +420,32 @@ export default function HTableModule(){
     };
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
+  // OpSpec §7.21: Need 4 total options (1 correct + 3 wrong)
   const wrongPairs = useMemo(()=>{
     const list = [];
     const v = (givenRow==='top') ? table.vTop : table.vBottom;
     const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
+    
+    // Wrong pair 1: same-row multiply
     if (v!=null && sSame!=null) list.push({
       a:v, b:sSame, label:`${v} × ${sSame}`,
       keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom']
     });
+    
+    // Wrong pair 2: scale × scale
     if (table.sTop!=null && table.sBottom!=null) list.push({
       a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`,
       keys:['sTop','sBottom']
     });
-    return shuffle(list);
+    
+    // Wrong pair 3: opposite value × same scale (if exists)
+    const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
+    if (vOpp!=null && sSame!=null) list.push({
+      a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`,
+      keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom']
+    });
+    
+    return shuffle(list).slice(0, 3); // Ensure exactly 3 wrong options
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -481,9 +459,27 @@ export default function HTableModule(){
     setDone(9); next();
   };
 
-  const chooseDivideByNumber = (num)=>{
-    const div = Number(num);
+  // OpSpec §7.22: Need 4 options for Step 10
+  const divideChoices = useMemo(()=>{
+    if (table.sTop==null || table.sBottom==null) return [];
+    
+    const correctScale = (givenRow==='top') ? table.sBottom : table.sTop;
+    const wrongScale = (givenRow==='top') ? table.sTop : table.sBottom;
+    
+    return shuffle([
+      { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
+      { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
+      { label: `Multiply by ${correctScale}`, value: null, correct: false },
+      { label: `Multiply by ${wrongScale}`, value: null, correct: false },
+    ]);
+  }, [givenRow, table.sTop, table.sBottom]);
+
+  const chooseDivideByNumber = (choice)=>{
+    if (!choice.correct) { miss(10); return; }
+    
+    const div = Number(choice.value);
     if (table.product==null || !Number.isFinite(div) || div===0) { miss(10); return; }
+    
     const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null);
 
     const g = gridRef.current;
@@ -544,15 +540,13 @@ export default function HTableModule(){
   const handleStep0 = (choice)=>{
     if(choice?.correct){
       setDone(0);
-      setStep(1); // H‑table rendering gate (OpSpec §9.1.1‑E)
+      setStep(1);
     } else {
       miss(0);
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // Tap handlers for steps 1–5 (OpSpec 9.1.1)
-  // ---------------------------------------------------------------------------
+  // Tap handlers
   const tapHeader1 = (d)=>{
     if (d?.v==='Units'){
       setTable(t=>({...t, head1:'Units'}));
@@ -581,7 +575,7 @@ export default function HTableModule(){
       const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
       if (exists) return prev;
 
-      const nextSel = [...prev, d];                     // avoid shadowing 'next()'
+      const nextSel = [...prev, d];
 
       if (nextSel.length===2){
         const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
@@ -597,7 +591,7 @@ export default function HTableModule(){
         setTimeout(()=>{
           setBlinkUnits(false);
           setDone(3); next();
-        }, 900);
+        }, 2000); // OpSpec §6: 2s blink
       }
 
       return nextSel;
@@ -626,9 +620,7 @@ export default function HTableModule(){
     });
   };
 
-  // ---------------------------------------------------------------------------
   // UI
-  // ---------------------------------------------------------------------------
   const ROW_H = 88;
   const lineColor = '#0f172a';
 
@@ -637,7 +629,6 @@ export default function HTableModule(){
 
   return (
     <div className="container" style={{position:'relative'}}>
-      {/* OpSpec §UI: animations / confetti */}
       <style>{`
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
@@ -645,6 +636,9 @@ export default function HTableModule(){
     
         @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
         .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
+        
+        /* OpSpec §6: highlight class for multiplied cells */
+        .hl { background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6 !important; border-radius: 8px; }
 
         @keyframes confettiFall {
           0%   { transform: translateY(-120vh) rotate(0deg);   opacity: 1; }
@@ -653,7 +647,6 @@ export default function HTableModule(){
         .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
         .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
 
-        /* Ensure large dropzones (visual parity with DnD-era UI) */
         .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
           min-height: ${ROW_H}px !important;
           height: ${ROW_H}px !important;
@@ -663,31 +656,15 @@ export default function HTableModule(){
       
       <div className="panes">
         <div className="card">
-          {/* Step title and controls on LEFT per OpSpec visual layout */}
           <div className="section">
-            {/* Problem banner (verbatim from generator.js) */}
             <div className="problem-banner">
               <div className="problem-title">Problem</div>
               <div className="problem-body">
                 {(() => {
                   const en = (problem && problem.text && (typeof problem.text.english === 'string')) ? problem.text.english : null;
-                  const alts = (problem && problem.text && problem.text.alts) ? problem.text.alts : null;
                   return (
                     <div>
                       <div style={{whiteSpace:'pre-wrap'}}>{en || ''}</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-
-
-                      <div><strong>Scale:</strong></div>
-                      <div>{String(sTop)} {topU} ⇄ {String(sBot)} {botU}</div>
-                      <div><strong>Given:</strong></div>
-                      <div>{String(givenVal)} {givenU}</div>
-                      <div><strong>Unknown:</strong></div>
-                      <div>(?) {targetU}</div>
                     </div>
                   );
                 })()}
@@ -750,67 +727,120 @@ export default function HTableModule(){
               </div>
             )}
 
+            {/* RIGHT-PANEL: STEP 6 – START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
+                  <button 
+                    key={c.id} 
+                    className="chip" 
+                    onClick={() => { 
+                      chooseOtherValue(c); 
+                    }}
+                  >
+                    {c.label}
+                  </button>
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 6 – END */}
 
+            {/* RIGHT-PANEL: STEP 7 – START */}
+            {step===7 && (
+              <div className="section">
+                <div className="muted bigger">Tap the correct cell in the table to place the value.</div>
+              </div>
+            )}
+            {/* RIGHT-PANEL: STEP 7 – END */}
+
+            {/* RIGHT-PANEL: STEP 8 – START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
                 {[
                   { id:'op_x', label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers' },
-                  { id:'op_sub', label:'Subtract the numbers' },
-                  { id:'op_avg', label:'Average the numbers' },
+                  { id:'op_add', label:'Add the numbers', good:false },
+                  { id:'op_sub', label:'Subtract the numbers', good:false },
+                  { id:'op_avg', label:'Average the numbers', good:false },
                 ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}>{o.label}</button>
+                  <button 
+                    key={o.id} 
+                    className="chip" 
+                    onClick={() => { 
+                      if (o.good) {
+                        setDone(8);
+                        next();
+                      } else {
+                        miss(8);
+                      }
+                    }}
+                  >
+                    {o.label}
+                  </button>
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 8 – END */}
 
+            {/* RIGHT-PANEL: STEP 9 – START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+                  <button 
+                    key={idx} 
+                    className="chip" 
+                    onClick={() => { 
+                      chooseMultiply(p); 
+                      setTripleUL(null); 
+                    }}
+                  >
+                    {p.label}
+                  </button>
                 ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 9 – END */}
 
+            {/* RIGHT-PANEL: STEP 10 – START */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sTop))}>
-                  Divide by {table.sTop ?? '—'}
-                </button>
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sBottom))}>
-                  Divide by {table.sBottom ?? '—'}
-                </button>
+                {divideChoices.map((choice, idx) => (
+                  <button 
+                    key={idx} 
+                    className="chip" 
+                    onClick={() => {
+                      chooseDivideByNumber(choice);
+                    }}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 10 – END */}
 
+            {/* RIGHT-PANEL: STEP 11 – START */}
             {step>=11 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
             )}
+            {/* RIGHT-PANEL: STEP 11 – END */}
           </div>
 
-          {/* H‑table visible AFTER step 0 is correct */}
+          {/* H-table visible AFTER step 0 */}
           {step>=1 && (
             <div className="hwrap" style={{position:'relative', marginTop:12}}>
               <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                 {/* Headers */}
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot className={`${!table.head1 ? "empty" : ""}`}>
+                  <Slot accept={["header"]} className={`${!table.head1 ? "empty" : ""}`}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
                   </Slot>
                 </div>
                 <div className="hhead" style={{height:ROW_H}}>
-                  <Slot className={`${!table.head2 ? "empty" : ""}`}>
+                  <Slot accept={["header"]} className={`${!table.head2 ? "empty" : ""}`}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
@@ -884,16 +914,15 @@ export default function HTableModule(){
           )}
         </div>
 
-        {/* RIGHT SIDE becomes auxiliary (kept for layout parity) */}
+        {/* RIGHT SIDE */}
         <div className="card right-steps">
           <div className="section">
-            <div className="muted">Tap-only mode enabled. Follow the prompt on the left.</div>
+            <div className="muted">Follow the prompts on the left. Tap to interact.</div>
           </div>
         </div>
       </div>
 
-
-      {/* Confetti (OpSpec §UI) */}
+      {/* Confetti */}
       {confettiOn && (
         <div className="htable-confetti">
           {Array.from({length:120}).map((_,i)=>{
