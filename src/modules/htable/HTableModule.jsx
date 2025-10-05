@@ -36,7 +36,7 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
-const Slot = ({ accept, children, className='', onClick, validator, test, ...rest }) => {
+const Slot = ({ accept, children, className='', blinkWrap=false, onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
@@ -486,7 +486,7 @@ export default function HTableModule(){
   };
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'ptable-blink ptable-blink-hard blink-bg' : ''),
+    (isBlink(key) ? 'ptable-blink' : ''),
     (needWildBlink(key) ? 'ptable-blink-wild' : ''),
   ].filter(Boolean).join(' ');
 
@@ -560,7 +560,7 @@ export default function HTableModule(){
 
                   {/* Row 1 */}
                   <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
+                    <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
                       <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                     </Slot>
                   </div>
@@ -579,7 +579,7 @@ export default function HTableModule(){
 
                   {/* Row 2 */}
                   <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
+                    <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
                       <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                     </Slot>
                   </div>
