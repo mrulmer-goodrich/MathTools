@@ -105,23 +105,7 @@ const STEP_TITLES = [
   "What value goes here?",
   "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
-// STEP 8 data: conceptual next step (Cross multiply is correct)
-const next8Choices = [
-  { id: 'cm', label: 'Cross multiply', correct: true },
-  { id: 'add', label: 'Add all the numbers', correct: false },
-  { id: 'avg', label: 'Find the average', correct: false },
-  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
-];
-const chooseNext8 = (choice)=>{
-  if (choice?.correct) {
-    setDone?.(8, true);
-    typeof next === 'function' && next();
-  } else {
-    incMiss?.(8);
-  }
-};
-
-  "What do we do next?",
+"What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
   "Calculate",
@@ -410,7 +394,27 @@ export default function HTableModule(){
     }
   };
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
+  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); 
+
+// STEP 8 data: conceptual next step (Cross multiply is correct)
+const next8Choices = [
+  { id: 'cm', label: 'Cross Multiply', correct: true },
+  { id: 'add', label: 'Add all the numbers', correct: false },
+  { id: 'avg', label: 'Find the average', correct: false },
+  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
+];
+const chooseNext8 = (choice)=>{
+  if (choice?.correct) {
+    setDone?.(8, true);
+    typeof next === 'function' && next();
+  } else {
+    incMiss?.(8);
+  }
+};
+
+  
+
+return ()=>window.removeEventListener('resize', onResize); },[]);
 
   const [highlightKeys, setHighlightKeys] = useState([]);
   useLayoutEffect(()=>{
