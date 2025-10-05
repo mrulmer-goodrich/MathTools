@@ -768,6 +768,5 @@ export default function HTableModule(){
         />
       )}
     </div>
-{/* end .container */}
   );
 }
