@@ -716,8 +716,7 @@ const divideChoices = useMemo(()=>{
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {shuffle(STEP1_CHOICES).map(c => ()
-                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
+                {shuffle(STEP1_CHOICES).map(c => ( <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
             )}
