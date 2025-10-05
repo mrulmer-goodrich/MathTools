@@ -728,15 +728,20 @@ const handleUnitChipClick = (chip) => {
             )}
 
             
+
 {step===6 && (
   <div className="chips with-borders center mt-8">
     {otherValueChoices.map(c => (
       <button
         key={c.id}
         className="chip"
-        onClick={() => chooseOtherValue(c
-
-
+        onClick={() => { chooseOtherValue(c); }}
+      >
+        {c.label}
+      </button>
+    ))}
+  </div>
+)}
 {step===8 && (
   <div className="chips with-borders center mt-8">
     {[
