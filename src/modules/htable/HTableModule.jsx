@@ -18,7 +18,7 @@ const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
+  return <DraggableBase data={merged} onClick={handleClick} draggable={false} onDragStart={(e)=>e.preventDefault()} role="button" tabIndex={0} {...rest} />;
 };
 
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
