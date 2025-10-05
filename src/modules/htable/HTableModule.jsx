@@ -767,6 +767,7 @@ export default function HTableModule(){
           onNewProblem={()=>resetProblem()}
         />
       )}
-    </div> {/* end .container */}
+    </div>
+{/* end .container */}
   );
 }
