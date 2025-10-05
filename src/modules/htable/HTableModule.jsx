@@ -556,16 +556,6 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 };
-      if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
-      return t;
-    });
-    setMathStrip(s=>({ ...s, showResult: true }));
-    setDone(11);
-    setOpenSum(true);
-    setConfettiOn(true);
-    setTimeout(()=>setConfettiOn(false), 3500);
-  };
-
   const resetProblem = ()=>{
     setProblem(genSaneHProblem());
     setTable({
