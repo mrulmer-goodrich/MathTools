@@ -253,6 +253,7 @@ export default function HTableModule(){
     while(picks.length<2 && pool.length){
       const candidate = pool[Math.floor(Math.random()*pool.length)];
       if (!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
+    }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
