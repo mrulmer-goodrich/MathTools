@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.5 (replaces 9.7.4)
+// HTableModule — UG Math Tools v9.7.6 (replaces 9.7.5)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -73,7 +73,7 @@ const STEP_TITLES = [
   "What value goes here?",
   "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
-  "What do we do now?",
+  "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
   "Calculate",
@@ -741,7 +741,7 @@ export default function HTableModule(){
 
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="problem-body">What do we do now?</div>
+              <div className="problem-body">What do we do next?</div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
