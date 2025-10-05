@@ -1,9 +1,11 @@
-// HTableModule — UG Math Tools v9.7.6 (replaces 9.7.5)
+// HTableModule — UG Math Tools v9.7.7 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
+  const handleStep0Choice = (c) => { try { setStep(1); } catch(e) { console && console.error('[SpecOp Guard][step0]', e); } };
+
 
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
@@ -663,7 +665,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
+                {STEP1_CHOICES.slice(0,4).map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
