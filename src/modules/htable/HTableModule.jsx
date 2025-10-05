@@ -1,8 +1,8 @@
 // src/modules/htable/HTableModule.jsx
-// Build: v9.6.0-compliant
+// Build: v9.6.0-compliant (CORRECTED)
 // -----------------------------------------------------------------------------
 // OpSpec v9.6.0 compliant implementation with tap-only interaction.
-// All 11 blockers from audit fixed.
+// CORRECTION: Restored full problem display logic (Scale/Given/Unknown metadata)
 // -----------------------------------------------------------------------------
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
@@ -137,7 +137,7 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // =============================================================================
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 19; // bumped for v9.6.0 compliance
+  const H_SNAP_VERSION = 19;
 
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
@@ -293,7 +293,7 @@ export default function HTableModule(){
     if (!choice?.correct){ miss(6); return; }
     setPickedOther(choice);
     setDone(6);
-    next(); // OpSpec §7.15: use next() not setStep()
+    next();
   };
 
   const tapPlaceValueTop = () => {
@@ -420,32 +420,28 @@ export default function HTableModule(){
     };
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
-  // OpSpec §7.21: Need 4 total options (1 correct + 3 wrong)
   const wrongPairs = useMemo(()=>{
     const list = [];
     const v = (givenRow==='top') ? table.vTop : table.vBottom;
     const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
     
-    // Wrong pair 1: same-row multiply
     if (v!=null && sSame!=null) list.push({
       a:v, b:sSame, label:`${v} × ${sSame}`,
       keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom']
     });
     
-    // Wrong pair 2: scale × scale
     if (table.sTop!=null && table.sBottom!=null) list.push({
       a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`,
       keys:['sTop','sBottom']
     });
     
-    // Wrong pair 3: opposite value × same scale (if exists)
     const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
     if (vOpp!=null && sSame!=null) list.push({
       a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`,
       keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom']
     });
     
-    return shuffle(list).slice(0, 3); // Ensure exactly 3 wrong options
+    return shuffle(list).slice(0, 3);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -459,7 +455,6 @@ export default function HTableModule(){
     setDone(9); next();
   };
 
-  // OpSpec §7.22: Need 4 options for Step 10
   const divideChoices = useMemo(()=>{
     if (table.sTop==null || table.sBottom==null) return [];
     
@@ -591,7 +586,7 @@ export default function HTableModule(){
         setTimeout(()=>{
           setBlinkUnits(false);
           setDone(3); next();
-        }, 2000); // OpSpec §6: 2s blink
+        }, 2000);
       }
 
       return nextSel;
@@ -637,7 +632,6 @@ export default function HTableModule(){
         @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
         .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
         
-        /* OpSpec §6: highlight class for multiplied cells */
         .hl { background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6 !important; border-radius: 8px; }
 
         @keyframes confettiFall {
@@ -657,14 +651,29 @@ export default function HTableModule(){
       <div className="panes">
         <div className="card">
           <div className="section">
+            {/* RESTORED: Full problem display with metadata */}
             <div className="problem-banner">
               <div className="problem-title">Problem</div>
               <div className="problem-body">
                 {(() => {
                   const en = (problem && problem.text && (typeof problem.text.english === 'string')) ? problem.text.english : null;
+                  const sTop = problem?.scale?.[0];
+                  const sBot = problem?.scale?.[1];
+                  const topU = problem?.units?.[0];
+                  const botU = problem?.units?.[1];
+                  const givenVal = problem?.given?.value;
+                  const givenU = (problem?.given?.row === 'top' ? topU : botU);
+                  const targetU = (problem?.given?.row === 'top' ? botU : topU);
+                  
                   return (
                     <div>
                       <div style={{whiteSpace:'pre-wrap'}}>{en || ''}</div>
+                      <div><strong>Scale:</strong></div>
+                      <div>{String(sTop)} {topU} ⇄ {String(sBot)} {botU}</div>
+                      <div><strong>Given:</strong></div>
+                      <div>{String(givenVal)} {givenU}</div>
+                      <div><strong>Unknown:</strong></div>
+                      <div>(?) {targetU}</div>
                     </div>
                   );
                 })()}
