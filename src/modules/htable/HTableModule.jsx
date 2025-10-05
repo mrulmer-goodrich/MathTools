@@ -1,7 +1,7 @@
 // HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
-//Ulmer-Goodrich Productions
+//Ulmer-Goodrich Productions!
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
