@@ -1,5 +1,4 @@
 // src/modules/htable/HTableModule.jsx
-// OpSpec v9.6.2 – Tap-only, prompts on RIGHT, problem+H-table on LEFT
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
@@ -13,7 +12,7 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 // ────────────────────────────────────────────────────────────────────────────────
-// TAP-ONLY WRAPPERS  (OpSpec §2, §8)
+// TAP-ONLY WRAPPERS
 // ────────────────────────────────────────────────────────────────────────────────
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
@@ -35,7 +34,7 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
-// blinkWrap default prevents No-Undef (QA #12)
+// blinkWrap default prevents No-Undef
 const Slot = ({ accept, children, className='', blinkWrap=false, onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
   const testFn = test ?? ((d) => {
@@ -58,19 +57,19 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Spec scaffolding & helpers (OpSpec §4–§6)
+// Spec scaffolding & helpers
 // ────────────────────────────────────────────────────────────────────────────────
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
-  "What goes in the first column?",
-  "What goes in the next column?",
+  "What always goes in the first column?",
+  "What always goes in the second column?",
   "What are the two units in the problem? (tap two)",
-  "What value goes here? (top row scale)",
-  "What value goes here? (bottom row scale)",
-  "What's the other value from the problem? (4 options)",
+  "What value goes here?",
+  "What value goes here?",
+  "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
   "What do we do now?",
-  "Which numbers are we multiplying?",
+  "Pick the two numbers we multiply",
   "What do we do next?",
   "Calculate",
 ];
@@ -117,7 +116,7 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
 export default function HTableModule(){
-  const H_SNAP_VERSION = 21;
+  const H_SNAP_VERSION = 22;
 
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
@@ -141,15 +140,8 @@ export default function HTableModule(){
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
 
-  // OpSpec §3 – 2s blink
+  // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
-  const flashCell = (key, nextStepIdx=null, delay=2000) => {
-    setBlinkKey(key);
-    setTimeout(()=>{
-      setBlinkKey(null);
-      if (nextStepIdx!==null){ setDone(nextStepIdx); next(); }
-    }, delay);
-  };
   const [blinkUnits, setBlinkUnits] = useState(false);
 
   // Persist
@@ -168,6 +160,14 @@ export default function HTableModule(){
   const givenUnitLabel = (problem?.given?.row === 'top' ? problem?.units?.[0] : problem?.units?.[1]) || '';
   const toLower = (s)=> (s||'').toLowerCase();
 
+  const allProblemNumbers = useMemo(()=>{
+    const all = new Set();
+    if (problem?.scale?.[0] != null) all.add(Number(problem.scale[0]));
+    if (problem?.scale?.[1] != null) all.add(Number(problem.scale[1]));
+    if (problem?.given?.value != null) all.add(Number(problem.given.value));
+    return Array.from(all);
+  },[problem?.id]);
+
   const expectedScaleForRowUnit = (rowUnitLabel) => {
     const u = toLower(rowUnitLabel);
     if (!u) return null;
@@ -181,10 +181,10 @@ export default function HTableModule(){
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
-  // Step 0: first action
+  // Step 0
   const handleStep0 = (choice) => {
     if (!choice?.correct) { miss(0); return; }
-    setDone(0); next(); // H-table becomes visible at step>=1
+    setDone(0); next();
   };
 
   // Step 1: first column must be Units
@@ -218,19 +218,20 @@ export default function HTableModule(){
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
 
+  // Include all problem numbers in choices (as requested), plus a few distractors
   const numbersTopScale = useMemo(()=>{
     const v = Number(problem?.scale?.[0]);
-    const set = new Set([v]);
+    const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<6 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
     return shuffle([...set]).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
-  },[problem?.id]);
+  },[problem?.id, allProblemNumbers]);
 
   const numbersBottomScale = useMemo(()=>{
     const v = Number(problem?.scale?.[1]);
-    const set = new Set([v]);
+    const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<6 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
     return shuffle([...set]).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
-  },[problem?.id]);
+  },[problem?.id, allProblemNumbers]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
   const tapUnit = (d)=>{
@@ -240,10 +241,17 @@ export default function HTableModule(){
       const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
       if (exists) return prev;
       const nextSel = [...prev, d];
+
+      // Immediate feedback on each correct selection (brief blink)
+      setBlinkUnits(true);
+      setTimeout(()=>setBlinkUnits(false), 800);
+
       if (nextSel.length===2){
         const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
         const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
         setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
+
+        // Full 2s blink once both are chosen
         setBlinkUnits(true);
         setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
@@ -270,21 +278,20 @@ export default function HTableModule(){
     });
   };
 
-  // Step 6/7 flow: other value from problem
+  // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
   const otherValueChoices = useMemo(()=>{
-    const correct = Number(problem?.given?.value);
-    const pool = new Set([correct]);
-    const sA = Number(problem?.scale?.[0]); const sB = Number(problem?.scale?.[1]);
+    const set = new Set(allProblemNumbers);
+    // add a couple distractors near the range
+    const base = Number(problem?.given?.value) || 3;
     let tries = 0;
-    while (pool.size < 4 && tries < 50){
-      const cand = Math.max(1, Math.round(correct + (Math.random()*6 - 3)));
-      if (cand!==sA && cand!==sB) pool.add(cand);
+    while (set.size < Math.max(3, allProblemNumbers.length + 2) && tries < 50){
+      set.add(Math.max(1, Math.round(base + (Math.random()*6 - 3))));
       tries++;
     }
-    const arr = Array.from(pool).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===correct }));
+    const arr = Array.from(set).map((v,i)=>({ id:'ov'+i, value:v, label:String(v), correct: v===Number(problem?.given?.value) }));
     return shuffle(arr);
-  },[problem?.id]);
+  },[problem?.id, allProblemNumbers]);
 
   const chooseOtherValue = (choice) => {
     if (step!==6) return;
@@ -299,14 +306,16 @@ export default function HTableModule(){
     const ok = pickedOther && rowIsGivenUnit(table.uTop);
     if (!ok){ miss(7); return; }
     setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-    flashCell('vTop', 7);
+    // No pre/post blink here per request; go straight ahead
+    setDone(7); next();
   };
   const tapPlaceValueBottom = () => {
     if (step!==7) return;
     const ok = pickedOther && rowIsGivenUnit(table.uBottom);
     if (!ok){ miss(7); return; }
     setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-    flashCell('vBottom', 7);
+    // No pre/post blink here per request; go straight ahead
+    setDone(7); next();
   };
 
   // Geometry for overlays
@@ -371,6 +380,7 @@ export default function HTableModule(){
 
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
 
+  // Options for step 9 tile selection (explicit tiles like "17 × 6")
   const crossPair = useMemo(()=>{
     if(!givenRow || table.sTop==null || table.sBottom==null) return null;
     const v = (givenRow==='top') ? table.vTop : table.vBottom;
@@ -387,10 +397,9 @@ export default function HTableModule(){
     if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
     const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
-    while (list.length < 3 && table.sTop!=null && table.sBottom!=null){
-      list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
-    }
-    return shuffle(list).slice(0,3);
+    // ensure a "random multiple combo"
+    if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
+    return shuffle(list).slice(0,4);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -478,22 +487,19 @@ export default function HTableModule(){
   const needWildBlink = (key)=> {
     if (step===4 && key==='sTop'    && table.sTop==null) return true;
     if (step===5 && key==='sBottom' && table.sBottom==null) return true;
-    if (step===7) {
-      if (rowIsGivenUnit(table.uTop)    && key==='vTop'    && table.vTop==null) return true;
-      if (rowIsGivenUnit(table.uBottom) && key==='vBottom' && table.vBottom==null) return true;
-    }
+    // DO NOT pre-blink target cells on step 7 (user should choose without hints)
+    // if (step===7) { ... }  // removed per request
     if (step===9 && Array.isArray(highlightKeys) && highlightKeys.includes(key)) return true;
     return false;
   };
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
     (isBlink(key) ? 'ptable-blink' : ''),
-    // Spec class mapping: use hard+bg instead of legacy 'wild'
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
   // ──────────────────────────────────────────────────────────────────────────────
-  // UI  (OpSpec §6: gating) + RIGHT PANEL
+  // UI + RIGHT PANEL
   // ──────────────────────────────────────────────────────────────────────────────
   return (
     <div className="container" style={{position:'relative'}}>
@@ -514,6 +520,9 @@ export default function HTableModule(){
           min-height: ${ROW_H}px !important;
           height: ${ROW_H}px !important;
         }
+
+        .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
+        .button.secondary { background: #e2e8f0; color: #0f172a; }
       `}</style>
 
       <div className="panes">
@@ -562,7 +571,7 @@ export default function HTableModule(){
                     </Slot>
                   </div>
                   <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('vTop') || highlightKeys.includes('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+                    <Slot blinkWrap={highlightKeys.includes('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
                       <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
                     </Slot>
                   </div>
@@ -581,7 +590,7 @@ export default function HTableModule(){
                     </Slot>
                   </div>
                   <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('vBottom') || highlightKeys.includes('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+                    <Slot blinkWrap={highlightKeys.includes('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
                       <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
                     </Slot>
                   </div>
@@ -615,8 +624,8 @@ export default function HTableModule(){
               </div>
             )}
 
-          </div>{/* end .section (LEFT) */}
-        </div>{/* end LEFT .card */}
+          </div>
+        </div>
 
         {/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
@@ -675,8 +684,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 4 — START */}
             {step===4 && (
               <div className="chips center mt-8">
-                {(numbersTopScale?.length ? numbersTopScale : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n})))
-                  .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
+                {numbersTopScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 4 — END */}
@@ -684,8 +692,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 5 — START */}
             {step===5 && (
               <div className="chips center mt-8">
-                {(numbersBottomScale?.length ? numbersBottomScale : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n})))
-                  .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
+                {numbersBottomScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 5 — END */}
@@ -700,22 +707,20 @@ export default function HTableModule(){
             )}
             {/* RIGHT-PANEL: STEP 6 — END */}
 
-            {/* RIGHT-PANEL: STEP 7 — START (no prompt UI; tap a cell on left) */}
-            {step===7 && (<div className="section" />)}
+            {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
+            {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
             {/* RIGHT-PANEL: STEP 7 — END */}
 
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="chips with-borders center mt-8">
-                <div className="problem-body">Tap the two numbers we multiply.</div>
-              </div>
+              <div className="problem-body">What do we do now?</div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).sort(()=>Math.random()-0.5).map((pair,idx)=>(
+                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
                 ))}
               </div>
@@ -740,6 +745,10 @@ export default function HTableModule(){
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
 
+            {/* Sticky footer controls */}
+            <div className="right-footer">
+              <button className="button secondary" onClick={resetProblem}>New Problem</button>
+            </div>
           </div>
         </div>
       </div>
