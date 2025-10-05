@@ -1,9 +1,7 @@
+
 // src/modules/htable/HTableModule.jsx
-// Build: v9.6.0-compliant (CORRECTED)
-// -----------------------------------------------------------------------------
-// OpSpec v9.6.0 compliant implementation with tap-only interaction.
-// CORRECTION: Restored full problem display logic (Scale/Given/Unknown metadata)
-// -----------------------------------------------------------------------------
+// Build: v9.6.1-compliant (TAP-ONLY; SURGICAL; UI-PRESERVED)
+/* eslint-disable react/no-unknown-property */
 
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
@@ -15,7 +13,7 @@ import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 // =============================================================================
-//  Tap-Only Chip Wrapper (OpSpec §3)
+//  Tap-Only Wrappers (OpSpec §3, §7.4)
 // =============================================================================
 
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
@@ -38,21 +36,14 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
-// =============================================================================
-//  Slot Wrapper (OpSpec §3 + §7.4: includes accept handling)
-// =============================================================================
-
 const Slot = ({ accept, children, className='', onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
-  
-  // OpSpec §7.4: Header slots must validate 'header' in accept array
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
-  
   return (
     <div
       className={`slot-wrap ${className}`}
@@ -137,7 +128,7 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // =============================================================================
 
 export default function HTableModule(){
-  const H_SNAP_VERSION = 19;
+  const H_SNAP_VERSION = 20;
 
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
@@ -441,6 +432,9 @@ export default function HTableModule(){
       keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom']
     });
     
+    while (list.length < 3 && table.sTop!=null && table.sBottom!=null){
+      list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
+    }
     return shuffle(list).slice(0, 3);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
@@ -457,10 +451,8 @@ export default function HTableModule(){
 
   const divideChoices = useMemo(()=>{
     if (table.sTop==null || table.sBottom==null) return [];
-    
     const correctScale = (givenRow==='top') ? table.sBottom : table.sTop;
     const wrongScale = (givenRow==='top') ? table.sTop : table.sBottom;
-    
     return shuffle([
       { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
       { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
@@ -471,26 +463,17 @@ export default function HTableModule(){
 
   const chooseDivideByNumber = (choice)=>{
     if (!choice.correct) { miss(10); return; }
-    
     const div = Number(choice.value);
     if (table.product==null || !Number.isFinite(div) || div===0) { miss(10); return; }
-    
     const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null);
-
     const g = gridRef.current;
     if (g && key){
       const gr = g.getBoundingClientRect();
       const r = refs[key].current?.getBoundingClientRect();
       if (r){
-        setTripleUL({
-          key,
-          left: r.left - gr.left + 8,
-          top: r.bottom - gr.top - 18,
-          width: Math.max(24, r.width - 16)
-        });
+        setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) });
       }
     }
-
     const result = table.product / div;
     setTable(t=>({ ...t, divisor: div, result }));
     setMathStrip(s=>({ ...s, divisor: div, result }));
@@ -541,7 +524,6 @@ export default function HTableModule(){
     }
   };
 
-  // Tap handlers
   const tapHeader1 = (d)=>{
     if (d?.v==='Units'){
       setTable(t=>({...t, head1:'Units'}));
@@ -550,7 +532,6 @@ export default function HTableModule(){
       miss(1);
     }
   };
-
   const tapHeader2 = (d)=>{
     if (d?.v==='ScaleNumbers'){
       setTable(t=>({...t, head2:'Scale Numbers'}));
@@ -561,34 +542,20 @@ export default function HTableModule(){
   };
 
   const [pickedUnits, setPickedUnits] = useState([]);
-
   const tapUnit = (d)=>{
     const label = d?.label ?? d?.u ?? '';
     if (!isCanonicalUnit(label)) { miss(3); return; }
-
     setPickedUnits(prev=>{
       const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
       if (exists) return prev;
-
       const nextSel = [...prev, d];
-
       if (nextSel.length===2){
         const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
         const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
-
-        setTable(t=>({
-          ...t,
-          uTop:    (topObj?.label||topObj?.u||''),
-          uBottom: (botObj?.label||botObj?.u||'')
-        }));
-
+        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
         setBlinkUnits(true);
-        setTimeout(()=>{
-          setBlinkUnits(false);
-          setDone(3); next();
-        }, 2000);
+        setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
-
       return nextSel;
     });
   };
@@ -597,28 +564,23 @@ export default function HTableModule(){
     setTable(t=>{
       const expected = expectedScaleForRowUnit(t.uTop);
       if (expected == null || Number(d?.value) !== Number(expected)) { miss(4); return t; }
-
       const t2 = { ...t, sTop: Number(d.value) };
       if (t2.sBottom!=null){ setDone(4); setDone(5); next(); } else { setDone(4); next(); }
       return t2;
     });
   };
-
   const tapScaleBottom = (d)=>{
     setTable(t=>{
       const expected = expectedScaleForRowUnit(t.uBottom);
       if (expected == null || Number(d?.value) !== Number(expected)) { miss(5); return t; }
-
       const t2 = { ...t, sBottom: Number(d.value) };
       if (t2.sTop!=null){ setDone(4); setDone(5); next(); } else { setDone(5); next(); }
       return t2;
     });
   };
 
-  // UI
   const ROW_H = 88;
   const lineColor = '#0f172a';
-
   const isBlink = (k)=> blinkKey === k;
   const cellCls = (key)=> `${highlightKeys.includes(key) ? 'hl' : ''} ${isBlink(key) ? 'ptable-blink' : ''}`;
 
@@ -628,16 +590,13 @@ export default function HTableModule(){
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: 14px; color: #0f172a; }
-    
+
         @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
-        .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
-        
+        .ptable-blink { animation: ptable-blink-kf 2s linear 0s 1; }
+
         .hl { background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6 !important; border-radius: 8px; }
 
-        @keyframes confettiFall {
-          0%   { transform: translateY(-120vh) rotate(0deg);   opacity: 1; }
-          100% { transform: translateY(120vh) rotate(720deg);  opacity: 1; }
-        }
+        @keyframes confettiFall { 0% { transform: translateY(-120vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(120vh) rotate(720deg); opacity: 1; } }
         .htable-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2147483647; }
         .htable-confetti .piece { position: absolute; width: 10px; height: 14px; opacity: 0.9; animation: confettiFall linear infinite; border-radius: 2px; }
 
@@ -647,16 +606,15 @@ export default function HTableModule(){
         }
       `}</style>
 
-      
       <div className="panes">
         <div className="card">
           <div className="section">
-            {/* RESTORED: Full problem display with metadata */}
+            {/* Problem */}
             <div className="problem-banner">
               <div className="problem-title">Problem</div>
               <div className="problem-body">
                 {(() => {
-                  const en = (problem && problem.text && (typeof problem.text.english === 'string')) ? problem.text.english : null;
+                  const en = problem?.text?.english ?? '';
                   const sTop = problem?.scale?.[0];
                   const sBot = problem?.scale?.[1];
                   const topU = problem?.units?.[0];
@@ -664,10 +622,9 @@ export default function HTableModule(){
                   const givenVal = problem?.given?.value;
                   const givenU = (problem?.given?.row === 'top' ? topU : botU);
                   const targetU = (problem?.given?.row === 'top' ? botU : topU);
-                  
                   return (
                     <div>
-                      <div style={{whiteSpace:'pre-wrap'}}>{en || ''}</div>
+                      <div style={{whiteSpace:'pre-wrap'}}>{en}</div>
                       <div><strong>Scale:</strong></div>
                       <div>{String(sTop)} {topU} ⇄ {String(sBot)} {botU}</div>
                       <div><strong>Given:</strong></div>
@@ -679,7 +636,7 @@ export default function HTableModule(){
                 })()}
               </div>
             </div>
-    
+
             <div className="step-title">{STEP_TITLES[step]}</div>
 
             {step===0 && (
@@ -740,15 +697,7 @@ export default function HTableModule(){
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
-                  <button 
-                    key={c.id} 
-                    className="chip" 
-                    onClick={() => { 
-                      chooseOtherValue(c); 
-                    }}
-                  >
-                    {c.label}
-                  </button>
+                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
             )}
@@ -771,20 +720,7 @@ export default function HTableModule(){
                   { id:'op_sub', label:'Subtract the numbers', good:false },
                   { id:'op_avg', label:'Average the numbers', good:false },
                 ].map(o => (
-                  <button 
-                    key={o.id} 
-                    className="chip" 
-                    onClick={() => { 
-                      if (o.good) {
-                        setDone(8);
-                        next();
-                      } else {
-                        miss(8);
-                      }
-                    }}
-                  >
-                    {o.label}
-                  </button>
+                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
                 ))}
               </div>
             )}
@@ -793,17 +729,8 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 9 – START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
-                  <button 
-                    key={idx} 
-                    className="chip" 
-                    onClick={() => { 
-                      chooseMultiply(p); 
-                      setTripleUL(null); 
-                    }}
-                  >
-                    {p.label}
-                  </button>
+                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
+                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
                 ))}
               </div>
             )}
@@ -813,15 +740,7 @@ export default function HTableModule(){
             {step===10 && (
               <div className="chips with-borders center mt-8">
                 {divideChoices.map((choice, idx) => (
-                  <button 
-                    key={idx} 
-                    className="chip" 
-                    onClick={() => {
-                      chooseDivideByNumber(choice);
-                    }}
-                  >
-                    {choice.label}
-                  </button>
+                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
                 ))}
               </div>
             )}
@@ -933,35 +852,27 @@ export default function HTableModule(){
 
       {/* Confetti */}
       {confettiOn && (
-        <div className="htable-confetti">
+        <div className="htable-confetti" aria-hidden="true">
           {Array.from({length:120}).map((_,i)=>{
             const left = Math.random()*100;
             const dur = 5 + Math.random()*4;
             const delay = Math.random()*2;
-            const bg = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4'][i%6];
-            return (
-              <div
-                key={i}
-                className="piece"
-                style={{
-                  left: `${left}%`,
-                  background: bg,
-                  animationDuration: `${dur}s`,
-                  animationDelay: `${delay}s`
-                }}
-              />
-            );
+            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
+            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
+            return <div key={i} className="piece" style={style} />;
           })}
         </div>
       )}
 
-      {/* Summary overlay */}
+      {/* Summary */}
       {openSum && (
         <SummaryOverlay
-          open={openSum}
+          isOpen={openSum}
           onClose={()=>setOpenSum(false)}
-          table={table}
           problem={problem}
+          table={table}
+          mathStrip={mathStrip}
+          onNewProblem={()=>resetProblem()}
         />
       )}
     </div>
