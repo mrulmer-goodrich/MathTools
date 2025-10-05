@@ -656,29 +656,119 @@ export default function HTableModule(){
         }
       `}</style>
 
+      
       <div className="panes">
         <div className="card">
-          {/* Step 0 fence */}
-          {step===0 && (
-            <div className="section">
-              <div className="step-title">{STEP_TITLES[0]}</div>
+          {/* Step title and controls on LEFT per OpSpec visual layout */}
+          <div className="section">
+            <div className="step-title">{STEP_TITLES[step]}</div>
+
+            {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* H‑table visible AFTER step 0 is correct (OpSpec §9.1.1‑E) */}
+            {step===1 && (
+              <div className="chips with-borders center" style={{marginTop:8}}>
+                {headerChoicesCol1.map((h, idx) => (
+                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
+                ))}
+              </div>
+            )}
+
+            {step===2 && (
+              <div className="chips with-borders center" style={{marginTop:8}}>
+                {headerChoicesCol2.map((h, idx) => (
+                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
+                ))}
+              </div>
+            )}
+
+            {step===3 && (
+              <div className="chips center mt-8">
+                {unitChoices.map(c => (
+                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
+                ))}
+              </div>
+            )}
+
+            {step===4 && (
+              <div className="chips center mt-8">
+                {(numbersStep5 && numbersStep5.length
+                  ? numbersStep5
+                  : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))
+                ).map(c => (
+                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />
+                ))}
+              </div>
+            )}
+
+            {step===5 && (
+              <div className="chips center mt-8">
+                {(numbersStep6 && numbersStep6.length
+                  ? numbersStep6
+                  : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))
+                ).map(c => (
+                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />
+                ))}
+              </div>
+            )}
+
+            {step===6 && (
+              <div className="chips with-borders center mt-8">
+                {otherValueChoices.map(c => (
+                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
+                ))}
+              </div>
+            )}
+
+            {step===8 && (
+              <div className="chips with-borders center mt-8">
+                {[
+                  { id:'op_x', label:'Cross Multiply', good:true },
+                  { id:'op_add', label:'Add the numbers' },
+                  { id:'op_sub', label:'Subtract the numbers' },
+                  { id:'op_avg', label:'Average the numbers' },
+                ].map(o => (
+                  <button key={o.id} className="chip" onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}>{o.label}</button>
+                ))}
+              </div>
+            )}
+
+            {step===9 && (
+              <div className="chips with-borders center mt-8">
+                {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
+                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
+                ))}
+              </div>
+            )}
+
+            {step===10 && (
+              <div className="chips with-borders center mt-8">
+                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sTop))}>
+                  Divide by {table.sTop ?? '—'}
+                </button>
+                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sBottom))}>
+                  Divide by {table.sBottom ?? '—'}
+                </button>
+              </div>
+            )}
+
+            {step>=11 && (
+              <div className="toolbar mt-10 center">
+                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
+              </div>
+            )}
+          </div>
+
+          {/* H‑table visible AFTER step 0 is correct */}
           {step>=1 && (
             <div className="hwrap" style={{position:'relative', marginTop:12}}>
-              <div
-                ref={gridRef}
-                className="hgrid"
-                style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}
-              >
-                {/* Headers Row */}
+              <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+                {/* Headers */}
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot className={`${!table.head1 ? "empty" : ""}`}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -686,7 +776,6 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot className={`${!table.head2 ? "empty" : ""}`}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -694,10 +783,7 @@ export default function HTableModule(){
                     </div>
                   </Slot>
                 </div>
-
-                <div className="hhead" style={{height:ROW_H}}>
-                  {/* Intentionally blank third header cell per OpSpec grid */}
-                </div>
+                <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
 
                 {/* Row 1 */}
                 <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
@@ -705,20 +791,17 @@ export default function HTableModule(){
                     <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                   </Slot>
                 </div>
-
                 <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
                   <Slot className={`${table.sTop==null ? "empty" : ""}`}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                   </Slot>
                 </div>
-
                 <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
                   <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
                     <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
                   </Slot>
                 </div>
 
-                {/* Spacer between rows */}
                 <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
                 {/* Row 2 */}
@@ -727,43 +810,35 @@ export default function HTableModule(){
                     <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                   </Slot>
                 </div>
-
                 <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                   </Slot>
                 </div>
-
                 <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
                   <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
                     <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
                   </Slot>
                 </div>
 
-                {/* H Lines (visuals unchanged; OpSpec §UI) */}
+                {/* H lines */}
                 <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
                 <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
                 <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
 
-                {/* Multiply oval emphasis */}
+                {/* Red oval */}
                 {oval && (
                   <div
                     style={{
                       position:'absolute',
-                      left: oval.left,
-                      top: oval.top,
-                      width: oval.len,
-                      height: 62,
+                      left: oval.left, top: oval.top, width: oval.len, height: 62,
                       transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '5px solid #ef4444',
-                      borderRadius: 9999,
-                      pointerEvents:'none',
-                      boxShadow:'0 0 10px rgba(239,68,68,0.6)'
+                      border: '5px solid #ef4444', borderRadius: 9999,
+                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
                     }}
                   />
                 )}
-
-                {/* Triple underline for divisor emphasis */}
+                {/* Red triple underline */}
                 {tripleUL && (
                   <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
                     <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
@@ -776,165 +851,14 @@ export default function HTableModule(){
           )}
         </div>
 
-        {/* Right panel: step fences & choices */}
+        {/* RIGHT SIDE becomes auxiliary (kept for layout parity) */}
         <div className="card right-steps">
           <div className="section">
-            <div className="step-title">{STEP_TITLES[step]}</div>
-
-            {/* Step 1 — Header Units (tap only) */}
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol1.map((h, idx) => (
-                  <Draggable
-                    key={h.id ?? idx}
-                    id={h.id ?? idx}
-                    label={h.label}
-                    data={h}
-                    tapAction={(e,d)=>tapHeader1(d)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Step 2 — Header Scale Numbers (tap only) */}
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {headerChoicesCol2.map((h, idx) => (
-                  <Draggable
-                    key={h.id ?? idx}
-                    id={h.id ?? idx}
-                    label={h.label}
-                    data={h}
-                    tapAction={(e,d)=>tapHeader2(d)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Step 3 — Units (two taps) */}
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable
-                    key={c.id}
-                    id={c.id}
-                    label={c.label}
-                    data={c}
-                    tapAction={(e,d)=>tapUnit(d)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Step 4 — Top scale (tap only) */}
-            {step===4 && (
-              <div className="chips center mt-8">
-                {(numbersStep5 && numbersStep5.length
-                  ? numbersStep5
-                  : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable
-                    key={c.id}
-                    id={c.id}
-                    label={c.label}
-                    data={c}
-                    tapAction={(e,d)=>tapScaleTop(d)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Step 5 — Bottom scale (tap only) */}
-            {step===5 && (
-              <div className="chips center mt-8">
-                {(numbersStep6 && numbersStep6.length
-                  ? numbersStep6
-                  : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n}))
-                ).map(c => (
-                  <Draggable
-                    key={c.id}
-                    id={c.id}
-                    label={c.label}
-                    data={c}
-                    tapAction={(e,d)=>tapScaleBottom(d)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Step 6 — Other value choice (tap only) */}
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
-                  <button
-                    key={c.id}
-                    className="chip"
-                    onClick={() => { chooseOtherValue(c); }}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 8 — What do we do now? */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x',   label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers' },
-                  { id:'op_sub', label:'Subtract the numbers' },
-                  { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (
-                  <button
-                    key={o.id}
-                    className="chip"
-                    onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 9 — Which numbers are we multiplying? */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
-                  <button
-                    key={idx}
-                    className="chip"
-                    onClick={() => { chooseMultiply(p); setTripleUL(null); }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 10 — Divide by ... */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sTop))}>
-                  Divide by {table.sTop ?? '—'}
-                </button>
-                <button className="chip" onClick={() => chooseDivideByNumber(Number(table.sBottom))}>
-                  Divide by {table.sBottom ?? '—'}
-                </button>
-              </div>
-            )}
-
-            {/* Step 11 — Calculate */}
-            {step>=11 && (
-              <div className="toolbar mt-10 center">
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>
-                  Calculate
-                </button>
-              </div>
-            )}
+            <div className="muted">Tap-only mode enabled. Follow the prompt on the left.</div>
           </div>
         </div>
       </div>
+
 
       {/* Confetti (OpSpec §UI) */}
       {confettiOn && (
