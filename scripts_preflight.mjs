@@ -1,31 +1,45 @@
+
 /**
- * UG Math Tools — Preflight (No-Dep) v1.0
- * Purpose: Catch the class of errors that slipped past manual 63‑point QA:
- * - Duplicate function/const names (e.g., duplicated onCalculate)
- * - Unbalanced (), {}, [] (common after merge conflicts)
- * - Lone bracket/brace lines inside JSX that render literally
- * - Multi-choice steps must render exactly 4 options (heuristic checks)
- * - Basic banned patterns (console logs, todo notes in release)
+ * UG Math Tools — Preflight (Recursive) v1.1
+ * Blocks parser-class errors before build. Zero dependencies.
  *
- * Usage in CI: `node scripts_preflight.mjs`
+ * Scans: all .js/.jsx/.ts/.tsx files under repo root and /src (recursively),
+ * excluding node_modules, .git, .vercel, dist, build, coverage.
  */
 
 import fs from 'fs';
 import path from 'path';
 
+const EXCLUDE_DIRS = new Set(['node_modules', '.git', '.vercel', 'dist', 'build', 'coverage']);
+const EXT = new Set(['.js', '.jsx', '.ts', '.tsx']);
+
+function walk(dir, out){
+  for (const entry of fs.readdirSync(dir, {withFileTypes:true})){
+    if (entry.isDirectory()){
+      if (EXCLUDE_DIRS.has(entry.name)) continue;
+      walk(path.join(dir, entry.name), out);
+    } else {
+      const ext = path.extname(entry.name);
+      if (EXT.has(ext)) out.push(path.join(dir, entry.name));
+    }
+  }
+}
+
 const ROOT = process.cwd();
-const TARGETS = [
-  'HTableModule v10.0.3.jsx',
-  'HTableModule v10.0.2.jsx',
-  'HTableModule v10.0.1..jsx',
-  'generator.js',
-  'generator_v10.0.2.js'
-].filter(f => fs.existsSync(path.join(ROOT, f)));
+const files = [];
+walk(ROOT, files);
+
+if (!files.length){
+  console.log('No JS/TS files found to scan.');
+  process.exit(0);
+}
 
 const errors = [];
 const warn = [];
 
 function read(f){ return fs.readFileSync(f, 'utf8'); }
+
+function rel(p){ return path.relative(ROOT, p).replace(/\\/g,'/'); }
 
 function balanceCheck(source, fname){
   const stack = [];
@@ -53,7 +67,7 @@ function loneBracketLines(source, fname){
   for (let i=0;i<lines.length;i++){
     const L = lines[i].trim();
     if (L === ']' || L === '}'){
-      // Allow brackets that close a block, but warn if visually alone
+      // Heuristic warning: lone bracket lines can render literally in JSX
       warn.push(`${fname}:${i+1} lone bracket/brace line — may render literally in JSX`);
     }
   }
@@ -69,7 +83,6 @@ function duplicateNameCheck(source, fname){
   }
   for (const [k, v] of Object.entries(nameCounts)){
     if (v > 1){
-      // Skip benign duplicates from different scopes if needed later.
       if (k === 'onCalculate' || k === 'otherValueChoices'){
         errors.push(`${fname}: Duplicate declaration of ${k}`);
       }
@@ -78,8 +91,6 @@ function duplicateNameCheck(source, fname){
 }
 
 function fourChoiceHeuristic(source, fname){
-  // Look for useMemo otherValueChoices and ensure final array has length 4
-  // We can't evaluate, but we can check for a slice(0,4) or a fixed length path
   if (/\botherValueChoices\b/.test(source)){
     const hasSlice = /\.slice\s*\(\s*0\s*,\s*4\s*\)/.test(source);
     const hasGuard = /_assertFour\s*\(/.test(source);
@@ -93,19 +104,19 @@ function bannedPatterns(source, fname){
   if (/console\.log\(/.test(source)){
     warn.push(`${fname}: console.log present (remove for release)`);
   }
-  if (/TODO|FIXME/.test(source)){
+  if (/\b(?:TODO|FIXME)\b/.test(source)){
     warn.push(`${fname}: TODO/FIXME markers present`);
   }
 }
 
-for (const rel of TARGETS){
-  const f = path.join(ROOT, rel);
-  const src = read(f);
-  balanceCheck(src, rel);
-  loneBracketLines(src, rel);
-  duplicateNameCheck(src, rel);
-  fourChoiceHeuristic(src, rel);
-  bannedPatterns(src, rel);
+for (const abs of files){
+  const src = read(abs);
+  const fname = rel(abs);
+  balanceCheck(src, fname);
+  loneBracketLines(src, fname);
+  duplicateNameCheck(src, fname);
+  fourChoiceHeuristic(src, fname);
+  bannedPatterns(src, fname);
 }
 
 if (errors.length){
@@ -119,4 +130,4 @@ if (warn.length){
   for (const w of warn) console.warn(' -', w);
 }
 
-console.log('✅ Preflight passed (no blocking errors).');
+console.log('✅ Preflight passed (no blocking errors). Files scanned:', files.length);
