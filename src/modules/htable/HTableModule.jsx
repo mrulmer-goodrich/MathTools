@@ -543,7 +543,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head1 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol1}
-                    onDropContent={(d) => { if (d.v === 'Units') { setTable(t => ({ ...t, head1: 'Units' })); setDone(1); next(); } else { miss(1); } }})); setDone(1); next(); } else { miss(1); } }}>
+                    onDropContent={(d)=>{ if(d.v==='Units'){ setTable(t=>({...t, head1:'Units'})); setDone(1); next() } else miss(1) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head1 || ''}</span>
                     </div>
@@ -552,7 +552,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol2}
-                    onDropContent={(d) => { if (d.v === 'Units') { setTable(t => ({ ...t, head2: 'Units' })); setDone(2); next(); } else { miss(2); } }})); setDone(2); next(); } else { miss(2); } }}>
+                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(3); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
