@@ -1,9 +1,10 @@
 
 /**
- * UG Math Tools — Preflight (Recursive) v1.3
- * Template/Quote/Comment aware delimiter scanner to avoid false positives
- * in CSS-in-JSX (<style>{` ... `}</style>) and regular strings.
- * Zero dependencies.
+ * UG Math Tools — Preflight (Recursive) v1.4
+ * - FIX: Correct regex literals (no double backslashes) — prevents "Unterminated group"
+ * - Template/Quote/Comment aware delimiter scanner (avoids CSS-in-JSX false positives)
+ * - CI-blocking: exits 1 on errors
+ * - Zero dependencies (Node 20+)
  */
 
 import fs from 'fs';
@@ -64,7 +65,7 @@ function snippetAt(source, line, window=2){
  * Balance check that ignores characters inside:
  * - single/double quoted strings
  * - template literals (except inside ${ ... } expressions)
- * - line // and block /* * / comments
+ * - line // and block /* */ comments
  */
 function balanceCheck(source, fname){
   const stack = [];
@@ -91,16 +92,15 @@ function balanceCheck(source, fname){
     // handle string/template states
     if (inSingle){
       if (!escape && ch === "'"){ inSingle=false; }
-      escape = !escape && ch === '\\\\';
+      escape = !escape && ch === '\\';
       continue;
     }
     if (inDouble){
       if (!escape && ch === '"'){ inDouble=false; }
-      escape = !escape && ch === '\\\\';
+      escape = !escape && ch === '\\';
       continue;
     }
     if (inTemplate){
-      // Allow ${ ... } expressions where we DO track delimiters
       if (ch === '`'){ inTemplate=false; continue; }
       if (ch === '$' && source[i+1] === '{'){
         // enter expression — push a sentinel to track until closing }
@@ -108,7 +108,7 @@ function balanceCheck(source, fname){
         i++; // skip '{' consumption by normal logic on next loop
         continue;
       }
-      // otherwise ignore content inside template body
+      // ignore content inside template body
       continue;
     }
 
@@ -125,7 +125,6 @@ function balanceCheck(source, fname){
       continue;
     }
     if (pairs[ch]){
-      // special case: close template ${...} expression without consuming normal stack
       if (ch === '}' && stack.length && stack[stack.length-1][0] === 'TEMPLATE_EXPR'){
         stack.pop();
         continue;
@@ -139,7 +138,6 @@ function balanceCheck(source, fname){
       }
     }
   }
-  // drain remaining openers, but ignore dangling TEMPLATE_EXPR sentinels if any
   while (stack.length && stack[stack.length-1][0] === 'TEMPLATE_EXPR'){ stack.pop(); }
   if (stack.length){
     const [open,pos] = stack[stack.length-1];
@@ -149,20 +147,9 @@ function balanceCheck(source, fname){
   }
 }
 
-function loneBracketLines(source, fname){
-  const lines = source.split(/\r?\n/);
-  for (let i=0;i<lines.length;i++){
-    const L = lines[i].trim();
-    if (L === ']' || L === '}'){
-      // Heuristic only — do not error on CSS template bodies
-      // warn.push(`${fname}:${i+1} lone bracket/brace line — may render literally in JSX`);
-    }
-  }
-}
-
 function duplicateNameCheck(source, fname){
   const nameCounts = {};
-  const re = /\\b(const|let|function)\\s+([A-Za-z_$][\\w$]*)\\b/g;
+  const re = /\b(const|let|function)\s+([A-Za-z_$][\w$]*)\b/g;
   let m;
   while((m = re.exec(source))){
     const name = m[2];
@@ -178,9 +165,9 @@ function duplicateNameCheck(source, fname){
 }
 
 function fourChoiceHeuristic(source, fname){
-  if (/\\botherValueChoices\\b/.test(source)){
-    const hasSlice = /\\.slice\\s*\\(\\s*0\\s*,\\s*4\\s*\\)/.test(source);
-    const hasGuard = /_assertFour\\s*\\(/.test(source);
+  if (/\botherValueChoices\b/.test(source)){
+    const hasSlice = /\.slice\s*\(\s*0\s*,\s*4\s*\)/.test(source);
+    const hasGuard = /_assertFour\s*\(/.test(source);
     if (!hasSlice && !hasGuard){
       warn.push(`${fname}: otherValueChoices lacks explicit 4-choice enforcement (slice(0,4) or _assertFour())`);
     }
@@ -188,10 +175,10 @@ function fourChoiceHeuristic(source, fname){
 }
 
 function bannedPatterns(source, fname){
-  if (/console\\.log\\(/.test(source)){
+  if (/console\.log\(/.test(source)){
     warn.push(`${fname}: console.log present (remove for release)`);
   }
-  if (/\\b(?:TODO|FIXME)\\b/.test(source)){
+  if (/\b(?:TODO|FIXME)\b/.test(source)){
     warn.push(`${fname}: TODO/FIXME markers present`);
   }
 }
@@ -200,10 +187,30 @@ for (const abs of files){
   const src = read(abs);
   const fname = rel(abs);
   balanceCheck(src, fname);
-  loneBracketLines(src, fname);
   duplicateNameCheck(src, fname);
   fourChoiceHeuristic(src, fname);
   bannedPatterns(src, fname);
+}
+
+// Extra: vercel.json guard (single JSON object and preflight in buildCommand)
+const vercelPath = path.join(ROOT, 'vercel.json');
+if (fs.existsSync(vercelPath)){
+  try{
+    const raw = read(vercelPath).trim();
+    const json = JSON.parse(raw);
+    if (!json || typeof json !== 'object' || Array.isArray(json)){
+      errors.push('vercel.json: Must be a single JSON object.');
+    } else {
+      const bc = json.buildCommand || '';
+      if (!/node\s+scripts_preflight\.mjs\s*&&\s*/.test(bc)){
+        errors.push('vercel.json: buildCommand must start with "node scripts_preflight.mjs && " to gate Vercel builds.');
+      }
+    }
+  } catch(e){
+    errors.push('vercel.json: Invalid JSON — ensure it contains a single object.');
+  }
+} else {
+  warn.push('vercel.json not found — Vercel may build without preflight gating.');
 }
 
 if (errors.length){
