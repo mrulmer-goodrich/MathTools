@@ -1,11 +1,9 @@
-// HTableModule — UG Math Tools v9.7.7 (replaces 9.7.6)
+// HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
-  const handleStep0Choice = (c) => { try { setStep(1); } catch(e) { console && console.error('[SpecOp Guard][step0]', e); } };
-
 
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
@@ -15,6 +13,37 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 // Data
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
+
+// ---- Safe problem wrapper (SpecOp 9.7.x): reject equal scale numbers (e.g., 20 ↔ 20) ----
+function _violatesEqualScalePair(p) {
+  try {
+    // Interpret common shapes: p.scaleTop/Bottom OR p.sTop/sBottom OR p.headerNum/headerDen
+    const a = (p && (p.scaleTop ?? p.sTop ?? p.headerNum));
+    const b = (p && (p.scaleBottom ?? p.sBottom ?? p.headerDen));
+    return (typeof a === 'number' && typeof b === 'number' && a === b);
+  } catch(_) {
+    return false;
+  }
+}
+
+function genSafeProblem(rawGenFn, maxTries = 25) {
+  if (typeof rawGenFn !== 'function') return rawGenFn;
+  let last = null;
+  for (let i = 0; i < maxTries; i++) {
+    const cand = rawGenFn();
+    last = cand;
+    if (!_violatesEqualScalePair(cand)) return cand;
+  }
+  // Fallback: if generator kept producing equal pairs, nudge bottom by +1
+  if (last && (last.scaleBottom ?? last.sBottom ?? last.headerDen) !== undefined) {
+    if (last.scaleBottom !== undefined) last.scaleBottom += 1;
+    else if (last.sBottom !== undefined) last.sBottom += 1;
+    else if (last.headerDen !== undefined) last.headerDen += 1;
+  }
+  return last;
+}
+// ---- End wrapper ----
+
 
 // ────────────────────────────────────────────────────────────────────────────────
 // TAP-ONLY WRAPPERS
@@ -665,7 +694,7 @@ export default function HTableModule(){
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.slice(0,4).map(c => (
+                {STEP1_CHOICES.map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
