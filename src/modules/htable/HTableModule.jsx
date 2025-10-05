@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v9.7.6 (replaces 9.7.5)
+// HTableModule — UG Math Tools v9.7.7 (replaces 9.7.6)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -772,16 +772,16 @@ export default function HTableModule(){
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
             {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {/* RIGHT-PANEL: STEP 8 — START */
+            {{/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                <button className="chip" onClick={()=>{ if(step===8){ setDone(8); next(); } } }>Cross Multiply</button>
+                <button className="chip" onClick={()=>{ if (step===8) { setDone(8); next(); } }}>Cross Multiply</button>
                 <button className="chip" onClick={()=>{ miss(8); }}>Add</button>
                 <button className="chip" onClick={()=>{ miss(8); }}>Divide</button>
                 <button className="chip" onClick={()=>{ miss(8); }}>Just Guess</button>
               </div>
             )}
-/* RIGHT-PANEL: STEP 8 — END */}
+{/* RIGHT-PANEL: STEP 8 — END */}}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
