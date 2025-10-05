@@ -15,9 +15,22 @@ import { loadSession, saveSession } from '../../lib/localStorage.js'
 // === PTables tap-to-place shim (verbatim pattern) ===
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
-const Draggable = ({ payload, data, onClick, ...rest }) => {
+const Draggable = ({ payload, data, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
-  const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
+  const handleClick = (e) => {
+    if (typeof tapAction === 'function') { tapAction(e, merged); return; }
+    onClick?.(e);
+  };
+  return (
+    <DraggableBase
+      data={merged}
+      draggable={false}
+      onDragStart={(e)=>{ e.preventDefault(); return false; }}
+      onClick={handleClick}
+      {...rest}
+    />
+  );
+};
   return <DraggableBase data={merged} payload={merged} onClick={handleClick} draggable={true} role="button" tabIndex={0} {...rest} />;
 };
 
@@ -336,7 +349,7 @@ const handleUnitChipClick = (chip) => {
       // blink for ~2s then advance
       setTimeout(()=>{ setDone(3); next(); }, 2000);
     }
-    return nextSelSel;
+    return nextSel;
   });
 };
 // geometry
@@ -791,7 +804,7 @@ const handleUnitChipClick = (chip) => {
     </button>
   </div>
 )}
-{step>=11 && (
+{step>=1 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
