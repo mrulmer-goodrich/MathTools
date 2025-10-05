@@ -655,95 +655,96 @@ const numbersStep6 = useMemo(()=>{
               </div>
             </div>
 
-            /* H-table visible AFTER step 0 */}
-          {step>=1 && (
-            <div className="hwrap" style={{position:'relative', marginTop:12}}>
-              <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-                {/* Headers */}
-                <div className="hhead" style={{height:ROW_H}}>
-                  <Slot accept={["header"]} className={`${!table.head1 ? "empty" : ""}`}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                      <span className="hhead-text">{table.head1 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead" style={{height:ROW_H}}>
-                  <Slot accept={["header"]} className={`${!table.head2 ? "empty" : ""}`}>
-                    <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                      <span className="hhead-text">{table.head2 || ''}</span>
-                    </div>
-                  </Slot>
-                </div>
-                <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
+         {/* H-table visible AFTER step 0 */}
+{step>=1 && (
+  <div className="hwrap" style={{position:'relative', marginTop:12}}>
+    <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+      {/* Headers */}
+      <div className="hhead" style={{height:ROW_H}}>
+        <Slot accept={["header"]} className={`${!table.head1 ? "empty" : ""}`}>
+          <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+            <span className="hhead-text">{table.head1 || ''}</span>
+          </div>
+        </Slot>
+      </div>
+      <div className="hhead" style={{height:ROW_H}}>
+        <Slot accept={["header"]} className={`${!table.head2 ? "empty" : ""}`}>
+          <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+            <span className="hhead-text">{table.head2 || ''}</span>
+          </div>
+        </Slot>
+      </div>
+      <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
 
-                {/* Row 1 */}
-                <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                    <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.sTop==null ? "empty" : ""}`}>
-                    <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
-                    <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
-                  </Slot>
-                </div>
+      {/* Row 1 */}
+      <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
+          <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
+        </Slot>
+      </div>
+      <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${table.sTop==null ? "empty" : ""}`}>
+          <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
+        </Slot>
+      </div>
+      <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+          <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
+        </Slot>
+      </div>
 
-                <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
+      <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
-                {/* Row 2 */}
-                <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                    <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
-                    <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
-                  </Slot>
-                </div>
-                <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                  <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
-                    <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
-                  </Slot>
-                </div>
+      {/* Row 2 */}
+      <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
+          <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
+        </Slot>
+      </div>
+      <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
+          <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
+        </Slot>
+      </div>
+      <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
+        <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+          <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
+        </Slot>
+      </div>
 
-                {/* H lines */}
-                <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-                <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+      {/* H lines */}
+      <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
+      <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+      <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
 
-                {/* Red oval */}
-                {oval && (
-                  <div
-                    style={{
-                      position:'absolute',
-                      left: oval.left, top: oval.top, width: oval.len, height: 62,
-                      transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                      border: '5px solid #ef4444', borderRadius: 9999,
-                      pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                    }}
-                  />
-                )}
-                {/* Red triple underline */}
-                {tripleUL && (
-                  <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                    <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+      {/* Red oval */}
+      {oval && (
+        <div
+          style={{
+            position:'absolute',
+            left: oval.left, top: oval.top, width: oval.len, height: 62,
+            transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
+            border: '5px solid #ef4444', borderRadius: 9999,
+            pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
+          }}
+        />
+      )}
+      {/* Red triple underline */}
+      {tripleUL && (
+        <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
+          <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
+          <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+          <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
         </div>
+      )}
+    </div>
+  </div>
+)}
 
+</div>{/* end .section in LEFT card */}
+</div>{/* end LEFT .card */}
 
-          {/* RIGHT SIDE */}
+/* RIGHT SIDE */
 <div className="card right-steps">
   <div className="section">
     <div className="step-title">{STEP_TITLES[step]}</div>
@@ -865,34 +866,34 @@ const numbersStep6 = useMemo(()=>{
     )}
     {/* RIGHT-PANEL: STEP 11 – END */}
   </div>
-</div>
+</div>{/* end RIGHT .card */}
 
-          
-      {/* Confetti */}
-      {confettiOn && (
-        <div className="htable-confetti" aria-hidden="true">
-          {Array.from({length:120}).map((_,i)=>{
-            const left = Math.random()*100;
-            const dur = 5 + Math.random()*4;
-            const delay = Math.random()*2;
-            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
-            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
-            return <div key={i} className="piece" style={style} />;
-          })}
-        </div>
-      )}
+</div>{/* end .panes */}
 
-      {/* Summary */}
-      {openSum && (
-        <SummaryOverlay
-          isOpen={openSum}
-          onClose={()=>setOpenSum(false)}
-          problem={problem}
-          table={table}
-          mathStrip={mathStrip}
-          onNewProblem={()=>resetProblem()}
-        />
-      )}
-    </div>
-  );
-}
+{/* Confetti */}
+{confettiOn && (
+  <div className="htable-confetti" aria-hidden="true">
+    {Array.from({length:120}).map((_,i)=>{
+      const left = Math.random()*100;
+      const dur = 5 + Math.random()*4;
+      const delay = Math.random()*2;
+      const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
+      const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
+      return <div key={i} className="piece" style={style} />;
+    })}
+  </div>
+)}
+
+{/* Summary */}
+{openSum && (
+  <SummaryOverlay
+    isOpen={openSum}
+    onClose={()=>setOpenSum(false)}
+    problem={problem}
+    table={table}
+    mathStrip={mathStrip}
+    onNewProblem={()=>resetProblem()}
+  />
+)}
+
+</div> /* end .container */
