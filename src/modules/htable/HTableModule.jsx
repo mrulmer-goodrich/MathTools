@@ -639,6 +639,10 @@ export default function HTableModule(){
     <div className="container" style={{position:'relative'}}>
       {/* OpSpec §UI: animations / confetti */}
       <style>{`
+        .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
+        .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
+        .problem-body { font-size: 14px; color: #0f172a; }
+    
         @keyframes ptable-blink-kf { 0%, 49% { filter: none; } 50%, 100% { filter: brightness(1.35); } }
         .ptable-blink { animation: ptable-blink-kf 0.9s linear 0s 1; }
 
@@ -661,6 +665,37 @@ export default function HTableModule(){
         <div className="card">
           {/* Step title and controls on LEFT per OpSpec visual layout */}
           <div className="section">
+            {
+            {
+            {/* Problem banner (verbatim from generator.js) */}
+            <div className="problem-banner">
+              <div className="problem-title">Problem</div>
+              <div className="problem-body">
+                {(() => {
+                  const en = (problem && problem.text && (typeof problem.text.english === 'string')) ? problem.text.english : null;
+                  const alts = (problem && problem.text && problem.text.alts) ? problem.text.alts : null;
+                  return (
+                    <div>
+                      <div style={{whiteSpace:'pre-wrap'}}>{en || ''}</div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+
+                      <div><strong>Scale:</strong></div>
+                      <div>{String(sTop)} {topU} ⇄ {String(sBot)} {botU}</div>
+                      <div><strong>Given:</strong></div>
+                      <div>{String(givenVal)} {givenU}</div>
+                      <div><strong>Unknown:</strong></div>
+                      <div>(?) {targetU}</div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+    
             <div className="step-title">{STEP_TITLES[step]}</div>
 
             {step===0 && (
