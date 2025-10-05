@@ -1,3 +1,4 @@
+// HTableModule v9.8.5 — hotfix for stray backslash before .map
 // HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
 // HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
@@ -715,7 +716,7 @@ return ()=>window.removeEventListener('resize', onResize); },[]);
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {shuffle(_assertFour(STEP1_CHOICES,"Step0"))\.map(c => (
+                {shuffle(_assertFour(STEP1_CHOICES,"Step0")).map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
@@ -780,7 +781,7 @@ return ()=>window.removeEventListener('resize', onResize); },[]);
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(_assertFour(otherValueChoices,"Step0"))\.map(c => (
+                {shuffle(_assertFour(otherValueChoices,"Step0")).map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
