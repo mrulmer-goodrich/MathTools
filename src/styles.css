@@ -83,7 +83,7 @@ body{
 
 /* ---------- Buttons ---------- */
 .button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
-.button.primary{ background: var(--eastway-blue); color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(11,75,140,.25); }
+.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
 .button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
 .button.big-under{ margin-top:12px; }
 .button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
@@ -1154,3 +1154,15 @@ body{
 /* Problem text matches ptable font */
 .problem-body { font-size: inherit !important; line-height: inherit !important; color: inherit !important; }
 
+
+
+/* v10.0.2: stronger primary button */
+.button.primary {
+  background: #0b5bd3;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,.12), inset 0 -2px 0 rgba(0,0,0,.2);
+}
+.button.primary:hover { filter: brightness(1.05); }
+.button.primary:active { transform: translateY(1px); box-shadow: 0 4px 10px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.2); }
+/* Center text inside chips and cells more consistently */
+.chip, .slot-wrap { display: inline-flex; align-items: center; justify-content: center; }
