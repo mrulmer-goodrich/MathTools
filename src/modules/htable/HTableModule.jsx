@@ -10,7 +10,7 @@ const _assertFour = (arr, tag) => {
   return arr;
 };
 
-// HTableModule v9.8.6 — hotfix for stray backslash before .map
+// HTableModule v9.8.7 — hotfix for stray backslash before .map
 // HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
 // HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
@@ -40,13 +40,32 @@ function _violatesEqualScalePair(p) {
   }
 }
 
+function _violatesDuplicateProblemValues(p){
+  try {
+    const a = (p && (p.scaleTop ?? p.sTop ?? (Array.isArray(p.scale)?p.scale[0]:undefined) ?? p.headerNum));
+    const b = (p && (p.scaleBottom ?? p.sBottom ?? (Array.isArray(p.scale)?p.scale[1]:undefined) ?? p.headerDen));
+    const g = (p && (p.given && p.given.value));
+    const vals = [a,b,g].filter(v => typeof v === 'number' && !Number.isNaN(v));
+    if (vals.length < 2) return false;
+    const seen = new Set();
+    for (const v of vals){
+      if (seen.has(v)) return true;
+      seen.add(v);
+    }
+    return false;
+  } catch(_) {
+    return false;
+  }
+}
+
+
 function genSafeProblem(rawGenFn, maxTries = 25) {
   if (typeof rawGenFn !== 'function') return rawGenFn;
   let last = null;
   for (let i = 0; i < maxTries; i++) {
     const cand = rawGenFn();
     last = cand;
-    if (!_violatesEqualScalePair(cand)) return cand;
+    if (!_violatesEqualScalePair(cand) && !_violatesDuplicateProblemValues(cand)) return cand;
   }
   // Fallback: if generator kept producing equal pairs, nudge bottom by +1
   if (last && (last.scaleBottom ?? last.sBottom ?? last.headerDen) !== undefined) {
@@ -54,7 +73,16 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
     else if (last.sBottom !== undefined) last.sBottom += 1;
     else if (last.headerDen !== undefined) last.headerDen += 1;
   }
-  return last;
+  if (last) {
+  try {
+    const a = (last.scaleTop ?? last.sTop ?? (Array.isArray(last.scale)?last.scale[0]:undefined) ?? last.headerNum);
+    const b = (last.scaleBottom ?? last.sBottom ?? (Array.isArray(last.scale)?last.scale[1]:undefined) ?? last.headerDen);
+    if (last.given && typeof last.given.value === 'number' && (last.given.value === a || last.given.value === b)) {
+      last.given.value = last.given.value + 1;
+    }
+  } catch{}
+}
+return last;
 }
 // ---- End wrapper ----
 
@@ -806,7 +834,11 @@ return ()=>window.removeEventListener('resize', onResize); },[]);
 
             {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
-              <div className="problem-body">What do we do next?</div>
+              <div className="chips with-borders center mt-8">
+                {shuffle(_assertFour(next8Choices,"Step8")).map(opt => (
+                  <button key={opt.id} className="chip" onClick={()=>chooseNext8(opt)}>{opt.label}</button>
+                ))}
+              </div>
             )}
             {/* RIGHT-PANEL: STEP 8 — END */}
 
