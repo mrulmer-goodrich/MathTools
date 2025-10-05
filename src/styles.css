@@ -83,7 +83,7 @@ body{
 
 /* ---------- Buttons ---------- */
 .button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
-.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
+.button.primary{ background: var(--eastway-blue); color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(11,75,140,.25); }
 .button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
 .button.big-under{ margin-top:12px; }
 .button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
