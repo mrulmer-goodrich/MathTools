@@ -18,7 +18,7 @@ const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.
 const Draggable = ({ payload, data, onClick, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => { _pickStore.set(merged); onClick?.(e); };
-  return <DraggableBase data={merged} onClick={handleClick} draggable={true} onDragStart={undefined} role="button" tabIndex={0} {...rest} />;
+  return <DraggableBase data={merged} payload={merged} onClick={handleClick} draggable={true} role="button" tabIndex={0} {...rest} />;
 };
 
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
@@ -323,7 +323,7 @@ const isCanonicalUnit = (uLabel) => {
 };
 const handleUnitChipClick = (chip) => {
   if (step!==3) return; // only at Step 4
-  if (!chip || !isCanonicalUnit(chip.label)) { miss(2); return; }
+  if (!chip || !isCanonicalUnit(chip.label)) { miss(3); return; }
   setPickedUnits(prev => {
     const labels = new Set(prev.map(x => (x.label||'').toLowerCase()));
     const low = (chip.label||'').toLowerCase();
@@ -334,9 +334,9 @@ const handleUnitChipClick = (chip) => {
       const botObj = nextSel.find(x => (x.label||'').toLowerCase()===canonicalBottomUnit);
       setTable(t => ({ ...t, uTop: topObj?.label||'', uBottom: botObj?.label||'' }));
       // blink for ~2s then advance
-      setTimeout(()=>{ setDone(7); next(); }, 2000);
+      setTimeout(()=>{ setDone(3); next(); }, 2000);
     }
-    return nextSel;
+    return nextSelSel;
   });
 };
 // geometry
@@ -420,7 +420,7 @@ const handleUnitChipClick = (chip) => {
     const product = pair.a * pair.b
     setTable(t=>({ ...t, product }))
     setMathStrip(s=>({ ...s, a: pair.a, b: pair.b }))
-    setDone(10); next()
+    setDone(9); next()
   }
 
   const chooseDivideByNumber = (num)=>{
@@ -552,7 +552,7 @@ const handleUnitChipClick = (chip) => {
                 <div className="hhead" style={{height:ROW_H}}>
                   <Slot style={{height:ROW_H}} className={`${!table.head2 ? "empty" : ""}`}
                     accept={["header","col"]} test={acceptCol2}
-                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(2); next() } else miss(2) }}>
+                    onDropContent={(d)=>{ if(d.v==='ScaleNumbers'){ setTable(t=>({...t, head2:'Scale Numbers'})); setDone(2); next() } else miss(3) }}>
                     <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                       <span className="hhead-text">{table.head2 || ''}</span>
                     </div>
@@ -586,7 +586,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sTop: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(7); next(); }
+                      if (both) { setDone(4); setDone(5); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
@@ -598,7 +598,7 @@ const handleUnitChipClick = (chip) => {
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uTop);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                      if (!isRightRow || !isRightNumber) { miss( 7 ); return t; }
+                      if (!isRightRow || !isRightNumber) { miss(7); return t; }
                       const t2 = { ...t, vTop: Number(d.value) };
                       if (t2.vTop!=null && t2.vBottom==null) { setDone(7); next(); }
                       return t2;
@@ -635,7 +635,7 @@ const handleUnitChipClick = (chip) => {
                       }
                       const t2 = { ...t, sBottom: Number(d.value) };
                       const both = (t2.sTop!=null && t2.sBottom!=null);
-                      if (both) { setDone(7); next(); }
+                      if (both) { setDone(4); setDone(5); next(); }
                       return t2;
                     })}>
                     <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
@@ -647,7 +647,7 @@ const handleUnitChipClick = (chip) => {
                     onDropContent={(d)=>setTable(t=>{
                       const isRightRow = rowIsGivenUnit(t.uBottom);
                       const isRightNumber = Number(d.value) === Number(problem?.given?.value);
-                      if (!isRightRow || !isRightNumber) { miss( 7 ); return t; }
+                      if (!isRightRow || !isRightNumber) { miss(7); return t; }
                       const t2 = { ...t, vBottom: Number(d.value) };
                       if (t2.vBottom!=null && t2.vTop==null) { setDone(7); next(); }
                       return t2;
