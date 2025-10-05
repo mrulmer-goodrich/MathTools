@@ -1,10 +1,8 @@
 
 /**
- * UG Math Tools — Preflight (Recursive) v1.1
- * Blocks parser-class errors before build. Zero dependencies.
- *
- * Scans: all .js/.jsx/.ts/.tsx files under repo root and /src (recursively),
- * excluding node_modules, .git, .vercel, dist, build, coverage.
+ * UG Math Tools — Preflight (Recursive) v1.2
+ * Better errors: reports line:column and a 3-line code snippet around the problem.
+ * Zero dependencies.
  */
 
 import fs from 'fs';
@@ -38,8 +36,28 @@ const errors = [];
 const warn = [];
 
 function read(f){ return fs.readFileSync(f, 'utf8'); }
-
 function rel(p){ return path.relative(ROOT, p).replace(/\\/g,'/'); }
+
+function idxToLineCol(source, idx){
+  let line=1, col=1;
+  for (let i=0;i<idx && i<source.length;i++){
+    if (source[i] === '\n'){ line++; col=1; }
+    else col++;
+  }
+  return {line, col};
+}
+
+function snippetAt(source, line, window=2){
+  const lines = source.split(/\r?\n/);
+  const start = Math.max(1, line-window);
+  const end = Math.min(lines.length, line+window);
+  const parts = [];
+  for (let i=start;i<=end;i++){
+    const mark = i===line ? '>' : ' ';
+    parts.push(`${mark} ${String(i).padStart(5,' ')} | ${lines[i-1]}`);
+  }
+  return parts.join('\n');
+}
 
 function balanceCheck(source, fname){
   const stack = [];
@@ -51,14 +69,18 @@ function balanceCheck(source, fname){
     else if (pairs[ch]){
       const top = stack.pop();
       if (!top || top.ch !== pairs[ch]){
-        errors.push(`${fname}: Unbalanced delimiter at index ${i} (${ch})`);
+        const lc = idxToLineCol(source, i);
+        const snip = snippetAt(source, lc.line);
+        errors.push(`${fname}: Unbalanced delimiter at ${lc.line}:${lc.col} (“${ch}”) \n${snip}`);
         return;
       }
     }
   }
   if (stack.length){
     const top = stack[stack.length-1];
-    errors.push(`${fname}: Missing closing for ${top.ch} starting at index ${top.pos}`);
+    const lc = idxToLineCol(source, top.pos);
+    const snip = snippetAt(source, lc.line);
+    errors.push(`${fname}: Missing closing for “${top.ch}” opened at ${lc.line}:${lc.col}\n${snip}`);
   }
 }
 
@@ -67,7 +89,6 @@ function loneBracketLines(source, fname){
   for (let i=0;i<lines.length;i++){
     const L = lines[i].trim();
     if (L === ']' || L === '}'){
-      // Heuristic warning: lone bracket lines can render literally in JSX
       warn.push(`${fname}:${i+1} lone bracket/brace line — may render literally in JSX`);
     }
   }
