@@ -1,4 +1,4 @@
-// HTableModule — UG Math Tools v10.0.3 (replaces 10.0.2)
+// HTableModule — UG Math Tools v10.0.3 (replaces 10.0.2) 
 // SpecOp Sync: Fix onCalculate merge error; enforce 4-choice rule; equation strip; overlay stop; no random bracket; adhere to SpecOp 10.0.1
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
