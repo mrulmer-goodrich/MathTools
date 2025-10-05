@@ -1,3 +1,4 @@
+// HTableModule v9.8.8 — define next8Choices/chooseNext8 in safe scope; ensure Step 8 mapping
 
 
 /** Guard: enforce 4-choice render without crashing */
@@ -10,7 +11,7 @@ const _assertFour = (arr, tag) => {
   return arr;
 };
 
-// HTableModule v9.8.7 — hotfix for stray backslash before .map
+// \19.8.8 — hotfix for stray backslash before .map
 // HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
 // HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
@@ -437,24 +438,6 @@ export default function HTableModule(){
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); 
 
-// STEP 8 data: conceptual next step (Cross multiply is correct)
-const next8Choices = [
-  { id: 'cm', label: 'Cross Multiply', correct: true },
-  { id: 'add', label: 'Add all the numbers', correct: false },
-  { id: 'avg', label: 'Find the average', correct: false },
-  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
-];
-const chooseNext8 = (choice)=>{
-  if (choice?.correct) {
-    setDone?.(8, true);
-    typeof next === 'function' && next();
-  } else {
-    incMiss?.(8);
-  }
-};
-
-  
-
 return ()=>window.removeEventListener('resize', onResize); },[]);
 
   const [highlightKeys, setHighlightKeys] = useState([]);
@@ -466,7 +449,26 @@ return ()=>window.removeEventListener('resize', onResize); },[]);
       const r = refs[k].current?.getBoundingClientRect();
       if(!r) return null;
       return { x: (r.left + r.right)/2 - gr.left, y: (r.top + r.bottom)/2 - gr.top };
-    }).filter(Boolean);
+    }).fi
+
+
+// STEP 8 data: conceptual next step (Cross Multiply correct)
+const next8Choices = [
+  { id: 'cm', label: 'Cross Multiply', correct: true },
+  { id: 'add', label: 'Add all the numbers', correct: false },
+  { id: 'avg', label: 'Find the average', correct: false },
+  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
+];
+const chooseNext8 = (choice)=>{
+  if (choice && choice.correct) {
+    setDone?.(8, true);
+    typeof next === 'function' && next();
+  } else {
+    incMiss?.(8);
+  }
+};
+
+lter(Boolean);
     if(centers.length!==2){ setOval(null); return }
     const [a,b] = centers;
     const midX = (a.x + b.x)/2;
