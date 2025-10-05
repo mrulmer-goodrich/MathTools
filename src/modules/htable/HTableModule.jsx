@@ -727,80 +727,68 @@ const handleUnitChipClick = (chip) => {
               </div>
             )}
 
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>chooseOtherValue(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}}>{o.label}</button>
-                ))}
-              </div>
-            )}
+            
+{step===6 && (
+  <div className="chips with-borders center mt-8">
+    {otherValueChoices.map(c => (
+      <button
+        key={c.id}
+        className="chip"
+        onClick={() => chooseOtherValue(c
 
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).map((p,idx)=>(
-                  <button
-                    key={idx}
-                    className="chip"
-                    onClick={() => { chooseMultiply(p); setTripleUL(null); }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
-              </div>
-            )}
-              </div>
-            )}
 
-            {step>=11 && (
-              <div className="math-strip">
-                {!mathStrip.divisor ? (
-                  <div className="big">{(mathStrip.a!=null && mathStrip.b!=null) ? `${mathStrip.a} × ${mathStrip.b}` : ''}</div>
-                ) : (
-                  <div className="eqline">
-                    <div className="fraction">
-                      <div className="numerator">{`${mathStrip.a} × ${mathStrip.b}`}</div>
-                      <div className="bar"></div>
-                      <div className="denominator">{`${mathStrip.divisor}`}</div>
-                    </div>
-                    {mathStrip.showResult && (
-                      <div className="big">= {Math.round((mathStrip.result + Number.EPSILON) * 1000) / 1000}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+{step===8 && (
+  <div className="chips with-borders center mt-8">
+    {[
+      { id:'op_x', label:'Cross Multiply', good:true },
+      { id:'op_add', label:'Add the numbers' },
+      { id:'op_sub', label:'Subtract the numbers' },
+      { id:'op_avg', label:'Average the numbers' },
+    ].map(o => (
+      <button
+        key={o.id}
+        className="chip"
+        onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}
+      >
+        {o.label}
+      </button>
+    ))}
+  </div>
+)}
+{step===9 && (
+  <div className="chips with-borders center mt-8">
+    {[crossPair, ...wrongPairs].filter(Boolean).map((p, idx) => (
+      <button
+        key={idx}
+        className="chip"
+        onClick={() => { chooseMultiply(p); setTripleUL(null); }}
+      >
+        {p.label}
+      </button>
+    ))}
+  </div>
+)}
 
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x', label:'Cross Multiply', good:true },
-                  { id:'op_add', label:'Add the numbers' },
-                  { id:'op_sub', label:'Subtract the numbers' },
-                  { id:'op_avg', label:'Average the numbers' },
-                ].map(o => (
-                  <button
-                    key={o.id}
-                    className="chip"
-                    onClick={() => { o.good ? (setDone(8), next()) : miss(8); }}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            )}}>{o.label}</button>
-                ))}
-              </div>
-            )}>Divide by {table.sTop ?? '—'}</button>
-                <button className="chip" onClick={()=>chooseDivideByNumber(Number(table.sBottom))}>Divide by {table.sBottom ?? '—'}</button>
-              </div>
-            )}
+  </div>
+)}
 
-            {step>=11 && (
+{step===10 && (
+  <div className="chips with-borders center mt-8">
+    <button
+      className="chip"
+      onClick={() => chooseDivideByNumber(Number(table.sTop))}
+    >
+      Divide by {table.sTop ?? '—'}
+    </button>
+    <button
+      className="chip"
+      onClick={() => chooseDivideByNumber(Number(table.sBottom))}
+    >
+      Divide by {table.sBottom ?? '—'}
+    </button>
+  </div>
+)}
+{step>=11 && (
               <div className="toolbar mt-10 center">
                 <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
               </div>
