@@ -1,20 +1,19 @@
 // src/modules/htable/HTableModule.jsx
-// OpSpec v9.6.1 – Tap-only, prompts on RIGHT, problem+H-table on LEFT
-
+// OpSpec v9.6.2 – Tap-only, prompts on RIGHT, problem+H-table on LEFT
 /* eslint-disable react/no-unknown-property */
-import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-// Shared UI
+// Shared UI (read-only per OpSpec)
 import DraggableBase from '../../components/DraggableChip.jsx'
 import DropSlotBase from '../../components/DropSlot.jsx'
 import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 
-// Data
+// Data (read-only per OpSpec)
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Tap-only wrappers (OpSpec §3, §7.4)
+// Tap-only wrappers (OpSpec §1, §5)
 // ────────────────────────────────────────────────────────────────────────────────
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
@@ -36,7 +35,7 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
-const Slot = ({ accept, children, className='', onClick, validator, test, ...rest }) => {
+const Slot = ({ accept, children, className='', onClick, validator, test, onDropContent, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
@@ -44,13 +43,14 @@ const Slot = ({ accept, children, className='', onClick, validator, test, ...res
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
   });
+  const onDropContentFn = onDropContent ?? (()=>{});
   return (
     <div
       className={`slot-wrap ${className}`}
       onClick={handleClick}
       onDragOver={(e)=>e.preventDefault()}
     >
-      <DropSlotBase test={testFn} onDropContent={()=>{}} {...rest}>
+      <DropSlotBase test={testFn} onDropContent={onDropContentFn} {...rest}>
         {children}
       </DropSlotBase>
     </div>
@@ -117,7 +117,7 @@ const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
 export default function HTableModule(){
-  const H_SNAP_VERSION = 21;
+  const H_SNAP_VERSION = 22;
 
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
@@ -138,19 +138,14 @@ export default function HTableModule(){
   );
 
   const [openSum, setOpenSum] = useState(false);
-  const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
 
-  // OpSpec §6 – 2s blink
+  // Blink management (2s standard)
   const [blinkKey, setBlinkKey] = useState(null);
-  const flashCell = (key, nextStepIdx=null, delay=2000) => {
+  const flash = (key, onAfter=null, delay=2000) => {
     setBlinkKey(key);
-    setTimeout(()=>{
-      setBlinkKey(null);
-      if (nextStepIdx!==null){ setDone(nextStepIdx); next(); }
-    }, delay);
+    setTimeout(()=>{ setBlinkKey(null); if (typeof onAfter==='function') onAfter(); }, delay);
   };
-  const [blinkUnits, setBlinkUnits] = useState(false);
 
   // Persist
   useEffect(()=>{
@@ -163,10 +158,10 @@ export default function HTableModule(){
   const setDone = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].done=true; return c; });
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
 
-  const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
-  const canonicalBottomUnit = (problem?.units?.[1] || '').toLowerCase();
-  const givenUnitLabel = (problem?.given?.row === 'top' ? problem?.units?.[0] : problem?.units?.[1]) || '';
   const toLower = (s)=> (s||'').toLowerCase();
+  const canonicalTopUnit    = toLower(problem?.units?.[0] || '');
+  const canonicalBottomUnit = toLower(problem?.units?.[1] || '');
+  const givenUnitLabel = (problem?.given?.row === 'top' ? problem?.units?.[0] : problem?.units?.[1]) || '';
 
   const expectedScaleForRowUnit = (rowUnitLabel) => {
     const u = toLower(rowUnitLabel);
@@ -181,13 +176,13 @@ export default function HTableModule(){
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
-  // Step 0: first action
+  // Step 0
   const handleStep0 = (choice) => {
     if (!choice?.correct) { miss(0); return; }
-    setDone(0); next(); // H-table becomes visible at step>=1
+    setDone(0); next();
   };
 
-  // Step 1: first column must be Units
+  // Step 1
   const tapHeader1 = (d) => {
     if (step !== 1) return;
     if (d?.v !== 'Units'){ miss(1); return; }
@@ -195,7 +190,7 @@ export default function HTableModule(){
     setDone(1); next();
   };
 
-  // Step 2: second column must be Scale Numbers
+  // Step 2
   const tapHeader2 = (d) => {
     if (step !== 2) return;
     if (d?.v !== 'ScaleNumbers'){ miss(2); return; }
@@ -203,7 +198,8 @@ export default function HTableModule(){
     setDone(2); next();
   };
 
-  // Choice pools
+  // Step 3
+  const [pickedUnits, setPickedUnits] = useState([]);
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2);
     const cat = unitCategory(correct[0] || '');
@@ -218,6 +214,25 @@ export default function HTableModule(){
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
 
+  const tapUnit = (d)=>{
+    if (step !== 3) return;
+    const label = d?.label ?? d?.u ?? '';
+    if (!isCanonicalUnit(label)) { miss(3); return; }
+    setPickedUnits(prev=>{
+      const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === toLower(label));
+      if (exists) return prev;
+      const nextSel = [...prev, d];
+      if (nextSel.length===2){
+        const topObj = nextSel.find(x=> toLower(x.label||x.u||'') === canonicalTopUnit);
+        const botObj = nextSel.find(x=> toLower(x.label||x.u||'') === canonicalBottomUnit);
+        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
+        flash('unitsBlink', ()=>{ setDone(3); next(); }, 2000);
+      }
+      return nextSel;
+    });
+  };
+
+  // Steps 4 & 5 — scales (dual-completion)
   const numbersTopScale = useMemo(()=>{
     const v = Number(problem?.scale?.[0]);
     const set = new Set([v]);
@@ -232,46 +247,37 @@ export default function HTableModule(){
     return shuffle([...set]).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
   },[problem?.id]);
 
-  const [pickedUnits, setPickedUnits] = useState([]);
-  const tapUnit = (d)=>{
-    const label = d?.label ?? d?.u ?? '';
-    if (!isCanonicalUnit(label)) { miss(3); return; }
-    setPickedUnits(prev=>{
-      const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
-      if (exists) return prev;
-      const nextSel = [...prev, d];
-      if (nextSel.length===2){
-        const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
-        const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
-        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
-        setBlinkUnits(true);
-        setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
-      }
-      return nextSel;
-    });
-  };
-
-  const tapScaleTop = (d)=>{
+  const onPickTopScale = (d)=>{
+    if (step !== 4 && step !== 5) return;
     setTable(t=>{
       const expected = expectedScaleForRowUnit(t.uTop);
       if (expected == null || Number(d?.value) !== Number(expected)) { miss(4); return t; }
       const t2 = { ...t, sTop: Number(d.value) };
-      if (t2.sBottom!=null){ setDone(4); setDone(5); next(); } else { setDone(4); next(); }
-      return t2;
-    });
-  };
-  const tapScaleBottom = (d)=>{
-    setTable(t=>{
-      const expected = expectedScaleForRowUnit(t.uBottom);
-      if (expected == null || Number(d?.value) !== Number(expected)) { miss(5); return t; }
-      const t2 = { ...t, sBottom: Number(d.value) };
-      if (t2.sTop!=null){ setDone(4); setDone(5); next(); } else { setDone(5); next(); }
+      if (t2.sBottom!=null){
+        setDone(4); setDone(5); next();
+      } else if (step===4){
+        setDone(4); next();
+      }
       return t2;
     });
   };
 
-  // Step 6/7 flow: other value from problem
-  const [pickedOther, setPickedOther] = useState(null);
+  const onPickBottomScale = (d)=>{
+    if (step !== 4 && step !== 5) return;
+    setTable(t=>{
+      const expected = expectedScaleForRowUnit(t.uBottom);
+      if (expected == null || Number(d?.value) !== Number(expected)) { miss(5); return t; }
+      const t2 = { ...t, sBottom: Number(d.value) };
+      if (t2.sTop!=null){
+        setDone(4); setDone(5); next();
+      } else if (step===5){
+        setDone(5); next();
+      }
+      return t2;
+    });
+  };
+
+  // Step 6: other value choices
   const otherValueChoices = useMemo(()=>{
     const correct = Number(problem?.given?.value);
     const pool = new Set([correct]);
@@ -289,170 +295,115 @@ export default function HTableModule(){
   const chooseOtherValue = (choice) => {
     if (step!==6) return;
     if (!choice?.correct){ miss(6); return; }
-    setPickedOther(choice);
-    setDone(6);
-    next();
+    setTable(t=>({ ...t, pickedOther: Number(choice.value) }));
+    setDone(6); next();
   };
 
-  const tapPlaceValueTop = () => {
+  // Step 7: place other value in the correct row
+  const placeOtherInTop = () => {
     if (step!==7) return;
-    const ok = pickedOther && rowIsGivenUnit(table.uTop);
-    if (!ok){ miss(7); return; }
-    setTable(t => ({ ...t, vTop: Number(pickedOther.value) }));
-    flashCell('vTop', 7);
+    setTable(t => {
+      const ok = rowIsGivenUnit(t.uTop);
+      if (!ok){ miss(7); return t; }
+      const t2 = { ...t, vTop: Number(t.pickedOther) };
+      flash('vTop', ()=>{ setDone(7); next(); });
+      return t2;
+    });
   };
-  const tapPlaceValueBottom = () => {
+  const placeOtherInBottom = () => {
     if (step!==7) return;
-    const ok = pickedOther && rowIsGivenUnit(table.uBottom);
-    if (!ok){ miss(7); return; }
-    setTable(t => ({ ...t, vBottom: Number(pickedOther.value) }));
-    flashCell('vBottom', 7);
+    setTable(t => {
+      const ok = rowIsGivenUnit(t.uBottom);
+      if (!ok){ miss(7); return t; }
+      const t2 = { ...t, vBottom: Number(t.pickedOther) };
+      flash('vBottom', ()=>{ setDone(7); next(); });
+      return t2;
+    });
   };
 
-  // Geometry for overlays
-  const gridRef = useRef(null);
-  const refs = {
-    uTop: useRef(null), sTop: useRef(null), vTop: useRef(null),
-    uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null)
+  // Step 8: cross multiply selection
+  const STEP8_CHOICES = useMemo(()=>[
+    { id:'cm', label:'Cross Multiply', correct:true },
+    { id:'add', label:'Add the numbers' },
+    { id:'sub', label:'Subtract the numbers' },
+    { id:'avg', label:'Average the numbers' },
+  ],[]);
+  const chooseStep8 = (c)=>{
+    if (step!==8){ return; }
+    if (!c?.correct){ miss(8); return; }
+    setDone(8); next();
   };
-  const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 });
-  const [oval, setOval] = useState(null);
-  const [tripleUL, setTripleUL] = useState(null);
-  const measure = ()=>{
-    const g = gridRef.current;
-    if(!g) return;
-    const gr = g.getBoundingClientRect();
-    const r_uTop    = refs.uTop.current?.getBoundingClientRect();
-    const r_sTop    = refs.sTop.current?.getBoundingClientRect();
-    const r_vTop    = refs.vTop.current?.getBoundingClientRect();
-    const r_uBottom = refs.uBottom.current?.getBoundingClientRect();
-    const r_sBottom = refs.sBottom.current?.getBoundingClientRect();
-    const r_vBottom = refs.vBottom.current?.getBoundingClientRect();
-    if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) {
-      setLines(l=>({ ...l, gridW: gr.width }));
-      return;
+
+  // Step 9: which numbers multiply (cross pair)
+  const productPairs = useMemo(()=>{
+    const pairs = [];
+    if (table.vTop!=null && table.sBottom!=null){
+      pairs.push({ id:'p1', a: table.vTop, b: table.sBottom, correct:true });
     }
-    const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left;
-    const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left;
-    const vTop = r_vTop.top - gr.top;
-    const vBottom = r_vBottom.bottom - gr.top;
-    const vHeight = (vBottom - vTop);
-    const hTop = (r_vTop.bottom + r_vBottom.top)/2 - gr.top;
-    setLines({ v1Left: v1, v2Left: v2, vTop: r_vTop.top - gr.top, vHeight, hTop, gridW: gr.width });
-    if (tripleUL && tripleUL.key){
-      const target = refs[tripleUL.key]?.current?.getBoundingClientRect();
-      if(target){
-        setTripleUL({ key: tripleUL.key, left: target.left - gr.left + 8, top: target.bottom - gr.top - 18, width: Math.max(24, target.width - 16) });
-      }
+    if (table.vBottom!=null && table.sTop!=null){
+      pairs.push({ id:'p2', a: table.vBottom, b: table.sTop, correct:true });
     }
-  };
-  useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
+    // Wrong pairs (same-row or scale×scale)
+    if (table.vTop!=null && table.sTop!=null){ pairs.push({ id:'w1', a: table.vTop, b: table.sTop }); }
+    if (table.vBottom!=null && table.sBottom!=null){ pairs.push({ id:'w2', a: table.vBottom, b: table.sBottom }); }
+    if (table.sTop!=null && table.sBottom!=null){ pairs.push({ id:'w3', a: table.sTop, b: table.sBottom }); }
+    // Limit to 4; shuffle
+    return shuffle(pairs).slice(0,4);
+  },[table.vTop, table.vBottom, table.sTop, table.sBottom]);
 
-  const [highlightKeys, setHighlightKeys] = useState([]);
-  useLayoutEffect(()=>{
-    if(!highlightKeys.length){ setOval(null); return }
-    const g = gridRef.current; if(!g) return;
-    const gr = g.getBoundingClientRect();
-    const centers = highlightKeys.map(k=>{
-      const r = refs[k].current?.getBoundingClientRect();
-      if(!r) return null;
-      return { x: (r.left + r.right)/2 - gr.left, y: (r.top + r.bottom)/2 - gr.top };
-    }).filter(Boolean);
-    if(centers.length!==2){ setOval(null); return }
-    const [a,b] = centers;
-    const midX = (a.x + b.x)/2;
-    const midY = (a.y + b.y)/2;
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const len = Math.sqrt(dx*dx + dy*dy) + 140;
-    const rot = Math.atan2(dy, dx) * 180/Math.PI;
-    setOval({ left: midX, top: midY, len, rot });
-  },[highlightKeys]);
-
-  const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
-
-  const crossPair = useMemo(()=>{
-    if(!givenRow || table.sTop==null || table.sBottom==null) return null;
-    const v = (givenRow==='top') ? table.vTop : table.vBottom;
-    const sOpp = (givenRow==='top') ? table.sBottom : table.sTop;
-    if (v==null || sOpp==null) return null;
-    return { a:v, b:sOpp, label:`${v} × ${sOpp}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sBottom':'sTop'] };
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-
-  const wrongPairs = useMemo(()=>{
-    const list = [];
-    const v = (givenRow==='top') ? table.vTop : table.vBottom;
-    const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
-    if (v!=null && sSame!=null) list.push({ a:v, b:sSame, label:`${v} × ${sSame}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom'] });
-    if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
-    const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
-    if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
-    while (list.length < 3 && table.sTop!=null && table.sBottom!=null){
-      list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
-    }
-    return shuffle(list).slice(0,3);
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-
-  const chooseMultiply = (pair)=>{
-    if(!pair || !crossPair){ miss(9); return; }
-    const correct = (pair.a===crossPair.a && pair.b===crossPair.b);
-    setHighlightKeys(pair.keys || []);
-    if(!correct){ miss(9); return; }
-    const product = pair.a * pair.b;
-    setTable(t=>({ ...t, product }));
-    setMathStrip(s=>({ ...s, a: pair.a, b: pair.b }));
-    setDone(9); next();
+  const chooseProductPair = (pair)=>{
+    if (step!==9){ return; }
+    if (!pair?.correct){ miss(9); return; }
+    const t2 = { ...table, product: Number(pair.a) * Number(pair.b) };
+    setTable(t2);
+    flash('pairBlink', ()=>{ setDone(9); next(); });
   };
 
+  // Step 10: divide by remaining scale
   const divideChoices = useMemo(()=>{
-    if (table.sTop==null || table.sBottom==null) return [];
-    const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;   // same-row scale
-    const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;   // opposite-row scale
-    return shuffle([
-      { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
-      { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
-      { label: `Multiply by ${correctScale}`, value: null, correct: false },
-      { label: `Multiply by ${wrongScale}`, value: null, correct: false },
-    ]);
-  },[givenRow, table.sTop, table.sBottom]);
+    let correctLabel = '';
+    if (table.vTop!=null && table.sBottom!=null){ correctLabel = `Divide by ${table.sTop}`; } // used sBottom => divide by sTop
+    if (table.vBottom!=null && table.sTop!=null){ correctLabel = `Divide by ${table.sBottom}`; } // used sTop => divide by sBottom
+    const wrong = [
+      'Divide by reciprocal',
+      'Multiply by another value',
+      'Multiply by another value (2)'
+    ];
+    const arr = [{ id:'d0', label: correctLabel, correct:true },
+                 { id:'d1', label: wrong[0] },
+                 { id:'d2', label: wrong[1] },
+                 { id:'d3', label: wrong[2] }];
+    return shuffle(arr);
+  },[table.vTop, table.vBottom, table.sTop, table.sBottom]);
 
-  const chooseDivideByNumber = (choice)=>{
-    if (!choice.correct) { miss(10); return; }
-    const div = Number(choice.value);
-    if (table.product==null || !Number.isFinite(div) || div===0) { miss(10); return; }
-    const key = (div === table.sTop) ? 'sTop' : (div === table.sBottom ? 'sBottom' : null);
-    const g = gridRef.current;
-    if (g && key){
-      const gr = g.getBoundingClientRect();
-      const r = refs[key].current?.getBoundingClientRect();
-      if (r){
-        setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) });
-      }
-    }
-    const result = table.product / div;
-    setTable(t=>({ ...t, divisor: div, result }));
-    setMathStrip(s=>({ ...s, divisor: div, result }));
+  const chooseDivide = (c)=>{
+    if (step!==10){ return; }
+    if (!c?.correct){ miss(10); return; }
+    let divisor = null;
+    if (table.vTop!=null && table.sBottom!=null){ divisor = table.sTop; }
+    if (table.vBottom!=null && table.sTop!=null){ divisor = table.sBottom; }
+    if (!divisor){ miss(10); return; }
+    const result = Number(table.product) / Number(divisor);
+    setTable(t=>({ ...t, divisor, result }));
     setDone(10); next();
   };
 
-  const onCalculate = ()=>{
-    setTable(t=>{
-      const r = t.result;
-      if (r == null) return t;
-      const unknownTop    = t.vTop == null  && t.vBottom != null;
-      const unknownBottom = t.vBottom == null && t.vTop != null;
-      if (unknownTop)    return { ...t, vTop: Number(r),   solvedRow:'top' };
-      if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
-      return t;
-    });
-    setMathStrip(s=>({ ...s, showResult: true }));
+  // Step 11: calculate (finalize)
+  const doCalculate = ()=>{
+    if (step!==11){ return; }
+    // Fill unknown cell based on which row had the given
+    if (rowIsGivenUnit(table.uTop)){
+      setTable(t=>({ ...t, vBottom: t.result, solvedRow: 'bottom' }));
+    } else {
+      setTable(t=>({ ...t, vTop: t.result, solvedRow: 'top' }));
+    }
     setDone(11);
     setOpenSum(true);
     setConfettiOn(true);
     setTimeout(()=>setConfettiOn(false), 3500);
   };
 
-  const resetProblem = ()=>{
+  const newProblem = ()=>{
     setProblem(genSaneHProblem());
     setTable({
       head1:'', head2:'',
@@ -463,309 +414,169 @@ export default function HTableModule(){
     });
     setStep(0);
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
-    setHighlightKeys([]); setOval(null); setTripleUL(null);
-    setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
-    setConfettiOn(false); setOpenSum(false);
-    setBlinkKey(null); setBlinkUnits(false);
-    setPickedOther(null);
+    setOpenSum(false);
+    setConfettiOn(false);
   };
-
-  const ROW_H = 88;
-  const lineColor = '#0f172a';
-  const isBlink = (k)=> blinkKey === k;
-
-  // wild blink cue logic
-  const needWildBlink = (key)=> {
-    if (step===4 && key==='sTop'    && table.sTop==null) return true;
-    if (step===5 && key==='sBottom' && table.sBottom==null) return true;
-    if (step===7) {
-      if (rowIsGivenUnit(table.uTop)    && key==='vTop'    && table.vTop==null) return true;
-      if (rowIsGivenUnit(table.uBottom) && key==='vBottom' && table.vBottom==null) return true;
-    }
-    return false;
-  };
-  const cellCls = (key)=> [
-    (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'ptable-blink' : ''),
-    (needWildBlink(key) ? 'ptable-blink-wild' : ''),
-  ].filter(Boolean).join(' ');
 
   // ──────────────────────────────────────────────────────────────────────────────
-  // RENDER
+  // UI
   // ──────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="container" style={{position:'relative'}}>
-      <style>{`
-        .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
-        .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
-        .problem-body { font-size: inherit; color: inherit; }
-
-        @keyframes ptable-blink-kf { 
-          0%, 20%, 40%, 60%, 80%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,.0); }
-          10%, 30%, 50%, 70%, 90%    { box-shadow: 0 0 0 4px rgba(59,130,246,.35); }
-        }
-        .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
-
-        /* Wild, continuous blink for 'What goes here?' prompts */
-        @keyframes ptable-blink-wild-kf {
-          0%   { box-shadow: 0 0 0 0 rgba(255,0,90,.55); transform: scale(1.00); }
-          25%  { box-shadow: 0 0 0 6px rgba(255,0,90,.35); transform: scale(1.03); }
-          50%  { box-shadow: 0 0 0 0 rgba(255,0,90,.10); transform: scale(1.00); }
-          75%  { box-shadow: 0 0 0 8px rgba(255,0,90,.45); transform: scale(1.04); }
-          100% { box-shadow: 0 0 0 0 rgba(255,0,90,.20); transform: scale(1.00); }
-        }
-        .ptable-blink-wild { animation: ptable-blink-wild-kf 1.6s ease-in-out 0s infinite; }
-
-        .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
-
-        .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
-          min-height: ${ROW_H}px !important;
-          height: ${ROW_H}px !important;
-        }
-      `}</style>
-
+    <div className="container">
       <div className="panes">
-        {/* LEFT CARD: Problem + H-table */}
+        {/* LEFT: Problem + H-table */}
         <div className="card">
           <div className="section">
-
-            {/* Problem (just the natural text; no labels) */}
-            <div className="problem-banner">
-              <div className="problem-title">Problem</div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {problem?.text?.english ?? ''}
-              </div>
+            <div className="step-title"><strong>Problem</strong></div>
+            <div className="muted bigger">
+              Given {String(problem?.given?.value)} {String(problem?.given?.row==='top' ? problem?.units?.[0] : problem?.units?.[1])}.
+              Scale: {String(problem?.scale?.[0])} : {String(problem?.scale?.[1])}
             </div>
+          </div>
 
-            {/* H-table visible AFTER step 0 */}
-            {step>=1 && (
-              <div className="hwrap" style={{position:'relative', marginTop:12}}>
-                <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-                  {/* Headers */}
-                  <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} className={`${!table.head1 ? "empty" : ""}`}>
-                      <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                        <span className="hhead-text">{table.head1 || ''}</span>
-                      </div>
-                    </Slot>
-                  </div>
-                  <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} className={`${!table.head2 ? "empty" : ""}`}>
-                      <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                        <span className="hhead-text">{table.head2 || ''}</span>
-                      </div>
-                    </Slot>
-                  </div>
-                  <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
+          {step>=1 && (
+            <div className="hwrap">
+              <div className="hgrid">
+                <div className="hhead">{table.head1 || <button className={`chip ${step===1 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={()=>tapHeader1({v:'Units'})}>Units</button>}</div>
+                <div className="hhead">{table.head2 || <button className={`chip ${step===2 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={()=>tapHeader2({v:'ScaleNumbers'})}>Scale Numbers</button>}</div>
+                <div className="hhead"><div className="hhead-text">Values</div></div>
 
-                  {/* Row 1 */}
-                  <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${!table.uTop ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                      <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.sTop==null ? "empty" : ""}`}>
-                      <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
-                      <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
-                    </Slot>
-                  </div>
+                <div className={`hcell ${blinkKey==='unitsBlink' ? 'ptable-blink-hard blink-bg' : ''}`}>{table.uTop || '—'}</div>
+                <div className={`hcell ${step===4 ? 'ptable-blink-hard blink-bg' : ''}`}>{table.sTop ?? '—'}</div>
+                <div className="hcell">
+                  {table.vTop ?? (step===7 ? <button className="button sm" onClick={placeOtherInTop}>Tap here</button> : '—')}
+                </div>
 
-                  <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
-
-                  {/* Row 2 */}
-                  <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${!table.uBottom ? "empty" : ""} ${blinkUnits ? 'ptable-blink' : ''}`}>
-                      <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.sBottom==null ? "empty" : ""}`}>
-                      <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
-                      <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
-                    </Slot>
-                  </div>
-
-                  {/* H lines */}
-                  <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-                  <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-                  <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-
-                  {/* Red oval */}
-                  {oval && (
-                    <div
-                      style={{
-                        position:'absolute',
-                        left: oval.left, top: oval.top, width: oval.len, height: 62,
-                        transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                        border: '5px solid #ef4444', borderRadius: 9999,
-                        pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                      }}
-                    />
-                  )}
-                  {/* Red triple underline */}
-                  {tripleUL && (
-                    <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                    </div>
-                  )}
+                <div className={`hcell ${blinkKey==='unitsBlink' ? 'ptable-blink-hard blink-bg' : ''}`}>{table.uBottom || '—'}</div>
+                <div className={`hcell ${step===5 ? 'ptable-blink-hard blink-bg' : ''}`}>{table.sBottom ?? '—'}</div>
+                <div className="hcell">
+                  {table.vBottom ?? (step===7 ? <button className="button sm" onClick={placeOtherInBottom}>Tap here</button> : '—')}
                 </div>
               </div>
-            )}
+            </div>
+          )}
+        </div>
 
-          </div>{/* end .section (LEFT) */}
-        </div>{/* end LEFT .card */}
-
-        {/* RIGHT SIDE – prompts only */}
+        {/* RIGHT: Prompts */}
         <div className="card right-steps">
-          <div className="section">
-            <div className="step-title">{STEP_TITLES[step]}</div>
+          <div className="step-title question-xl">{STEP_TITLES[step]}</div>
 
-            {step===0 && (
-              <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 0 – START */}
+          {step===0 && (
+            <div className="chips with-borders center mt-8">
+              {STEP1_CHOICES.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>handleStep0(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 0 – END */}
 
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {[
-                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 3 – START */}
+          {step===3 && (
+            <div className="chips with-borders center mt-8">
+              {unitChoices.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>tapUnit(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 3 – END */}
 
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {[
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 4 – START */}
+          {step===4 && (
+            <div className="chips with-borders center mt-8">
+              {numbersTopScale.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>onPickTopScale(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 4 – END */}
 
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 5 – START */}
+          {step===5 && (
+            <div className="chips with-borders center mt-8">
+              {numbersBottomScale.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>onPickBottomScale(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 5 – END */}
 
-            {step===4 && (
-              <div className="chips center mt-8">
-                {(numbersTopScale?.length ? numbersTopScale : [3,5,7,9,12,18].map((n,i)=>({id:"nf5_"+i,label:String(n),kind:"num",value:n})))
-                  .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 6 – START */}
+          {step===6 && (
+            <div className="chips with-borders center mt-8">
+              {otherValueChoices.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>chooseOtherValue(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 6 – END */}
 
-            {step===5 && (
-              <div className="chips center mt-8">
-                {(numbersBottomScale?.length ? numbersBottomScale : [4,6,8,10].map((n,i)=>({id:"nf6_"+i,label:String(n),kind:"num",value:n})))
-                  .map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 8 – START */}
+          {step===8 && (
+            <div className="chips with-borders center mt-8">
+              {STEP8_CHOICES.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>chooseStep8(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 8 – END */}
 
-            {/* Step 6 */}
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 9 – START */}
+          {step===9 && (
+            <div className="chips with-borders center mt-8">
+              {productPairs.map((p, idx) => (
+                <button key={p.id ?? idx} className="chip" onClick={()=>chooseProductPair(p)}>
+                  {String(p.a)} × {String(p.b)}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 9 – END */}
 
-            {/* Step 7 – no text; blinking cell cues the action */}
-            {step===7 && (<div className="section" />)}
+          {/* RIGHT-PANEL: STEP 10 – START */}
+          {step===10 && (
+            <div className="chips with-borders center mt-8">
+              {divideChoices.map((o, idx) => (
+                <button key={o.id ?? idx} className="chip" onClick={()=>chooseDivide(o)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 10 – END */}
 
-            {/* Step 8 */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {[
-                  { id:'op_x',  label:'Cross Multiply',      good:true  },
-                  { id:'op_add',label:'Add the numbers',     good:false },
-                  { id:'op_sub',label:'Subtract the numbers',good:false },
-                  { id:'op_avg',label:'Average the numbers', good:false },
-                ].map(o => (
-                  <button key={o.id} className="chip" onClick={() => { if (o.good) { setDone(8); next(); } else { miss(8); } }}>{o.label}</button>
-                ))}
-              </div>
-            )}
+          {/* RIGHT-PANEL: STEP 11 – START */}
+          {step>=11 && (
+            <div className="center mt-8">
+              <button className="big-button" onClick={doCalculate}>Calculate</button>
+            </div>
+          )}
+          {/* RIGHT-PANEL: STEP 11 – END */}
+        </div>
+      </div>
 
-            {/* Step 9 */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((p, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseMultiply(p); setTripleUL(null); }}>{p.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 10 */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                {divideChoices.map((choice, idx) => (
-                  <button key={idx} className="chip" onClick={() => { chooseDivideByNumber(choice); }}>{choice.label}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Step 11 */}
-            {step>=11 && (
-              <div className="toolbar mt-10 center" style={{display:'flex', gap:12, justifyContent:'center'}}>
-                <button className="button success" disabled={table.result==null} onClick={onCalculate}>Calculate</button>
-                <button className="button" onClick={resetProblem}>New Problem</button>
-              </div>
-            )}
+      {openSum && (
+        <SummaryOverlay onClose={()=>setOpenSum(false)}>
+          <div className="center mt-8">
+            <button className="big-button" onClick={newProblem}>New Problem</button>
           </div>
-        </div>
-
-      </div>{/* end .panes */}
-
-      {/* Confetti */}
-      {confettiOn && (
-        <div className="htable-confetti" aria-hidden="true">
-          {Array.from({length:120}).map((_,i)=>{
-            const left = Math.random()*100;
-            const dur = 5 + Math.random()*4;
-            const delay = Math.random()*2;
-            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
-            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
-            return <div key={i} className="piece" style={style} />;
-          })}
-        </div>
+        </SummaryOverlay>
       )}
 
-      {/* Summary */}
-      {openSum && (
-        <SummaryOverlay
-          isOpen={openSum}
-          onClose={()=>setOpenSum(false)}
-          problem={problem}
-          table={table}
-          mathStrip={mathStrip}
-          onNewProblem={()=>resetProblem()}
-        />
+      {confettiOn && (
+        <div className="sf-confetti" aria-hidden="true"></div>
       )}
     </div>
   );
