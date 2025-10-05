@@ -1,12 +1,10 @@
-/**
- * UG Math Tools — Preflight (Recursive) v1.6
- * - FIX: Clean regex literals (no extra backslashes)
- * - FIX: No '/* ... */' tokens inside block comments
- * - Template/Quote/Comment-aware delimiter scan (avoids CSS-in-JSX false positives)
- * - Recursively scans all .js/.jsx/.ts/.tsx under repo (excludes node_modules, .git, dist, build, coverage, .vercel)
- * - CI-blocking: exits with code 1 on errors
- * - Zero dependencies; Node >= 18 recommended (tested on Node 20/22)
- */
+// UG Math Tools — Preflight (Recursive) v1.7
+// - Removes any use of '/* ... */' in comments to avoid accidental closures
+// - Regex literals use single backslashes (no invalid escapes)
+// - Template/quote/comment-aware delimiter scan (CSS-in-JSX safe)
+// - Recursively scans .js/.jsx/.ts/.tsx (excludes node_modules, .git, dist, build, coverage, .vercel)
+// - CI-blocking: exits with code 1 on errors
+// - Zero dependencies; Node >= 18 (tested on Node 20/22)
 
 import fs from 'fs';
 import path from 'path';
@@ -62,12 +60,9 @@ function snippetAt(source, line, window = 2) {
   return parts.join('\n');
 }
 
-/**
- * Balance check that ignores characters inside:
- * - single (') and double (") quoted strings
- * - template literals (`...`) EXCEPT inside ${ ... } expressions
- * - line comments (//) and block comments
- */
+// Balance check that ignores content inside:
+// - single quotes ('...'), double quotes ("..."), template literals (`...`) except inside ${ ... }
+// - line comments (//) && block comments
 function balanceCheck(source, fname) {
   const stack = [];
   const pairs = { ')': '(', '}': '{', ']': '[' };
@@ -83,24 +78,23 @@ function balanceCheck(source, fname) {
     const next = source[i + 1];
 
     // comment states
-    if (inLineComment) { if (ch == '\n') inLineComment = false; continue; }
+    if (inLineComment) { if (ch === '\n') inLineComment = false; continue; }
     if (inBlockComment) { if (prev === '*' && ch === '/') inBlockComment = false; continue; }
 
     // string/template states
-    if (inSingle) { if (!escape && ch === "'") inSingle = false; escape = (!escape and ch == '\\\\'); continue; }
-    if (inDouble) { if (!escape && ch === '"') inDouble = false; escape = (!escape and ch == '\\\\'); continue; }
+    if (inSingle) { if (!escape && ch === "'") inSingle = false; escape = (!escape && ch === '\\'); continue; }
+    if (inDouble) { if (!escape && ch === '"') inDouble = false; escape = (!escape && ch === '\\'); continue; }
     if (inTemplate) {
       if (ch === '`') { inTemplate = false; continue; }
       if (ch === '$' && next === '{') {
-        // enter ${ ... } expression: track braces inside until matching }
         stack.push(['TEMPLATE_EXPR', i]);
-        i++; // let next loop see '{' and handle in normal flow
+        i++; // let next loop see '{'
         continue;
       }
-      continue; // ignore template body text
+      continue; // ignore template body
     }
 
-    // detect state entries
+    // detect entries
     if (ch === '/' && next === '/') { inLineComment = true; i++; continue; }
     if (ch === '/' && next === '*') { inBlockComment = true; i++; continue; }
     if (ch === "'") { inSingle = true; escape = false; continue; }
@@ -110,7 +104,6 @@ function balanceCheck(source, fname) {
     // delimiter handling
     if (openers.has(ch)) { stack.push([ch, i]); continue; }
     if (pairs[ch]) {
-      // close template ${ ... } expression without consuming normal stack
       if (ch === '}' && stack.length && stack[stack.length - 1][0] === 'TEMPLATE_EXPR') { stack.pop(); continue; }
       const top = stack.pop();
       if (!top || top[0] !== pairs[ch]) {
@@ -121,7 +114,6 @@ function balanceCheck(source, fname) {
       }
     }
   }
-  // drain stray template sentinels
   while (stack.length && stack[stack.length - 1][0] === 'TEMPLATE_EXPR') stack.pop();
   if (stack.length) {
     const [open, pos] = stack[stack.length - 1];
