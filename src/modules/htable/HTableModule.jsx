@@ -533,28 +533,28 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     setDone(10); next();
   };
 
-  const onCalculate = ()=>{
-  setTable(t=>{
+  const onCalculate = () => {
+  setTable(t => {
     const r = t.result;
     if (r == null) return t;
-    const unknownTop    = t.vTop == null  && t.vBottom != null;
+
+    const unknownTop = t.vTop == null && t.vBottom != null;
     const unknownBottom = t.vBottom == null && t.vTop != null;
-    const nt = unknownTop
-      ? { ...t, vTop: Number(r), solvedRow:'top' }
-      : (unknownBottom ? { ...t, vBottom: Number(r), solvedRow:'bottom' } : t);
-    return nt;
+
+    if (unknownTop) return { ...t, vTop: Number(r), solvedRow: 'top' };
+    if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow: 'bottom' };
+    return t;
   });
 
   // Stop overlays and blink only the solved cell
   setOval(null);
   setTripleUL(null);
   setBlinkUnits(false);
-  setBlinkKey(prev => prev); // keep stable; solved cell will animate via result blink
-  setMathStrip(s=>({ ...s, showResult: true }));
+  setMathStrip(s => ({ ...s, showResult: true }));
   setDone(11);
   setOpenSum(true);
   setConfettiOn(true);
-  setTimeout(()=>setConfettiOn(false), 3500);
+  setTimeout(() => setConfettiOn(false), 3500);
 };
       if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow:'bottom' };
       return t;
