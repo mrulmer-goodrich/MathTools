@@ -690,14 +690,7 @@ const tapUnit = (d)=>{
             )}
 
             {/* Step 7 */}
-            {step===7 && (<div className="section" />)}.map((_,i)=>{
-            const left = Math.random()*100;
-            const dur = 5 + Math.random()*4;
-            const delay = Math.random()*2;
-            const bg = `hsl(${Math.floor(Math.random()*360)}, 80%, 60%)`;
-            const style = { left: `${left}%`, top: `-5vh`, background: bg, animationDuration: `${dur}s`, animationDelay: `${delay}s` };
-            return <div key={i} className="piece" style={style} />;
-          })}
+            {step===7 && (<div className="section" />)}}
         </div>
       )}
 
