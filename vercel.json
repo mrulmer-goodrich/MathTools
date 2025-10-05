@@ -1,6 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite"
-
+  "version": 2,
+  "buildCommand": "node scripts_preflight.mjs && vite build",
+  "installCommand": "npm ci || npm i",
+  "framework": "vite",
+  "outputDirectory": "dist"
 }
