@@ -1,18 +1,3 @@
-// HTableModule v9.8.8 — define next8Choices/chooseNext8 in safe scope; ensure Step 8 mapping
-
-
-/** Guard: enforce 4-choice render without crashing */
-const _assertFour = (arr, tag) => {
-  try {
-    if (!Array.isArray(arr) || arr.length !== 4) {
-      console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr);
-    }
-  } catch {}
-  return arr;
-};
-
-// \19.8.8 — hotfix for stray backslash before .map
-// HTableModule v9.8.3 (surgical build from v9.8.0) - SpecOp sync 9.8.0
 // HTableModule — UG Math Tools v9.7.8 (replaces 9.7.6)
 // SpecOp Sync: JSX-comment anchors hotfix; build error prevention; QA preflight checks
 // src/modules/htable/HTableModule.jsx
@@ -41,32 +26,13 @@ function _violatesEqualScalePair(p) {
   }
 }
 
-function _violatesDuplicateProblemValues(p){
-  try {
-    const a = (p && (p.scaleTop ?? p.sTop ?? (Array.isArray(p.scale)?p.scale[0]:undefined) ?? p.headerNum));
-    const b = (p && (p.scaleBottom ?? p.sBottom ?? (Array.isArray(p.scale)?p.scale[1]:undefined) ?? p.headerDen));
-    const g = (p && (p.given && p.given.value));
-    const vals = [a,b,g].filter(v => typeof v === 'number' && !Number.isNaN(v));
-    if (vals.length < 2) return false;
-    const seen = new Set();
-    for (const v of vals){
-      if (seen.has(v)) return true;
-      seen.add(v);
-    }
-    return false;
-  } catch(_) {
-    return false;
-  }
-}
-
-
 function genSafeProblem(rawGenFn, maxTries = 25) {
   if (typeof rawGenFn !== 'function') return rawGenFn;
   let last = null;
   for (let i = 0; i < maxTries; i++) {
     const cand = rawGenFn();
     last = cand;
-    if (!_violatesEqualScalePair(cand) && !_violatesDuplicateProblemValues(cand)) return cand;
+    if (!_violatesEqualScalePair(cand)) return cand;
   }
   // Fallback: if generator kept producing equal pairs, nudge bottom by +1
   if (last && (last.scaleBottom ?? last.sBottom ?? last.headerDen) !== undefined) {
@@ -74,16 +40,7 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
     else if (last.sBottom !== undefined) last.sBottom += 1;
     else if (last.headerDen !== undefined) last.headerDen += 1;
   }
-  if (last) {
-  try {
-    const a = (last.scaleTop ?? last.sTop ?? (Array.isArray(last.scale)?last.scale[0]:undefined) ?? last.headerNum);
-    const b = (last.scaleBottom ?? last.sBottom ?? (Array.isArray(last.scale)?last.scale[1]:undefined) ?? last.headerDen);
-    if (last.given && typeof last.given.value === 'number' && (last.given.value === a || last.given.value === b)) {
-      last.given.value = last.given.value + 1;
-    }
-  } catch{}
-}
-return last;
+  return last;
 }
 // ---- End wrapper ----
 
@@ -147,7 +104,7 @@ const STEP_TITLES = [
   "What value goes here?",
   "What’s the other value from the problem?",
   "Where should this value go? (tap a cell)",
-"What do we do next?",
+  "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
   "Calculate",
@@ -191,6 +148,17 @@ const genSaneHProblem = () => {
 
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 
+
+/** Guard: enforce 4-choice render without crashing */
+const _assertFour = (arr, tag) => {
+  try {
+    if (!Array.isArray(arr) || arr.length !== 4) {
+      console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr);
+    }
+  } catch {}
+  return arr;
+};
+
 // ────────────────────────────────────────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
@@ -201,7 +169,21 @@ export default function HTableModule(){
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
 
-  const [session, setSession] = useState(persisted || { attempts: [] });
+  
+  // STEP 8: four-choice conceptual prompt
+  const STEP8_CHOICES = [
+    { id: 'cm', label: 'Cross Multiply', correct: true },
+    { id: 'add', label: 'Add all the numbers', correct: false },
+    { id: 'avg', label: 'Find the average', correct: false },
+    { id: 'sub', label: 'Subtract the smaller from larger', correct: false },
+  ];
+
+  const chooseNext8 = (choice) => {
+    if (!choice || !choice.correct) { miss(8); return; }
+    setDone(8);
+    next();
+  };
+const [session, setSession] = useState(persisted || { attempts: [] });
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
   const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
@@ -436,9 +418,7 @@ export default function HTableModule(){
     }
   };
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); 
-
-return ()=>window.removeEventListener('resize', onResize); },[]);
+  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
 
   const [highlightKeys, setHighlightKeys] = useState([]);
   useLayoutEffect(()=>{
@@ -449,26 +429,7 @@ return ()=>window.removeEventListener('resize', onResize); },[]);
       const r = refs[k].current?.getBoundingClientRect();
       if(!r) return null;
       return { x: (r.left + r.right)/2 - gr.left, y: (r.top + r.bottom)/2 - gr.top };
-    }).fi
-
-
-// STEP 8 data: conceptual next step (Cross Multiply correct)
-const next8Choices = [
-  { id: 'cm', label: 'Cross Multiply', correct: true },
-  { id: 'add', label: 'Add all the numbers', correct: false },
-  { id: 'avg', label: 'Find the average', correct: false },
-  { id: 'sub', label: 'Subtract the smaller from the larger', correct: false },
-];
-const chooseNext8 = (choice)=>{
-  if (choice && choice.correct) {
-    setDone?.(8, true);
-    typeof next === 'function' && next();
-  } else {
-    incMiss?.(8);
-  }
-};
-
-lter(Boolean);
+    }).filter(Boolean);
     if(centers.length!==2){ setOval(null); return }
     const [a,b] = centers;
     const midX = (a.x + b.x)/2;
@@ -758,7 +719,7 @@ lter(Boolean);
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {shuffle(_assertFour(STEP1_CHOICES,"Step0")).map(c => (
+                {STEP1_CHOICES.map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
@@ -823,7 +784,7 @@ lter(Boolean);
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(_assertFour(otherValueChoices,"Step0")).map(c => (
+                {otherValueChoices.map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -834,15 +795,17 @@ lter(Boolean);
             {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
             {/* RIGHT-PANEL: STEP 7 — END */}
 
-            {/* RIGHT-PANEL: STEP 8 — START */}
+            {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(_assertFour(next8Choices,"Step8")).map(opt => (
-                  <button key={opt.id} className="chip" onClick={()=>chooseNext8(opt)}>{opt.label}</button>
+                {shuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
+                  <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>
+                    {opt.label}
+                  </button>
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 8 — END */}
+            {/* RIGHT-PANEL: STEP 8 — END */}/* RIGHT-PANEL: STEP 8 — END */}
 
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
