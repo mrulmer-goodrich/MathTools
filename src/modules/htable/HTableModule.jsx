@@ -896,4 +896,7 @@ const numbersStep6 = useMemo(()=>{
   />
 )}
 
-</div> /* end .container */
+{/* end .container */}
+</div>
+);
+}
