@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.4.5 (built off 10.4.2)
+// HTableModule — UG Math Tools v10.4.6 (built off 10.4.2)
 // Previous working copy reference: 10.3.6
 // SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
 // src/modules/htable/HTableModule.jsx
@@ -897,7 +897,7 @@ function narrativeFor(lang) {
                     </Slot>
                   </div>
                   <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+                    <Slot blinkWrap={highlightKeys.includes('vTop') || isFinalBlinkKey('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
                       <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
                     </Slot>
                   </div>
@@ -916,7 +916,7 @@ function narrativeFor(lang) {
                     </Slot>
                   </div>
                   <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+                    <Slot blinkWrap={highlightKeys.includes('vBottom') || isFinalBlinkKey('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
                       <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
                     </Slot>
                   </div>
@@ -971,12 +971,12 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {[
+                {shuffle([
                   { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
                   { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
+                ]).map((h, idx) => (
                   <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
                 ))}
               </div>
@@ -986,11 +986,12 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 2 — START */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {[
+                {shuffle([
+                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
                   { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ].map((h, idx) => (
+                ]).map((h, idx) => (
                   <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
                 ))}
               </div>
@@ -1010,7 +1011,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 4 — START */}
             {step===4 && (
               <div className="chips center mt-8">
-                {numbersTopScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
+                {shuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 4 — END */}
@@ -1018,7 +1019,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 5 — START */}
             {step===5 && (
               <div className="chips center mt-8">
-                {numbersBottomScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
+                {shuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 5 — END */}
@@ -1026,7 +1027,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {otherValueChoices.map(c => (
+                {shuffle(otherValueChoices).map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -1052,7 +1053,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
+                {shuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
                 ))}
               </div>
@@ -1062,7 +1063,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 10 — START */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
-                {divideChoices.map((c,idx)=>(
+                {shuffle(divideChoices).map((c,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
                 ))}
               </div>
