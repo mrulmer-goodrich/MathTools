@@ -281,7 +281,6 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     if (step !== 1) return;
     if (d?.v !== 'Units'){ miss(1); return; }
     setTable(t => ({ ...t, head1: 'Units' }));
-    if (solvedKey) setBlinkKey(solvedKey);
 setDone(1); next();
   };
 
@@ -671,7 +670,8 @@ function narrativeFor(lang) {
     return (typeof alt === 'string') ? alt : english;
   }
 
-  const displayText = narrativeFor(rotLang);
+  function enforceEquals(s){ return (s||'').replace(/↔/g,'='); }
+  const displayText = enforceEquals(narrativeFor(rotLang));
 
   // ──────────────────────────────────────────────────────────────────────────────
   // UI + RIGHT PANEL
@@ -1014,7 +1014,7 @@ function narrativeFor(lang) {
                 onMouseDown={holdDownEnglish} onMouseUp={holdUpEnglish} onMouseLeave={holdUpEnglish}
                 onTouchStart={holdDownEnglish} onTouchEnd={holdUpEnglish}
                 onPointerDown={holdDownEnglish} onPointerUp={holdUpEnglish} onPointerCancel={holdUpEnglish}
-              >Hold for English</button>
+              >Press for English</button>
               <button className={`button secondary ${step>=11 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
             </div>
           </div>
