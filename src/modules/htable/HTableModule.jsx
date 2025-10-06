@@ -927,7 +927,7 @@ setDone(11);
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
-                <button  className="button" onClick={onCalculate} disabled={Boolean(step>=11 || table?.result==null)}>Calculate</button>
+                <button  className="button" onClick={onCalculate} disabled={Boolean(step>=11 || ((table?.vTop == null) === (table?.vBottom == null)))}>Calculate</button>
               </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
