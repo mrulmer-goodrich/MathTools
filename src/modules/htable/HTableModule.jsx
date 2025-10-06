@@ -661,16 +661,9 @@ setDone(11);
   s = s.replace(/\p{L}/gu, 'X');
   Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
   return s;
-}>>`;
-      placeholders[key] = tok;
-      s = s.split(tok).join(key);
-    });
-    s = s.replace(/\p{L}/gu, 'X');
-    Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
-    return s;
-  }
+}
 
-  function narrativeFor(lang) {
+function narrativeFor(lang) {
     const english = problem?.text?.english || '';
     if (lang === 'English') return english;
     if (lang === 'XXXX') return maskToXXXX(english);
