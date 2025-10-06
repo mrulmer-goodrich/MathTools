@@ -1,3 +1,5 @@
+/* UG Math Tools generator patch v10.2.0: enforce '=' scale and rotation cleanup */
+function scaleWithEquals({ a, b, u1, u2 }) { return `${a} ${u1} = ${b} ${u2}.`; }
 // src/lib/generator.js — Scene-aware, humorous H-Table generator (v3.0)
 // - Keeps genScaleProblem (unchanged for your ScaleFactor module)
 // - Upgrades genHProblem with:
@@ -26,7 +28,11 @@ export function genScaleProblem() {
     if (Number.isInteger(W) && Number.isInteger(H) && W >= 6 && W <= 100 && H >= 6 && H <= 100) {
       const pair = choice(['horizontal', 'vertical'])
       const part2 = pair === 'horizontal' ? 'vertical' : 'horizontal'
-      return {
+      function filterAltOrderByCompleteness(altOrder, alts, a, b, u1, u2) {
+  const needle = `${a} ${u1} = ${b} ${u2}`;
+  return (altOrder || []).filter(l => l === 'XXXX' || (typeof alts?.[l] === 'string' && alts[l].includes(needle)));
+}
+return {
         id: uuid(),
         ratio: { p, q, value: p / q },
         original: { w, h },
@@ -330,7 +336,7 @@ const LEX = {
 
 /* Language list for rotation */
 const LANGS = ['Spanish','French','German','Swahili','Vietnamese']
-const ALT_ORDER = [...LANGS, 'FadeOut', 'BlackOut'] // optional, harmless
+const ALT_ORDER = [...LANGS, 'XXXX'] // optional, harmless
 
 /* Openers (random verb phrases) */
 const OPENERS = {
