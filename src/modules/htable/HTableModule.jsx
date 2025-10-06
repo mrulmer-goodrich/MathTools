@@ -674,14 +674,18 @@ const onCalculate = () => {
   const givenVal = problem?.given?.value;
   const otherUnit = (problem?.given?.row === 'top' ? u2 : u1) || (problem?.other?.unit || '');
   const tokens = [String(a), String(b), '=', u1, u2, otherUnit, String(givenVal)].filter(Boolean);
-  const pre='\\uE000', post='\\uE001';
+  const pre='\uE000', post='\uE001';
   const placeholders = {};
   let s = String(str);
   tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); });
-  s = s.replace(/\\p{L}/gu, 'X');
+  // Replace letters without Unicode property escapes: heuristic = chars where lower!=upper
+  s = Array.from(s).map(ch => {
+    try { return (ch.toLowerCase() !== ch.toUpperCase()) ? 'X' : ch; } catch { return ch; }
+  }).join('');
   Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
   return s;
 }
+
 
 
 
