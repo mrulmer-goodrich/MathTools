@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.4.2 (built off 10.4.1)
+// HTableModule — UG Math Tools v10.4.3 (built off 10.4.2)
 // Previous working copy reference: 10.3.6
 // SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
 // src/modules/htable/HTableModule.jsx
@@ -572,7 +572,7 @@ setDone(1); next();
     }
     const result = table.product / div;
     setTable(t=>({ ...t, divisor: div, result }));
-    setMathStrip(s=>({ ...s, divisor: div, result }));
+    setMathStrip(s=>({ ...s, divisor: div, result, showResult: false }));
     setDone(10); next();
   };
 
@@ -855,7 +855,7 @@ function narrativeFor(lang) {
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
 {/* Equation display (Step 11+ when result shown) */}
-{ step >= 11 && Number.isFinite(mathStrip?.result) && (
+{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
   <div className="eq-display">
     <span className="frac">
       <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
@@ -863,7 +863,7 @@ function narrativeFor(lang) {
       <span className="den">{String(mathStrip?.divisor ?? '')}</span>
     </span>
     <span className="eq"> = </span>
-    <span className="res">{String(mathStrip?.result ?? '')}</span>
+    <span className="res">{ mathStrip?.showResult ? String(mathStrip?.result ?? '') : null }</span>
   </div>
 )}
 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
@@ -1078,7 +1078,13 @@ function narrativeFor(lang) {
 
             {/* Sticky footer controls */}
             <div className="right-footer">
-              <button className={`button secondary ${npBlink ? 'action-blink blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
+              <button
+                type="button"
+                className={`button secondary ${npBlink ? 'action-blink-strong' : ''}`}
+                onClick={resetProblem}
+              >
+                New Problem
+              </button>
             </div>
           </div>
         </div>
