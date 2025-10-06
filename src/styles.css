@@ -1291,3 +1291,48 @@ body{
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
 }
 
+
+/* === styles.append.htable.v10.4.6.css ===
+   - Force solved-cell blink to yellow (override blue .ptable-blink-hard)
+   - Style all answer chips in right panel to PTables blue pills
+   - Stronger "Press for English" depth
+*/
+
+/* Force yellow on any final-blink element inside HTable */
+.hgrid .ptable-blink-hard{
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 6px rgba(245,158,11,.35) !important;
+}
+.hgrid .blink-bg{
+  animation: ptableBlinkBG 0.9s linear infinite;
+  background: #fff7cc !important;
+}
+
+/* Apply wrapper halo too when blinkWrap is added by finalBlink */
+.hgrid .slot-wrap.ptable-blink-wrap::after{
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 8px rgba(245,158,11,.35) !important;
+}
+
+/* Right-panel answer chips = PTables blue pill */
+.right-steps .chips .chip,
+.right-steps .chips .chip-lg{
+  background: var(--cms-light) !important;
+  border: 2px solid var(--border, #e2e8f0) !important;
+  color: #0b2b4a !important;
+  font-weight: 900 !important;
+  font-size: 22px !important;
+  padding: 10px 16px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 3px 0 rgba(0,0,0,.08) !important;
+}
+
+/* Make Press for English more button-y */
+.button.button-contrast{
+  border: 2px solid var(--border, #e2e8f0);
+  background:#fff;
+  box-shadow: 0 8px 18px rgba(0,0,0,.14), inset 0 -2px 0 rgba(0,0,0,.06);
+}
+.button.button-contrast:hover{ transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,.18), inset 0 -2px 0 rgba(0,0,0,.06); }
+.button.button-contrast:active{ transform: translateY(0); box-shadow: 0 6px 14px rgba(0,0,0,.14); }
