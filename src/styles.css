@@ -1166,3 +1166,62 @@ body{
 .button.primary:active { transform: translateY(1px); box-shadow: 0 4px 10px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.2); }
 /* Center text inside chips and cells more consistently */
 .chip, .slot-wrap { display: inline-flex; align-items: center; justify-content: center; }
+
+
+/* === styles.append.htable.v10.4.4.css ===
+   Align H-Table look/feel with PTables (fonts, chip styling, blink color).
+   Safe to append at the *bottom* of styles.css. */
+
+/* Problem text bigger but compact */
+.h-problem .problem-title,
+.right-steps .step-title { 
+  font-size: clamp(16px, 1.2vw + 14px, 20px); 
+  line-height: 1.25;
+  font-weight: 800;
+}
+.h-problem .muted { font-size: 0.98rem; }
+
+/* H-Table grid: larger numbers & chips (match PTables) */
+.hgrid .chip, .hgrid .chip-lg {
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 2px 0 rgba(0,0,0,.06);
+}
+
+/* Final answer blink uses the same yellow guidance as PTables */
+.hgrid .ptable-blink-hard,
+.hgrid .blink-bg {
+  outline: 2px solid #f59e0b !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(245,158,11,.30) !important;
+  background: #fff7cc !important;
+}
+
+/* Choice chips (right side) to match PTables buttons */
+.right-steps .answer-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  box-shadow: 0 3px 0 rgba(0,0,0,.06);
+}
+
+/* Stronger, continuous pulse for New Problem */
+.action-blink-strong { 
+  animation: np-strong 1.2s ease-in-out 0s infinite;
+}
+@keyframes np-strong {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+  50%  { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(59,130,246,.15); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+}
+
