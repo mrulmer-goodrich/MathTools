@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.4.1 (built off 10.4.0 baseline)
+// HTableModule — UG Math Tools v10.4.2 (built off 10.4.1)
 // Previous working copy reference: 10.3.6
 // SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
 // src/modules/htable/HTableModule.jsx
@@ -610,13 +610,9 @@ function applyPostCalculateEffects() {
     return t;
   });
 
-  // Start blinking on solved cell (standard style) for 2s, then stop
-  if (solvedKey) {
-    setBlinkKey(solvedKey);
-    setTimeout(() => setBlinkKey(null), 2000);
-  }
-
-  // Confetti & summary
+  // Start blinking on solved cell (module-yellow style) — continuous until New Problem
+  if (solvedKey) { setBlinkKey(solvedKey); }
+// Confetti & summary
   setOpenSum(true);
   setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
@@ -677,7 +673,7 @@ const onCalculate = () => {
   const finalBlink = (step>=11) ? (table?.solvedRow==='top' ? 'vTop' : (table?.solvedRow==='bottom' ? 'vBottom' : null)) : null;
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) || (finalBlink && key===finalBlink) ? 'ptable-blink' : ''),
+    (isBlink(key) ? 'ptable-blink' : (finalBlink && key===finalBlink ? 'ptable-blink-hard blink-bg' : '')),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -812,6 +808,14 @@ function narrativeFor(lang) {
 
 
   .action-blink { animation: ptable-blink-kf 2s ease-out 0s infinite; }
+.action-blink-strong { 
+  animation: np-strong 1.2s ease-in-out 0s infinite;
+}
+@keyframes np-strong {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+  50%  { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(59,130,246,.15); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+}
 `}
 </style>
 
