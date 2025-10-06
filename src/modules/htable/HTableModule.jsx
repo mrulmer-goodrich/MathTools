@@ -1,6 +1,7 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.3.6
-// SpecOp Sync: Remove orphaned post-calc useEffect; enable Calculate at Step 11; keep four-choice guards
+// HTableModule — UG Math Tools v10.4.1 (built off 10.4.0 baseline)
+// Previous working copy reference: 10.3.6
+// SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -234,15 +235,16 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   // v10.2.0 — initialize rotation order on problem change
   useEffect(() => {
     try {
-      const pool = (problem?.altOrder || []).filter(l => l !== 'English');
+      // Build from actual available alts; ignore placeholders & empties
+      const altsObj = (problem?.text?.alts) || {};
+      const keys = Object.keys(altsObj).filter(k => typeof altsObj[k] === 'string' && altsObj[k].trim().length > 0);
+      const pool = keys.filter(l => l !== 'English' && l !== 'XXXX');
       setRotationOrder(pool);
       setRotLang('English');
       setIsHoldingEnglish(false);
     } catch {}
-  }, [problem?.id, JSON.stringify(problem?.altOrder)]);
-
-
-  // Helpers
+  }, [problem?.id, JSON.stringify(problem?.text?.alts)]);
+// Helpers
   const miss = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c; });
   const setDone = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].done=true; return c; });
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
@@ -586,32 +588,45 @@ function applyPostCalculateEffects() {
   if (postCalcAppliedRef.current) return;
   postCalcAppliedRef.current = true;
 
-  // Stop prior blinking
+  // Stop prior blinking & overlays
   setBlinkUnits(false);
   setBlinkKey(null);
   if (typeof setHighlightKeys === 'function') setHighlightKeys([]);
-
-  // Remove overlays
   setOval(null);
   setTripleUL(null);
 
+  // Ensure equation strip is visible on first Calculate
+  setMathStrip(s => ({ ...s, showResult: true }));
+
   // Insert result; pick solved cell
   const rGlobal = Number(mathStrip?.result);
+  const unknownTop = table.vTop==null && table.sTop!=null && table.sBottom!=null && table.vBottom!=null;
+  const unknownBottom = table.vBottom==null && table.sTop!=null && table.sBottom!=null && table.vTop!=null;
   let solvedKey = null;
   setTable(t => {
-    const r = Number.isFinite(rGlobal) ? rGlobal : t.result;
-    if (!Number.isFinite(r)) return t;
-    const unknownTop = t.vTop == null && t.vBottom != null;
-    const unknownBottom = t.vBottom == null && t.vTop != null;
-    if (unknownTop)  { solvedKey = 'vTop';    return { ...t, vTop: Number(r),    solvedRow: 'top'    }; }
+    const r = Number.isFinite(rGlobal) ? rGlobal : Number(t?.result);
+    if (unknownTop){ solvedKey = 'vTop';    return { ...t, vTop: Number(r), solvedRow: 'top' }; }
     if (unknownBottom){ solvedKey = 'vBottom'; return { ...t, vBottom: Number(r), solvedRow: 'bottom' }; }
     return t;
   });
 
-  // Start blinking on solved cell
-  if (solvedKey) setBlinkKey(solvedKey);
+  // Start blinking on solved cell (standard style) for 2s, then stop
+  if (solvedKey) {
+    setBlinkKey(solvedKey);
+    setTimeout(() => setBlinkKey(null), 2000);
+  }
 
-  // Confetti
+  // Confetti & summary
+  setOpenSum(true);
+  setConfettiOn(true);
+  setTimeout(() => setConfettiOn(false), 3500);
+
+  // Mark done & schedule New Problem blinking
+  setDone(11);
+  if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
+  setNpBlink(false);
+  npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
+
   setOpenSum(true);
   setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
