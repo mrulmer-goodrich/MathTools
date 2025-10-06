@@ -1,4 +1,4 @@
-// src/lib/generator.js — Scene-aware, humorous H-Table generator (v3.0)
+// src/lib/generator.js — Scene-aware, humorous H-Table generator (v3.1)
 // - Keeps genScaleProblem (unchanged for your ScaleFactor module)
 // - Upgrades genHProblem with:
 //    • scene → motivations → allowed unit categories (coherent & funny)
