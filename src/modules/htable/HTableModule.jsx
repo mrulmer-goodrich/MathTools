@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.3.0
+// HTableModule — UG Math Tools v10.3.5
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -627,7 +627,8 @@ const onCalculate = () => {
   applyPostCalculateEffects();
 };
   const resetProblem = ()=>{
-    setProblem(genSaneHProblem());
+    postCalcAppliedRef.current = false; setNpBlink(false);
+  setProblem(genSaneHProblem());
     setTable({
       head1:'', head2:'',
       uTop:'', uBottom:'',
@@ -1079,13 +1080,6 @@ function narrativeFor(lang) {
     </div>
   );
 }
-
-/* v10.3.2 post-calc guard & fallback */
-useEffect(() => {
-  // Reset per problem
-  postCalcAppliedRef.current = false;
-  setNpBlink(false);
-}, [problem?.id]);
 
 useEffect(() => {
   // Fallback: if some other handler computes the result & sets done, ensure effects are applied
