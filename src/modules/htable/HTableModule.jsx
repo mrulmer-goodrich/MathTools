@@ -573,38 +573,56 @@ setDone(1); next();
     setDone(10); next();
   };
 
-  const onCalculate = () => {
-  setTable(t => {
-    const r = t.result;
-    if (r == null) return t;
+  
+const holdEnglishDown = () => { setIsHoldingEnglish(true); setRotLang('English'); };
+const holdEnglishUp   = () => { setIsHoldingEnglish(false); setRotLang(prev => {
+  if (!rotationOrder?.length) return prev;
+  if (prev === 'English') return rotationOrder[0];
+  const idx = rotationOrder.indexOf(prev);
+  return (idx === -1 || idx === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[idx + 1];
+}); };
+const onCalculate = () => {
+  const rGlobal = Number(mathStrip?.result);
 
+  // 1) Stop all PRIOR ENABLED blinking
+  setBlinkUnits(false);
+  setBlinkKey(null);
+  if (typeof setHighlightKeys === 'function') setHighlightKeys([]);
+
+  // 2) Remove overlays (oval, underline)
+  setOval(null);
+  setTripleUL(null);
+
+  // 3) Insert result into solved cell
+  let solvedKey = null;
+  setTable(t => {
+    const r = Number.isFinite(rGlobal) ? rGlobal : t.result;
+    if (!Number.isFinite(r)) return t;
     const unknownTop = t.vTop == null && t.vBottom != null;
     const unknownBottom = t.vBottom == null && t.vTop != null;
-
-    if (unknownTop) return { ...t, vTop: Number(r), solvedRow: 'top' };
-    if (unknownBottom) return { ...t, vBottom: Number(r), solvedRow: 'bottom' };
+    if (unknownTop)  { solvedKey = 'vTop';    return { ...t, vTop: Number(r),    solvedRow: 'top'    }; }
+    if (unknownBottom){ solvedKey = 'vBottom'; return { ...t, vBottom: Number(r), solvedRow: 'bottom' }; }
     return t;
   });
 
-  // Stop overlays and blink only the solved cell
-  setOval(null);
-  setTripleUL(null);
-  setBlinkUnits(false);
-  // Determine which cell just got solved and blink that single cell
-setBlinkKey(prev => {
-  const k = (table.vTop == null && table.vBottom != null) ? 'vTop'
-          : (table.vBottom == null && table.vTop != null) ? 'vBottom'
-          : (table.solvedRow === 'top' ? 'vTop' : (table.solvedRow === 'bottom' ? 'vBottom' : null));
-  return k;
-});
-// Disable Calculate button by marking flow complete
-setDone(11);
+  // 4) START NEW BLINKING ON THE SOLVED CELL
+  if (solvedKey) setBlinkKey(solvedKey);
+
+  // 5) Trigger confetti
   setOpenSum(true);
   setConfettiOn(true);
-  if (npBlinkRef.current){ clearTimeout(npBlinkRef.current); }
+
+  // 6) After 3 seconds, start New Problem blinking
+  if (npBlinkRef?.current) { clearTimeout(npBlinkRef.current); }
   setNpBlink(false);
   npBlinkRef.current = setTimeout(() => { setNpBlink(true); }, 3000);
-setTimeout(() => setConfettiOn(false), 3500);
+
+  // Disable Calculate button by marking flow complete
+  setDone(11);
+
+  // One-shot confetti fadeout
+  setTimeout(() => setConfettiOn(false), 3500);
+
 };
   const resetProblem = ()=>{
     setProblem(genSaneHProblem());
@@ -770,7 +788,9 @@ function narrativeFor(lang) {
 .no-fade { opacity: 1 !important; }
 */
 
-`}  .action-blink { animation: ptable-blink-kf 2s ease-out 0s infinite; }
+
+  .action-blink { animation: ptable-blink-kf 2s ease-out 0s infinite; }
+`}
 </style>
 
       <div className="panes">
@@ -785,6 +805,23 @@ function narrativeFor(lang) {
               <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
                 {displayText}
               </div>
+    <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
+      <button
+        type="button"
+        className="button"
+        onMouseDown={holdEnglishDown}
+        onMouseUp={holdEnglishUp}
+        onMouseLeave={holdEnglishUp}
+        onTouchStart={holdEnglishDown}
+        onTouchEnd={holdEnglishUp}
+        onPointerDown={holdEnglishDown}
+        onPointerUp={holdEnglishUp}
+        onPointerCancel={holdEnglishUp}
+      >
+        Press for English
+      </button>
+    </div>
+
             </div>
 
             {/* H-table visible AFTER step 0 */}
@@ -1015,7 +1052,7 @@ function narrativeFor(lang) {
 
             {/* Sticky footer controls */}
             <div className="right-footer">
-              <button className={`button secondary ${step>=11 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
+              <button className={`button secondary ${npBlink ? 'action-blink blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
             </div>
           </div>
         </div>
