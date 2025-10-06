@@ -10,7 +10,7 @@
 
 // Ensures the scale fragment always shows "=" with original unit tokens.
 function scaleWithEquals({ a, b, u1, u2 }) {
-  return `${a} ${u1} = ${b} ${u2}.`;a
+  return `${a} ${u1} = ${b} ${u2}.`;
 }
 /* ========== RNG & UUID (self-contained) ========== */
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min }
@@ -638,7 +638,8 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     units: [u1, u2],
     scale: [a, b],
     given: { row: gRow, value: g },
-    \1    meta: { baseUnits: { u1, u2, otherUnit: (gRow==='top'?u2:u1) }, languages: rotationFiltered },
+altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
+    meta: { baseUnits: { u1, u2, otherUnit: (gRow==='top'?u2:u1) }, languages: rotationFiltered },
     // Extras available if you ever want MC:
     answer
   }
