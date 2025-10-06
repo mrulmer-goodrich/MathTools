@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
+// HTableModule — UG Math Tools v10.3.0
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -217,6 +217,8 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const [rotationOrder, setRotationOrder] = useState([]); // excludes English, includes 'XXXX'
   const [isHoldingEnglish, setIsHoldingEnglish] = useState(false);
   const [rotationId, setRotationId] = useState(null);
+  const [npBlink, setNpBlink] = useState(false);
+  const npBlinkRef = useRef(null);
 
 
   // 2s blink
@@ -654,14 +656,15 @@ setTimeout(() => setConfettiOn(false), 3500);
   const givenVal = problem?.given?.value;
   const otherUnit = (problem?.given?.row === 'top' ? u2 : u1) || (problem?.other?.unit || '');
   const tokens = [String(a), String(b), '=', u1, u2, otherUnit, String(givenVal)].filter(Boolean);
-  const pre='\uE000', post='\uE001';
+  const pre='\\uE000', post='\\uE001';
   const placeholders = {};
   let s = String(str);
   tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); });
-  s = s.replace(/\p{L}/gu, 'X');
+  s = s.replace(/\\p{L}/gu, 'X');
   Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
   return s;
 }
+
 
 
 function narrativeFor(lang) {
@@ -767,7 +770,8 @@ function narrativeFor(lang) {
 .no-fade { opacity: 1 !important; }
 */
 
-`}</style>
+`}  .action-blink { animation: ptable-blink-kf 2s ease-out 0s infinite; }
+</style>
 
       <div className="panes">
         {/* H-GRID RENDER */}
@@ -1011,12 +1015,6 @@ function narrativeFor(lang) {
 
             {/* Sticky footer controls */}
             <div className="right-footer">
-              <button type="button"
-                className="button ghost"
-                onMouseDown={holdDownEnglish} onMouseUp={holdUpEnglish} onMouseLeave={holdUpEnglish}
-                onTouchStart={holdDownEnglish} onTouchEnd={holdUpEnglish}
-                onPointerDown={holdDownEnglish} onPointerUp={holdUpEnglish} onPointerCancel={holdUpEnglish}
-              >Press for English</button>
               <button className={`button secondary ${step>=11 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
             </div>
           </div>
