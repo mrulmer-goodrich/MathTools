@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.4.3 (built off 10.4.2)
+// HTableModule — UG Math Tools v10.4.5 (built off 10.4.2)
 // Previous working copy reference: 10.3.6
 // SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
 // src/modules/htable/HTableModule.jsx
@@ -671,6 +671,7 @@ const onCalculate = () => {
     return false;
   };
   const finalBlink = (step>=11) ? (table?.solvedRow==='top' ? 'vTop' : (table?.solvedRow==='bottom' ? 'vBottom' : null)) : null;
+  const isFinalBlinkKey = (k)=> (finalBlink && k===finalBlink);
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
     (isBlink(key) ? 'ptable-blink' : (finalBlink && key===finalBlink ? 'ptable-blink-hard blink-bg' : '')),
