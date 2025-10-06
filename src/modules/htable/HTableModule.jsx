@@ -551,7 +551,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   setOval(null);
   setTripleUL(null);
   setBlinkUnits(false);
-  \1// Determine which cell just got solved and blink that single cell
+  // Determine which cell just got solved and blink that single cell
 setBlinkKey(prev => {
   const k = (table.vTop == null && table.vBottom != null) ? 'vTop'
           : (table.vBottom == null && table.vTop != null) ? 'vBottom'
