@@ -1082,10 +1082,10 @@ function narrativeFor(lang) {
 
 /* v10.3.2 post-calc guard & fallback */
 useEffect(() => {
-  // Reset per problem (derived key)
+  // Reset per problem
   postCalcAppliedRef.current = false;
   setNpBlink(false);
-}, [problem?.scale, problem?.units, problem?.given?.row, problem?.given?.value]);
+}, [problem?.id]);
 
 useEffect(() => {
   // Fallback: if some other handler computes the result & sets done, ensure effects are applied
