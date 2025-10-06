@@ -219,6 +219,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const [rotationId, setRotationId] = useState(null);
   const [npBlink, setNpBlink] = useState(false);
   const npBlinkRef = useRef(null);
+  const postCalcAppliedRef = useRef(false);
 
 
   // 2s blink
@@ -581,19 +582,21 @@ const holdEnglishUp   = () => { setIsHoldingEnglish(false); setRotLang(prev => {
   const idx = rotationOrder.indexOf(prev);
   return (idx === -1 || idx === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[idx + 1];
 }); };
-const onCalculate = () => {
-  const rGlobal = Number(mathStrip?.result);
+function applyPostCalculateEffects() {
+  if (postCalcAppliedRef.current) return;
+  postCalcAppliedRef.current = true;
 
-  // 1) Stop all PRIOR ENABLED blinking
+  // Stop prior blinking
   setBlinkUnits(false);
   setBlinkKey(null);
   if (typeof setHighlightKeys === 'function') setHighlightKeys([]);
 
-  // 2) Remove overlays (oval, underline)
+  // Remove overlays
   setOval(null);
   setTripleUL(null);
 
-  // 3) Insert result into solved cell
+  // Insert result; pick solved cell
+  const rGlobal = Number(mathStrip?.result);
   let solvedKey = null;
   setTable(t => {
     const r = Number.isFinite(rGlobal) ? rGlobal : t.result;
@@ -605,24 +608,23 @@ const onCalculate = () => {
     return t;
   });
 
-  // 4) START NEW BLINKING ON THE SOLVED CELL
+  // Start blinking on solved cell
   if (solvedKey) setBlinkKey(solvedKey);
 
-  // 5) Trigger confetti
+  // Confetti
   setOpenSum(true);
   setConfettiOn(true);
-
-  // 6) After 3 seconds, start New Problem blinking
-  if (npBlinkRef?.current) { clearTimeout(npBlinkRef.current); }
-  setNpBlink(false);
-  npBlinkRef.current = setTimeout(() => { setNpBlink(true); }, 3000);
-
-  // Disable Calculate button by marking flow complete
-  setDone(11);
-
-  // One-shot confetti fadeout
   setTimeout(() => setConfettiOn(false), 3500);
 
+  // Mark done & schedule New Problem blinking
+  setDone(11);
+  if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
+  setNpBlink(false);
+  npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
+}
+
+const onCalculate = () => {
+  applyPostCalculateEffects();
 };
   const resetProblem = ()=>{
     setProblem(genSaneHProblem());
@@ -812,7 +814,7 @@ function narrativeFor(lang) {
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
       <button
         type="button"
-        className="button"
+        className="button button-contrast"
         onMouseDown={holdEnglishDown}
         onMouseUp={holdEnglishUp}
         onMouseLeave={holdEnglishUp}
@@ -1077,3 +1079,18 @@ function narrativeFor(lang) {
     </div>
   );
 }
+
+/* v10.3.2 post-calc guard & fallback */
+useEffect(() => {
+  // Reset per problem
+  postCalcAppliedRef.current = false;
+  setNpBlink(false);
+}, [problemId]);
+
+useEffect(() => {
+  // Fallback: if some other handler computes the result & sets done, ensure effects are applied
+  const r = Number(mathStrip?.result);
+  if (Number.isFinite(r) && done === 11 && !postCalcAppliedRef.current) {
+    applyPostCalculateEffects();
+  }
+}, [mathStrip?.result, done]);
