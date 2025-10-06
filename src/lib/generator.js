@@ -1,5 +1,3 @@
-/* UG Math Tools generator patch v10.2.0: enforce '=' scale and rotation cleanup */
-function scaleWithEquals({ a, b, u1, u2 }) { return `${a} ${u1} = ${b} ${u2}.`; }
 // src/lib/generator.js — Scene-aware, humorous H-Table generator (v3.0)
 // - Keeps genScaleProblem (unchanged for your ScaleFactor module)
 // - Upgrades genHProblem with:
@@ -9,6 +7,11 @@ function scaleWithEquals({ a, b, u1, u2 }) { return `${a} ${u1} = ${b} ${u2}.`; 
 //    • integer-friendly answers by default (configurable)
 // - Compatible with HTableModule v3.1 payload expectations
 
+
+// Ensures the scale fragment always shows "=" with original unit tokens.
+function scaleWithEquals({ a, b, u1, u2 }) {
+  return `${a} ${u1} = ${b} ${u2}.`;a
+}
 /* ========== RNG & UUID (self-contained) ========== */
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min }
 function choice(arr)   { return arr[Math.floor(Math.random() * arr.length)] }
@@ -28,11 +31,7 @@ export function genScaleProblem() {
     if (Number.isInteger(W) && Number.isInteger(H) && W >= 6 && W <= 100 && H >= 6 && H <= 100) {
       const pair = choice(['horizontal', 'vertical'])
       const part2 = pair === 'horizontal' ? 'vertical' : 'horizontal'
-      function filterAltOrderByCompleteness(altOrder, alts, a, b, u1, u2) {
-  const needle = `${a} ${u1} = ${b} ${u2}`;
-  return (altOrder || []).filter(l => l === 'XXXX' || (typeof alts?.[l] === 'string' && alts[l].includes(needle)));
-}
-return {
+      return {
         id: uuid(),
         ratio: { p, q, value: p / q },
         original: { w, h },
@@ -595,7 +594,7 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
 
   // Build English sentence from randomized parts
   const openerEN   = choice(OPENERS.English)
-  const scaleEN    = choice(SCALE_LINES.English)({ a, b, u1, u2 })
+  const scaleEN = scaleWithEquals({ a, b, u1, u2 })
   const nounEN     = scene.nouns[category] || 'segment'
   const uGiven     = gRow === 'top' ? u1 : u2
   const uOther     = gRow === 'top' ? u2 : u1
@@ -606,11 +605,21 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
 
   // Build alts per language
   const alts = {}
+  // Build rotation languages list and validate completeness (must include exact "a u1 = b u2")
+  const rotationLanguages = [...LANGS, 'XXXX'];
+  const must = `${a} ${u1} = ${b} ${u2}`;
+  function hasComplete(lang){
+    if (lang === 'XXXX') return true;
+    const t = alts[lang];
+    return typeof t === 'string' && t.includes(must);
+  }
+  const rotationFiltered = rotationLanguages.filter(hasComplete);
+
   for (const lang of languages) {
     const place = tr(lang, 'place', sceneKey)
     const why   = tr(lang, 'why', motivationKey)
     const opener = choice(OPENERS[lang] || OPENERS.English)
-    const scale  = choice(SCALE_LINES[lang] || SCALE_LINES.English)({ a, b, u1, u2 })
+    const scale = scaleWithEquals({ a, b, u1, u2 })
     const noun   = scene.nouns[category] || 'segment'
     const qBank  = QUESTIONS[lang] && QUESTIONS[lang][category]
       ? QUESTIONS[lang][category] : QUESTIONS.English[category]
@@ -629,7 +638,7 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     units: [u1, u2],
     scale: [a, b],
     given: { row: gRow, value: g },
-    altOrder: ALT_ORDER,
+    \1    meta: { baseUnits: { u1, u2, otherUnit: (gRow==='top'?u2:u1) }, languages: rotationFiltered },
     // Extras available if you ever want MC:
     answer
   }
