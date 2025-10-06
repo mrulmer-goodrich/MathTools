@@ -1,3 +1,4 @@
+///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
 // HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
@@ -550,7 +551,15 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   setOval(null);
   setTripleUL(null);
   setBlinkUnits(false);
-  setMathStrip(s => ({ ...s, showResult: true }));
+  \1// Determine which cell just got solved and blink that single cell
+setBlinkKey(prev => {
+  const k = (table.vTop == null && table.vBottom != null) ? 'vTop'
+          : (table.vBottom == null && table.vTop != null) ? 'vBottom'
+          : (table.solvedRow === 'top' ? 'vTop' : (table.solvedRow === 'bottom' ? 'vBottom' : null));
+  return k;
+});
+// Disable Calculate button by marking flow complete
+setDone(11);
   setDone(11);
   setOpenSum(true);
   setConfettiOn(true);
@@ -588,9 +597,10 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     if (step===9 && Array.isArray(highlightKeys) && highlightKeys.includes(key)) return true;
     return false;
   };
+  const finalBlink = (step>=11) ? (table?.solvedRow==='top' ? 'vTop' : (table?.solvedRow==='bottom' ? 'vBottom' : null)) : null;
   const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'ptable-blink' : ''),
+    (isBlink(key) || (finalBlink && key===finalBlink) ? 'ptable-blink' : ''),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -619,7 +629,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
         /* v10.0.1 — HTable cell centering & uniform text */
         .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
         .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
-        .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; }
+        .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; font-size: 1.25rem; }
 
 
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
@@ -679,6 +689,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
 }
 .eq-display .eq { font-weight: 800; }
 .eq-display .res { font-weight: 900; }
+.hgrid > *:nth-child(3n) { font-size: inherit; }
 `}</style>
 
       <div className="panes">
@@ -916,14 +927,14 @@ const [session, setSession] = useState(persisted || { attempts: [] });
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
-                <button className="button primary" onClick={onCalculate}>Calculate</button>
+                <button  className="button" onClick={onCalculate} disabled={Boolean(step>=11 || table?.result==null)}>Calculate</button>
               </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
 
             {/* Sticky footer controls */}
             <div className="right-footer">
-              <button className="button secondary" onClick={resetProblem}>New Problem</button>
+              <button  className="button secondary {step>=11 ? \'ptable-blink-hard blink-bg\' : \'\'}"  onClick={resetProblem}>New Problem</button>
             </div>
           </div>
         </div>
