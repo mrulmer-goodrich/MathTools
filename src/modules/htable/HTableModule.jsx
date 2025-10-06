@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1) 
+// HTableModule — UG Math Tools v10.0.2 (replaces v10.0.1)
 // SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -212,6 +212,12 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const [openSum, setOpenSum] = useState(false);
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
+  // v10.2.0 — Language rotation state
+  const [rotLang, setRotLang] = useState('English');
+  const [rotationOrder, setRotationOrder] = useState([]); // excludes English, includes 'XXXX'
+  const [isHoldingEnglish, setIsHoldingEnglish] = useState(false);
+  const [rotationId, setRotationId] = useState(null);
+
 
   // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
@@ -222,6 +228,16 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
     saveSession(nextState); setSession(nextState);
   },[problem, table, step, steps]);
+  // v10.2.0 — initialize rotation order on problem change
+  useEffect(() => {
+    try {
+      const pool = (problem?.altOrder || []).filter(l => l !== 'English');
+      setRotationOrder(pool);
+      setRotLang('English');
+      setIsHoldingEnglish(false);
+    } catch {}
+  }, [problem?.id, JSON.stringify(problem?.altOrder)]);
+
 
   // Helpers
   const miss = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c; });
@@ -265,7 +281,8 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     if (step !== 1) return;
     if (d?.v !== 'Units'){ miss(1); return; }
     setTable(t => ({ ...t, head1: 'Units' }));
-    setDone(1); next();
+    if (solvedKey) setBlinkKey(solvedKey);
+setDone(1); next();
   };
 
   // Step 2: second column must be Scale Numbers
@@ -447,6 +464,22 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   };
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
+  // v10.2.0 — single 15s rotation interval
+  useEffect(() => {
+    if (rotationId) { clearInterval(rotationId); setRotationId(null); }
+    const id = setInterval(() => {
+      if (isHoldingEnglish) return;
+      if (!rotationOrder || rotationOrder.length === 0) return;
+      setRotLang(prev => {
+        if (prev === 'English') return rotationOrder[0];
+        const i = rotationOrder.indexOf(prev);
+        return (i < 0 || i === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[i + 1];
+      });
+    }, 15000);
+    setRotationId(id);
+    return () => clearInterval(id);
+  }, [JSON.stringify(rotationOrder), isHoldingEnglish]);
+
 
   const [highlightKeys, setHighlightKeys] = useState([]);
   useLayoutEffect(()=>{
@@ -467,6 +500,11 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     const rot = Math.atan2(dy, dx) * 180/Math.PI;
     setOval({ left: midX, top: midY, len, rot });
   },[highlightKeys]);
+
+  
+  // v10.2.0 — press-and-hold English handlers
+  const holdDownEnglish = () => { setIsHoldingEnglish(true); setRotLang('English'); };
+  const holdUpEnglish   = () => { setIsHoldingEnglish(false); };
 
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
 
@@ -560,7 +598,6 @@ setBlinkKey(prev => {
 });
 // Disable Calculate button by marking flow complete
 setDone(11);
-  setDone(11);
   setOpenSum(true);
   setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
@@ -604,6 +641,45 @@ setDone(11);
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
+  
+  // v10.2.0 — narrative selection and XXXX masking
+  const langLabel = rotLang;
+
+  function maskToXXXX(str) {
+  if (!str) return str;
+  const [u1, u2] = problem?.units || [];
+  const [a, b] = problem?.scale || [];
+  const otherUnit = (problem?.given?.unit || problem?.other?.unit || '');
+  const tokens = [String(a), String(b), '=', u1, u2, otherUnit].filter(Boolean);
+  const placeholders = {};
+  let s = str;
+  tokens.forEach((tok, i) => {
+    const key = `<<T${i}>>`;
+    placeholders[key] = tok;
+    s = s.split(tok).join(key);
+  });
+  s = s.replace(/\p{L}/gu, 'X');
+  Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
+  return s;
+}>>`;
+      placeholders[key] = tok;
+      s = s.split(tok).join(key);
+    });
+    s = s.replace(/\p{L}/gu, 'X');
+    Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
+    return s;
+  }
+
+  function narrativeFor(lang) {
+    const english = problem?.text?.english || '';
+    if (lang === 'English') return english;
+    if (lang === 'XXXX') return maskToXXXX(english);
+    const alt = problem?.text?.alts?.[lang];
+    return (typeof alt === 'string') ? alt : english;
+  }
+
+  const displayText = narrativeFor(rotLang);
+
   // ──────────────────────────────────────────────────────────────────────────────
   // UI + RIGHT PANEL
   // ──────────────────────────────────────────────────────────────────────────────
@@ -614,10 +690,9 @@ setDone(11);
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: inherit; color: inherit; }
 
-        /* removed inline @keyframes ptable-blink-kf (SpecOp contract only) */
-          10%, 30%, 50%, 70%, 90%    { box-shadow: 0 0 0 4px rgba(59,130,246,.35); }
-        }
-        .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
+        /* Keyframes are provided globally by the app shell. Do not declare inline here. */
+/* .ptable-blink relies on the global @keyframes ptable-blink-kf */
+.ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
 
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
@@ -654,7 +729,7 @@ setDone(11);
         /* Lock blink look to the first-step style; remove stray center stripes */
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
-        .ptable-blink-hard.blink-bg::after { display: none !important; }/
+        .ptable-blink-hard.blink-bg::after { display: none !important; }
 .hcell, .hhead {
   display: flex !important;
   align-items: center !important;
@@ -690,6 +765,13 @@ setDone(11);
 .eq-display .eq { font-weight: 800; }
 .eq-display .res { font-weight: 900; }
 .hgrid > *:nth-child(3n) { font-size: inherit; }
+
+/* Optional 1000ms fade (commented-out)
+.narrative-fade-zone.fade-out-1000 { opacity: 0; transition: opacity 1000ms linear; }
+.narrative-fade-zone.fade-in-1000  { opacity: 1; transition: opacity 1000ms linear; }
+.no-fade { opacity: 1 !important; }
+*/
+
 `}</style>
 
       <div className="panes">
@@ -700,9 +782,9 @@ setDone(11);
 
             {/* Problem (natural text only) */}
             <div className="problem-banner">
-              <div className="problem-title">Problem</div>
+              <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
               <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {problem?.text?.english ?? ''}
+                {displayText}
               </div>
             </div>
 
@@ -711,7 +793,7 @@ setDone(11);
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
 {/* Equation display (Step 11+ when result shown) */}
-{step >= 11 && mathStrip?.showResult && (
+{ step >= 11 && Number.isFinite(mathStrip?.result) && (
   <div className="eq-display">
     <span className="frac">
       <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
@@ -934,7 +1016,13 @@ setDone(11);
 
             {/* Sticky footer controls */}
             <div className="right-footer">
-              <button  className="button secondary {step>=11 ? \'ptable-blink-hard blink-bg\' : \'\'}"  onClick={resetProblem}>New Problem</button>
+              <button type="button"
+                className="button ghost"
+                onMouseDown={holdDownEnglish} onMouseUp={holdUpEnglish} onMouseLeave={holdUpEnglish}
+                onTouchStart={holdDownEnglish} onTouchEnd={holdUpEnglish}
+                onPointerDown={holdDownEnglish} onPointerUp={holdUpEnglish} onPointerCancel={holdUpEnglish}
+              >Hold for English</button>
+              <button className={`button secondary ${step>=11 ? 'ptable-blink-hard blink-bg' : ''}`} onClick={resetProblem}>New Problem</button>
             </div>
           </div>
         </div>
