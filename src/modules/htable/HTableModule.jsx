@@ -599,7 +599,10 @@ setBlinkKey(prev => {
 setDone(11);
   setOpenSum(true);
   setConfettiOn(true);
-  setTimeout(() => setConfettiOn(false), 3500);
+  if (npBlinkRef.current){ clearTimeout(npBlinkRef.current); }
+  setNpBlink(false);
+  npBlinkRef.current = setTimeout(() => { setNpBlink(true); }, 3000);
+setTimeout(() => setConfettiOn(false), 3500);
 };
   const resetProblem = ()=>{
     setProblem(genSaneHProblem());
