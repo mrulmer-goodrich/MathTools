@@ -1,6 +1,6 @@
 ///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.3.5
-// SpecOp Sync: Step 2 four-choice guard; Step 6 four-choice enforcement; result equation display; onCalculate duplicate fix; stray bracket removal; formatting alignment
+// HTableModule — UG Math Tools v10.3.6
+// SpecOp Sync: Remove orphaned post-calc useEffect; enable Calculate at Step 11; keep four-choice guards
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
@@ -1052,7 +1052,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
               <div className="center" style={{marginTop:12}}>
-                <button  className="button" onClick={onCalculate} disabled={Boolean(step>=11 || ((table?.vTop == null) === (table?.vBottom == null)))}>Calculate</button>
+                <button  className="button" onClick={onCalculate} disabled={( (table?.vTop == null) === (table?.vBottom == null) )}>Calculate</button>
               </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
@@ -1080,11 +1080,3 @@ function narrativeFor(lang) {
     </div>
   );
 }
-
-useEffect(() => {
-  // Fallback: if some other handler computes the result & sets done, ensure effects are applied
-  const r = Number(mathStrip?.result);
-  if (Number.isFinite(r) && done === 11 && !postCalcAppliedRef.current) {
-    applyPostCalculateEffects();
-  }
-}, [mathStrip?.result, done]);
