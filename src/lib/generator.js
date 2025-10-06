@@ -605,15 +605,14 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
 
   // Build alts per language
   const alts = {}
-  // Build rotation languages list and validate completeness (must include exact "a u1 = b u2")
+  // Rotation languages with XXXX; validate narratives contain exact '=’ scale fragment
   const rotationLanguages = [...LANGS, 'XXXX'];
   const must = `${a} ${u1} = ${b} ${u2}`;
-  function hasComplete(lang){
+  const rotationFiltered = rotationLanguages.filter(lang => {
     if (lang === 'XXXX') return true;
     const t = alts[lang];
     return typeof t === 'string' && t.includes(must);
-  }
-  const rotationFiltered = rotationLanguages.filter(hasComplete);
+  });
 
   for (const lang of languages) {
     const place = tr(lang, 'place', sceneKey)
@@ -638,8 +637,9 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     units: [u1, u2],
     scale: [a, b],
     given: { row: gRow, value: g },
-altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
+    altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
     meta: { baseUnits: { u1, u2, otherUnit: (gRow==='top'?u2:u1) }, languages: rotationFiltered },
+    altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
     // Extras available if you ever want MC:
     answer
   }
