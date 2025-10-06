@@ -651,19 +651,18 @@ setTimeout(() => setConfettiOn(false), 3500);
   if (!str) return str;
   const [u1, u2] = problem?.units || [];
   const [a, b] = problem?.scale || [];
-  const otherUnit = (problem?.given?.unit || problem?.other?.unit || '');
-  const tokens = [String(a), String(b), '=', u1, u2, otherUnit].filter(Boolean);
+  const givenVal = problem?.given?.value;
+  const otherUnit = (problem?.given?.row === 'top' ? u2 : u1) || (problem?.other?.unit || '');
+  const tokens = [String(a), String(b), '=', u1, u2, otherUnit, String(givenVal)].filter(Boolean);
+  const pre='\uE000', post='\uE001';
   const placeholders = {};
-  let s = str;
-  tokens.forEach((tok, i) => {
-    const key = `<<T${i}>>`;
-    placeholders[key] = tok;
-    s = s.split(tok).join(key);
-  });
+  let s = String(str);
+  tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); });
   s = s.replace(/\p{L}/gu, 'X');
   Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
   return s;
 }
+
 
 function narrativeFor(lang) {
     const english = problem?.text?.english || '';
