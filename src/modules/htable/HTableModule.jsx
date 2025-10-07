@@ -101,11 +101,11 @@ const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
   "What always goes in the second column?",
-  "What are the two units in the problem?",
+  "What are the two units in the problem? (tap two)",
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
-  "Tap the cell where you should place the value",
+  "Where should this value go? (tap a cell)",
   "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
@@ -118,6 +118,10 @@ const STEP1_CHOICES = [
   { id:'convert',    label:'Convert Units First' },
   { id:'guess',      label:'Just Guess' },
 ];
+
+// Randomized once per problem for step 0 choices
+const step0Choices = useMemo(()=> shuffle(STEP1_CHOICES), [problem?.id]);
+
 
 const UNIT_CATS = {
   length: ['mm','millimeter','millimeters','cm','centimeter','centimeters','m','meter','meters','km','kilometer','kilometers','in','inch','inches','ft','foot','feet','yd','yard','yards','mi','mile','miles'],
@@ -187,7 +191,7 @@ export default function HTableModule(){
     { id: 'cm', label: 'Cross Multiply', correct: true },
     { id: 'add', label: 'Add all the numbers', correct: false },
     { id: 'avg', label: 'Find the average', correct: false },
-    { id: 'sub', label: 'Subtract the numbers', correct: false },
+    { id: 'sub', label: 'Subtract the smaller from larger', correct: false },
   ];
 
   const chooseNext8 = (choice) => {
@@ -613,7 +617,8 @@ function applyPostCalculateEffects() {
   // Start blinking on solved cell (module-yellow style) — continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
 // Confetti & summary
-setConfettiOn(true);
+  setOpenSum(true);
+  setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -621,7 +626,9 @@ setConfettiOn(true);
   if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
   setNpBlink(false);
   npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
-setConfettiOn(true);
+
+  setOpenSum(true);
+  setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -958,7 +965,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
+                {step0Choices.map(c => (
                   <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
@@ -1068,7 +1075,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 10 — END */}
 
             {/* RIGHT-PANEL: STEP 11 — START */}
-            {step>=11 && (!mathStrip?.showResult) && (
+            {step>=11 && (
               <div className="center" style={{marginTop:12}}>
                 <button  className="button" onClick={onCalculate} disabled={( (table?.vTop == null) === (table?.vBottom == null) )}>Calculate</button>
               </div>
