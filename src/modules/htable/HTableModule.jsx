@@ -101,11 +101,11 @@ const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
   "What always goes in the second column?",
-  "What are the two units in the problem? (tap two)",
+  "What are the two units in the problem?",
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
-  "Where should this value go? (tap a cell)",
+  "Tap the cell where you should place the value",
   "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
@@ -187,7 +187,7 @@ export default function HTableModule(){
     { id: 'cm', label: 'Cross Multiply', correct: true },
     { id: 'add', label: 'Add all the numbers', correct: false },
     { id: 'avg', label: 'Find the average', correct: false },
-    { id: 'sub', label: 'Subtract the smaller from larger', correct: false },
+    { id: 'sub', label: 'Subtract the numbers', correct: false },
   ];
 
   const chooseNext8 = (choice) => {
@@ -238,7 +238,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
       // Build from actual available alts; ignore placeholders & empties
       const altsObj = (problem?.text?.alts) || {};
       const keys = Object.keys(altsObj).filter(k => typeof altsObj[k] === 'string' && altsObj[k].trim().length > 0);
-      const pool = keys.filter(l => l !== 'English' && l !== 'XXXX');
+      const pool = keys.filter(l => l !== 'English');
       setRotationOrder(pool);
       setRotLang('English');
       setIsHoldingEnglish(false);
@@ -613,8 +613,7 @@ function applyPostCalculateEffects() {
   // Start blinking on solved cell (module-yellow style) — continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
 // Confetti & summary
-  setOpenSum(true);
-  setConfettiOn(true);
+setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -622,9 +621,7 @@ function applyPostCalculateEffects() {
   if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
   setNpBlink(false);
   npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
-
-  setOpenSum(true);
-  setConfettiOn(true);
+setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -835,7 +832,7 @@ function narrativeFor(lang) {
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
       <button
         type="button"
-        className="button button-contrast"
+        className="button button-contrast no-hover"
         onMouseDown={holdEnglishDown}
         onMouseUp={holdEnglishUp}
         onMouseLeave={holdEnglishUp}
@@ -1071,7 +1068,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 10 — END */}
 
             {/* RIGHT-PANEL: STEP 11 — START */}
-            {step>=11 && (
+            {step>=11 && (!mathStrip?.showResult) && (
               <div className="center" style={{marginTop:12}}>
                 <button  className="button" onClick={onCalculate} disabled={( (table?.vTop == null) === (table?.vBottom == null) )}>Calculate</button>
               </div>
