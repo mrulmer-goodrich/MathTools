@@ -1340,3 +1340,18 @@ body{
 
 /* Scoped rule: disable hover effects for press-and-hold controls */
 .no-hover:hover, .no-hover:active { transform:none !important; box-shadow:none !important; filter:none !important; }
+
+/* PATCH: neutralize hover for press-and-hold English control only */
+.no-hover:hover,
+.no-hover:focus:hover,
+.no-hover:active:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* If you have hover-driven color/underline elsewhere, fence it too: */
+.no-hover:hover * {
+  text-decoration: none !important;
+}
+
