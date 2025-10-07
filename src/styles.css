@@ -1336,3 +1336,7 @@ body{
 }
 .button.button-contrast:hover{ transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,.18), inset 0 -2px 0 rgba(0,0,0,.06); }
 .button.button-contrast:active{ transform: translateY(0); box-shadow: 0 6px 14px rgba(0,0,0,.14); }
+
+
+/* Scoped rule: disable hover effects for press-and-hold controls */
+.no-hover:hover, .no-hover:active { transform:none !important; box-shadow:none !important; filter:none !important; }
