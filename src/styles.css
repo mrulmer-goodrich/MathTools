@@ -71,7 +71,6 @@ body{
 .BigButton, .bigBtn, .big-button{ display:inline-flex; align-items:center; justify-content:center; }
 
 /* ---------- Cards & Panes ---------- */
-.panes{ display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; align-items:start; }
 .card{
   background: var(--card);
   border: 1px solid var(--border-2);
@@ -83,7 +82,6 @@ body{
 
 /* ---------- Buttons ---------- */
 .button{ border-radius:12px; padding:10px 14px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:700; }
-.button.primary{ background:var(--cms-light); color:#05223c; border-color:transparent; }
 .button.success{ background:var(--t-green); color:white; border-color:#0ea371; }
 .button.big-under{ margin-top:12px; }
 .button:disabled{ background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; box-shadow:none; }
@@ -576,23 +574,7 @@ body{
    - Keep all rules scoped to PTables to avoid leaks
 */
 
-:root{
-  --eastway-blue: #0B4B8C;
-  --eastway-green:#0C6B4D;
-  --cms-light:    #DAE9F6;
 
-  --ink:          #0F172A;
-  --ink-2:        #334155;
-  --ink-3:        #64748B;
-  --border:       #CBD5E1;
-  --border-2:     #E2E8F0;
-  --bg-subtle:    #F1F5F9;
-  --card:         #FFFFFF;
-
-  --t-green:  #10B981;
-  --t-yellow: #F59E0B;
-  --t-red:    #EF4444;
-}
 
 /* --- Keep user's existing styles (v8.0) by importing them into this file --- */
 /* For this downloadable file, we include only the incremental overrides and additions. */
@@ -1111,12 +1093,6 @@ body{
     min-height: 100px;
   }
 }
-/* === OpSpec v9.6.1 UI Overrides (tap-only + layout) === */
-.panes{ grid-template-columns: 2fr 1fr !important; }
-
-.chips.with-borders > *{ cursor: pointer !important; }
-.chip{ cursor: pointer !important; }
-.chips.with-borders > *:active{ cursor: pointer !important; }
 
 /* Make blink more obvious */
 @keyframes ptable-blink-kf { 
