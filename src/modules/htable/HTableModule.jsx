@@ -1,7 +1,4 @@
-// HTableModule — UG Math Tools v10.4.6 (built off 10.4.2)
-// Previous working copy reference: 10.3.6
-// SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
-// src/modules/htable/HTableModule.jsx
+// HTableModule — UG Math Tools v10.4.7 (surgical from 10.4.6)
 //Ulmer-Goodrich Productions
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
@@ -15,10 +12,9 @@ import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
 
-// ---- Safe problem wrapper (SpecOp 9.7.x): reject equal scale numbers (e.g., 20 ↔ 20) ----
+// ---- Safe problem wrapper (unchanged) ----
 function _violatesEqualScalePair(p) {
   try {
-    // Interpret common shapes: p.scaleTop/Bottom OR p.sTop/sBottom OR p.headerNum/headerDen
     const a = (p && (p.scaleTop ?? p.sTop ?? p.headerNum));
     const b = (p && (p.scaleBottom ?? p.sBottom ?? p.headerDen));
     return (typeof a === 'number' && typeof b === 'number' && a === b);
@@ -26,7 +22,6 @@ function _violatesEqualScalePair(p) {
     return false;
   }
 }
-
 function genSafeProblem(rawGenFn, maxTries = 25) {
   if (typeof rawGenFn !== 'function') return rawGenFn;
   let last = null;
@@ -35,7 +30,6 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
     last = cand;
     if (!_violatesEqualScalePair(cand)) return cand;
   }
-  // Fallback: if generator kept producing equal pairs, nudge bottom by +1
   if (last && (last.scaleBottom ?? last.sBottom ?? last.headerDen) !== undefined) {
     if (last.scaleBottom !== undefined) last.scaleBottom += 1;
     else if (last.sBottom !== undefined) last.sBottom += 1;
@@ -43,13 +37,10 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
   }
   return last;
 }
-// ---- End wrapper ----
-
 
 // ────────────────────────────────────────────────────────────────────────────────
-// TAP-ONLY WRAPPERS
+// TAP-ONLY wrappers (unchanged)
 // ────────────────────────────────────────────────────────────────────────────────
-// TAP-ONLY WRAPPERS — SLOT/DRAG
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => {
@@ -70,7 +61,6 @@ const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   );
 };
 
-// blinkWrap default prevents No-Undef
 const Slot = ({ accept, children, className='', blinkWrap=false, onClick, validator, test, ...rest }) => {
   const handleClick = (e) => { onClick?.(e); };
   const testFn = test ?? ((d) => {
@@ -93,9 +83,8 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Spec scaffolding & helpers
+// Spec scaffolding & helpers (unchanged where not marked)
 // ────────────────────────────────────────────────────────────────────────────────
-// STEP TITLES
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
@@ -118,7 +107,7 @@ const STEP1_CHOICES = [
   { id:'guess',      label:'Just Guess' },
 ];
 
-const UNIT_CATS = {
+const UNIT_CATS = { /* … (same as 10.4.6) … */ 
   length: ['mm','millimeter','millimeters','cm','centimeter','centimeters','m','meter','meters','km','kilometer','kilometers','in','inch','inches','ft','foot','feet','yd','yard','yards','mi','mile','miles'],
   time: ['sec','secs','second','seconds','min','mins','minute','minutes','hour','hours','day','days','week','weeks','year','years'],
   volume: ['tsp','tsps','teaspoon','teaspoons','tbsp','tbsps','tablespoon','tablespoons','cup','cups','quart','quarts','qt','qts','gallon','gallons','liter','liters','l','milliliter','milliliters','ml'],
@@ -150,7 +139,7 @@ const genSaneHProblem = () => {
       const c = Number(q?.given?.value);
       if([a,b,c].some(n=>Number.isNaN(n))) return false;
       const set = new Set([a,b,c]);
-      return set.size===3; // all three numbers must be unique
+      return set.size===3;
     }catch{ return false }
   };
   while(tries<50 && (!saneProblem(p) || !uniqueTriple(p))){ p = genHProblem(); tries++; }
@@ -158,16 +147,7 @@ const genSaneHProblem = () => {
 };
 
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
-
-/** Guard: enforce 4-choice render without crashing */
-const _assertFour = (arr, tag) => {
-  try {
-    if (!Array.isArray(arr) || arr.length !== 4) {
-      console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr);
-    }
-  } catch {}
-  return arr;
-};
+const _assertFour = (arr, tag) => { try { if (!Array.isArray(arr) || arr.length !== 4) { console.warn('Choice count not 4 for', tag, Array.isArray(arr)?arr.length:arr); } } catch {} return arr; };
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Component
@@ -178,19 +158,14 @@ export default function HTableModule(){
   const persisted = loadSession() || {};
   const snap = (persisted.hSnap && persisted.hSnap.version===H_SNAP_VERSION) ? persisted.hSnap : null;
 
-  // STEP 8: four-choice conceptual prompt
   const STEP8_CHOICES = [
     { id: 'cm', label: 'Cross Multiply', correct: true },
     { id: 'add', label: 'Add all the numbers', correct: false },
     { id: 'avg', label: 'Find the average', correct: false },
-    { id: 'sub', label: 'Subtract the numbers', correct: false }, // PATCH: copy tweak
+    { id: 'sub', label: 'Subtract the numbers', correct: false },
   ];
 
-  const chooseNext8 = (choice) => {
-    if (!choice || !choice.correct) { miss(8); return; }
-    setDone(8);
-    next();
-  };
+  const chooseNext8 = (choice) => { if (!choice || !choice.correct) { miss(8); return; } setDone(8); next(); };
 
   const [session, setSession] = useState(persisted || { attempts: [] });
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
@@ -203,43 +178,44 @@ export default function HTableModule(){
   });
 
   const [step, setStep] = useState(snap?.step ?? 0);
-  const [steps, setSteps] = useState(
-    snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
-  );
+  const [steps, setSteps] = useState(snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false})));
 
+  // Summary state exists but will stay off in 10.4.7
   const [openSum, setOpenSum] = useState(false);
+
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
 
   // v10.2.0 — Language rotation state
   const [rotLang, setRotLang] = useState('English');
-  const [rotationOrder, setRotationOrder] = useState([]); // now includes 'XXXX'
+  const [rotationOrder, setRotationOrder] = useState([]); // includes 'XXXX'
   const [isHoldingEnglish, setIsHoldingEnglish] = useState(false);
   const [rotationId, setRotationId] = useState(null);
+
+  const prevLangRef = useRef('English'); // PATCH 10.4.7: remember language before hold
 
   const [npBlink, setNpBlink] = useState(false);
   const npBlinkRef = useRef(null);
   const postCalcAppliedRef = useRef(false);
 
-  // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const [blinkUnits, setBlinkUnits] = useState(false);
 
-  // Persist
   useEffect(()=>{
     const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
     saveSession(nextState); setSession(nextState);
   },[problem, table, step, steps]);
 
-  // v10.2.0 — initialize rotation order on problem change (PATCH: include 'XXXX')
+  // Initialize rotation order on problem change — include 'XXXX'
   useEffect(() => {
     try {
       const altsObj = (problem?.text?.alts) || {};
       const keys = Object.keys(altsObj).filter(k => typeof altsObj[k] === 'string' && altsObj[k].trim().length > 0);
-      const pool = keys.filter(l => l !== 'English'); // PATCH: do NOT exclude 'XXXX'
+      const pool = keys.filter(l => l !== 'English'); // allow XXXX if present
       setRotationOrder(pool);
       setRotLang('English');
       setIsHoldingEnglish(false);
+      prevLangRef.current = pool[0] || 'English';
     } catch {}
   }, [problem?.id, JSON.stringify(problem?.text?.alts)]);
 
@@ -275,33 +251,12 @@ export default function HTableModule(){
   };
 
   // Step 0
-  const handleStep0 = (choice) => {
-    if (!choice?.correct) { miss(0); return; }
-    setDone(0); next();
-  };
+  const handleStep0 = (choice) => { if (!choice?.correct) { miss(0); return; } setDone(0); next(); };
 
-  // PATCH: Step 0 choices randomized once per problem; no in-render shuffle
-  const step0Choices = useMemo(() => {
-    return shuffle(STEP1_CHOICES);
-  }, [problem?.id]);
+  // Randomize once per problem; no in-render shuffle
+  const step0Choices = useMemo(() => shuffle(STEP1_CHOICES), [problem?.id]);
 
-  // Step 1: first column must be Units
-  const tapHeader1 = (d) => {
-    if (step !== 1) return;
-    if (d?.v !== 'Units'){ miss(1); return; }
-    setTable(t => ({ ...t, head1: 'Units' }));
-    setDone(1); next();
-  };
-
-  // Step 2: second column must be Scale Numbers
-  const tapHeader2 = (d) => {
-    if (step !== 2) return;
-    if (d?.v !== 'ScaleNumbers'){ miss(2); return; }
-    setTable(t => ({ ...t, head2: 'Scale Numbers' }));
-    setDone(2); next();
-  };
-
-  // PATCH: Step 1 & 2 stable choices (no in-render shuffle)
+  // Step 1/2 stable header choices
   const step1HeaderChoices = useMemo(() => shuffle([
     { id:'col_units', label:'Units', kind:'col', v:'Units' },
     { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
@@ -316,7 +271,7 @@ export default function HTableModule(){
     { id:'col_rates',  label:'Rates',  kind:'col', v:'Rates' },
   ]), [problem?.id]);
 
-  // Choice pools
+  // Unit choices (unchanged)
   const unitChoices = useMemo(()=>{
     const correct = Array.from(new Set(problem.units || [])).slice(0,2);
     const cat = unitCategory(correct[0] || '');
@@ -331,7 +286,7 @@ export default function HTableModule(){
     return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
 
-  // Include all problem numbers in choices (as requested), plus a few distractors
+  // Number choice pools (unchanged except no in-render shuffle)
   const numbersTopScale = useMemo(()=>{
     const v = Number(problem?.scale?.[0]);
     const set = new Set([v, ...allProblemNumbers]);
@@ -355,7 +310,6 @@ export default function HTableModule(){
       if (exists) return prev;
       const nextSel = [...prev, d];
 
-      // Immediate feedback on each correct selection (brief blink)
       setBlinkUnits(true);
       setTimeout(()=>setBlinkUnits(false), 800);
 
@@ -364,7 +318,6 @@ export default function HTableModule(){
         const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
         setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
 
-        // Full 2s blink once both are chosen
         setBlinkUnits(true);
         setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
@@ -391,7 +344,6 @@ export default function HTableModule(){
     });
   };
 
-  // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
   const otherValueChoices = useMemo(()=>{
     const correct = Number(problem?.given?.value);
@@ -423,13 +375,7 @@ export default function HTableModule(){
     return shuffle(_assertFour(arr, "Step6-OtherValue"));
   }, [problem?.id, problem?.scale, problem?.given]);
 
-  const chooseOtherValue = (choice) => {
-    if (step!==6) return;
-    if (!choice?.correct){ miss(6); return; }
-    setPickedOther(choice);
-    setDone(6);
-    next();
-  };
+  const chooseOtherValue = (choice) => { if (step!==6) return; if (!choice?.correct){ miss(6); return; } setPickedOther(choice); setDone(6); next(); };
 
   const tapPlaceValueTop = () => {
     if (step!==7) return;
@@ -446,18 +392,14 @@ export default function HTableModule(){
     setDone(7); next();
   };
 
-  // Geometry for overlays
+  // Geometry and overlay helpers (unchanged)
   const gridRef = useRef(null);
-  const refs = {
-    uTop: useRef(null), sTop: useRef(null), vTop: useRef(null),
-    uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null)
-  };
+  const refs = { uTop: useRef(null), sTop: useRef(null), vTop: useRef(null), uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null) };
   const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 });
   const [oval, setOval] = useState(null);
   const [tripleUL, setTripleUL] = useState(null);
-  const measure = ()=>{
-    const g = gridRef.current;
-    if(!g) return;
+  const measure = ()=>{ /* …same as 10.4.6… */ 
+    const g = gridRef.current; if(!g) return;
     const gr = g.getBoundingClientRect();
     const r_uTop    = refs.uTop.current?.getBoundingClientRect();
     const r_sTop    = refs.sTop.current?.getBoundingClientRect();
@@ -466,8 +408,7 @@ export default function HTableModule(){
     const r_sBottom = refs.sBottom.current?.getBoundingClientRect();
     const r_vBottom = refs.vBottom.current?.getBoundingClientRect();
     if(!(r_sTop && r_vTop && r_uTop && r_uBottom && r_sBottom && r_vBottom)) {
-      setLines(l=>({ ...l, gridW: gr.width }));
-      return;
+      setLines(l=>({ ...l, gridW: gr.width })); return;
     }
     const v1 = (r_uTop.right + r_sTop.left)/2 - gr.left;
     const v2 = (r_sTop.right + r_vTop.left)/2 - gr.left;
@@ -486,7 +427,7 @@ export default function HTableModule(){
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
 
-  // v10.2.0 — single 15s rotation interval
+  // ── Language rotation interval (unchanged) ──
   useEffect(() => {
     if (rotationId) { clearInterval(rotationId); setRotationId(null); }
     const id = setInterval(() => {
@@ -502,33 +443,22 @@ export default function HTableModule(){
     return () => clearInterval(id);
   }, [JSON.stringify(rotationOrder), isHoldingEnglish]);
 
-  const [highlightKeys, setHighlightKeys] = useState([]);
-  useLayoutEffect(()=>{
-    if(!highlightKeys.length){ setOval(null); return }
-    const g = gridRef.current; if(!g) return;
-    const gr = g.getBoundingClientRect();
-    const centers = highlightKeys.map(k=>{
-      const r = refs[k].current?.getBoundingClientRect();
-      if(!r) return null;
-      return { x: (r.left + r.right)/2 - gr.left, y: (r.top + r.bottom)/2 - gr.top };
-    }).filter(Boolean);
-    if(centers.length!==2){ setOval(null); return }
-    const [a,b] = centers;
-    const midX = (a.x + b.x)/2;
-    const midY = (a.y + b.y)/2;
-    const dx = b.x - a.x, dy = b.y - a.y;
-    const len = Math.sqrt(dx*dx + dy*dy) + 140;
-    const rot = Math.atan2(dy, dx) * 180/Math.PI;
-    setOval({ left: midX, top: midY, len, rot });
-  },[highlightKeys]);
-
-  // v10.2.0 — press-and-hold English handlers
-  const holdDownEnglish = () => { setIsHoldingEnglish(true); setRotLang('English'); };
-  const holdUpEnglish   = () => { setIsHoldingEnglish(false); };
+  // ── Press-and-hold English (PATCH 10.4.7: instant resume on release) ──
+  const holdDownEnglish = () => {
+    prevLangRef.current = rotLang === 'English' ? (rotationOrder[0] || 'English') : rotLang;
+    setIsHoldingEnglish(true);
+    setRotLang('English');
+  };
+  const holdUpEnglish   = () => {
+    setIsHoldingEnglish(false);
+    // Immediately resume the rotation without waiting for the interval tick:
+    const nextLang = prevLangRef.current;
+    if (nextLang && nextLang !== 'English') setRotLang(nextLang);
+  };
 
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
 
-  // Options for step 9 tile selection (explicit tiles like "17 × 6")
+  // Cross-multiply (unchanged)
   const crossPair = useMemo(()=>{
     if(!givenRow || table.sTop==null || table.sBottom==null) return null;
     const v = (givenRow==='top') ? table.vTop : table.vBottom;
@@ -545,7 +475,6 @@ export default function HTableModule(){
     if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
     const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
-    // ensure a "random multiple combo"
     if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
     const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return shuffle(uniq).slice(0,4);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
@@ -563,8 +492,8 @@ export default function HTableModule(){
 
   const divideChoices = useMemo(()=>{
     if (table.sTop==null || table.sBottom==null) return [];
-    const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;   // same-row scale
-    const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;   // opposite-row scale
+    const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;
+    const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;
     return shuffle([
       { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
       { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
@@ -592,8 +521,12 @@ export default function HTableModule(){
     setDone(10); next();
   };
 
-  // v10.2.0 — (unused earlier duplicates removed by omission)
-  // PATCH: final post-calc remains as-is
+  const [highlightKeys, setHighlightKeys] = useState([]);
+  const [oval, setOval] = useState(null);
+  const [tripleUL, setTripleUL] = useState(null);
+  const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 });
+
+  // Post-calc effects (PATCH 10.4.7: Summary disabled)
   function applyPostCalculateEffects() {
     if (postCalcAppliedRef.current) return;
     postCalcAppliedRef.current = true;
@@ -616,10 +549,11 @@ export default function HTableModule(){
       if (unknownBottom){ solvedKey = 'vBottom'; return { ...t, vBottom: Number(r), solvedRow: 'bottom' }; }
       return t;
     });
-
     if (solvedKey) { setBlinkKey(solvedKey); }
 
-    setOpenSum(true);
+    // Summary overlay remains OFF in 10.4.7:
+    setOpenSum(false);
+
     setConfettiOn(true);
     setTimeout(() => setConfettiOn(false), 3500);
 
@@ -628,9 +562,9 @@ export default function HTableModule(){
     setNpBlink(false);
     npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
   }
-
   const onCalculate = () => { applyPostCalculateEffects(); };
 
+  // Reset (unchanged)
   const resetProblem = ()=>{
     postCalcAppliedRef.current = false; setNpBlink(false);
     setProblem(genSaneHProblem());
@@ -652,9 +586,7 @@ export default function HTableModule(){
   };
 
   const ROW_H = 88;
-  const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
-
   const needWildBlink = (key)=> {
     if (step===4 && key==='sTop'    && table.sTop==null) return true;
     if (step===5 && key==='sBottom' && table.sBottom==null) return true;
@@ -669,10 +601,9 @@ export default function HTableModule(){
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
-  // v10.2.0 — narrative selection and XXXX masking
   const langLabel = rotLang;
 
-  function maskToXXXX(str) {
+  function maskToXXXX(str) { /* unchanged */ 
     if (!str) return str;
     const [u1, u2] = problem?.units || [];
     const [a, b] = problem?.scale || [];
@@ -683,13 +614,10 @@ export default function HTableModule(){
     const placeholders = {};
     let s = String(str);
     tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); });
-    s = Array.from(s).map(ch => {
-      try { return (ch.toLowerCase() !== ch.toUpperCase()) ? 'X' : ch; } catch { return ch; }
-    }).join('');
+    s = Array.from(s).map(ch => { try { return (ch.toLowerCase() !== ch.toUpperCase()) ? 'X' : ch; } catch { return ch; } }).join('');
     Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
     return s;
   }
-
   function narrativeFor(lang) {
     const english = problem?.text?.english || '';
     if (lang === 'English') return english;
@@ -697,12 +625,11 @@ export default function HTableModule(){
     const alt = problem?.text?.alts?.[lang];
     return (typeof alt === 'string') ? alt : english;
   }
-
   function enforceEquals(s){ return (s||'').replace(/↔/g,'='); }
   const displayText = enforceEquals(narrativeFor(rotLang));
 
   // ──────────────────────────────────────────────────────────────────────────────
-  // UI + RIGHT PANEL
+  // UI LAYOUT
   // ──────────────────────────────────────────────────────────────────────────────
   return (
     <div className="container" style={{position:'relative'}}>
@@ -710,81 +637,43 @@ export default function HTableModule(){
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: inherit; color: inherit; }
-
-        /* Keyframes are provided globally by the app shell. Do not declare inline here. */
-        /* .ptable-blink relies on the global @keyframes ptable-blink-kf */
         .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
-
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
-
-        .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty {
-          min-height: ${ROW_H}px !important;
-          height: ${ROW_H}px !important;
-        }
-
+        .hcell .empty, .hcell .slot, .hcell .slot.empty, .hhead .empty { min-height: ${ROW_H}px !important; height: ${ROW_H}px !important; }
         .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
         .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
         .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; font-size: 1.25rem; }
-
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
-        .panes { display: flex; gap: 12px; align-items: flex-start; }
+        .panes { display: flex; gap: 24px; align-items: flex-start; }
         .card { flex: 1 1 0; min-width: 0; }
         .card.right-steps { order: 1; }
         .card.hgrid-card  { order: 2; }
-
-        @media (max-width: 720px) {
-          .panes { flex-direction: column; }
-          .card.right-steps, .card.hgrid-card { order: initial; }
-        }
-
-        .panes { gap: 24px; }
+        @media (max-width: 720px) { .panes { flex-direction: column; } .card.right-steps, .card.hgrid-card { order: initial; } }
         .card.right-steps { font-size: 1.06rem; }
-        .card.right-steps .chip,
-        .card.right-steps .button { font-size: 1.06rem; }
+        .card.right-steps .chip, .card.right-steps .button { font-size: 1.06rem; }
         .right-footer { margin-top: 12px; }
-
         .ptable-blink-hard.blink-bg { background: transparent !important; }
-        .ptable-blink-hard.blink-bg::before,
-        .ptable-blink-hard.blink-bg::after { display: none !important; }
-
-        .eq-display {
-          font-size: 1.6rem;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.6rem;
-          padding: 0.5rem 0;
-        }
+        .ptable-blink-hard.blink-bg::before, .ptable-blink-hard.blink-bg::after { display: none !important; }
+        .eq-display { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.5rem 0; }
         .eq-display .frac { display: inline-grid; grid-template-rows: auto 2px auto; align-items: center; justify-items: center; }
         .eq-display .frac .bar { width: 100%; height: 2px; background: #0f172a; margin: 0.15rem 0; }
         .eq-display .eq { font-weight: 800; }
         .eq-display .res { font-weight: 900; }
-        .hgrid > *:nth-child(3n) { font-size: inherit; }
-
         .action-blink { animation: ptable-blink-kf 2s ease-out 0s infinite; }
         .action-blink-strong { animation: np-strong 1.2s ease-in-out 0s infinite; }
-        @keyframes np-strong {
-          0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
-          50%  { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(59,130,246,.15); }
-          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
-        }
+        @keyframes np-strong { 0%{ transform:scale(1); box-shadow:0 0 0 0 rgba(59,130,246,.25);} 50%{ transform:scale(1.06); box-shadow:0 0 0 10px rgba(59,130,246,.15);} 100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(59,130,246,.25);} }
       `}</style>
 
       <div className="panes">
-        {/* LEFT CARD: Problem + H-table */}
+        {/* LEFT CARD: Problem + Press for English */}
         <div className="card hgrid-card">
           <div className="section">
-
-            {/* Problem (natural text only) */}
             <div className="problem-banner">
               <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {displayText}
-              </div>
+              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>{displayText}</div>
 
-              {/* PATCH: add no-hover; remove onMouseLeave */}
+              {/* Press for English — hover neutralized via your CSS .no-hover */}
               <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
                 <button
                   type="button"
@@ -802,22 +691,11 @@ export default function HTableModule(){
               </div>
             </div>
 
-            {/* H-table visible AFTER step 0 */}
+            {/* H-table (visual) */}
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
-                {/* Equation display (Step 11+ when result shown) */}
-                { (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
-                  <div className="eq-display">
-                    <span className="frac">
-                      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
-                      <span className="bar"></span>
-                      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
-                    </span>
-                    <span className="eq"> = </span>
-                    <span className="res">{ mathStrip?.showResult ? String(mathStrip?.result ?? '') : null }</span>
-                  </div>
-                )}
                 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+                  {/* … grid content unchanged … */}
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
                     <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
@@ -833,8 +711,7 @@ export default function HTableModule(){
                       </div>
                     </Slot>
                   </div>
-                  <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
-
+                  <div className="hhead" style={{height:ROW_H}} />
                   {/* Row 1 */}
                   <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
                     <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
@@ -871,12 +748,12 @@ export default function HTableModule(){
                     </Slot>
                   </div>
 
-                  {/* H lines */}
+                  {/* H & V lines */}
                   <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${'#0f172a'}`}} />
                   <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${'#0f172a'}`}} />
                   <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${'#0f172a'}`}} />
 
-                  {/* Red oval (Step 9) */}
+                  {/* Red overlays */}
                   {oval && (
                     <div
                       style={{
@@ -888,7 +765,6 @@ export default function HTableModule(){
                       }}
                     />
                   )}
-                  {/* Red triple underline (Step 10) */}
                   {tripleUL && (
                     <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
                       <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
@@ -899,16 +775,40 @@ export default function HTableModule(){
                 </div>
               </div>
             )}
-
           </div>
         </div>
 
-        {/* RIGHT SIDE – prompts only */}
+        {/* RIGHT SIDE – prompts + equation strip + Calculate (moved here) */}
         <div className="card right-steps">
           <div className="section">
+
+            {/* PATCH 10.4.7: Equation strip ON RIGHT; inline Calculate button */}
+            {(step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
+              <div className="eq-display" style={{marginBottom:8}}>
+                <span className="frac">
+                  <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
+                  <span className="bar"></span>
+                  <span className="den">{String(mathStrip?.divisor ?? '')}</span>
+                </span>
+                <span className="eq"> = </span>
+                {mathStrip?.showResult ? (
+                  <span className="res">{ String(mathStrip?.result ?? '') }</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="button action-blink-strong"
+                    onClick={onCalculate}
+                    disabled={ ( (table?.vTop == null) === (table?.vBottom == null) ) }
+                  >
+                    Calculate
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="step-title">{STEP_TITLES[step]}</div>
 
-            {/* RIGHT-PANEL: STEP 0 — START (PATCH: use step0Choices) */}
+            {/* RIGHT-PANEL: STEP 0 */}
             {step===0 && (
               <div className="chips with-borders center">
                 {step0Choices.map(c => (
@@ -916,9 +816,8 @@ export default function HTableModule(){
                 ))}
               </div>
             )}
-            {/* RIGHT-PANEL: STEP 0 — END */}
 
-            {/* RIGHT-PANEL: STEP 1 — START (PATCH: stable list) */}
+            {/* RIGHT-PANEL: STEP 1 */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {step1HeaderChoices.map((h, idx) => (
@@ -927,7 +826,7 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 2 — START (PATCH: stable list) */}
+            {/* RIGHT-PANEL: STEP 2 */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
                 {step2HeaderChoices.map((h, idx) => (
@@ -945,21 +844,21 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 4 (PATCH: remove render-time shuffle) */}
+            {/* RIGHT-PANEL: STEP 4 */}
             {step===4 && (
               <div className="chips center mt-8">
                 {numbersTopScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 5 (PATCH: remove render-time shuffle) */}
+            {/* RIGHT-PANEL: STEP 5 */}
             {step===5 && (
               <div className="chips center mt-8">
                 {numbersBottomScale.map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 6 (PATCH: remove render-time shuffle) */}
+            {/* RIGHT-PANEL: STEP 6 */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
                 {otherValueChoices.map(c => (
@@ -969,20 +868,18 @@ export default function HTableModule(){
             )}
 
             {/* RIGHT-PANEL: STEP 7 */}
-            {step===7 && (<div className="problem-body">Tap the cell where you should place the value.</div>)} {/* copy aligned */}
+            {step===7 && (<div className="problem-body">Tap the cell where you should place the value.</div>)}
 
-            {/* RIGHT-PANEL: STEP 8 (PATCH: stable choices) */}
+            {/* RIGHT-PANEL: STEP 8 */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
                 {_assertFour(STEP8_CHOICES, "Step8").map((opt,idx)=>(
-                  <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>
-                    {opt.label}
-                  </button>
+                  <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>{opt.label}</button>
                 ))}
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 9 (PATCH: rely on memoized wrongPairs; no extra shuffle in render) */}
+            {/* RIGHT-PANEL: STEP 9 */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
                 {[crossPair, ...wrongPairs].filter(Boolean).slice(0,4).map((pair,idx)=>(
@@ -991,19 +888,12 @@ export default function HTableModule(){
               </div>
             )}
 
-            {/* RIGHT-PANEL: STEP 10 (PATCH: remove render-time shuffle) */}
+            {/* RIGHT-PANEL: STEP 10 */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
                 {divideChoices.map((c,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
                 ))}
-              </div>
-            )}
-
-            {/* RIGHT-PANEL: STEP 11 */}
-            {step>=11 && (
-              <div className="center" style={{marginTop:12}}>
-                <button className="button" onClick={onCalculate} disabled={( (table?.vTop == null) === (table?.vBottom == null) )}>Calculate</button>
               </div>
             )}
 
@@ -1021,8 +911,8 @@ export default function HTableModule(){
         </div>
       </div>
 
-      {/* Summary overlay + confetti (unchanged) */}
-      {openSum && (
+      {/* Summary overlay stays OFF in 10.4.7 */}
+      {false && openSum && (
         <SummaryOverlay
           open={openSum}
           onClose={()=>setOpenSum(false)}
