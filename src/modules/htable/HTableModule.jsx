@@ -1,16 +1,16 @@
-///This is now controlling authority as v.10.1.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.4.6 (built off 10.4.2)
-// Previous working copy reference: 10.3.6
-// SpecOp Sync: Language rotator excludes 'XXXX' and only uses valid alts; Post-calc runs on first click; solved-cell blink uses standard style for 2s; overlays cleared; New Problem pulse
+///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
+// HTableModule — UG Math Tools v10.5.1 
+// SpecOp Sync: Request #1 fixes (hover→press English, XXXX rotation, stable shuffles, wording,
+// chip label+size, remove Summary+calc-left text, font sizing)
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
+
 /* eslint-disable react/no-unknown-property */
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
 import DropSlotBase from '../../components/DropSlot.jsx'
-import SummaryOverlay from '../../components/SummaryOverlay.jsx'
 
 // Data
 import { genHProblem } from '../../lib/generator.js'
@@ -105,7 +105,7 @@ const STEP_TITLES = [
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
-  "Where should this value go? (tap a cell)",
+  "Tap the cell where you should place the <value>",
   "What do we do next?",
   "Pick the two numbers we multiply",
   "What do we do next?",
@@ -187,7 +187,7 @@ export default function HTableModule(){
     { id: 'cm', label: 'Cross Multiply', correct: true },
     { id: 'add', label: 'Add all the numbers', correct: false },
     { id: 'avg', label: 'Find the average', correct: false },
-    { id: 'sub', label: 'Subtract the smaller from larger', correct: false },
+    { id: 'sub', label: 'Subtract the numbers', correct: false },
   ];
 
   const chooseNext8 = (choice) => {
@@ -223,7 +223,30 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const postCalcAppliedRef = useRef(false);
 
 
-  // 2s blink
+  
+// --- Press-and-hold English toggle (SpecOp 10.5.0: devnotes Request #1) ---
+const startHoldEnglish = () => {
+  setIsHoldingEnglish(true);
+  setRotLang('English');
+};
+const endHoldEnglish = () => {
+  setIsHoldingEnglish(false);
+};
+
+// Stable shuffle per step instance
+const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
+useEffect(() => { setShuffleSeed(Math.random()); }, [step]);
+const seededShuffle = (arr) => {
+  const rng = (function(seed){ return () => (seed = (seed * 9301 + 49297) % 233280) / 233280; })(Math.floor(shuffleSeed*1e6)||1);
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(rng()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+};
+
+// 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const [blinkUnits, setBlinkUnits] = useState(false);
 
@@ -317,14 +340,14 @@ setDone(1); next();
     const v = Number(problem?.scale?.[0]);
     const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
-    return shuffle([...set]).slice(0,4).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
+    return seededShuffle([...set]).slice(0,4).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
   },[problem?.id, allProblemNumbers]);
 
   const numbersBottomScale = useMemo(()=>{
     const v = Number(problem?.scale?.[1]);
     const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
-    return shuffle([...set]).slice(0,4).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
+    return seededShuffle([...set]).slice(0,4).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
   },[problem?.id, allProblemNumbers]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
@@ -401,7 +424,7 @@ setDone(1); next();
     correct: v === correct
   }));
 
-  return shuffle(_assertFour(arr, "Step6-OtherValue"));
+  return seededShuffle(_assertFour(arr, "Step6-OtherValue"));
 }, [problem?.id, problem?.scale, problem?.given]);
 
   const chooseOtherValue = (choice) => {
@@ -476,6 +499,7 @@ setDone(1); next();
       if (!rotationOrder || rotationOrder.length === 0) return;
       setRotLang(prev => {
         if (prev === 'English') return rotationOrder[0];
+  const displayStep7Value = pickedOther?.value ?? problem?.given?.value ?? "";
         const i = rotationOrder.indexOf(prev);
         return (i < 0 || i === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[i + 1];
       });
@@ -1041,7 +1065,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
             {step===8 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
+                {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
                   <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>
                     {opt.label}
                   </button>
@@ -1094,15 +1118,7 @@ function narrativeFor(lang) {
 
       {/* Summary overlay + confetti (single burst per summary) */}
       {openSum && (
-        <SummaryOverlay
-          open={openSum}
-          onClose={()=>setOpenSum(false)}
-          problem={problem}
-          table={table}
-          mathStrip={mathStrip}
-          confettiOn={confettiOn}
-          onNewProblem={resetProblem}
-        />
+        
       )}
     </div>
   );
