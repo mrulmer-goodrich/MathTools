@@ -210,7 +210,6 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
 
-  const [openSum, setOpenSum] = useState(false);
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
   // v10.2.0 — Language rotation state
@@ -1116,10 +1115,6 @@ function narrativeFor(lang) {
         </div>
       </div>
 
-      {/* Summary overlay + confetti (single burst per summary) */}
-      {openSum && (
-        
-      )}
     </div>
   );
 }
