@@ -98,7 +98,7 @@ const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
   "What always goes in the second column?",
-  "What are the two units in the problem? (tap two)",
+  "What are the two units in the problem?",
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
@@ -344,19 +344,18 @@ setDone(1); next();
       const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
       if (exists) return prev;
       const nextSel = [...prev, d];
-
-      // Immediate feedback on each correct selection (brief blink)
-      setBlinkUnits(true);
-      setTimeout(()=>setBlinkUnits(false), 800);
-
-      if (nextSel.length===2){
-        const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
-        const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
-        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
-
-        // Full 2s blink once both are chosen
+  
+      if (nextSel.length === 1) {
+        const uTopLabel = (label || '').toString();
+        setTable(t => ({ ...t, uTop: uTopLabel }));
         setBlinkUnits(true);
-        setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
+        setTimeout(() => setBlinkUnits(false), 2000);
+      } else if (nextSel.length === 2) {
+        const firstLabel = (nextSel[0]?.label || nextSel[0]?.u || '').toString();
+        const secondLabel = (label || '').toString();
+              setTable(t => ({ ...t, uBottom: secondLabel }));
+        setBlinkUnits(true);
+        setTimeout(() => { setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
       return nextSel;
     });
