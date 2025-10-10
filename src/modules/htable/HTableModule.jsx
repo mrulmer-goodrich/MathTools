@@ -882,7 +882,7 @@ function narrativeFor(lang) {
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
-{/* Equation display (Step 11+ when result shown) */}
+{/* Equation display (Step 10+ when equation ready) */}
 { (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
   <div className="eq-display">
     <span className="frac">
@@ -891,7 +891,18 @@ function narrativeFor(lang) {
       <span className="den">{String(mathStrip?.divisor ?? '')}</span>
     </span>
     <span className="eq"> = </span>
-    <span className="res">{ mathStrip?.showResult ? String(mathStrip?.result ?? '') : null }</span>
+    {!mathStrip?.showResult ? (
+      <button 
+        className="button ptable-blink-hard blink-bg" 
+        onClick={onCalculate} 
+        disabled={((table?.vTop == null) === (table?.vBottom == null))}
+        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700}}
+      >
+        Calculate
+      </button>
+    ) : (
+      <span className="res">{String(mathStrip?.result ?? '')}</span>
+    )}
   </div>
 )}
 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
@@ -1099,9 +1110,7 @@ function narrativeFor(lang) {
 
             {/* RIGHT-PANEL: STEP 11 — START */}
             {step>=11 && (
-              <div className="center" style={{marginTop:12}}>
-                <button  className="button" onClick={onCalculate} disabled={( (table?.vTop == null) === (table?.vBottom == null) )}>Calculate</button>
-              </div>
+              <div className="problem-body"> </div>
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
 
