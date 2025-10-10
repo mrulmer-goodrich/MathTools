@@ -345,22 +345,37 @@ setDone(1); next();
       if (exists) return prev;
       const nextSel = [...prev, d];
 
-      // Immediate feedback on each correct selection (brief blink)
-      setBlinkUnits(true);
-      setTimeout(()=>setBlinkUnits(false), 800);
+      // Determine which canonical unit this is
+      const isTopUnit = toLower(label) === canonicalTopUnit;
+      const isBotUnit = toLower(label) === canonicalBottomUnit;
 
-      if (nextSel.length===2){
-        const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
-        const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
-        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
-
-        // Full 2s blink once both are chosen
+      if (nextSel.length === 1) {
+        // First unit selected - place immediately with 2s blink
+        if (isTopUnit) {
+          setTable(t => ({ ...t, uTop: label }));
+        } else if (isBotUnit) {
+          setTable(t => ({ ...t, uBottom: label }));
+        }
         setBlinkUnits(true);
-        setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
+        setTimeout(() => setBlinkUnits(false), 2000);
+      } else if (nextSel.length === 2) {
+        // Second unit selected - place immediately with 2s blink, then advance
+        if (isTopUnit) {
+          setTable(t => ({ ...t, uTop: label }));
+        } else if (isBotUnit) {
+          setTable(t => ({ ...t, uBottom: label }));
+        }
+        setBlinkUnits(true);
+        setTimeout(() => { 
+          setBlinkUnits(false); 
+          setDone(3); 
+          next(); 
+        }, 2000);
       }
+
       return nextSel;
     });
-  };
+  };    
 
   const tapScaleTop = (d)=>{
     setTable(t=>{
