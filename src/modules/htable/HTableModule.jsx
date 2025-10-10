@@ -1,4 +1,4 @@
-///This is now controlling authority as v.10.5.4 and additional changes should be made from this baseline//
+///This is now controlling authority as v.11.0.1 and additional changes should be made from this baseline//
 // HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -223,7 +223,7 @@ const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, resul
 
 // Stable shuffle per step (SpecOp 10.5.0 Request #1)
 const [shuffleSeed, setShuffleSeed] = useState(()=>Math.random());
-useEffect(()=>{ setShuffleSeed(Math.random()); }, [step]);
+useEffect(()=>{ setShuffleSeed(Math.random()); }, [step, problem?.id]);
 const seededShuffle = (arr) => {
   const a = Array.isArray(arr) ? arr.slice() : [];
   let seed = Math.floor((shuffleSeed || 1)*1e6) || 1;
@@ -493,7 +493,7 @@ setDone(1); next();
     }, 15000);
     setRotationId(id);
     return () => clearInterval(id);
-  }, [JSON.stringify(rotationOrder), isHoldingEnglish]);
+   }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
 
   const [highlightKeys, setHighlightKeys] = useState([]);
@@ -517,9 +517,9 @@ setDone(1); next();
   },[highlightKeys]);
 
   
-  // v10.2.0 — press-and-hold English handlers
-  const holdDownEnglish = () => { setIsHoldingEnglish(true); setRotLang('English'); };
-  const holdUpEnglish   = () => { setIsHoldingEnglish(false); };
+  // v11.0.— press-and-hold English handlers - hides these actions
+  //const holdDownEnglish = () => { setIsHoldingEnglish(true); setRotLang('English'); };
+  //const holdUpEnglish   = () => { setIsHoldingEnglish(false); };
 
   const givenRow = (table.vBottom!=null) ? 'bottom' : (table.vTop!=null ? 'top' : null);
 
@@ -852,7 +852,7 @@ function narrativeFor(lang) {
         onPointerDown={holdEnglishDown}
         onPointerUp={holdEnglishUp}
         onPointerCancel={holdEnglishUp}
-       onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={(e)=>{setIsOverEnglish(false); holdEnglishUp(e);}}>
+      onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={()=>setIsOverEnglish(false)}>
         Press for English
       </button>
     </div>
@@ -969,7 +969,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
+               {seededShuffle(STEP1_CHOICES).map(c => (
                   <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
