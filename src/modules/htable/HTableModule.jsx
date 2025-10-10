@@ -826,6 +826,14 @@ function narrativeFor(lang) {
 }
 .eq-display .eq { font-weight: 800; }
 .eq-display .res { font-weight: 900; }
+.eq-display .button {
+  margin: 0;
+  min-height: auto;
+  line-height: 1.2;
+}
+.eq-display .ptable-blink-hard.blink-bg {
+  animation: ptable-blink-kf 2s ease-out 0s infinite;
+}
 .hgrid > *:nth-child(3n) { font-size: inherit; }
 
 /* Optional 1000ms fade (commented-out)
