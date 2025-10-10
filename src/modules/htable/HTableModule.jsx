@@ -1043,7 +1043,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 6 — END */}
 
             {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
-            {step===7 && (<div className="problem-body"> </div>)} //field should be blank
+            {step===7 && (<div className="problem-body"> </div>)} 
             {/* RIGHT-PANEL: STEP 7 — END */}
 
             {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
