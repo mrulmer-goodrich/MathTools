@@ -1359,3 +1359,7 @@ body{
 .chip-tiny { padding: 6px 10px !important; font-size: 12px !important; line-height: 1; }
 .chip-hdraw { font-size: inherit !important; padding: 8px 12px !important; }
 
+/* --- APPEND: UG Math Tools v10.5.4 (Request #1 refinements) --- */
+.press-for-english:hover { filter: none; transform: none; box-shadow: none; }
+.chip-tiny { padding: 6px 10px !important; font-size: 12px !important; line-height: 1; }
+.chip-hdraw { font-size: inherit !important; padding: 8px 12px !important; }
