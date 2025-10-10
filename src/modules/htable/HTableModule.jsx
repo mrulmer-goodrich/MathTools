@@ -1,7 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.1 
-// SpecOp Sync: Request #1 fixes (hover→press English, XXXX rotation, stable shuffles, wording,
-// chip label+size, remove Summary+calc-left text, font sizing)
+// HTableModule — UG Math Tools v10.5.0 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -161,6 +159,18 @@ const genSaneHProblem = () => {
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 
 
+
+
+// Stable per-step shuffle (SpecOp Request #1)
+const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
+useEffect(() => { setShuffleSeed(Math.random()); }, [step]);
+const seededShuffle = (arr) => {
+  const rng = (function(seed){ return () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296; })(Math.floor(shuffleSeed*1e9)||1);
+  const a = (arr||[]).slice();
+  for (let i=a.length-1;i>0;i--){ const j = Math.floor(rng()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+
 /** Guard: enforce 4-choice render without crashing */
 const _assertFour = (arr, tag) => {
   try {
@@ -209,7 +219,6 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
-
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
   // v10.2.0 — Language rotation state
@@ -222,30 +231,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const postCalcAppliedRef = useRef(false);
 
 
-  
-// --- Press-and-hold English toggle (SpecOp 10.5.0: devnotes Request #1) ---
-const startHoldEnglish = () => {
-  setIsHoldingEnglish(true);
-  setRotLang('English');
-};
-const endHoldEnglish = () => {
-  setIsHoldingEnglish(false);
-};
-
-// Stable shuffle per step instance
-const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
-useEffect(() => { setShuffleSeed(Math.random()); }, [step]);
-const seededShuffle = (arr) => {
-  const rng = (function(seed){ return () => (seed = (seed * 9301 + 49297) % 233280) / 233280; })(Math.floor(shuffleSeed*1e6)||1);
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(rng()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-};
-
-// 2s blink
+  // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const [blinkUnits, setBlinkUnits] = useState(false);
 
@@ -260,9 +246,10 @@ const seededShuffle = (arr) => {
       // Build from actual available alts; ignore placeholders & empties
       const altsObj = (problem?.text?.alts) || {};
       const keys = Object.keys(altsObj).filter(k => typeof altsObj[k] === 'string' && altsObj[k].trim().length > 0);
-      const pool = keys.filter(l => l !== 'English' && l !== 'XXXX');
-      setRotationOrder(pool);
-      setRotLang('English');
+// SpecOp 10.5.0: rotation should include 'XXXX' and exclude 'English'; 'XXXX' goes first.
+const pool = ['XXXX', ...keys.filter(l => l !== 'English' && l !== 'XXXX')];
+setRotationOrder(pool);
+setRotLang('English');
       setIsHoldingEnglish(false);
     } catch {}
   }, [problem?.id, JSON.stringify(problem?.text?.alts)]);
@@ -331,7 +318,7 @@ setDone(1); next();
       if (!picks.find(p=>p.u===candidate.u)) picks.push(candidate);
     }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
-    return shuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
+    return seededShuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
   },[problem]);
 
   // Include all problem numbers in choices (as requested), plus a few distractors
@@ -396,6 +383,7 @@ setDone(1); next();
 
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
+  const displayStep7Value = pickedOther?.value ?? problem?.given?.value ?? "";
   const otherValueChoices = useMemo(()=>{
   const correct = Number(problem?.given?.value);
   const sTop = Number(problem?.scale?.[0]);
@@ -423,7 +411,7 @@ setDone(1); next();
     correct: v === correct
   }));
 
-  return seededShuffle(_assertFour(arr, "Step6-OtherValue"));
+  return shuffle(_assertFour(arr, "Step6-OtherValue"));
 }, [problem?.id, problem?.scale, problem?.given]);
 
   const chooseOtherValue = (choice) => {
@@ -498,7 +486,6 @@ setDone(1); next();
       if (!rotationOrder || rotationOrder.length === 0) return;
       setRotLang(prev => {
         if (prev === 'English') return rotationOrder[0];
-  const displayStep7Value = pickedOther?.value ?? problem?.given?.value ?? "";
         const i = rotationOrder.indexOf(prev);
         return (i < 0 || i === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[i + 1];
       });
@@ -636,8 +623,7 @@ function applyPostCalculateEffects() {
   // Start blinking on solved cell (module-yellow style) — continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
 // Confetti & summary
-  setOpenSum(true);
-  setConfettiOn(true);
+setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -645,9 +631,7 @@ function applyPostCalculateEffects() {
   if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
   setNpBlink(false);
   npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
-
-  setOpenSum(true);
-  setConfettiOn(true);
+setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
@@ -674,8 +658,8 @@ const onCalculate = () => {
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
     setHighlightKeys([]); setOval(null); setTripleUL(null);
     setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
-    setConfettiOn(false); setOpenSum(false);
-    setBlinkKey(null); setBlinkUnits(false);
+    setConfettiOn(false);
+setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
     setPickedUnits([]);
   };
@@ -858,7 +842,7 @@ function narrativeFor(lang) {
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
       <button
         type="button"
-        className="button button-contrast"
+        className="button button-contrast press-for-english"
         onMouseDown={holdEnglishDown}
         onMouseUp={holdEnglishUp}
         onMouseLeave={holdEnglishUp}
@@ -979,13 +963,13 @@ function narrativeFor(lang) {
         {/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
           <div className="section">
-            <div className="step-title">{STEP_TITLES[step]}</div>
+            <div className="step-title">{step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value)) : STEP_TITLES[step]}</div>
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
                 {STEP1_CHOICES.map(c => (
-                  <button key={c.id} className="chip" onClick={()=>handleStep0(c)}>{c.label}</button>
+                  <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
             )}
@@ -1034,7 +1018,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 4 — START */}
             {step===4 && (
               <div className="chips center mt-8">
-                {shuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
+                {seededShuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 4 — END */}
@@ -1042,7 +1026,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 5 — START */}
             {step===5 && (
               <div className="chips center mt-8">
-                {shuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
+                {seededShuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
               </div>
             )}
             {/* RIGHT-PANEL: STEP 5 — END */}
@@ -1050,7 +1034,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 6 — START */}
             {step===6 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(otherValueChoices).map(c => (
+                {seededShuffle(otherValueChoices).map(c => (
                   <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
                 ))}
               </div>
@@ -1065,7 +1049,7 @@ function narrativeFor(lang) {
             {step===8 && (
               <div className="chips with-borders center mt-8">
                 {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
-                  <button key={opt.id || idx} className="chip" onClick={()=>chooseNext8(opt)}>
+                  <button key={opt.id || idx} className="chip chip-tiny" onClick={()=>chooseNext8(opt)}>
                     {opt.label}
                   </button>
                 ))}
@@ -1076,7 +1060,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 9 — START */}
             {step===9 && (
               <div className="chips with-borders center mt-8">
-                {shuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
+                {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
                 ))}
               </div>
@@ -1086,7 +1070,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 10 — START */}
             {step===10 && (
               <div className="chips with-borders center mt-8">
-                {shuffle(divideChoices).map((c,idx)=>(
+                {seededShuffle(divideChoices).map((c,idx)=>(
                   <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
                 ))}
               </div>
@@ -1115,6 +1099,14 @@ function narrativeFor(lang) {
         </div>
       </div>
 
+      {/* Summary overlay + confetti (single burst per summary) */}
+problem={problem}
+          table={table}
+          mathStrip={mathStrip}
+          confettiOn={confettiOn}
+          onNewProblem={resetProblem}
+        />
+      )}
     </div>
   );
 }
