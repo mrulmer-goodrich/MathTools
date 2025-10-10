@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.0 
+// HTableModule — UG Math Tools v10.5.4 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -9,7 +9,6 @@ import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 're
 // Shared UI
 import DraggableBase from '../../components/DraggableChip.jsx'
 import DropSlotBase from '../../components/DropSlot.jsx'
-
 // Data
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
@@ -159,18 +158,6 @@ const genSaneHProblem = () => {
 const shuffle = (arr)=> arr.slice().sort(()=>Math.random()-0.5);
 
 
-
-
-// Stable per-step shuffle (SpecOp Request #1)
-const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
-useEffect(() => { setShuffleSeed(Math.random()); }, [step]);
-const seededShuffle = (arr) => {
-  const rng = (function(seed){ return () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296; })(Math.floor(shuffleSeed*1e9)||1);
-  const a = (arr||[]).slice();
-  for (let i=a.length-1;i>0;i--){ const j = Math.floor(rng()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-};
-
 /** Guard: enforce 4-choice render without crashing */
 const _assertFour = (arr, tag) => {
   try {
@@ -219,17 +206,31 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
-  const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
+const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
   // v10.2.0 — Language rotation state
   const [rotLang, setRotLang] = useState('English');
   const [rotationOrder, setRotationOrder] = useState([]); // excludes English, includes 'XXXX'
+  const rotationOrderFull = useMemo(()=> ['XXXX', ...rotationOrder], [rotationOrder])
   const [isHoldingEnglish, setIsHoldingEnglish] = useState(false);
+  const [isOverEnglish, setIsOverEnglish] = useState(false);
   const [rotationId, setRotationId] = useState(null);
   const [npBlink, setNpBlink] = useState(false);
   const npBlinkRef = useRef(null);
   const postCalcAppliedRef = useRef(false);
 
+
+
+// Stable shuffle per step (SpecOp 10.5.0 Request #1)
+const [shuffleSeed, setShuffleSeed] = useState(()=>Math.random());
+useEffect(()=>{ setShuffleSeed(Math.random()); }, [step]);
+const seededShuffle = (arr) => {
+  const a = Array.isArray(arr) ? arr.slice() : [];
+  let seed = Math.floor((shuffleSeed || 1)*1e6) || 1;
+  const rng = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(rng()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+};
 
   // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
@@ -246,10 +247,9 @@ const [session, setSession] = useState(persisted || { attempts: [] });
       // Build from actual available alts; ignore placeholders & empties
       const altsObj = (problem?.text?.alts) || {};
       const keys = Object.keys(altsObj).filter(k => typeof altsObj[k] === 'string' && altsObj[k].trim().length > 0);
-// SpecOp 10.5.0: rotation should include 'XXXX' and exclude 'English'; 'XXXX' goes first.
-const pool = ['XXXX', ...keys.filter(l => l !== 'English' && l !== 'XXXX')];
-setRotationOrder(pool);
-setRotLang('English');
+      const pool = keys.filter(l => l !== 'English' && l !== 'XXXX');
+      setRotationOrder(pool);
+      setRotLang('English');
       setIsHoldingEnglish(false);
     } catch {}
   }, [problem?.id, JSON.stringify(problem?.text?.alts)]);
@@ -383,7 +383,6 @@ setDone(1); next();
 
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
   const [pickedOther, setPickedOther] = useState(null);
-  const displayStep7Value = pickedOther?.value ?? problem?.given?.value ?? "";
   const otherValueChoices = useMemo(()=>{
   const correct = Number(problem?.given?.value);
   const sTop = Number(problem?.scale?.[0]);
@@ -411,7 +410,7 @@ setDone(1); next();
     correct: v === correct
   }));
 
-  return shuffle(_assertFour(arr, "Step6-OtherValue"));
+  return seededShuffle(_assertFour(arr, "Step6-OtherValue"));
 }, [problem?.id, problem?.scale, problem?.given]);
 
   const chooseOtherValue = (choice) => {
@@ -421,6 +420,8 @@ setDone(1); next();
     setDone(6);
     next();
   };
+  const displayStep7Value = pickedOther?.value ?? problem?.given?.value ?? "";
+
 
   const tapPlaceValueTop = () => {
     if (step!==7) return;
@@ -482,12 +483,12 @@ setDone(1); next();
   useEffect(() => {
     if (rotationId) { clearInterval(rotationId); setRotationId(null); }
     const id = setInterval(() => {
-      if (isHoldingEnglish) return;
-      if (!rotationOrder || rotationOrder.length === 0) return;
+      if (isHoldingEnglish || isOverEnglish) return;
+      if (!rotationOrderFull || rotationOrderFull.length === 0) return;
       setRotLang(prev => {
-        if (prev === 'English') return rotationOrder[0];
-        const i = rotationOrder.indexOf(prev);
-        return (i < 0 || i === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[i + 1];
+        if (prev === 'English') return rotationOrderFull[0];
+        const i = rotationOrderFull.indexOf(prev);
+        return (i < 0 || i === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[i + 1];
       });
     }, 15000);
     setRotationId(id);
@@ -541,7 +542,7 @@ setDone(1); next();
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
     // ensure a "random multiple combo"
     if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
-    const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return shuffle(uniq).slice(0,4);
+    const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return seededShuffle(uniq).slice(0,4);
   },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
 
   const chooseMultiply = (pair)=>{
@@ -559,7 +560,7 @@ setDone(1); next();
     if (table.sTop==null || table.sBottom==null) return [];
     const correctScale = (givenRow==='top') ? table.sTop : table.sBottom;   // same-row scale
     const wrongScale   = (givenRow==='top') ? table.sBottom : table.sTop;   // opposite-row scale
-    return shuffle([
+    return seededShuffle([
       { label: `Divide by ${correctScale}`, value: correctScale, correct: true },
       { label: `Divide by ${wrongScale}`, value: wrongScale, correct: false },
       { label: `Multiply by ${correctScale}`, value: null, correct: false },
@@ -588,11 +589,11 @@ setDone(1); next();
 
   
 const holdEnglishDown = () => { setIsHoldingEnglish(true); setRotLang('English'); };
-const holdEnglishUp   = () => { setIsHoldingEnglish(false); setRotLang(prev => {
-  if (!rotationOrder?.length) return prev;
-  if (prev === 'English') return rotationOrder[0];
-  const idx = rotationOrder.indexOf(prev);
-  return (idx === -1 || idx === rotationOrder.length - 1) ? rotationOrder[0] : rotationOrder[idx + 1];
+const holdEnglishUp = () => { setIsHoldingEnglish(false); setRotLang(prev => {
+  if (!rotationOrderFull?.length) return prev;
+  if (prev === 'English') return rotationOrderFull[0];
+  const idx = rotationOrderFull.indexOf(prev);
+  return (idx === -1 || idx === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[idx + 1];
 }); };
 function applyPostCalculateEffects() {
   if (postCalcAppliedRef.current) return;
@@ -842,7 +843,7 @@ function narrativeFor(lang) {
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
       <button
         type="button"
-        className="button button-contrast press-for-english"
+        className="button button-contrast"
         onMouseDown={holdEnglishDown}
         onMouseUp={holdEnglishUp}
         onMouseLeave={holdEnglishUp}
@@ -851,7 +852,7 @@ function narrativeFor(lang) {
         onPointerDown={holdEnglishDown}
         onPointerUp={holdEnglishUp}
         onPointerCancel={holdEnglishUp}
-      >
+       onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={(e)=>{setIsOverEnglish(false); holdEnglishUp(e);}}>
         Press for English
       </button>
     </div>
@@ -963,7 +964,7 @@ function narrativeFor(lang) {
         {/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
           <div className="section">
-            <div className="step-title">{step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value)) : STEP_TITLES[step]}</div>
+            <div className="step-title">{step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step]}</div>
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
@@ -978,7 +979,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {shuffle([
+                {seededShuffle([
                   { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
@@ -993,7 +994,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 2 — START */}
             {step===2 && (
               <div className="chips with-borders center" style={{marginTop:8}}>
-                {shuffle([
+                {seededShuffle([
                   { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
                   { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
@@ -1098,15 +1099,6 @@ function narrativeFor(lang) {
           </div>
         </div>
       </div>
-
-      {/* Summary overlay + confetti (single burst per summary) */}
-problem={problem}
-          table={table}
-          mathStrip={mathStrip}
-          confettiOn={confettiOn}
-          onNewProblem={resetProblem}
-        />
-      )}
-    </div>
+</div>
   );
 }
