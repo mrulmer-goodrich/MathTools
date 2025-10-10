@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.4 
+// HTableModule — UG Math Tools v10.5.5 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -76,7 +76,7 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
     const listOk = Array.isArray(accept) && accept.length > 0 ? accept.includes(t) : true;
     const valOk = typeof validator === "function" ? !!validator(d) : true;
     return listOk && valOk;
-  });
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   return (
     <div
       className={`slot-wrap ${blinkWrap ? 'ptable-blink-wrap' : ''} ${className}`}
@@ -192,7 +192,7 @@ export default function HTableModule(){
     setDone(8);
     next();
   };
-const [session, setSession] = useState(persisted || { attempts: [] });
+const [session, setSession] = useState(persisted || { attempts: [] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
   const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
@@ -200,13 +200,12 @@ const [session, setSession] = useState(persisted || { attempts: [] });
     sTop:null, sBottom:null,
     vTop:null, vBottom:null,
     product:null, divisor:null, result:null, solvedRow:null
-  });
-
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const [step, setStep] = useState(snap?.step ?? 0);
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
-const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
+const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const [confettiOn, setConfettiOn] = useState(false);
   // v10.2.0 — Language rotation state
   const [rotLang, setRotLang] = useState('English');
@@ -223,7 +222,7 @@ const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, resul
 
 // Stable shuffle per step (SpecOp 10.5.0 Request #1)
 const [shuffleSeed, setShuffleSeed] = useState(()=>Math.random());
-useEffect(()=>{ setShuffleSeed(Math.random()); }, [step]);
+  useEffect(()=>{ setShuffleSeed(Math.random()); }, [step, problem?.id]);
 const seededShuffle = (arr) => {
   const a = Array.isArray(arr) ? arr.slice() : [];
   let seed = Math.floor((shuffleSeed || 1)*1e6) || 1;
@@ -240,7 +239,7 @@ const seededShuffle = (arr) => {
   useEffect(()=>{
     const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
     saveSession(nextState); setSession(nextState);
-  },[problem, table, step, steps]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   // v10.2.0 — initialize rotation order on problem change
   useEffect(() => {
     try {
@@ -252,10 +251,10 @@ const seededShuffle = (arr) => {
       setRotLang('English');
       setIsHoldingEnglish(false);
     } catch {}
-  }, [problem?.id, JSON.stringify(problem?.text?.alts)]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 // Helpers
-  const miss = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c; });
-  const setDone = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].done=true; return c; });
+  const miss = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].misses++; return c; }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+  const setDone = (idx)=>setSteps(s=>{ const c=[...s]; if(c[idx]) c[idx].done=true; return c; }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const next = ()=>setStep(s=>Math.min(s+1, STEP_TITLES.length-1));
 
   const canonicalTopUnit    = (problem?.units?.[0] || '').toLowerCase();
@@ -269,7 +268,7 @@ const seededShuffle = (arr) => {
     if (problem?.scale?.[1] != null) all.add(Number(problem.scale[1]));
     if (problem?.given?.value != null) all.add(Number(problem.given.value));
     return Array.from(all);
-  },[problem?.id]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const expectedScaleForRowUnit = (rowUnitLabel) => {
     const u = toLower(rowUnitLabel);
@@ -319,7 +318,7 @@ setDone(1); next();
     }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return seededShuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
-  },[problem]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   // Include all problem numbers in choices (as requested), plus a few distractors
   const numbersTopScale = useMemo(()=>{
@@ -327,14 +326,14 @@ setDone(1); next();
     const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
     return seededShuffle([...set]).slice(0,4).map((n,i)=>({ id:'nt_'+i, label:String(n), kind:'num', value:Number(n) }));
-  },[problem?.id, allProblemNumbers]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const numbersBottomScale = useMemo(()=>{
     const v = Number(problem?.scale?.[1]);
     const set = new Set([v, ...allProblemNumbers]);
     let i=0; while(set.size<4 && i<40){ set.add(Math.max(1, v + Math.round((Math.random()*6)-3))); i++; }
     return seededShuffle([...set]).slice(0,4).map((n,i)=>({ id:'nb_'+i, label:String(n), kind:'num', value:Number(n) }));
-  },[problem?.id, allProblemNumbers]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const [pickedUnits, setPickedUnits] = useState([]);
   const tapUnit = (d)=>{
@@ -359,7 +358,7 @@ setDone(1); next();
         setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
       return nextSel;
-    });
+    }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   };
 
   const tapScaleTop = (d)=>{
@@ -369,7 +368,7 @@ setDone(1); next();
       const t2 = { ...t, sTop: Number(d.value) };
       if (t2.sBottom!=null){ setDone(4); setDone(5); next(); } else { setDone(4); next(); }
       return t2;
-    });
+    }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   };
   const tapScaleBottom = (d)=>{
     setTable(t=>{
@@ -378,7 +377,7 @@ setDone(1); next();
       const t2 = { ...t, sBottom: Number(d.value) };
       if (t2.sTop!=null){ setDone(4); setDone(5); next(); } else { setDone(5); next(); }
       return t2;
-    });
+    }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   };
 
   // Step 6/7 flow: other value from problem (choices include all problem numbers but only the correct is accepted)
@@ -411,7 +410,7 @@ setDone(1); next();
   }));
 
   return seededShuffle(_assertFour(arr, "Step6-OtherValue"));
-}, [problem?.id, problem?.scale, problem?.given]);
+}, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const chooseOtherValue = (choice) => {
     if (step!==6) return;
@@ -446,7 +445,7 @@ setDone(1); next();
     uTop: useRef(null), sTop: useRef(null), vTop: useRef(null),
     uBottom: useRef(null), sBottom: useRef(null), vBottom: useRef(null)
   };
-  const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 });
+  const [lines, setLines] = useState({ v1Left:0, v2Left:0, vTop:0, vHeight:0, hTop:0, gridW:0 }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const [oval, setOval] = useState(null);
   const [tripleUL, setTripleUL] = useState(null);
   const measure = ()=>{
@@ -469,16 +468,16 @@ setDone(1); next();
     const vBottom = r_vBottom.bottom - gr.top;
     const vHeight = (vBottom - vTop);
     const hTop = (r_vTop.bottom + r_vBottom.top)/2 - gr.top;
-    setLines({ v1Left: v1, v2Left: v2, vTop: r_vTop.top - gr.top, vHeight, hTop, gridW: gr.width });
+    setLines({ v1Left: v1, v2Left: v2, vTop: r_vTop.top - gr.top, vHeight, hTop, gridW: gr.width }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     if (tripleUL && tripleUL.key){
       const target = refs[tripleUL.key]?.current?.getBoundingClientRect();
       if(target){
-        setTripleUL({ key: tripleUL.key, left: target.left - gr.left + 8, top: target.bottom - gr.top - 18, width: Math.max(24, target.width - 16) });
+        setTripleUL({ key: tripleUL.key, left: target.left - gr.left + 8, top: target.bottom - gr.top - 18, width: Math.max(24, target.width - 16) }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
       }
     }
   };
-  useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
-  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
+  useLayoutEffect(()=>{ measure() }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+  useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   // v10.2.0 — single 15s rotation interval
   useEffect(() => {
     if (rotationId) { clearInterval(rotationId); setRotationId(null); }
@@ -489,11 +488,11 @@ setDone(1); next();
         if (prev === 'English') return rotationOrderFull[0];
         const i = rotationOrderFull.indexOf(prev);
         return (i < 0 || i === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[i + 1];
-      });
+      }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     }, 15000);
     setRotationId(id);
-    return () => clearInterval(id);
-  }, [JSON.stringify(rotationOrder), isHoldingEnglish]);
+    return () => { try { clearInterval(id); } catch {} }; () => clearInterval(id);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
 
   const [highlightKeys, setHighlightKeys] = useState([]);
@@ -513,8 +512,8 @@ setDone(1); next();
     const dx = b.x - a.x, dy = b.y - a.y;
     const len = Math.sqrt(dx*dx + dy*dy) + 140;
     const rot = Math.atan2(dy, dx) * 180/Math.PI;
-    setOval({ left: midX, top: midY, len, rot });
-  },[highlightKeys]);
+    setOval({ left: midX, top: midY, len, rot }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   
   // v10.2.0 — press-and-hold English handlers
@@ -530,20 +529,20 @@ setDone(1); next();
     const sOpp = (givenRow==='top') ? table.sBottom : table.sTop;
     if (v==null || sOpp==null) return null;
     return { a:v, b:sOpp, label:`${v} × ${sOpp}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sBottom':'sTop'] };
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const wrongPairs = useMemo(()=>{
     const list = [];
     const v = (givenRow==='top') ? table.vTop : table.vBottom;
     const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
-    if (v!=null && sSame!=null) list.push({ a:v, b:sSame, label:`${v} × ${sSame}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom'] });
-    if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
+    if (v!=null && sSame!=null) list.push({ a:v, b:sSame, label:`${v} × ${sSame}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom'] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+    if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
-    if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
+    if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     // ensure a "random multiple combo"
-    if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
+    if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     const seen=new Set(); const uniq=[]; for(const p of list){ if(!p) continue; const k=`${p.a}×${p.b}`; if(seen.has(k)) continue; if(crossPair && p.a===crossPair.a && p.b===crossPair.b) continue; seen.add(k); uniq.push(p);} return seededShuffle(uniq).slice(0,4);
-  },[givenRow, table.sTop, table.sBottom, table.vTop, table.vBottom]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const chooseMultiply = (pair)=>{
     if(!pair || !crossPair){ miss(9); return; }
@@ -566,7 +565,7 @@ setDone(1); next();
       { label: `Multiply by ${correctScale}`, value: null, correct: false },
       { label: `Multiply by ${wrongScale}`, value: null, correct: false },
     ]);
-  },[givenRow, table.sTop, table.sBottom]);
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
   const chooseDivideByNumber = (choice)=>{
     if (!choice.correct) { miss(10); return; }
@@ -578,7 +577,7 @@ setDone(1); next();
       const gr = g.getBoundingClientRect();
       const r = refs[key].current?.getBoundingClientRect();
       if (r){
-        setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) });
+        setTripleUL({ key, left: r.left - gr.left + 8, top: r.bottom - gr.top - 18, width: Math.max(24, r.width - 16) }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
       }
     }
     const result = table.product / div;
@@ -619,8 +618,7 @@ function applyPostCalculateEffects() {
     if (unknownTop){ solvedKey = 'vTop';    return { ...t, vTop: Number(r), solvedRow: 'top' }; }
     if (unknownBottom){ solvedKey = 'vBottom'; return { ...t, vBottom: Number(r), solvedRow: 'bottom' }; }
     return t;
-  });
-
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   // Start blinking on solved cell (module-yellow style) — continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
 // Confetti & summary
@@ -654,11 +652,11 @@ const onCalculate = () => {
       sTop:null, sBottom:null,
       vTop:null, vBottom:null,
       product:null, divisor:null, result:null, solvedRow:null
-    });
+    }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     setStep(0);
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
     setHighlightKeys([]); setOval(null); setTripleUL(null);
-    setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
+    setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
     setConfettiOn(false);
 setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
@@ -700,12 +698,12 @@ setBlinkKey(null); setBlinkUnits(false);
   const pre='\uE000', post='\uE001';
   const placeholders = {};
   let s = String(str);
-  tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); });
+  tokens.forEach((tok, i) => { const key = pre+i+post; placeholders[key]=tok; s = s.split(tok).join(key); }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   // Replace letters without Unicode property escapes: heuristic = chars where lower!=upper
   s = Array.from(s).map(ch => {
     try { return (ch.toLowerCase() !== ch.toUpperCase()) ? 'X' : ch; } catch { return ch; }
   }).join('');
-  Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); });
+  Object.keys(placeholders).forEach(k => { s = s.split(k).join(placeholders[k]); }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   return s;
 }
 
@@ -969,7 +967,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
               <div className="chips with-borders center">
-                {STEP1_CHOICES.map(c => (
+                {seededShuffle(STEP1_CHOICES).map(c => (
                   <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
