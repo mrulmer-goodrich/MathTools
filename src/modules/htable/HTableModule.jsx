@@ -494,9 +494,10 @@ setDone(1); next();
   };
   useLayoutEffect(()=>{ measure() },[step, table.uTop, table.uBottom, table.sTop, table.sBottom, table.vTop, table.vBottom]);
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
+  
+  
   // v10.2.0 — single 15s rotation interval
   useEffect(() => {
-    if (rotationId) { clearInterval(rotationId); setRotationId(null); }
     const id = setInterval(() => {
       if (isHoldingEnglish || isOverEnglish) return;
       if (!rotationOrderFull || rotationOrderFull.length === 0) return;
@@ -507,8 +508,11 @@ setDone(1); next();
       });
     }, 15000);
     setRotationId(id);
-    return () => clearInterval(id);
-   }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+    return () => {
+      clearInterval(id);
+      setRotationId(null);
+    };
+  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
 
 
   const [highlightKeys, setHighlightKeys] = useState([]);
