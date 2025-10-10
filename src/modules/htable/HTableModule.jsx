@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.5 
+// HTableModule — UG Math Tools v10.5.6 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -200,12 +200,13 @@ const [session, setSession] = useState(persisted || { attempts: [] }, [rotationO
     sTop:null, sBottom:null,
     vTop:null, vBottom:null,
     product:null, divisor:null, result:null, solvedRow:null
-  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+  }
+  });
   const [step, setStep] = useState(snap?.step ?? 0);
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
   );
-const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
   // v10.2.0 — Language rotation state
   const [rotLang, setRotLang] = useState('English');
