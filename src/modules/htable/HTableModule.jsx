@@ -1,5 +1,5 @@
-///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.6 
+///This is now controlling authority as v.10.5.4 and additional changes should be made from this baseline//
+// HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -98,7 +98,7 @@ const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
   "What always goes in the second column?",
-  "What are the two units in the problem?",
+  "What are the two units in the problem? (tap two)",
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
@@ -319,7 +319,7 @@ setDone(1); next();
     }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return seededShuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
-  },[problem?.id, problem?.units]);
+  },[problem]);
 
   // Include all problem numbers in choices (as requested), plus a few distractors
   const numbersTopScale = useMemo(()=>{
@@ -344,18 +344,19 @@ setDone(1); next();
       const exists = prev.find(x=> (x?.label||x?.u||'').toLowerCase() === (label||'').toLowerCase());
       if (exists) return prev;
       const nextSel = [...prev, d];
-  
-      if (nextSel.length === 1) {
-        const uTopLabel = (label || '').toString();
-        setTable(t => ({ ...t, uTop: uTopLabel }));
+
+      // Immediate feedback on each correct selection (brief blink)
+      setBlinkUnits(true);
+      setTimeout(()=>setBlinkUnits(false), 800);
+
+      if (nextSel.length===2){
+        const topObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalTopUnit);
+        const botObj = nextSel.find(x=> (x.label||x.u||'').toLowerCase() === canonicalBottomUnit);
+        setTable(t=>({ ...t, uTop:(topObj?.label||topObj?.u||''), uBottom:(botObj?.label||botObj?.u||'') }));
+
+        // Full 2s blink once both are chosen
         setBlinkUnits(true);
-        setTimeout(() => setBlinkUnits(false), 2000);
-      } else if (nextSel.length === 2) {
-        const firstLabel = (nextSel[0]?.label || nextSel[0]?.u || '').toString();
-        const secondLabel = (label || '').toString();
-              setTable(t => ({ ...t, uBottom: secondLabel }));
-        setBlinkUnits(true);
-        setTimeout(() => { setBlinkUnits(false); setDone(3); next(); }, 2000);
+        setTimeout(()=>{ setBlinkUnits(false); setDone(3); next(); }, 2000);
       }
       return nextSel;
     });
