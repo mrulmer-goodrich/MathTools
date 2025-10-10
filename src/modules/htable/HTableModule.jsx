@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.4 
+// HTableModule — UG Math Tools v10.5.6 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -319,7 +319,7 @@ setDone(1); next();
     }
     const full = [...correct, ...picks.map(p=>p.u)].slice(0,4);
     return seededShuffle(full.map((u,i)=>({ id:'u'+i, label:u, kind:'unit' })));
-  },[problem]);
+  },[problem?.id, problem?.units]);
 
   // Include all problem numbers in choices (as requested), plus a few distractors
   const numbersTopScale = useMemo(()=>{
