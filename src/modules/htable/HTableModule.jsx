@@ -704,9 +704,10 @@ setBlinkKey(null); setBlinkUnits(false);
   };
   const finalBlink = (step>=11) ? (table?.solvedRow==='top' ? 'vTop' : (table?.solvedRow==='bottom' ? 'vBottom' : null)) : null;
   const isFinalBlinkKey = (k)=> (finalBlink && k===finalBlink);
-  const cellCls = (key)=> [
+  
+const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'ptable-blink' : (finalBlink && key===finalBlink ? 'ptable-blink-hard blink-bg' : '')),
+    (isBlink(key) ? 'final-blink-2s' : (finalBlink && key===finalBlink ? 'ptable-blink-hard blink-bg' : '')),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -758,8 +759,13 @@ function narrativeFor(lang) {
         .problem-body { font-size: inherit; color: inherit; }
 
         /* Keyframes are provided globally by the app shell. Do not declare inline here. */
+
 /* .ptable-blink relies on the global @keyframes ptable-blink-kf */
 .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
+.final-blink-2s { 
+  animation: ptable-blink-kf 2s ease-out 0s 1; 
+  background: rgba(250, 204, 21, 0.3) !important;
+}
 
         .hl { border: none !important; background: radial-gradient(circle at 50% 50%, rgba(59,130,246,.18), rgba(59,130,246,0) 60%); outline: none !important; }
 
@@ -831,14 +837,16 @@ function narrativeFor(lang) {
 }
 .eq-display .eq { font-weight: 800; }
 .eq-display .res { font-weight: 900; }
+
+
 .eq-display .button {
   margin: 0;
   min-height: auto;
   line-height: 1.2;
 }
-.eq-display .ptable-blink-hard.blink-bg {
-  animation: calc-strong-pulse 1.2s ease-in-out 0s infinite;
-}
+
+
+
 .hgrid > *:nth-child(3n) { font-size: inherit; }
 
 /* Optional 1000ms fade (commented-out)
@@ -857,11 +865,7 @@ function narrativeFor(lang) {
   50%  { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(59,130,246,.25); }
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
 }
-@keyframes calc-strong-pulse {
-  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); border: 2px solid rgba(59,130,246,.6); }
-  50%  { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(59,130,246,.25); border: 2px solid rgba(59,130,246,1); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); border: 2px solid rgba(59,130,246,.6); }
-}
+
 `}
 </style>
 
@@ -909,12 +913,12 @@ function narrativeFor(lang) {
       <span className="den">{String(mathStrip?.divisor ?? '')}</span>
     </span>
     <span className="eq"> = </span>
-    {!mathStrip?.showResult ? (
+{!mathStrip?.showResult ? (
       <button 
-        className="button ptable-blink-hard blink-bg" 
+        className="button action-blink-strong" 
         onClick={onCalculate} 
         disabled={((table?.vTop == null) === (table?.vBottom == null))}
-        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700}}
+        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
       >
         Calculate
       </button>
