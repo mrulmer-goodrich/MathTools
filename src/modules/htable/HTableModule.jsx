@@ -98,7 +98,7 @@ const STEP_TITLES = [
   "What's the first step to solve the problem?",
   "What always goes in the first column?",
   "What always goes in the second column?",
-  "What are the two units in the problem? (tap two)",
+  "What are the two units in the problem?",
   "What value goes here?",
   "What value goes here?",
   "What’s the other value from the problem?",
@@ -182,7 +182,7 @@ export default function HTableModule(){
   // STEP 8: four-choice conceptual prompt
   const STEP8_CHOICES = [
     { id: 'cm', label: 'Cross Multiply', correct: true },
-    { id: 'add', label: 'Add all the numbers', correct: false },
+    { id: 'add', label: 'Add the numbers', correct: false },
     { id: 'avg', label: 'Find the average', correct: false },
     { id: 'sub', label: 'Subtract the numbers', correct: false },
   ];
@@ -1043,7 +1043,7 @@ function narrativeFor(lang) {
             {/* RIGHT-PANEL: STEP 6 — END */}
 
             {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
-            {step===7 && (<div className="problem-body">Tap the correct cell in the table.</div>)}
+            {step===7 && (<div className="problem-body"> </div>)} //field should be blank
             {/* RIGHT-PANEL: STEP 7 — END */}
 
             {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
