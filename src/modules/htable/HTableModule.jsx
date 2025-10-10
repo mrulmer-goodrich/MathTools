@@ -702,12 +702,11 @@ setBlinkKey(null); setBlinkUnits(false);
     if (step===9 && Array.isArray(highlightKeys) && highlightKeys.includes(key)) return true;
     return false;
   };
-  const finalBlink = (step>=11) ? (table?.solvedRow==='top' ? 'vTop' : (table?.solvedRow==='bottom' ? 'vBottom' : null)) : null;
-  const isFinalBlinkKey = (k)=> (finalBlink && k===finalBlink);
+const isFinalBlinkKey = (k)=> (blinkKey && k===blinkKey && step>=11);
   
 const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'final-blink-2s' : (finalBlink && key===finalBlink ? 'ptable-blink-hard blink-bg' : '')),
+    (isBlink(key) ? 'final-blink-2s' : ''),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
