@@ -642,17 +642,22 @@ function applyPostCalculateEffects() {
 
   // Start blinking on solved cell (module-yellow style) — continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
-// Confetti & summary
-setConfettiOn(true);
+
+  // Start blinking on solved cell for 2 seconds, then stop and start New Problem pulse
+  if (solvedKey) { 
+    setBlinkKey(solvedKey);
+    setTimeout(() => {
+      setBlinkKey(null);
+      setNpBlink(true);
+    }, 2000);
+  }
+
+  // Confetti & summary
+  setConfettiOn(true);
   setTimeout(() => setConfettiOn(false), 3500);
 
-  // Mark done & schedule New Problem blinking
+  // Mark done
   setDone(11);
-  if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
-  setNpBlink(false);
-  npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
-setConfettiOn(true);
-  setTimeout(() => setConfettiOn(false), 3500);
 
   // Mark done & schedule New Problem blinking
   setDone(11);
@@ -832,7 +837,7 @@ function narrativeFor(lang) {
   line-height: 1.2;
 }
 .eq-display .ptable-blink-hard.blink-bg {
-  animation: ptable-blink-kf 2s ease-out 0s infinite;
+  animation: calc-strong-pulse 1.2s ease-in-out 0s infinite;
 }
 .hgrid > *:nth-child(3n) { font-size: inherit; }
 
@@ -848,9 +853,14 @@ function narrativeFor(lang) {
   animation: np-strong 1.2s ease-in-out 0s infinite;
 }
 @keyframes np-strong {
-  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
-  50%  { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(59,130,246,.15); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.25); }
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
+  50%  { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(59,130,246,.25); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
+}
+@keyframes calc-strong-pulse {
+  0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); border: 2px solid rgba(59,130,246,.6); }
+  50%  { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(59,130,246,.25); border: 2px solid rgba(59,130,246,1); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); border: 2px solid rgba(59,130,246,.6); }
 }
 `}
 </style>
@@ -1002,7 +1012,7 @@ function narrativeFor(lang) {
         {/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
           <div className="section">
-            <div className="step-title">{step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step]}</div>
+            <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
