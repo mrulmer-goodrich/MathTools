@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.10.5.0 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.6 
+// HTableModule — UG Math Tools v10.5.7 
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -194,14 +194,14 @@ export default function HTableModule(){
   };
 const [session, setSession] = useState(persisted || { attempts: [] }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
-  const [table, setTable] = useState(() => (snap?.table) || {
+  const [table, setTable] = useState(() => ((snap?.table) || {
     head1:'', head2:'',
     uTop:'', uBottom:'',
     sTop:null, sBottom:null,
     vTop:null, vBottom:null,
     product:null, divisor:null, result:null, solvedRow:null
-  }
-  });
+  }));
+
   const [step, setStep] = useState(snap?.step ?? 0);
   const [steps, setSteps] = useState(
     snap?.steps || STEP_TITLES.map(()=>({misses:0,done:false}))
