@@ -1,12 +1,9 @@
 ///This is now controlling authority as v.11.0.1 and additional changes should be made from this baseline//
-// HTableModule.jsx — UG Math Tools v11.0.2 (replaces v11.0.1)
-// SpecOp Sync: Move Problem section to left, move Math Strip below H-table, set rotation to 10s, normalize final blink classes; anchors inserted per SpecOp 4.x
-// Changes: Surgical moves per Dev Change Requests Part 1 & 2; no logic refactors
+// HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
 /* eslint-disable react/no-unknown-property */
-// ANCHOR: Imports
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
 // Shared UI
@@ -96,7 +93,6 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 // ────────────────────────────────────────────────────────────────────────────────
 // Spec scaffolding & helpers
 // ────────────────────────────────────────────────────────────────────────────────
-// ANCHOR: STEP_TITLES
 // STEP TITLES
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
@@ -176,9 +172,7 @@ const _assertFour = (arr, tag) => {
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
 // STEP LOGIC (0–11)
-// ANCHOR: Component start
 export default function HTableModule(){
-  // ANCHOR: State declarations
   const H_SNAP_VERSION = 22;
 
   const persisted = loadSession() || {};
@@ -200,8 +194,7 @@ export default function HTableModule(){
   };
 const [session, setSession] = useState(persisted || { attempts: [] });
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
-  // ANCHOR: Table initializer
-const [table, setTable] = useState(() => (snap?.table) || {
+  const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
     uTop:'', uBottom:'',
     sTop:null, sBottom:null,
@@ -239,7 +232,6 @@ const seededShuffle = (arr) => {
   return a;
 };
 
-  // ANCHOR: Blink timers
   // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const [blinkUnits, setBlinkUnits] = useState(false);
@@ -292,7 +284,6 @@ const seededShuffle = (arr) => {
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
-  // ANCHOR: Step handlers
   // Step 0
   const handleStep0 = (choice) => {
     if (!choice?.correct) { miss(0); return; }
@@ -505,8 +496,7 @@ setDone(1); next();
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
   
   
-  // ANCHOR: Rotation interval
-// v10.2.0 — single 15s rotation interval
+  // v10.2.0 — single 15s rotation interval
   useEffect(() => {
     const id = setInterval(() => {
       if (isHoldingEnglish || isOverEnglish) return;
@@ -516,7 +506,7 @@ setDone(1); next();
         const i = rotationOrderFull.indexOf(prev);
         return (i < 0 || i === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[i + 1];
       });
-    }, 10000);
+    }, 15000);
     setRotationId(id);
     return () => {
       clearInterval(id);
@@ -716,7 +706,7 @@ const isFinalBlinkKey = (k)=> (blinkKey && k===blinkKey && step>=11);
   
 const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-
+    (isBlink(key) ? 'final-blink-2s' : ''),
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -766,11 +756,12 @@ function narrativeFor(lang) {
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: inherit; color: inherit; }
-{/* Keyframes are provided globally by the app shell. Do not declare inline here. */}
+
+        /* Keyframes are provided globally by the app shell. Do not declare inline here. */
 
 /* .ptable-blink relies on the global @keyframes ptable-blink-kf */
 .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
-. { 
+.final-blink-2s { 
   animation: ptable-blink-kf 2s ease-out 0s 1; 
   background: rgba(250, 204, 21, 0.3) !important;
 }
@@ -882,15 +873,11 @@ function narrativeFor(lang) {
 {/* LEFT CARD: Problem + H-table */}
         <div className="card hgrid-card">
           <div className="section">
-<div className="section">
 
+            {/* Problem (natural text only) */}
             <div className="problem-banner">
               <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              
-</div>
-
-
-            {/* Problem (natural text only) */}<div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
+              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
                 {displayText}
               </div>
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
