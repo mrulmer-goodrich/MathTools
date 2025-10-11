@@ -688,3 +688,128 @@ export function genPTable(difficulty = "easy") {
 
   return { rows, k, proportional, revealRow4 };
 }
+
+
+
+// Generator for Proportional Graphs problems
+
+/**
+ * Generate a proportional graphs problem
+ * @param {string} difficulty - 'easy', 'medium', or 'hard'
+ * @returns {object} Problem data for proportional graphs
+ */
+export function genPGraph(difficulty = 'easy') {
+  const isProportional = Math.random() < 0.5;
+  
+  if (!isProportional) {
+    // Generate non-proportional graph
+    const types = ['curved', 'notThroughOrigin', 'curvedNotThrough'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    let whyNot, curveFunc, yIntercept, k;
+    
+    if (type === 'curved') {
+      whyNot = 'notStraight';
+      // Quadratic curve through origin
+      const a = 0.05 + Math.random() * 0.15;
+      curveFunc = (x) => Math.min(a * x * x, 10);
+    } else if (type === 'notThroughOrigin') {
+      whyNot = 'notThroughOrigin';
+      // Straight line not through origin
+      k = difficulty === 'easy' ? (2 + Math.floor(Math.random() * 3)) : (0.3 + Math.random() * 2);
+      yIntercept = 1 + Math.floor(Math.random() * 3);
+    } else {
+      whyNot = 'both';
+      // Curved line not through origin
+      const a = 0.05 + Math.random() * 0.1;
+      const b = 1 + Math.floor(Math.random() * 2);
+      curveFunc = (x) => Math.min(a * x * x + b, 10);
+    }
+    
+    return {
+      isProportional: false,
+      type,
+      whyNot,
+      curveFunc,
+      yIntercept,
+      k,
+      perfectPoints: [],
+    };
+  }
+  
+  // Generate proportional graph
+  let k;
+  
+  if (difficulty === 'easy') {
+    // 50% k > 1, 50% k < 1
+    if (Math.random() < 0.5) {
+      // k > 1: simple whole numbers
+      k = 2 + Math.floor(Math.random() * 3); // 2, 3, 4
+    } else {
+      // k < 1: simple fractions
+      const fractions = [
+        { num: 1, den: 2 }, // 0.5
+        { num: 1, den: 3 }, // 0.333...
+        { num: 2, den: 3 }, // 0.666...
+        { num: 1, den: 4 }, // 0.25
+        { num: 3, den: 4 }, // 0.75
+      ];
+      const frac = fractions[Math.floor(Math.random() * fractions.length)];
+      k = frac.num / frac.den;
+    }
+  } else if (difficulty === 'medium') {
+    // Similar distribution but can include 1.5, 2.5, etc.
+    if (Math.random() < 0.5) {
+      k = 1.5 + Math.floor(Math.random() * 3) * 0.5; // 1.5, 2, 2.5, 3
+    } else {
+      const fractions = [
+        { num: 1, den: 2 },
+        { num: 1, den: 3 },
+        { num: 2, den: 3 },
+        { num: 1, den: 4 },
+        { num: 3, den: 4 },
+        { num: 1, den: 5 },
+        { num: 2, den: 5 },
+        { num: 3, den: 5 },
+      ];
+      const frac = fractions[Math.floor(Math.random() * fractions.length)];
+      k = frac.num / frac.den;
+    }
+  } else {
+    // Hard: any reasonable k value
+    if (Math.random() < 0.5) {
+      k = 1 + Math.random() * 4; // 1 to 5
+    } else {
+      k = 0.2 + Math.random() * 0.8; // 0.2 to 1
+    }
+  }
+  
+  // Generate perfect points (whole number coordinates on the line)
+  const perfectPoints = [];
+  for (let x = 1; x <= 10; x++) {
+    const y = k * x;
+    // Only include if y is a whole number and within range
+    if (Math.abs(y - Math.round(y)) < 0.01 && y >= 1 && y <= 10) {
+      perfectPoints.push({ x, y: Math.round(y) });
+    }
+  }
+  
+  // If no perfect points found (shouldn't happen with our k values), create some
+  if (perfectPoints.length === 0) {
+    // Adjust k to ensure perfect points exist
+    k = Math.floor(k) || 1;
+    for (let x = 1; x <= 10; x++) {
+      const y = k * x;
+      if (y <= 10) {
+        perfectPoints.push({ x, y });
+      }
+    }
+  }
+  
+  return {
+    isProportional: true,
+    k,
+    perfectPoints,
+    type: 'proportional',
+  };
+}
