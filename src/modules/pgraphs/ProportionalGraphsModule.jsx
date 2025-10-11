@@ -263,10 +263,10 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       isProportional: problem.isProportional
     });
     
-    // Validate click is on the line (with VERY large tolerance for touch screens)
+    // Validate click is on a perfect point (must be exact)
     if (problem.isProportional) {
       const expectedY = problem.k * roundedX;
-      const tolerance = 1.5; // Very forgiving tolerance
+      const tolerance = 1.5; // Very forgiving tolerance for clicking
       const diff = Math.abs(roundedY - expectedY);
       
       console.log('Validation:', {
@@ -275,14 +275,22 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
         diff,
         tolerance,
         inRange: roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY,
-        withinTolerance: diff < tolerance
+        withinTolerance: diff < tolerance,
+        perfectPoints: problem.perfectPoints
       });
       
+      // Must be within tolerance AND be an actual perfect point
       if (diff < tolerance && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
-        console.log('✓ Valid point selected!', { x: roundedX, y: roundedY });
-        setClickedPoint({ x: roundedX, y: roundedY });
-        setTimeout(() => setClickedPoint(null), 500);
-        onPointClick({ x: roundedX, y: roundedY });
+        // Check if this is actually a perfect point
+        const isPerfect = problem.perfectPoints.some(p => p.x === roundedX && p.y === roundedY);
+        if (isPerfect) {
+          console.log('✓ Valid perfect point selected!', { x: roundedX, y: roundedY });
+          setClickedPoint({ x: roundedX, y: roundedY });
+          setTimeout(() => setClickedPoint(null), 500);
+          onPointClick({ x: roundedX, y: roundedY });
+        } else {
+          console.log('✗ Click on line but not a perfect point. Try clicking on a point with whole number coordinates.');
+        }
       } else {
         console.log('✗ Click not on line or out of range');
       }
@@ -445,14 +453,40 @@ export default function ProportionalGraphsModule() {
   const equationChoices = useMemo(() => {
     if (calculatedK === null) return [];
     
-    const kStr = calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK.toString();
-    const reciprocalK = calculatedK < 1 ? `(${selectedX}/${selectedY})` : (1 / calculatedK).toFixed(2);
+    // For display: use fraction format
+    const kDisplay = calculatedK < 1 ? (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Fraction numerator={selectedY} denominator={selectedX} />
+      </span>
+    ) : calculatedK.toString();
+    
+    const reciprocalDisplay = calculatedK < 1 ? (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Fraction numerator={selectedX} denominator={selectedY} />
+      </span>
+    ) : (1 / calculatedK).toFixed(2);
     
     return shuffle([
-      { formula: `y = ${kStr}x`, isCorrect: true },
-      { formula: `y = ${reciprocalK}x`, isCorrect: false },
-      { formula: `x = ${kStr}y`, isCorrect: false },
-      { formula: `y = x + ${kStr}`, isCorrect: false },
+      { 
+        formula: <span>y = {kDisplay}x</span>, 
+        displayText: `y = ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}x`,
+        isCorrect: true 
+      },
+      { 
+        formula: <span>y = {reciprocalDisplay}x</span>, 
+        displayText: `y = ${calculatedK < 1 ? `(${selectedX}/${selectedY})` : (1/calculatedK).toFixed(2)}x`,
+        isCorrect: false 
+      },
+      { 
+        formula: <span>x = {kDisplay}y</span>, 
+        displayText: `x = ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}y`,
+        isCorrect: false 
+      },
+      { 
+        formula: <span>y = x + {kDisplay}</span>, 
+        displayText: `y = x + ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}`,
+        isCorrect: false 
+      },
     ]);
   }, [calculatedK, selectedY, selectedX]);
   
@@ -493,11 +527,14 @@ export default function ProportionalGraphsModule() {
   
   // Handle step 4: Click on graph
   const handlePointClick = (point) => {
-    // Check if it's a perfect point
+    // Check if it's a perfect point (must match exactly)
     const isPerfect = problem.perfectPoints.some(p => p.x === point.x && p.y === point.y);
+    console.log('Point clicked:', point, 'Is perfect?', isPerfect, 'Perfect points:', problem.perfectPoints);
     if (isPerfect) {
       setSelectedPoint(point);
       setCurrentStep(5); // Go to coordinate selection
+    } else {
+      console.log('Not a perfect point - ignoring click');
     }
   };
   
@@ -550,7 +587,7 @@ export default function ProportionalGraphsModule() {
   
   // Handle step 10: Select equation
   const handleEquationSelect = (equation) => {
-    setSelectedEquation(equation.formula);
+    setSelectedEquation(equation.displayText);
     if (equation.isCorrect) {
       setShowFinalConfetti(true);
     } else {
@@ -781,12 +818,12 @@ export default function ProportionalGraphsModule() {
               <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
                 <span>k</span>
                 <span>=</span>
-                <Fraction numerator={selectedY} denominator={selectedX} />
-                {calculatedK % 1 !== 0 && (
-                  <>
-                    <span>=</span>
-                    <span>{calculatedK.toFixed(3)}</span>
-                  </>
+                {calculatedK % 1 !== 0 ? (
+                  // Show decimal only (to 1 decimal place)
+                  <span>{calculatedK.toFixed(1)}</span>
+                ) : (
+                  // Show whole number
+                  <span>{calculatedK}</span>
                 )}
               </div>
               <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -804,18 +841,14 @@ export default function ProportionalGraphsModule() {
             </div>
           )}
           {/* Final Result */}
-          {selectedEquation && equationChoices.find(eq => eq.formula === selectedEquation && eq.isCorrect) && (
+          {selectedEquation && equationChoices.find(eq => eq.displayText === selectedEquation && eq.isCorrect) && (
             <div className="section">
               <div className="step-title">✓ Excellent!</div>
               <div style={{ marginTop: 12, fontSize: '20px', fontWeight: 900, textAlign: 'center' }}>
-                k = {calculatedK < 1 ? (
-                  <Fraction numerator={selectedY} denominator={selectedX} />
-                ) : (
-                  calculatedK
-                )}
+                k = {calculatedK % 1 !== 0 ? calculatedK.toFixed(1) : calculatedK}
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
-                For every 1 unit increase in x, y increases by {calculatedK} units.
+                For every 1 unit increase in x, y increases by {calculatedK.toFixed(1)} units.
               </div>
               <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px' }}>
                 {selectedEquation}
