@@ -1025,7 +1025,7 @@ function narrativeFor(lang) {
           </div>
         </div>
 
-        {{/* RIGHT SIDE – prompts only */}
+        {/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
           <div className="section">
             <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
