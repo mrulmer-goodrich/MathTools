@@ -212,18 +212,26 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
   }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates, blinkPoint, blinkState]);
   
   const handleClick = (e) => {
-    if (!onPointClick) return;
+    if (!onPointClick) {
+      console.log('Click handler not active - onPointClick is null');
+      return;
+    }
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    
+    // Account for canvas scaling (CSS vs actual canvas size)
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
     
     const padding = 60;
     const graphWidth = canvas.width - 2 * padding;
     const graphHeight = canvas.height - 2 * padding;
     
-    // Dynamic max values
+    // Dynamic max values (must match rendering)
     let maxX = 10;
     let maxY = 10;
     if (problem.isProportional && problem.k < 1) {
@@ -242,13 +250,37 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const roundedX = Math.round(graphX);
     const roundedY = Math.round(graphY);
     
-    // Validate click is on the line (with large tolerance)
+    console.log('Click detected:', {
+      canvasClick: { x: clickX, y: clickY },
+      graphCoords: { x: graphX, y: graphY },
+      rounded: { x: roundedX, y: roundedY },
+      k: problem.k,
+      expectedY: problem.k * roundedX,
+      isProportional: problem.isProportional
+    });
+    
+    // Validate click is on the line (with VERY large tolerance for touch screens)
     if (problem.isProportional) {
       const expectedY = problem.k * roundedX;
-      if (Math.abs(roundedY - expectedY) < 0.75 && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
+      const tolerance = 1.0; // Increased tolerance
+      const diff = Math.abs(roundedY - expectedY);
+      
+      console.log('Validation:', {
+        expectedY,
+        actualY: roundedY,
+        diff,
+        tolerance,
+        inRange: roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY,
+        withinTolerance: diff < tolerance
+      });
+      
+      if (diff < tolerance && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
+        console.log('✓ Valid point selected!', { x: roundedX, y: roundedY });
         setClickedPoint({ x: roundedX, y: roundedY });
         setTimeout(() => setClickedPoint(null), 500);
         onPointClick({ x: roundedX, y: roundedY });
+      } else {
+        console.log('✗ Click not on line or out of range');
       }
     }
   };
@@ -265,7 +297,10 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
         cursor: onPointClick ? 'crosshair' : 'default',
         maxWidth: '100%',
         height: 'auto',
+        touchAction: 'none', // Prevent touch scrolling on canvas
+        userSelect: 'none',  // Prevent text selection
       }}
+      aria-label={onPointClick ? "Click on a point on the line to select it" : "Graph display"}
     />
   );
 }
