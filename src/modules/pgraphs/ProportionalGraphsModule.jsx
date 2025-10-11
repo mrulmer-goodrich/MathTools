@@ -1,10 +1,11 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v2.0.0
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v2.4.0
 // Proportional Graphs learning tool
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
 import BigButton from "../../components/BigButton.jsx";
 import ugConfetti from "../../lib/confetti.js";
+import { reduceFraction, fractionToDecimal } from "../../lib/mathUtils.js";
 
 /** 
  * Proportional Graphs Module
@@ -346,6 +347,7 @@ export default function ProportionalGraphsModule() {
   const [selectedY, setSelectedY] = useState(null);
   const [selectedX, setSelectedX] = useState(null);
   const [calculatedK, setCalculatedK] = useState(null);
+  const [reducedFraction, setReducedFraction] = useState(null); // Store reduced fraction
   const [selectedEquation, setSelectedEquation] = useState(null);
   const [showFinalConfetti, setShowFinalConfetti] = useState(false);
   const confettiInterval = useRef(null);
@@ -385,6 +387,7 @@ export default function ProportionalGraphsModule() {
     setSelectedY(null);
     setSelectedX(null);
     setCalculatedK(null);
+    setReducedFraction(null);
     setSelectedEquation(null);
     setShowFinalConfetti(false);
     setShowConfirmNew(false);
@@ -451,44 +454,50 @@ export default function ProportionalGraphsModule() {
   
   // Generate equation choices (randomized)
   const equationChoices = useMemo(() => {
-    if (calculatedK === null) return [];
+    if (calculatedK === null || !reducedFraction) return [];
     
-    // For display: use fraction format
+    const { num, den } = reducedFraction;
+    
+    // For display: use ONLY fraction (no decimal)
     const kDisplay = calculatedK < 1 ? (
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={selectedY} denominator={selectedX} />
+        <Fraction numerator={num} denominator={den} />
       </span>
     ) : calculatedK.toString();
     
     const reciprocalDisplay = calculatedK < 1 ? (
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={selectedX} denominator={selectedY} />
+        <Fraction numerator={den} denominator={num} />
       </span>
-    ) : (1 / calculatedK).toFixed(2);
+    ) : (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Fraction numerator={1} denominator={calculatedK} />
+      </span>
+    );
     
     return shuffle([
       { 
         formula: <span>y = {kDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}x`,
+        displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}x`,
         isCorrect: true 
       },
       { 
         formula: <span>y = {reciprocalDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${selectedX}/${selectedY})` : (1/calculatedK).toFixed(2)}x`,
+        displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${calculatedK})`}x`,
         isCorrect: false 
       },
       { 
         formula: <span>x = {kDisplay}y</span>, 
-        displayText: `x = ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}y`,
+        displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}y`,
         isCorrect: false 
       },
       { 
         formula: <span>y = x + {kDisplay}</span>, 
-        displayText: `y = x + ${calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK}`,
+        displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}`,
         isCorrect: false 
       },
     ]);
-  }, [calculatedK, selectedY, selectedX]);
+  }, [calculatedK, reducedFraction]);
   
   // Handle step 1: Is proportional?
   const handleProportionalChoice = (choice) => {
@@ -582,6 +591,11 @@ export default function ProportionalGraphsModule() {
   const handleCompute = () => {
     const k = selectedY / selectedX;
     setCalculatedK(k);
+    
+    // Reduce the fraction
+    const reduced = reduceFraction(selectedY, selectedX);
+    setReducedFraction(reduced);
+    
     setCurrentStep(10); // Go to equation selection
   };
   
@@ -750,9 +764,14 @@ export default function ProportionalGraphsModule() {
           {currentStep === 7 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
-              <div className="slot-wrap ptable-blink-wrap" style={{ marginTop: 12, marginBottom: 12 }}>
+              <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <Fraction numerator="___" denominator="x" />
+                  k = <span style={{ position: 'relative', display: 'inline-block' }}>
+                    <Fraction 
+                      numerator={<span className="ptable-pulse" style={{ display: 'inline-block', minWidth: '40px', height: '4px', background: '#f59e0b', borderRadius: '2px' }} />} 
+                      denominator="x" 
+                    />
+                  </span>
                 </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -773,9 +792,14 @@ export default function ProportionalGraphsModule() {
           {currentStep === 8 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
-              <div className="slot-wrap ptable-blink-wrap" style={{ marginTop: 12, marginBottom: 12 }}>
+              <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <Fraction numerator={selectedY} denominator="___" />
+                  k = <span style={{ position: 'relative', display: 'inline-block' }}>
+                    <Fraction 
+                      numerator={selectedY} 
+                      denominator={<span className="ptable-pulse" style={{ display: 'inline-block', minWidth: '40px', height: '4px', background: '#f59e0b', borderRadius: '2px' }} />} 
+                    />
+                  </span>
                 </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -812,15 +836,16 @@ export default function ProportionalGraphsModule() {
           )}
           
           {/* Step 10: Select equation */}
-          {currentStep === 10 && calculatedK !== null && (
+          {currentStep === 10 && calculatedK !== null && reducedFraction && (
             <div className="section">
               <div className="step-title">Now that you know k, what is the equation?</div>
-              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                <span>k</span>
+              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span>k =</span>
+                <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                 <span>=</span>
                 {calculatedK % 1 !== 0 ? (
-                  // Show decimal only (to 1 decimal place)
-                  <span>{calculatedK.toFixed(1)}</span>
+                  // Show fraction as decimal
+                  <span>{fractionToDecimal(reducedFraction.num, reducedFraction.den)}</span>
                 ) : (
                   // Show whole number
                   <span>{calculatedK}</span>
@@ -841,14 +866,21 @@ export default function ProportionalGraphsModule() {
             </div>
           )}
           {/* Final Result */}
-          {selectedEquation && equationChoices.find(eq => eq.displayText === selectedEquation && eq.isCorrect) && (
+          {selectedEquation && equationChoices.find(eq => eq.displayText === selectedEquation && eq.isCorrect) && reducedFraction && (
             <div className="section">
               <div className="step-title">✓ Excellent!</div>
-              <div style={{ marginTop: 12, fontSize: '20px', fontWeight: 900, textAlign: 'center' }}>
-                k = {calculatedK % 1 !== 0 ? calculatedK.toFixed(1) : calculatedK}
+              <div style={{ marginTop: 12, fontSize: '20px', fontWeight: 900, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <span>k =</span>
+                {calculatedK < 1 ? (
+                  // Show as fraction for k < 1
+                  <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
+                ) : (
+                  // Show as whole number for k >= 1
+                  <span>{calculatedK}</span>
+                )}
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
-                For every 1 unit increase in x, y increases by {calculatedK.toFixed(1)} units.
+                For every 1 unit increase in x, y increases by {calculatedK < 1 ? `${reducedFraction.num}/${reducedFraction.den}` : calculatedK} units.
               </div>
               <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px' }}>
                 {selectedEquation}
