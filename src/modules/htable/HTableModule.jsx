@@ -1,9 +1,12 @@
 ///This is now controlling authority as v.11.0.1 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
+// HTableModule.jsx — UG Math Tools v11.0.2 (replaces v11.0.1)
+// SpecOp Sync: Move Problem section to left, move Math Strip below H-table, set rotation to 10s, normalize final blink classes; anchors inserted per SpecOp 4.x
+// Changes: Surgical moves per Dev Change Requests Part 1 & 2; no logic refactors
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
 /* eslint-disable react/no-unknown-property */
+// ANCHOR: Imports
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 
 // Shared UI
@@ -93,6 +96,7 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
 // ────────────────────────────────────────────────────────────────────────────────
 // Spec scaffolding & helpers
 // ────────────────────────────────────────────────────────────────────────────────
+// ANCHOR: STEP_TITLES
 // STEP TITLES
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
@@ -172,7 +176,9 @@ const _assertFour = (arr, tag) => {
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
 // STEP LOGIC (0–11)
+// ANCHOR: Component start
 export default function HTableModule(){
+  // ANCHOR: State declarations
   const H_SNAP_VERSION = 22;
 
   const persisted = loadSession() || {};
@@ -194,7 +200,8 @@ export default function HTableModule(){
   };
 const [session, setSession] = useState(persisted || { attempts: [] });
   const [problem, setProblem] = useState(() => (snap?.problem) || genSaneHProblem());
-  const [table, setTable] = useState(() => (snap?.table) || {
+  // ANCHOR: Table initializer
+const [table, setTable] = useState(() => (snap?.table) || {
     head1:'', head2:'',
     uTop:'', uBottom:'',
     sTop:null, sBottom:null,
@@ -232,6 +239,7 @@ const seededShuffle = (arr) => {
   return a;
 };
 
+  // ANCHOR: Blink timers
   // 2s blink
   const [blinkKey, setBlinkKey] = useState(null);
   const [blinkUnits, setBlinkUnits] = useState(false);
@@ -284,6 +292,7 @@ const seededShuffle = (arr) => {
     return s===canonicalTopUnit || s===canonicalBottomUnit;
   };
 
+  // ANCHOR: Step handlers
   // Step 0
   const handleStep0 = (choice) => {
     if (!choice?.correct) { miss(0); return; }
@@ -496,7 +505,8 @@ setDone(1); next();
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
   
   
-  // v10.2.0 — single 15s rotation interval
+  // ANCHOR: Rotation interval
+// v10.2.0 — single 15s rotation interval
   useEffect(() => {
     const id = setInterval(() => {
       if (isHoldingEnglish || isOverEnglish) return;
@@ -756,8 +766,7 @@ function narrativeFor(lang) {
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
         .problem-body { font-size: inherit; color: inherit; }
-
-        /* Keyframes are provided globally by the app shell. Do not declare inline here. */
+{/* Keyframes are provided globally by the app shell. Do not declare inline here. */}
 
 /* .ptable-blink relies on the global @keyframes ptable-blink-kf */
 .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
@@ -873,13 +882,12 @@ function narrativeFor(lang) {
 {/* LEFT CARD: Problem + H-table */}
         <div className="card hgrid-card">
           <div className="section">
-
+<div className="section">
 
             <div className="problem-banner">
               <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
               
-
-            
+</div>
 
 
             {/* Problem (natural text only) */}<div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
@@ -908,7 +916,30 @@ function narrativeFor(lang) {
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
-<div ref={gridRef} className=\"hgrid\" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+{/* Equation display (Step 10+ when equation ready) */}
+{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
+  <div className="eq-display">
+    <span className="frac">
+      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
+      <span className="bar"></span>
+      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
+    </span>
+    <span className="eq"> = </span>
+{!mathStrip?.showResult ? (
+      <button 
+        className="button action-blink-strong" 
+        onClick={onCalculate} 
+        disabled={((table?.vTop == null) === (table?.vBottom == null))}
+        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
+      >
+        Calculate
+      </button>
+    ) : (
+      <span className="res">{String(mathStrip?.result ?? '')}</span>
+    )}
+  </div>
+)}
+<div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
                     <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
@@ -994,33 +1025,10 @@ function narrativeFor(lang) {
           </div>
         </div>
 
-        
-{/* Equation display (Step 10+ when equation ready) */}
-{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
-  <div className="eq-display">
-    <span className="frac">
-      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
-      <span className="bar"></span>
-      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
-    </span>
-    <span className="eq"> = </span>
-{!mathStrip?.showResult ? (
-      <button 
-        className="button action-blink-strong" 
-        onClick={onCalculate} 
-        disabled={((table?.vTop == null) === (table?.vBottom == null))}
-        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
-      >
-        Calculate
-      </button>
-    ) : (
-      <span className="res">{String(mathStrip?.result ?? '')}</span>
-    )}
-  </div>
-)}
-{/* RIGHT SIDE – prompts only */}
+        {{/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
-          <div className="section"><div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
+          <div className="section">
+            <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
