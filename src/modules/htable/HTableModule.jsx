@@ -705,10 +705,9 @@ setBlinkKey(null); setBlinkUnits(false);
 const isFinalBlinkKey = (k)=> (blinkKey && k===blinkKey && step>=11);
   
 const cellCls = (key)=> [
-    (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'final-blink-2s' : ''),
-    (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
-  ].filter(Boolean).join(' ');
+  (highlightKeys.includes(key) ? 'hl' : ''),
+  (isBlink(key) ? 'final-blink-2s ptable-blink-hard blink-bg' : ''),
+].filter(Boolean).join(' ');
 
   
   // v10.2.0 — narrative selection and XXXX masking
@@ -929,14 +928,14 @@ function narrativeFor(lang) {
 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
+                    <Slot accept={["header"]} blinkWrap={(blinkKey==='uTop') && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                         <span className="hhead-text">{table.head1 || ''}</span>
                       </div>
                     </Slot>
                   </div>
                   <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} blinkWrap={step===2 && !table.head2} className={`${!table.head2 ? "empty" : ""}`}>
+                    <Slot accept={["header"]} blinkWrap={(blinkKey==='uBottom') && !table.head2} className={`${!table.head2 ? "empty" : ""}`}>
                       <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
                         <span className="hhead-text">{table.head2 || ''}</span>
                       </div>
@@ -946,17 +945,17 @@ function narrativeFor(lang) {
 
                   {/* Row 1 */}
                   <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
+                    <Slot blinkWrap={blinkUnits && (blinkKey==='uTop' || blinkKey==='uBottom')} className={`${!table.uTop ? "empty" : ""}`}>
                       <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('sTop') || highlightKeys.includes('sTop')} className={`${table.sTop==null ? "empty" : ""}`}>
+                    <Slot blinkWrap={blinkKey===''sTop''} className={`${table.sTop==null ? "empty" : ""}`}>
                       <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vTop') || isFinalBlinkKey('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+                    <Slot blinkWrap={blinkKey===''vTop''} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
                       <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
                     </Slot>
                   </div>
@@ -965,17 +964,17 @@ function narrativeFor(lang) {
 
                   {/* Row 2 */}
                   <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
+                    <Slot blinkWrap={blinkUnits && (blinkKey==='uTop' || blinkKey==='uBottom')} className={`${!table.uBottom ? "empty" : ""}`}>
                       <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('sBottom') || highlightKeys.includes('sBottom')} className={`${table.sBottom==null ? "empty" : ""}`}>
+                    <Slot blinkWrap={blinkKey===''sBottom''} className={`${table.sBottom==null ? "empty" : ""}`}>
                       <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
                     </Slot>
                   </div>
                   <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vBottom') || isFinalBlinkKey('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+                    <Slot blinkWrap={blinkKey===''vBottom''} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
                       <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
                     </Slot>
                   </div>
