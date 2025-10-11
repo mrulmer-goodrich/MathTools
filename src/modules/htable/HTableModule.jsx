@@ -506,7 +506,7 @@ setDone(1); next();
         const i = rotationOrderFull.indexOf(prev);
         return (i < 0 || i === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[i + 1];
       });
-    }, 15000);
+    }, 10000);
     setRotationId(id);
     return () => {
       clearInterval(id);
@@ -706,7 +706,7 @@ const isFinalBlinkKey = (k)=> (blinkKey && k===blinkKey && step>=11);
   
 const cellCls = (key)=> [
     (highlightKeys.includes(key) ? 'hl' : ''),
-    (isBlink(key) ? 'final-blink-2s' : ''),
+
     (needWildBlink(key) ? 'ptable-blink-hard blink-bg' : ''),
   ].filter(Boolean).join(' ');
 
@@ -761,7 +761,7 @@ function narrativeFor(lang) {
 
 /* .ptable-blink relies on the global @keyframes ptable-blink-kf */
 .ptable-blink { animation: ptable-blink-kf 2s ease-out 0s 1; }
-.final-blink-2s { 
+. { 
   animation: ptable-blink-kf 2s ease-out 0s 1; 
   background: rgba(250, 204, 21, 0.3) !important;
 }
@@ -874,10 +874,15 @@ function narrativeFor(lang) {
         <div className="card hgrid-card">
           <div className="section">
 
-            {/* Problem (natural text only) */}
+
             <div className="problem-banner">
               <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
+              
+
+            
+
+
+            {/* Problem (natural text only) */}<div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
                 {displayText}
               </div>
     <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
@@ -903,29 +908,7 @@ function narrativeFor(lang) {
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
-{/* Equation display (Step 10+ when equation ready) */}
-{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
-  <div className="eq-display">
-    <span className="frac">
-      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
-      <span className="bar"></span>
-      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
-    </span>
-    <span className="eq"> = </span>
-{!mathStrip?.showResult ? (
-      <button 
-        className="button action-blink-strong" 
-        onClick={onCalculate} 
-        disabled={((table?.vTop == null) === (table?.vBottom == null))}
-        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
-      >
-        Calculate
-      </button>
-    ) : (
-      <span className="res">{String(mathStrip?.result ?? '')}</span>
-    )}
-  </div>
-)}
+{
 <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
@@ -1012,10 +995,33 @@ function narrativeFor(lang) {
           </div>
         </div>
 
-        {/* RIGHT SIDE – prompts only */}
+        
+/* Equation display (Step 10+ when equation ready) */}
+{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
+  <div className="eq-display">
+    <span className="frac">
+      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
+      <span className="bar"></span>
+      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
+    </span>
+    <span className="eq"> = </span>
+{!mathStrip?.showResult ? (
+      <button 
+        className="button action-blink-strong" 
+        onClick={onCalculate} 
+        disabled={((table?.vTop == null) === (table?.vBottom == null))}
+        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
+      >
+        Calculate
+      </button>
+    ) : (
+      <span className="res">{String(mathStrip?.result ?? '')}</span>
+    )}
+  </div>
+)}
+{/* RIGHT SIDE – prompts only */}
         <div className="card right-steps">
-          <div className="section">
-            <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
+          <div className="section"><div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
