@@ -1,25 +1,23 @@
-// src/modules/ptables/ProportionalTablesModule.jsx — v8.2.7
-// Changes vs 8.2.6:
-// - Confetti: add singleton guard + cooldown to prevent double/continuous drops across modules.
-// - No logic flow changes for steps. Blink wrapper kept as in 8.2.6.
+// ProportionalTablesModule.jsx — UG Math Tools v8.5.1.2 (replaces v8.5.1.1)
+// SpecOp Sync: Add required anchors; confirm single-target blink gating; no functional changes
+// Changes: Comment-only anchors + header bump; existing pulse/blur logic preserved
 
+// ANCHOR: Imports
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPTable } from "../../lib/generator.js";
 import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
-
-
 import ugConfetti from "../../lib/confetti.js";
 
 /** UG Math Tools
  * Module: ProportionalTablesModule.jsx
- * Version: 8.5.1.1  (2025-10-04)
- * Change: Hotfix — remove diff markers; unify confetti with ScaleFactor; add smoke route (?smoke=ptables)
- * Notes: Surgical patch only; no renames/moves. Uses shared .sf-confetti CSS.
+ * Version: 8.5.1.2  (2025-10-11)
+ * Notes: Anchors added; pulse visuals unchanged; single-target gating verified
  */
 
 // Shared, lightweight confetti (same as ScaleFactor)
+// (kept as-is; used after solve step)
 function Confetti({ show }) {
   if (!show) return null;
   const COUNT = 90;
@@ -59,9 +57,9 @@ const shuffle = (arr) => { const a = [...arr]; for (let i=a.length-1;i>0;i--){co
 // ⬇️ Guarded confetti to avoid duplicates from parallel modules
 function multiBurstConfetti() {
   try { ugConfetti.burst(); } catch {}
-
 }
 
+// Small helper for click-to-drop support across devices
 const _pickStore = { data: null, set(d){this.data=d||null;}, peek(){return this.data;}, clear(){this.data=null;} };
 
 const Draggable = ({ payload, data, onClick, ...rest }) => {
@@ -70,7 +68,7 @@ const Draggable = ({ payload, data, onClick, ...rest }) => {
   return <DraggableBase data={merged} onClick={handleClick} role="button" tabIndex={0} {...rest} />;
 };
 
-// NOTE: `blinkWrap` renders a wrapper-level animated outline.
+// Wrapper for DropSlot with optional animated outline around it
 const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, children, blinkWrap=false, ...rest }) => {
   const testFn = test ?? ((d) => {
     const t = (d?.type ?? d?.kind ?? "").toString();
@@ -97,7 +95,9 @@ const Slot = ({ accept, onDrop, validator, test, onDropContent, onClick, childre
 const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
 const ACCEPT_VALUE  = ["value", "number"];
 
+// ANCHOR: Component start
 export default function ProportionalTablesModule() {
+  // ANCHOR: State declarations
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => genPTable(difficulty));
   const [xPlaced, setXPlaced] = useState(false);
@@ -113,9 +113,9 @@ export default function ProportionalTablesModule() {
   const [fractions, setFractions] = useState({});
   const [kValues, setKValues] = useState({});
   const [reveal, setReveal] = useState({});
+  // ANCHOR: Blink timers
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
-  
 
   // cache choices
   const fillChoicesRef = useRef({});
@@ -153,15 +153,14 @@ export default function ProportionalTablesModule() {
   const revealFourthRow = (ksEqual===true && conceptCorrect);
   const [row4Answer, setRow4Answer] = useState(null);
 
+  // ANCHOR: Step handlers
   const resetAll = (nextDiff = difficulty) => {
     const next = genPTable(nextDiff);
     setProblem(next);
     setXPlaced(false); setYPlaced(false); setKPlaced(false);
     setNumIsY(false); setDenIsX(false);
     setFractions({});
-
-  
- setKValues({}); setReveal({});
+    setKValues({}); setReveal({});
     setConceptAnswer(null); setRow4Answer(null);
     setLabelStepTarget('x'); setBuildTarget('num'); setFillRow(0); setFillPart('num');
     fillChoicesRef.current = {};
@@ -258,6 +257,8 @@ export default function ProportionalTablesModule() {
 
   useEffect(()=>{ if (!xPlaced) setLabelStepTarget('x'); else if (!yPlaced) setLabelStepTarget('y'); else setLabelStepTarget('k'); }, [xPlaced,yPlaced,kPlaced]);
   useEffect(()=>{ if (!numIsY) setBuildTarget('num'); else setBuildTarget('den'); }, [numIsY,denIsX]);
+
+  // ANCHOR: Table initializer
   useEffect(()=>{
     const f = fractions[fillRow] || {};
     if (fillPart==='num' && f.num!=null) { setFillPart('den'); return; }
@@ -435,97 +436,98 @@ export default function ProportionalTablesModule() {
     );
   };
 
+  // ANCHOR: Component end
   return (
     <>
       <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:96px;font-size:22px;color:#0f172a;font-weight:800;padding:8px 12px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
-    <div className="panes ptables-layout">
-      <div className="card">
-        <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
-          <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "easy" ? "active" : ""}
-              onClick={() => { setDifficulty("easy"); resetAll("easy"); }} aria-pressed={difficulty === "easy"}>Easy</BigButton>
+      <div className="panes ptables-layout">
+        <div className="card">
+          <div className="row" style={{ justifyContent: "flex-start", marginBottom: 8, gap: 8 }}>
+            <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
+              <BigButton className={difficulty === "easy" ? "active" : ""}
+                onClick={() => { setDifficulty("easy"); resetAll("easy"); }} aria-pressed={difficulty === "easy"}>Easy</BigButton>
+            </div>
+            <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
+              <BigButton className={difficulty === "medium" ? "active" : ""}
+                onClick={() => { setDifficulty("medium"); resetAll("medium"); }} aria-pressed={difficulty === "medium"}>Medium</BigButton>
+            </div>
+            <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
+              <BigButton className={difficulty === "hard" ? "active" : ""}
+                onClick={() => { setDifficulty("hard"); resetAll("hard"); }} aria-pressed={difficulty === "hard"}>Hard</BigButton>
+            </div>
           </div>
-          <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "medium" ? "active" : ""}
-              onClick={() => { setDifficulty("medium"); resetAll("medium"); }} aria-pressed={difficulty === "medium"}>Medium</BigButton>
-          </div>
-          <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
-            <BigButton className={difficulty === "hard" ? "active" : ""}
-              onClick={() => { setDifficulty("hard"); resetAll("hard"); }} aria-pressed={difficulty === "hard"}>Hard</BigButton>
-          </div>
+          {Table}
         </div>
-        {Table}
-      </div>
 
-      <div className="card right-steps">
-        {currentStep === "label" && (
-          <div className="section">
-            <div className="step-title">What goes here?</div>
-            {renderLabelChoices()}
-          </div>
-        )}
-        {currentStep === "build" && (
-          <div className="section">
-            <div className="step-title">What goes here?</div>
-            {renderBuildChoices()}
-          </div>
-        )}
-        {currentStep === "fill" && (
-          <div className="section">
-            <div className="step-title">What goes here?</div>
-            {renderFillChoices()}
-          </div>
-        )}
-        {currentStep === "concept" && (
-          <div className="section">
-            <div className="step-title">Is this table proportional?</div>
-            <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              {randomizedConcept.map(({ key, label }) => (
-                <button key={key} className="answer-btn" onClick={() => setConceptAnswer(key)}>{label}</button>
-              ))}
+        <div className="card right-steps">
+          {currentStep === "label" && (
+            <div className="section">
+              <div className="step-title">What goes here?</div>
+              {renderLabelChoices()}
             </div>
-            {conceptAnswer && (
-              <div className="center" style={{ marginTop: 10 }}>
-                {conceptCorrect ? (
-                  <div className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>✓ Correct</div>
-                ) : (
-                  <div className="badge" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>Try again</div>
-                )}
+          )}
+          {currentStep === "build" && (
+            <div className="section">
+              <div className="step-title">What goes here?</div>
+              {renderBuildChoices()}
+            </div>
+          )}
+          {currentStep === "fill" && (
+            <div className="section">
+              <div className="step-title">What goes here?</div>
+              {renderFillChoices()}
+            </div>
+          )}
+          {currentStep === "concept" && (
+            <div className="section">
+              <div className="step-title">Is this table proportional?</div>
+              <div className="row" style={{ gap: 8, justifyContent: "center" }}>
+                {randomizedConcept.map(({ key, label }) => (
+                  <button key={key} className="answer-btn" onClick={() => setConceptAnswer(key)}>{label}</button>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-        {currentStep === "solve" && (
-          <div className="section">
-            <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
-            <div className="row" style={{ gap: 8, justifyContent: "center" }}>
-              {shuffle([
-                { key: "dot", label: "y = k • x", correct: true },
-                { key: "div", label: "y = k ÷ x", correct: false },
-                { key: "add", label: "y = k + x", correct: false },
-                { key: "emd", label: "y = k – x", correct: false },
-              ]).map(({ key, label, correct }) => (
-                <button key={key} className="answer-btn"
-                  onClick={() => {
-                    if (correct) {
-                      setRow4Answer(null);
-                      setTimeout(() => {
-                        solveRow4();
-                        const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
-                        if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
-                        multiBurstConfetti();
-                      }, 10);
-                    } else {
-                      alert("Not quite — try another.");
-                    }
-                  }}
-                >{label}</button>
-              ))}
+              {conceptAnswer && (
+                <div className="center" style={{ marginTop: 10 }}>
+                  {conceptCorrect ? (
+                    <div className="badge" style={{ background: "#ecfdf5", borderColor: "#86efac" }}>✓ Correct</div>
+                  ) : (
+                    <div className="badge" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>Try again</div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+          {currentStep === "solve" && (
+            <div className="section">
+              <div className="step-title">How do we solve for the missing y-value in the new 4th row?</div>
+              <div className="row" style={{ gap: 8, justifyContent: "center" }}>
+                {shuffle([
+                  { key: "dot", label: "y = k • x", correct: true },
+                  { key: "div", label: "y = k ÷ x", correct: false },
+                  { key: "add", label: "y = k + x", correct: false },
+                  { key: "emd", label: "y = k – x", correct: false },
+                ]).map(({ key, label, correct }) => (
+                  <button key={key} className="answer-btn"
+                    onClick={() => {
+                      if (correct) {
+                        setRow4Answer(null);
+                        setTimeout(() => {
+                          solveRow4();
+                          const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
+                          if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
+                          multiBurstConfetti();
+                        }, 10);
+                      } else {
+                        alert("Not quite — try another.");
+                      }
+                    }}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  </>
+    </>
   );
 }
