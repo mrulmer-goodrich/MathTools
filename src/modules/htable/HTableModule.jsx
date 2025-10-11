@@ -908,8 +908,7 @@ function narrativeFor(lang) {
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
                 
-{
-<div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+<div ref={gridRef} className=\"hgrid\" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
                   {/* Headers */}
                   <div className="hhead" style={{height:ROW_H}}>
                     <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
