@@ -996,7 +996,7 @@ function narrativeFor(lang) {
         </div>
 
         
-{/* Equation display (Step 10+ when equation ready) */}}
+{/* Equation display (Step 10+ when equation ready) */}
 { (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
   <div className="eq-display">
     <span className="frac">
