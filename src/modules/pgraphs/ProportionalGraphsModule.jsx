@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v1.0.0
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v2.0.0
 // Proportional Graphs learning tool
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -11,8 +11,6 @@ import ugConfetti from "../../lib/confetti.js";
  * Teaches students to identify proportional relationships and calculate k
  */
 
-const loadDifficulty = () => localStorage.getItem("pgraphs-difficulty") || "easy";
-const saveDifficulty = (d) => localStorage.setItem("pgraphs-difficulty", d);
 const shuffle = (arr) => { 
   const a = [...arr]; 
   for (let i = a.length - 1; i > 0; i--) {
@@ -22,10 +20,20 @@ const shuffle = (arr) => {
   return a; 
 };
 
-// Canvas-based graph renderer
-function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
+// Canvas-based graph renderer with dynamic axes
+function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCoordinates, blinkPoint }) {
   const canvasRef = useRef(null);
   const [clickedPoint, setClickedPoint] = useState(null);
+  const [blinkState, setBlinkState] = useState(false);
+
+  // Blink animation for the green dot
+  useEffect(() => {
+    if (!blinkPoint) return;
+    const interval = setInterval(() => {
+      setBlinkState(prev => !prev);
+    }, 500);
+    return () => clearInterval(interval);
+  }, [blinkPoint]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,9 +42,22 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
     const height = canvas.height;
-    const padding = 50;
+    const padding = 60;
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
+    
+    // Dynamic axis range based on k value
+    let maxX = 10;
+    let maxY = 10;
+    
+    if (problem.isProportional && problem.k < 1) {
+      // For k < 1, expand x-axis to show more points
+      maxX = 20;
+      maxY = 10;
+    } else if (problem.isProportional && problem.k > 1) {
+      maxX = 10;
+      maxY = Math.min(problem.k * 10, 20);
+    }
     
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -44,19 +65,25 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     ctx.fillRect(0, 0, width, height);
     
     // Helper function to convert graph coordinates to canvas coordinates
-    const toCanvasX = (x) => padding + (x / 10) * graphWidth;
-    const toCanvasY = (y) => height - padding - (y / 10) * graphHeight;
+    const toCanvasX = (x) => padding + (x / maxX) * graphWidth;
+    const toCanvasY = (y) => height - padding - (y / maxY) * graphHeight;
     
     // Draw grid lines
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1;
-    for (let i = 0; i <= 10; i++) {
+    
+    const xStep = maxX <= 10 ? 1 : 2;
+    const yStep = maxY <= 10 ? 1 : 2;
+    
+    for (let i = 0; i <= maxX; i += xStep) {
       // Vertical lines
       ctx.beginPath();
       ctx.moveTo(toCanvasX(i), padding);
       ctx.lineTo(toCanvasX(i), height - padding);
       ctx.stroke();
-      
+    }
+    
+    for (let i = 0; i <= maxY; i += yStep) {
       // Horizontal lines
       ctx.beginPath();
       ctx.moveTo(padding, toCanvasY(i));
@@ -66,7 +93,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     
     // Draw axes
     ctx.strokeStyle = '#1f2937';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     // X-axis
     ctx.beginPath();
     ctx.moveTo(padding, height - padding);
@@ -82,35 +109,36 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
-    for (let i = 0; i <= 10; i++) {
-      // X-axis labels
-      ctx.fillText(i.toString(), toCanvasX(i), height - padding + 20);
-      // Y-axis labels
-      if (i > 0) {
-        ctx.textAlign = 'right';
-        ctx.fillText(i.toString(), padding - 10, toCanvasY(i) + 5);
-        ctx.textAlign = 'center';
-      }
+    
+    for (let i = 0; i <= maxX; i += xStep) {
+      ctx.fillText(i.toString(), toCanvasX(i), height - padding + 25);
+    }
+    
+    for (let i = yStep; i <= maxY; i += yStep) {
+      ctx.textAlign = 'right';
+      ctx.fillText(i.toString(), padding - 15, toCanvasY(i) + 5);
+      ctx.textAlign = 'center';
     }
     
     // Draw axis titles
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillText('x', width - padding + 20, height - padding + 5);
-    ctx.fillText('y', padding - 5, padding - 20);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('x', width - padding + 30, height - padding + 5);
+    ctx.fillText('y', padding - 5, padding - 30);
     
     // Draw the line/curve
     ctx.strokeStyle = '#0b4b8c';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.beginPath();
     
     if (problem.isProportional) {
       // Draw straight line through origin
       ctx.moveTo(toCanvasX(0), toCanvasY(0));
-      ctx.lineTo(toCanvasX(10), toCanvasY(problem.k * 10));
+      const endY = Math.min(problem.k * maxX, maxY);
+      ctx.lineTo(toCanvasX(maxX), toCanvasY(endY));
     } else if (problem.type === 'curved') {
       // Draw curve
-      for (let x = 0; x <= 10; x += 0.1) {
-        const y = problem.curveFunc(x);
+      for (let x = 0; x <= maxX; x += 0.1) {
+        const y = Math.min(problem.curveFunc(x), maxY);
         if (x === 0) {
           ctx.moveTo(toCanvasX(x), toCanvasY(y));
         } else {
@@ -120,42 +148,57 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     } else if (problem.type === 'notThroughOrigin') {
       // Draw straight line not through origin
       const y0 = problem.yIntercept;
-      const y10 = problem.k * 10 + problem.yIntercept;
+      const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
       ctx.moveTo(toCanvasX(0), toCanvasY(y0));
-      ctx.lineTo(toCanvasX(10), toCanvasY(y10));
+      ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
+    } else if (problem.type === 'curvedNotThrough') {
+      // Draw curve not through origin
+      for (let x = 0; x <= maxX; x += 0.1) {
+        const y = Math.min(problem.curveFunc(x), maxY);
+        if (x === 0) {
+          ctx.moveTo(toCanvasX(x), toCanvasY(y));
+        } else {
+          ctx.lineTo(toCanvasX(x), toCanvasY(y));
+        }
+      }
     }
     ctx.stroke();
     
-    // Highlight origin if requested
+    // Highlight origin if requested (only AFTER correct answer)
     if (showOrigin) {
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
-      ctx.arc(toCanvasX(0), toCanvasY(0), 8, 0, Math.PI * 2);
+      ctx.arc(toCanvasX(0), toCanvasY(0), 10, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
     
     // Highlight perfect point if provided
     if (highlightPoint) {
-      ctx.fillStyle = '#10b981';
-      ctx.beginPath();
-      ctx.arc(toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y), 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      // Only show if not blinking, or if blinking and currently in "on" state
+      if (!blinkPoint || blinkState) {
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y), 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
       
-      // Draw coordinate label
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(
-        `(${highlightPoint.x}, ${highlightPoint.y})`,
-        toCanvasX(highlightPoint.x),
-        toCanvasY(highlightPoint.y) - 18
-      );
+      // Draw coordinate label ONLY if showCoordinates is true
+      if (showCoordinates) {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 28px sans-serif'; // 2x larger
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        const label = `(${highlightPoint.x}, ${highlightPoint.y})`;
+        ctx.strokeText(label, toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y) - 25);
+        ctx.fillText(label, toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y) - 25);
+      }
     }
     
     // Show clicked point temporarily
@@ -166,7 +209,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
       ctx.fill();
     }
     
-  }, [problem, highlightPoint, showOrigin, clickedPoint]);
+  }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates, blinkPoint, blinkState]);
   
   const handleClick = (e) => {
     if (!onPointClick) return;
@@ -176,13 +219,24 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
     
-    const padding = 50;
+    const padding = 60;
     const graphWidth = canvas.width - 2 * padding;
     const graphHeight = canvas.height - 2 * padding;
     
+    // Dynamic max values
+    let maxX = 10;
+    let maxY = 10;
+    if (problem.isProportional && problem.k < 1) {
+      maxX = 20;
+      maxY = 10;
+    } else if (problem.isProportional && problem.k > 1) {
+      maxX = 10;
+      maxY = Math.min(problem.k * 10, 20);
+    }
+    
     // Convert canvas coordinates to graph coordinates
-    const graphX = ((clickX - padding) / graphWidth) * 10;
-    const graphY = ((canvas.height - clickY - padding) / graphHeight) * 10;
+    const graphX = ((clickX - padding) / graphWidth) * maxX;
+    const graphY = ((canvas.height - clickY - padding) / graphHeight) * maxY;
     
     // Round to nearest integer
     const roundedX = Math.round(graphX);
@@ -191,7 +245,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin }) {
     // Validate click is on the line (with large tolerance)
     if (problem.isProportional) {
       const expectedY = problem.k * roundedX;
-      if (Math.abs(roundedY - expectedY) < 0.75 && roundedX >= 0 && roundedX <= 10 && roundedY >= 0 && roundedY <= 10) {
+      if (Math.abs(roundedY - expectedY) < 0.75 && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
         setClickedPoint({ x: roundedX, y: roundedY });
         setTimeout(() => setClickedPoint(null), 500);
         onPointClick({ x: roundedX, y: roundedY });
@@ -231,8 +285,8 @@ function Fraction({ numerator, denominator, showEquals = false }) {
 }
 
 export default function ProportionalGraphsModule() {
-  const [difficulty, setDifficulty] = useState(loadDifficulty());
-  const [problem, setProblem] = useState(() => genPGraph(difficulty));
+  const [problem, setProblem] = useState(() => genPGraph());
+  const [showConfirmNew, setShowConfirmNew] = useState(false);
   
   // Step tracking
   const [currentStep, setCurrentStep] = useState(1);
@@ -245,11 +299,34 @@ export default function ProportionalGraphsModule() {
   const [selectedY, setSelectedY] = useState(null);
   const [selectedX, setSelectedX] = useState(null);
   const [calculatedK, setCalculatedK] = useState(null);
+  const [selectedEquation, setSelectedEquation] = useState(null);
+  const [showFinalConfetti, setShowFinalConfetti] = useState(false);
+  const confettiInterval = useRef(null);
   
-  useEffect(() => saveDifficulty(difficulty), [difficulty]);
+  // Continuous confetti effect
+  useEffect(() => {
+    if (showFinalConfetti) {
+      // Burst immediately
+      try { ugConfetti.burst(); } catch {}
+      // Then burst every 2 seconds
+      confettiInterval.current = setInterval(() => {
+        try { ugConfetti.burst(); } catch {}
+      }, 2000);
+    } else {
+      if (confettiInterval.current) {
+        clearInterval(confettiInterval.current);
+        confettiInterval.current = null;
+      }
+    }
+    return () => {
+      if (confettiInterval.current) {
+        clearInterval(confettiInterval.current);
+      }
+    };
+  }, [showFinalConfetti]);
   
-  const resetAll = (nextDiff = difficulty) => {
-    const next = genPGraph(nextDiff);
+  const resetAll = () => {
+    const next = genPGraph();
     setProblem(next);
     setCurrentStep(1);
     setSelectedProportional(null);
@@ -261,9 +338,22 @@ export default function ProportionalGraphsModule() {
     setSelectedY(null);
     setSelectedX(null);
     setCalculatedK(null);
+    setSelectedEquation(null);
+    setShowFinalConfetti(false);
+    setShowConfirmNew(false);
   };
   
-  // Generate coordinate choices
+  const handleNewProblem = () => {
+    if (currentStep === 1 || whyNotProportional || selectedEquation) {
+      // At start or finished - just reset
+      resetAll();
+    } else {
+      // In middle of problem - show confirmation
+      setShowConfirmNew(true);
+    }
+  };
+  
+  // Generate coordinate choices (randomized)
   const coordinateChoices = useMemo(() => {
     if (!problem.isProportional || !selectedPoint) return [];
     
@@ -280,7 +370,7 @@ export default function ProportionalGraphsModule() {
     ]);
   }, [problem, selectedPoint]);
   
-  // Generate y-value choices
+  // Generate y-value choices (randomized)
   const yChoices = useMemo(() => {
     if (!selectedCoordinates) return [];
     
@@ -296,7 +386,7 @@ export default function ProportionalGraphsModule() {
     ]);
   }, [selectedCoordinates, problem]);
   
-  // Generate x-value choices
+  // Generate x-value choices (randomized)
   const xChoices = useMemo(() => {
     if (!selectedCoordinates) return [];
     
@@ -311,6 +401,21 @@ export default function ProportionalGraphsModule() {
       { value: otherPoint.x || correct - 1, label: (otherPoint.x || correct - 1).toString(), isCorrect: false },
     ]);
   }, [selectedCoordinates, problem]);
+  
+  // Generate equation choices (randomized)
+  const equationChoices = useMemo(() => {
+    if (calculatedK === null) return [];
+    
+    const kStr = calculatedK < 1 ? `(${selectedY}/${selectedX})` : calculatedK.toString();
+    const reciprocalK = calculatedK < 1 ? `(${selectedX}/${selectedY})` : (1 / calculatedK).toFixed(2);
+    
+    return shuffle([
+      { formula: `y = ${kStr}x`, isCorrect: true },
+      { formula: `y = ${reciprocalK}x`, isCorrect: false },
+      { formula: `x = ${kStr}y`, isCorrect: false },
+      { formula: `y = x + ${kStr}`, isCorrect: false },
+    ]);
+  }, [calculatedK, selectedY, selectedX]);
   
   // Handle step 1: Is proportional?
   const handleProportionalChoice = (choice) => {
@@ -401,60 +506,39 @@ export default function ProportionalGraphsModule() {
   const handleCompute = () => {
     const k = selectedY / selectedX;
     setCalculatedK(k);
-    try { ugConfetti.burst(); } catch {}
+    setCurrentStep(10); // Go to equation selection
+  };
+  
+  // Handle step 10: Select equation
+  const handleEquationSelect = (equation) => {
+    setSelectedEquation(equation.formula);
+    if (equation.isCorrect) {
+      setShowFinalConfetti(true);
+    } else {
+      setTimeout(() => setSelectedEquation(null), 1000);
+    }
   };
   
   return (
     <>
       <div className="panes pgraphs-layout">
         <div className="card">
-          {/* Difficulty buttons */}
-          <div className="row" style={{ justifyContent: "flex-start", marginBottom: 16, gap: 8 }}>
-            <div className={`press ${difficulty === "easy" ? "is-active" : ""}`}>
-              <BigButton 
-                className={difficulty === "easy" ? "active" : ""}
-                onClick={() => { setDifficulty("easy"); resetAll("easy"); }}
-                aria-pressed={difficulty === "easy"}
-              >
-                Easy
-              </BigButton>
-            </div>
-            <div className={`press ${difficulty === "medium" ? "is-active" : ""}`}>
-              <BigButton 
-                className={difficulty === "medium" ? "active" : ""}
-                onClick={() => { setDifficulty("medium"); resetAll("medium"); }}
-                aria-pressed={difficulty === "medium"}
-              >
-                Medium
-              </BigButton>
-            </div>
-            <div className={`press ${difficulty === "hard" ? "is-active" : ""}`}>
-              <BigButton 
-                className={difficulty === "hard" ? "active" : ""}
-                onClick={() => { setDifficulty("hard"); resetAll("hard"); }}
-                aria-pressed={difficulty === "hard"}
-              >
-                Hard
-              </BigButton>
-            </div>
-          </div>
-          
           {/* Graph */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
             <GraphCanvas 
               problem={problem}
               onPointClick={currentStep === 4 ? handlePointClick : null}
               highlightPoint={selectedPoint}
-              showOrigin={currentStep === 2 || currentStep === 3}
+              showOrigin={whyProportional === 'both'} 
+              showCoordinates={selectedCoordinates !== null}
+              blinkPoint={currentStep === 7 || currentStep === 8}
             />
           </div>
           
-          {/* New Problem button (shown after completion) */}
-          {(whyNotProportional === problem.whyNot || calculatedK !== null) && (
-            <div className="center" style={{ marginTop: 18 }}>
-              <BigButton onClick={() => resetAll()}>New Problem</BigButton>
-            </div>
-          )}
+          {/* New Problem button */}
+          <div className="center" style={{ marginTop: 18 }}>
+            <BigButton onClick={handleNewProblem}>New Problem</BigButton>
+          </div>
         </div>
         
         {/* Right panel - Questions */}
@@ -464,18 +548,18 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">Is this graph proportional or not proportional?</div>
               <div className="row" style={{ gap: 10, marginTop: 12 }}>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleProportionalChoice('yes')}
-                >
-                  Proportional
-                </button>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleProportionalChoice('not')}
-                >
-                  Not Proportional
-                </button>
+                {shuffle([
+                  { key: 'yes', label: 'Proportional' },
+                  { key: 'not', label: 'Not Proportional' }
+                ]).map(choice => (
+                  <button 
+                    key={choice.key}
+                    className="answer-btn pgraph-choice-btn"
+                    onClick={() => handleProportionalChoice(choice.key)}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -485,27 +569,20 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">Why is this graph NOT proportional?</div>
               <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyNot('notStraight')}
-                  style={{ width: '100%' }}
-                >
-                  It's not a straight line
-                </button>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyNot('notThroughOrigin')}
-                  style={{ width: '100%' }}
-                >
-                  It doesn't go through the origin (0,0)
-                </button>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyNot('both')}
-                  style={{ width: '100%' }}
-                >
-                  Both - it's not straight AND doesn't go through origin
-                </button>
+                {shuffle([
+                  { key: 'notStraight', label: "It's not a straight line" },
+                  { key: 'notThroughOrigin', label: "It doesn't go through the origin (0,0)" },
+                  { key: 'both', label: "Both - it's not straight AND doesn't go through origin" }
+                ]).map(choice => (
+                  <button 
+                    key={choice.key}
+                    className="answer-btn pgraph-choice-btn"
+                    onClick={() => handleWhyNot(choice.key)}
+                    style={{ width: '100%' }}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
               </div>
               {whyNotProportional === problem.whyNot && (
                 <div className="center" style={{ marginTop: 12 }}>
@@ -522,27 +599,21 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">Why is this graph proportional?</div>
               <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyProportional('both')}
-                  style={{ width: '100%' }}
-                >
-                  It's a straight line AND goes through the origin (0,0)
-                </button>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyProportional('straightOnly')}
-                  style={{ width: '100%' }}
-                >
-                  It's a straight line only
-                </button>
-                <button 
-                  className="answer-btn"
-                  onClick={() => handleWhyProportional('originOnly')}
-                  style={{ width: '100%' }}
-                >
-                  It goes through the origin (0,0) only
-                </button>
+                {shuffle([
+                  { key: 'both', label: "It's a straight line AND goes through the origin (0,0)" },
+                  { key: 'straightOnly', label: "It's a straight line only" },
+                  { key: 'originOnly', label: "It goes through the origin (0,0) only" },
+                  { key: 'notStraight', label: "It's not a straight line" }
+                ]).map(choice => (
+                  <button 
+                    key={choice.key}
+                    className="answer-btn pgraph-choice-btn"
+                    onClick={() => handleWhyProportional(choice.key)}
+                    style={{ width: '100%' }}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -565,7 +636,7 @@ export default function ProportionalGraphsModule() {
                 {coordinateChoices.map((coord, i) => (
                   <button
                     key={i}
-                    className="answer-btn"
+                    className="answer-btn pgraph-choice-btn"
                     onClick={() => handleCoordinateSelect(coord)}
                   >
                     {coord.label}
@@ -580,18 +651,21 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">What is the formula to find k?</div>
               <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                <button className="answer-btn" onClick={() => handleFormulaSelect('y/x')}>
-                  k = <Fraction numerator="y" denominator="x" />
-                </button>
-                <button className="answer-btn" onClick={() => handleFormulaSelect('x/y')}>
-                  k = <Fraction numerator="x" denominator="y" />
-                </button>
-                <button className="answer-btn" onClick={() => handleFormulaSelect('x+y')}>
-                  k = x + y
-                </button>
-                <button className="answer-btn" onClick={() => handleFormulaSelect('y-x')}>
-                  k = y - x
-                </button>
+                {shuffle([
+                  { key: 'y/x', formula: <Fraction numerator="y" denominator="x" />, correct: true },
+                  { key: 'x/y', formula: <Fraction numerator="x" denominator="y" />, correct: false },
+                  { key: 'x+y', formula: 'x + y', correct: false },
+                  { key: 'y-x', formula: 'y — x', correct: false } // em dash
+                ]).map(({ key, formula, correct }) => (
+                  <button 
+                    key={key}
+                    className="answer-btn pgraph-choice-btn" 
+                    onClick={() => handleFormulaSelect(key)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    k = {formula}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -600,14 +674,16 @@ export default function ProportionalGraphsModule() {
           {currentStep === 7 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
-              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center' }}>
-                k = <Fraction numerator={<span className="ptable-pulse" style={{ display: 'inline-block', width: '30px', height: '4px', background: '#3b82f6' }} />} denominator={selectedCoordinates.x} />
+              <div className="slot-wrap ptable-blink-wrap" style={{ marginTop: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
+                  k = <Fraction numerator="___" denominator="x" />
+                </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 {yChoices.map((choice, i) => (
                   <button
                     key={i}
-                    className="answer-btn"
+                    className="answer-btn pgraph-choice-btn"
                     onClick={() => handleYSelect(choice)}
                   >
                     {choice.label}
@@ -621,14 +697,16 @@ export default function ProportionalGraphsModule() {
           {currentStep === 8 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
-              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center' }}>
-                k = <Fraction numerator={selectedY} denominator={<span className="ptable-pulse" style={{ display: 'inline-block', width: '30px', height: '4px', background: '#3b82f6' }} />} />
+              <div className="slot-wrap ptable-blink-wrap" style={{ marginTop: 12, marginBottom: 12 }}>
+                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
+                  k = <Fraction numerator={selectedY} denominator="___" />
+                </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 {xChoices.map((choice, i) => (
                   <button
                     key={i}
-                    className="answer-btn"
+                    className="answer-btn pgraph-choice-btn"
                     onClick={() => handleXSelect(choice)}
                   >
                     {choice.label}
@@ -642,12 +720,12 @@ export default function ProportionalGraphsModule() {
           {currentStep === 9 && (
             <div className="section">
               <div className="step-title">Click Compute to calculate k!</div>
-              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center' }}>
+              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
                 k = <Fraction numerator={selectedY} denominator={selectedX} />
               </div>
               <div className="center">
                 <button 
-                  className="answer-btn flash"
+                  className="answer-btn pgraph-choice-btn flash"
                   onClick={handleCompute}
                   style={{ fontSize: '20px', padding: '16px 28px' }}
                 >
@@ -657,8 +735,37 @@ export default function ProportionalGraphsModule() {
             </div>
           )}
           
-          {/* Result */}
-          {calculatedK !== null && (
+          {/* Step 10: Select equation */}
+          {currentStep === 10 && calculatedK !== null && (
+            <div className="section">
+              <div className="step-title">Now that you know k, what is the equation?</div>
+              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                <span>k</span>
+                <span>=</span>
+                <Fraction numerator={selectedY} denominator={selectedX} />
+                {calculatedK % 1 !== 0 && (
+                  <>
+                    <span>=</span>
+                    <span>{calculatedK.toFixed(3)}</span>
+                  </>
+                )}
+              </div>
+              <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                {equationChoices.map((eq, i) => (
+                  <button
+                    key={i}
+                    className="answer-btn pgraph-choice-btn"
+                    onClick={() => handleEquationSelect(eq)}
+                    style={{ width: '100%' }}
+                  >
+                    {eq.formula}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Final Result */}
+          {selectedEquation && equationChoices.find(eq => eq.formula === selectedEquation && eq.isCorrect) && (
             <div className="section">
               <div className="step-title">✓ Excellent!</div>
               <div style={{ marginTop: 12, fontSize: '20px', fontWeight: 900, textAlign: 'center' }}>
@@ -671,13 +778,52 @@ export default function ProportionalGraphsModule() {
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
                 For every 1 unit increase in x, y increases by {calculatedK} units.
               </div>
-              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700 }}>
-                y = {calculatedK}x
+              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px' }}>
+                {selectedEquation}
               </div>
             </div>
           )}
         </div>
       </div>
+      
+      {/* Confirmation Modal */}
+      {showConfirmNew && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: '400px', padding: '24px' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: 16 }}>
+              Start a new problem?
+            </div>
+            <div className="muted" style={{ marginBottom: 20 }}>
+              You'll lose your progress on the current problem.
+            </div>
+            <div className="row" style={{ gap: 12, justifyContent: 'center' }}>
+              <button 
+                className="button primary"
+                onClick={resetAll}
+              >
+                Yes, New Problem
+              </button>
+              <button 
+                className="button"
+                onClick={() => setShowConfirmNew(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
