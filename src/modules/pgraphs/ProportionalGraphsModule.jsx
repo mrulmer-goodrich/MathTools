@@ -243,8 +243,11 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     }
     
     // Convert canvas coordinates to graph coordinates
+    // X is straightforward
     const graphX = ((clickX - padding) / graphWidth) * maxX;
-    const graphY = ((canvas.height - clickY - padding) / graphHeight) * maxY;
+    // Y needs to be flipped because canvas Y goes down, graph Y goes up
+    const canvasYFromBottom = canvas.height - clickY;
+    const graphY = ((canvasYFromBottom - padding) / graphHeight) * maxY;
     
     // Round to nearest integer
     const roundedX = Math.round(graphX);
@@ -252,6 +255,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     
     console.log('Click detected:', {
       canvasClick: { x: clickX, y: clickY },
+      canvasYFromBottom,
       graphCoords: { x: graphX, y: graphY },
       rounded: { x: roundedX, y: roundedY },
       k: problem.k,
@@ -262,7 +266,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     // Validate click is on the line (with VERY large tolerance for touch screens)
     if (problem.isProportional) {
       const expectedY = problem.k * roundedX;
-      const tolerance = 1.0; // Increased tolerance
+      const tolerance = 1.5; // Very forgiving tolerance
       const diff = Math.abs(roundedY - expectedY);
       
       console.log('Validation:', {
