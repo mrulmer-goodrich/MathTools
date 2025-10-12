@@ -275,30 +275,26 @@ ctx.stroke();
       maxY = Math.min(problem.k * 10, 20);
     }
     
-    // Convert canvas coordinates to graph coordinates
+// Convert canvas coordinates to graph coordinates
+// IMPORTANT: This assumes you draw in CSS pixels (common when using ctx.scale(dpr,dpr))
 const { offsetX, offsetY } = e.nativeEvent;
-const dpr = window.devicePixelRatio || 1;
 
-// Use canvas pixel space to match drawing math
-const pxX = offsetX * dpr;
-const pxY = offsetY * dpr;
-
+// Same paddings used by draw code
 const paddingLeft = 40;
 const paddingRight = 20;
 const paddingTop = 20;
 const paddingBottom = 40;
 
-const innerW = canvas.width - paddingLeft - paddingRight;
-const innerH = canvas.height - paddingTop - paddingBottom;
+// Use CSS pixel size (NOT canvas.width/height which are device pixels)
+const innerW = canvas.clientWidth - paddingLeft - paddingRight;
+const innerH = canvas.clientHeight - paddingTop - paddingBottom;
 const originXPx = paddingLeft;
-const originYPx = canvas.height - paddingBottom;
+const originYPx = canvas.clientHeight - paddingBottom;
 
-// Map pixel -> graph units (Quadrant I)
-const graphX = (pxX - originXPx) / innerW * maxX;
-const graphY = (originYPx - pxY) / innerH * maxY;
-const roundedX = Math.round(graphX);
-    const roundedY = Math.round(graphY);
-    
+// Map CSS px -> graph units (Quadrant I)
+const graphX = (offsetX - originXPx) / innerW * maxX;
+const graphY = (originYPx - offsetY) / innerH * maxY;
+
     console.log('🖱️ CLICK DEBUG:', {
       canvas: { clickX, clickY },
       graph: { graphX, graphY },
