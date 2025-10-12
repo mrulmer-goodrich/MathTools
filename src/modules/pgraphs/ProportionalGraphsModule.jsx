@@ -83,8 +83,8 @@ if (ppts.length > 0) {
 ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
 ctx.lineWidth = 1.25;
     
-    const xStep = maxX <= 10 ? 1 : 2;
-    const yStep = maxY <= 10 ? 1 : 2;
+    const xStep = chooseStep(maxX);
+    const yStep = chooseStep(maxY);
     
     for (let i = 0; i <= maxX; i += xStep) {
       // Vertical lines
@@ -260,14 +260,17 @@ ctx.stroke();
     // Dynamic max values (must match rendering)
     let maxX = 10;
     let maxY = 10;
-    if (problem.isProportional && problem.k < 1) {
-      maxX = 20;
-      maxY = 10;
-    } else if (problem.isProportional && problem.k > 1) {
-      maxX = 10;
-      maxY = Math.min(problem.k * 10, 20);
+    {
+      const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
+      if (ppts.length > 0) {
+        const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
+        const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
+        const minYNeeded = (smallest?.y ?? 1) + 1;
+        maxX = niceCeil(Math.max(10, minXNeeded), 5);
+        maxY = niceCeil(Math.max(10, minYNeeded), 5);
+      }
     }
-    
+
     // Convert canvas coordinates to graph coordinates
     const graphX = ((clickX - padding) / graphWidth) * maxX;
     const canvasYFromBottom = canvas.height - clickY;
@@ -924,7 +927,7 @@ export default function ProportionalGraphsModule() {
                 {calculatedK < 1 ? (
                   <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                 ) : (
-                  <span>{calculatedK}</span>
+                  <span>{fmt2(calculatedK)}</span>
                 )}
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
@@ -936,7 +939,7 @@ export default function ProportionalGraphsModule() {
                 {calculatedK < 1 ? (
                   <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                 ) : (
-                  <span>{calculatedK}</span>
+                  <span>{fmt2(calculatedK)}</span>
                 )}
                 <span>x</span>
               </div>
