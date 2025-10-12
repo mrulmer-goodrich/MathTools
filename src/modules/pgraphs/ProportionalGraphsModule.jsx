@@ -141,46 +141,41 @@ if (problem?.isProportional) {
     y2 = maxY;
     x2 = maxY / problem.k;
   }
-} else {
-  // non-proportional drawing logic (leave whatever you already have, or default)
-  x2 = maxX;
-  y2 = Math.min(problem.k * maxX, maxY);
-
-
-    } else if (problem.type === 'curved') {
-      // Draw curve - stop drawing when y reaches maxY to avoid flat line
-      let started = false;
-      for (let x = 0; x <= maxX; x += 0.1) {
-        const y = problem.curveFunc(x);
-        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
-        if (!started) {
-          ctx.moveTo(toCanvasX(x), toCanvasY(y));
-          started = true;
-        } else {
-          ctx.lineTo(toCanvasX(x), toCanvasY(y));
-        }
-      }
-    } else if (problem.type === 'notThroughOrigin') {
-      // Draw straight line not through origin
-      const y0 = problem.yIntercept;
-      const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
-      ctx.moveTo(toCanvasX(0), toCanvasY(y0));
-      ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
-    } else if (problem.type === 'curvedNotThrough') {
-      // Draw curve not through origin - stop drawing when y reaches maxY
-      let started = false;
-      for (let x = 0; x <= maxX; x += 0.1) {
-        const y = problem.curveFunc(x);
-        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
-        if (!started) {
-          ctx.moveTo(toCanvasX(x), toCanvasY(y));
-          started = true;
-        } else {
-          ctx.lineTo(toCanvasX(x), toCanvasY(y));
-        }
-      }
+} else if (problem.type === 'curved') {
+  // Draw curve - stop drawing when y reaches maxY to avoid flat line
+  let started = false;
+  for (let x = 0; x <= maxX; x += 0.1) {
+    const y = problem.curveFunc(x);
+    if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+    if (!started) {
+      ctx.moveTo(toCanvasX(x), toCanvasY(y));
+      started = true;
+    } else {
+      ctx.lineTo(toCanvasX(x), toCanvasY(y));
     }
-    ctx.stroke();
+  }
+} else if (problem.type === 'notThroughOrigin') {
+  // Draw straight line not through origin
+  const y0 = problem.yIntercept;
+  const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
+  ctx.moveTo(toCanvasX(0), toCanvasY(y0));
+  ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
+} else if (problem.type === 'curvedNotThrough') {
+  // Draw curve not through origin - stop drawing when y reaches maxY
+  let started = false;
+  for (let x = 0; x <= maxX; x += 0.1) {
+    const y = problem.curveFunc(x);
+    if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+    if (!started) {
+      ctx.moveTo(toCanvasX(x), toCanvasY(y));
+      started = true;
+    } else {
+      ctx.lineTo(toCanvasX(x), toCanvasY(y));
+    }
+  }
+}
+ctx.stroke();
+
     
     // Highlight origin if requested (only AFTER correct answer)
     if (showOrigin) {
