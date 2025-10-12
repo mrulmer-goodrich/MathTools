@@ -67,9 +67,9 @@ if (ppts.length > 0) {
     const toCanvasX = (x) => padding + (x / maxX) * graphWidth;
     const toCanvasY = (y) => height - padding - (y / maxY) * graphHeight;
     
-    // Draw grid lines
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
+    // darken grid lines for better visibility
+ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
+ctx.lineWidth = 1.25;
     
     const xStep = maxX <= 10 ? 1 : 2;
     const yStep = maxY <= 10 ? 1 : 2;
