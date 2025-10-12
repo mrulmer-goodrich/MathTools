@@ -779,7 +779,7 @@ export default function ProportionalGraphsModule() {
                       <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
                     <div className="frac-bar narrow" />
-                    <div style={{ fontSize: '20px', fontWeight: 900', color: 'transparent', userSelect: 'none' }}>x</div>
+                   <div style={{ fontSize: '20px', fontWeight: 900, color: 'transparent', userSelect: 'none' }}>x</div>
                   </div>
                 </div>
               </div>
