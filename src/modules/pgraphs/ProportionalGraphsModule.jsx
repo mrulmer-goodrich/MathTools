@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.1
+// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.0
 // Proportional Graphs learning tool
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -22,19 +22,9 @@ const shuffle = (arr) => {
 };
 
 // Canvas-based graph renderer with dynamic axes
-function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCoordinates, blinkPoint }) {
+function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCoordinates }) {
   const canvasRef = useRef(null);
   const [clickedPoint, setClickedPoint] = useState(null);
-  const [blinkState, setBlinkState] = useState(false);
-
-  // Blink animation for the green dot
-  useEffect(() => {
-    if (!blinkPoint) return;
-    const interval = setInterval(() => {
-      setBlinkState(prev => !prev);
-    }, 500);
-    return () => clearInterval(interval);
-  }, [blinkPoint]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,16 +174,13 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     
     // Highlight perfect point if provided
     if (highlightPoint) {
-      // Only show if not blinking, or if blinking and currently in "on" state
-      if (!blinkPoint || blinkState) {
-        ctx.fillStyle = '#10b981';
-        ctx.beginPath();
-        ctx.arc(toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y), 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(toCanvasX(highlightPoint.x), toCanvasY(highlightPoint.y), 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
       
       // Draw coordinate label ONLY if showCoordinates is true
       if (showCoordinates) {
@@ -216,7 +203,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       ctx.fill();
     }
     
-  }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates, blinkPoint, blinkState]);
+  }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates]);
   
   const handleClick = (e) => {
     if (!onPointClick) {
@@ -340,6 +327,28 @@ function Fraction({ numerator, denominator, showEquals = false, whiteBar = false
 export default function ProportionalGraphsModule() {
   const [problem, setProblem] = useState(() => genPGraph());
   const [showConfirmNew, setShowConfirmNew] = useState(false);
+  
+  // Add pulse animation style
+  useEffect(() => {
+    const styleId = 'pgraph-pulse-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
   
   // Step tracking
   const [currentStep, setCurrentStep] = useState(1);
@@ -631,13 +640,7 @@ export default function ProportionalGraphsModule() {
               highlightPoint={selectedPoint}
               showOrigin={whyProportional === 'both'} 
               showCoordinates={selectedCoordinates !== null}
-              blinkPoint={currentStep === 7 || currentStep === 8}
             />
-          </div>
-          
-          {/* New Problem button */}
-          <div className="center" style={{ marginTop: 18 }}>
-            <BigButton onClick={handleNewProblem}>New Problem</BigButton>
           </div>
         </div>
         
@@ -656,6 +659,7 @@ export default function ProportionalGraphsModule() {
                     key={choice.key}
                     className="answer-btn pgraph-choice-btn"
                     onClick={() => handleProportionalChoice(choice.key)}
+                    style={{ flex: '1 1 calc(50% - 5px)', minWidth: '140px' }}
                   >
                     {choice.label}
                   </button>
@@ -735,6 +739,7 @@ export default function ProportionalGraphsModule() {
                     key={i}
                     className="answer-btn pgraph-choice-btn"
                     onClick={() => handleCoordinateSelect(coord)}
+                    style={{ flex: '1 1 calc(50% - 4px)', minWidth: '120px' }}
                   >
                     {coord.label}
                   </button>
@@ -758,7 +763,7 @@ export default function ProportionalGraphsModule() {
                     key={key}
                     className="answer-btn pgraph-choice-btn" 
                     onClick={() => handleFormulaSelect(key)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    style={{ flex: '1 1 calc(50% - 4px)', minWidth: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   >
                     k = {formula}
                   </button>
@@ -776,7 +781,7 @@ export default function ProportionalGraphsModule() {
                   <span style={{ display: 'inline-flex', alignItems: 'center' }}>k =</span>
                   <div className="fraction mini-frac" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle' }}>
                     <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
+                      <span style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
                     <div className="frac-bar narrow" style={{ width: '100%', margin: '2px 0' }} />
                     <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</div>
@@ -789,6 +794,7 @@ export default function ProportionalGraphsModule() {
                     key={i}
                     className="answer-btn pgraph-choice-btn"
                     onClick={() => handleYSelect(choice)}
+                    style={{ flex: '1 1 calc(50% - 4px)', minWidth: '120px' }}
                   >
                     {choice.label}
                   </button>
@@ -808,7 +814,7 @@ export default function ProportionalGraphsModule() {
                     <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{selectedY}</div>
                     <div className="frac-bar narrow" style={{ width: '100%', margin: '2px 0' }} />
                     <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
+                      <span style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
                   </div>
                 </div>
@@ -819,6 +825,7 @@ export default function ProportionalGraphsModule() {
                     key={i}
                     className="answer-btn pgraph-choice-btn"
                     onClick={() => handleXSelect(choice)}
+                    style={{ flex: '1 1 calc(50% - 4px)', minWidth: '120px' }}
                   >
                     {choice.label}
                   </button>
@@ -922,6 +929,19 @@ export default function ProportionalGraphsModule() {
               </div>
             </div>
           )}
+          
+          {/* New Problem button - always visible at bottom of right panel */}
+          <div className="section" style={{ marginTop: 'auto', paddingTop: 20 }}>
+            <div className="center">
+              <BigButton 
+                onClick={handleNewProblem}
+                className={showFinalConfetti ? 'flash' : ''}
+                style={showFinalConfetti ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}}
+              >
+                New Problem
+              </BigButton>
+            </div>
+          </div>
         </div>
       </div>
       
