@@ -639,6 +639,8 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
   }
 }
 
+
+
 // src/lib/ptables/generator.js
 // Problem generator for Proportional Tables.
 // Returns an object: { rows: [{x,y},...], k, proportional, revealRow4 }
@@ -685,7 +687,7 @@ export function genPTable(difficulty = "easy") {
 
 
 
-// Generator for Proportional Graphs problems (variety + 2-decimal display-safe)
+// Generator for Proportional Graphs problems (variety + subset perfectPoints + 2-dec display helpers)
 /**
  * Generate a proportional graphs problem
  * @param {string} difficulty - 'easy', 'medium', or 'hard' (preserved for API)
@@ -696,7 +698,7 @@ export function genPGraph(difficulty = 'easy') {
   const isProportional = Math.random() < 0.65;
 
   if (!isProportional) {
-    // --- Non-proportional (unchanged API; added variety preserved) ---
+    // --- Non-proportional (unchanged API; added variety) ---
     const types = ['curved', 'notThroughOrigin', 'curvedNotThrough'];
     const type = types[Math.floor(Math.random() * types.length)];
 
@@ -709,7 +711,7 @@ export function genPGraph(difficulty = 'easy') {
       curveFunc = (x) => a * x * x;
     } else if (type === 'notThroughOrigin') {
       whyNot = 'notThroughOrigin';
-      // Keep slopes varied and y-intercepts modest
+      // Straight line not through origin
       k = 1 + Math.floor(Math.random() * 12);          // 1..12
       yIntercept = 1 + Math.floor(Math.random() * 7);   // 1..7
     } else {
@@ -734,7 +736,7 @@ export function genPGraph(difficulty = 'easy') {
   // --- Proportional case ---
   function gcd(a, b) { while (b) [a, b] = [b, a % b]; return Math.abs(a); }
 
-  // Bias away from integers to avoid "every point is perfect" feel:
+  // Bias away from integers to avoid “all perfect points” feel:
   //  - 15% integers (1..14)
   //  - 55% proper fractions (num < den, den up to 15)
   //  - 30% improper fractions (non-integer)
@@ -760,13 +762,12 @@ export function genPGraph(difficulty = 'easy') {
 
   const k = num / den;
 
-  // --- 2-decimal display fields (do NOT use for math) ---
+  // --- Optional 2-dec display fields (do NOT use for math inside the generator) ---
   const kRounded = Number(k.toFixed(2));           // numeric 2-dec
   const kRoundedText = k.toFixed(2);               // string "x.xx"
   const kFractionText = `${num}/${den}`;
 
   // --- Perfect points: return a *subset* (3..6) of lattice points, not every multiple ---
-  // Pick random m values to sample sparse points so UI never looks "all perfect."
   const perfectPoints = [];
   const wanted = 3 + Math.floor(Math.random() * 4); // 3..6
   const used = new Set();
@@ -784,12 +785,12 @@ export function genPGraph(difficulty = 'easy') {
   return {
     isProportional: true,
     type: 'proportional',
-    k,                 // keep full-precision number for all computations
-    kNum: num,         // NEW: integer numerator
-    kDen: den,         // NEW: integer denominator
-    kRounded,          // NEW: numeric rounded (2 decimals) if you need numeric compare within tolerance
-    kRoundedText,      // NEW: "x.xx" for UI labels
-    kFractionText,     // NEW: "num/den" for UI fraction display
+    k,                 // full-precision for math
+    kNum: num,         // optional helper
+    kDen: den,         // optional helper
+    kRounded,          // optional helper
+    kRoundedText,      // optional helper
+    kFractionText,     // optional helper
     perfectPoints,     // limited subset for variety
   };
 }
