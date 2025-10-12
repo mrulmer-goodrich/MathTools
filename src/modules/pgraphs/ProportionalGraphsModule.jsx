@@ -91,8 +91,7 @@ if (ppts.length > 0) {
 ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
 ctx.lineWidth = 1.25;
     
-    const xStep = maxX <= 10 ? 1 : 2;
-    const yStep = maxY <= 10 ? 1 : 2;
+    const xStep = chooseStep(maxX); const yStep = chooseStep(maxY);
     
     for (let i = 0; i <= maxX; i += xStep) {
       // Vertical lines
@@ -277,10 +276,10 @@ ctx.stroke();
     }
     
     // Convert canvas coordinates to graph coordinates
-    const paddingLeft = graph.paddingLeft ?? 40;
-    const paddingRight = graph.paddingRight ?? 20;
-    const paddingTop = graph.paddingTop ?? 20;
-    const paddingBottom = graph.paddingBottom ?? 40;
+    const paddingLeft = 40;
+    const paddingRight = 20;
+    const paddingTop = 20;
+    const paddingBottom = 40;
 
     const originX = canvasRect.left + paddingLeft;
     const originY = canvasRect.bottom - paddingBottom;
