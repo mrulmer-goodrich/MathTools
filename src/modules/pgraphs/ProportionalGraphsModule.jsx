@@ -7,6 +7,12 @@ import BigButton from "../../components/BigButton.jsx";
 import ugConfetti from "../../lib/confetti.js";
 import { reduceFraction, fractionToDecimal } from "../../lib/mathUtils.js";
 
+// format to 2 decimal places; returns Number (not string)
+const fmt2 = (n) => Number(n.toFixed(2));
+
+// Round up to a “nice” tick (default step = 5)
+const niceCeil = (n, step = 5) => Math.ceil(n / step) * step;
+
 /** 
  * Proportional Graphs Module
  * Teaches students to identify proportional relationships and calculate k
@@ -37,18 +43,20 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
     
-    // Dynamic axis range based on k value
-    let maxX = 10;
-    let maxY = 10;
-    
-    if (problem.isProportional && problem.k < 1) {
-      // For k < 1, expand x-axis to show more points
-      maxX = 20;
-      maxY = 10;
-    } else if (problem.isProportional && problem.k > 1) {
-      maxX = 10;
-      maxY = Math.min(problem.k * 10, 20);
-    }
+// Dynamic axis range based on *perfectPoints* so at least one is visible
+let maxX = 10;
+let maxY = 10;
+
+const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
+if (ppts.length > 0) {
+  // choose the smallest perfect point by overall size to ensure it fits
+  const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
+  const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
+  const minYNeeded = (smallest?.y ?? 1) + 1;
+  maxX = niceCeil(Math.max(10, minXNeeded), 5);
+  maxY = niceCeil(Math.max(10, minYNeeded), 5);
+}
+
     
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -441,47 +449,49 @@ export default function ProportionalGraphsModule() {
   }, [selectedCoordinates, problem]);
   
   // Generate equation choices (randomized)
-  const equationChoices = useMemo(() => {
-    if (calculatedK === null || !reducedFraction) return [];
-    
-    const { num, den } = reducedFraction;
-    
-    // For display in equation choices: use fraction for k < 1, whole number for k >= 1
-    const kDisplay = calculatedK < 1 ? (
-      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={num} denominator={den} whiteBar={true} />
-      </span>
-    ) : calculatedK.toString();
-    
-    const reciprocalDisplay = calculatedK < 1 ? (
-      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={den} denominator={num} whiteBar={true} />
-      </span>
-    ) : (
-      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={1} denominator={calculatedK} whiteBar={true} />
-      </span>
-    );
+ const equationChoices = useMemo(() => {
+  if (calculatedK === null || !reducedFraction) return [];
+  
+  const { num, den } = reducedFraction;
+  const kDec2 = fmt2(calculatedK);
+
+  // For display in equation choices: use fraction for k < 1, 2-decimal for k >= 1
+  const kDisplay = calculatedK < 1 ? (
+    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <Fraction numerator={num} denominator={den} whiteBar={true} />
+    </span>
+  ) : kDec2.toString();
+  
+  const reciprocalDisplay = calculatedK < 1 ? (
+    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+      <Fraction numerator={den} denominator={num} whiteBar={true} />
+    </span>
+  ) : (
+    // plain "1/k" text for k>=1 (avoid fraction with decimal denominator)
+    <span style={{ display: 'inline-flex', alignItems: 'center' }}>1/{kDec2}</span>
+  );
+
+
     
     return shuffle([
       { 
         formula: <span>y = {kDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}x`,
+        displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}x`,
         isCorrect: true 
       },
       { 
         formula: <span>y = {reciprocalDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${calculatedK})`}x`,
+        displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${kDec2})`}x`,
         isCorrect: false 
       },
       { 
         formula: <span>x = {kDisplay}y</span>, 
-        displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}y`,
+        displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}y`,
         isCorrect: false 
       },
       { 
         formula: <span>y = x + {kDisplay}</span>, 
-        displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : calculatedK}`,
+        displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : kDec2}`,
         isCorrect: false 
       },
     ]);
@@ -844,10 +854,10 @@ export default function ProportionalGraphsModule() {
                   <>
                     <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                     <span style={{ display: 'inline-flex', alignItems: 'center' }}>=</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>{fractionToDecimal(reducedFraction.num, reducedFraction.den)}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>{fmt2(fractionToDecimal(reducedFraction.num, reducedFraction.den))}</span>
                   </>
                 ) : (
-                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>{calculatedK}</span>
+                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>{fmt2(calculatedK)}</span>
                 )}
               </div>
               {!selectedEquation && (
@@ -894,7 +904,8 @@ export default function ProportionalGraphsModule() {
                 )}
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
-                For every 1 unit increase in x, y increases by {calculatedK < 1 ? `${reducedFraction.num}/${reducedFraction.den}` : calculatedK} units.
+               For every 1 unit increase in x, y increases by {calculatedK < 1 ? `${reducedFraction.num}/${reducedFraction.den}` : fmt2(calculatedK)} units.
+
               </div>
               <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                 <span>y =</span>
