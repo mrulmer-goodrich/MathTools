@@ -63,18 +63,27 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
     
-// Dynamic axis range based on *perfectPoints* so at least one is visible
-let maxX = problem?.xMax ?? 10;
-let maxY = problem?.yMax ?? 10;
+// Dynamic axis range: TRUST generator xMax/yMax if provided; else ensure at least one perfect point is visible
+let maxX, maxY;
 
-const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
-if (ppts.length > 0) {
-  // choose the smallest perfect point by overall size to ensure it fits
-  const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
-  const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
-  const minYNeeded = (smallest?.y ?? 1) + 1;
-  maxX = niceCeil(Math.max(10, minXNeeded), 5);
-  maxY = niceCeil(Math.max(10, minYNeeded), 5);
+// 1) Use generator-provided limits when present
+if (Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)) {
+  maxX = problem.xMax;
+  maxY = problem.yMax;
+} else {
+  // 2) Fallback to a “smallest visible perfect point” rule
+  const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
+  if (ppts.length > 0) {
+    const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
+    const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
+    const minYNeeded = (smallest?.y ?? 1) + 1;
+    maxX = niceCeil(Math.max(10, minXNeeded), 5);
+    maxY = niceCeil(Math.max(10, minYNeeded), 5);
+  } else {
+    // 3) Last resort
+    maxX = 10;
+    maxY = 10;
+  }
 }
 
     
@@ -244,79 +253,88 @@ ctx.stroke();
     
   }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates]);
   
-  const handleClick = (e) => {
-    if (!onPointClick) {
-      console.log('❌ Click handler not active - onPointClick is null');
-      return;
-    }
-    
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    
-    // Account for canvas scaling (CSS vs actual canvas size)
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const clickX = (e.clientX - rect.left) * scaleX;
-    const clickY = (e.clientY - rect.top) * scaleY;
-    
-    const padding = 60;
-    const graphWidth = canvas.width - 2 * padding;
-    const graphHeight = canvas.height - 2 * padding;
-    
-    // Dynamic max values (must match rendering)
-    let maxX = 10;
-    let maxY = 10;
-    if (problem.isProportional && problem.k < 1) {
-      maxX = 20;
-      maxY = 10;
-    } else if (problem.isProportional && problem.k > 1) {
+const handleClick = (e) => {
+  if (!onPointClick) {
+    console.log('❌ Click handler not active - onPointClick is null');
+    return;
+  }
+
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+
+  // Map browser click → canvas pixel coordinates
+  // (This works whether or not DPR scaling is used for the backing store.)
+  const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+  // Use the SAME padding and sizes as the draw code
+  const padding = 60;
+  const graphWidth = canvas.width - 2 * padding;
+  const graphHeight = canvas.height - 2 * padding;
+
+  // Recompute maxX/maxY EXACTLY like the draw code (keep in sync!)
+  let maxX, maxY;
+  if (Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)) {
+    maxX = problem.xMax;
+    maxY = problem.yMax;
+  } else {
+    const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
+    if (ppts.length > 0) {
+      const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
+      const minXNeeded = (smallest?.x ?? 1) + 1;
+      const minYNeeded = (smallest?.y ?? 1) + 1;
+      maxX = niceCeil(Math.max(10, minXNeeded), 5);
+      maxY = niceCeil(Math.max(10, minYNeeded), 5);
+    } else {
       maxX = 10;
-      maxY = Math.min(problem.k * 10, 20);
+      maxY = 10;
     }
-    
-// Convert canvas coordinates to graph coordinates
-// IMPORTANT: This assumes you draw in CSS pixels (common when using ctx.scale(dpr,dpr))
-const { offsetX, offsetY } = e.nativeEvent;
+  }
 
-// Same paddings used by draw code
-const paddingLeft = 40;
-const paddingRight = 20;
-const paddingTop = 20;
-const paddingBottom = 40;
+  // Canvas px → graph units (Quadrant I)
+  const left = padding;
+  const top = padding;
+  const right = padding + graphWidth;
+  const bottom = padding + graphHeight;
 
-// Use CSS pixel size (NOT canvas.width/height which are device pixels)
-const innerW = canvas.clientWidth - paddingLeft - paddingRight;
-const innerH = canvas.clientHeight - paddingTop - paddingBottom;
-const originXPx = paddingLeft;
-const originYPx = canvas.clientHeight - paddingBottom;
+  // If the click is outside the plotting rectangle, ignore it
+  if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) {
+    console.log('❌ Click outside plotting area');
+    return;
+  }
 
-// Map CSS px -> graph units (Quadrant I)
-const graphX = (offsetX - originXPx) / innerW * maxX;
-const graphY = (originYPx - offsetY) / innerH * maxY;
+  const graphX = (canvasX - left) / graphWidth * maxX;
+  const graphY = (bottom - canvasY) / graphHeight * maxY;
 
+  // Standardize to SNAPPED integers (your requested naming)
+  const snappedX = Math.round(graphX);
+  const snappedY = Math.round(graphY);
+
+  // Bounds check on snapped values
+  if (
+    problem.isProportional &&
+    snappedX >= 0 && snappedX <= maxX &&
+    snappedY >= 0 && snappedY <= maxY
+  ) {
     console.log('🖱️ CLICK DEBUG:', {
-      canvas: { clickX, clickY },
-      graph: { graphX, graphY },
-      rounded: { x: roundedX, y: roundedY },
+      canvas: { x: canvasX, y: canvasY },
+      graph: { x: graphX, y: graphY },
+      snapped: { x: snappedX, y: snappedY },
       problem: {
         k: problem.k,
         isProportional: problem.isProportional,
         perfectPoints: problem.perfectPoints
       }
     });
-    
-    // For proportional graphs, pass the rounded coordinates to the parent handler
-    // The parent will validate against the perfectPoints array
-    if (problem.isProportional && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
-      console.log('✅ Click coordinates passed to parent handler');
-      setClickedPoint({ x: roundedX, y: roundedY });
-      setTimeout(() => setClickedPoint(null), 500);
-      onPointClick({ x: roundedX, y: roundedY });
-    } else {
-      console.log('❌ Click outside graph bounds');
-    }
-  };
+
+    setClickedPoint({ x: snappedX, y: snappedY });
+    setTimeout(() => setClickedPoint(null), 500);
+    onPointClick({ x: snappedX, y: snappedY });
+  } else {
+    console.log('❌ Click outside graph bounds (after snap)');
+  }
+};
+
   
   return (
     <canvas
