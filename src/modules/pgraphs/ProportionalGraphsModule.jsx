@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.0
+// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.1
 // Proportional Graphs learning tool
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -327,11 +327,11 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
 function Fraction({ numerator, denominator, showEquals = false, whiteBar = false }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-      {showEquals && <span style={{ fontSize: '20px', fontWeight: 900 }}>=</span>}
-      <div className="fraction mini-frac">
-        <div style={{ fontSize: '20px', fontWeight: 900 }}>{numerator ?? '—'}</div>
-        <div className="frac-bar narrow" style={whiteBar ? { background: '#ffffff' } : {}} />
-        <div style={{ fontSize: '20px', fontWeight: 900 }}>{denominator ?? '—'}</div>
+      {showEquals && <span style={{ fontSize: '20px', fontWeight: 900, display: 'inline-flex', alignItems: 'center' }}>=</span>}
+      <div className="fraction mini-frac" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle' }}>
+        <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{numerator ?? '—'}</div>
+        <div className="frac-bar narrow" style={whiteBar ? { background: '#ffffff', width: '100%', margin: '2px 0' } : { width: '100%', margin: '2px 0' }} />
+        <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{denominator ?? '—'}</div>
       </div>
     </div>
   );
@@ -537,15 +537,15 @@ export default function ProportionalGraphsModule() {
   const handlePointClick = (point) => {
     console.log('📍 handlePointClick called with:', point);
     console.log('📍 Current problem.k:', problem.k);
+    console.log('📍 Perfect points available:', problem.perfectPoints);
     
-    // Check if this is a valid perfect point (y = k*x where both x and y are integers)
-    const expectedY = problem.k * point.x;
-    const isValid = expectedY === point.y && Number.isInteger(point.y) && Number.isInteger(point.x);
+    // Check if this point exists in the perfectPoints array
+    const isValid = problem.perfectPoints.some(p => p.x === point.x && p.y === point.y);
     
     console.log('📍 Validation:', {
-      expectedY,
-      actualY: point.y,
-      isValid
+      clickedPoint: point,
+      isValid,
+      perfectPoints: problem.perfectPoints
     });
     
     if (isValid) {
@@ -773,13 +773,13 @@ export default function ProportionalGraphsModule() {
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span>k =</span>
-                  <div className="fraction mini-frac">
-                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>k =</span>
+                  <div className="fraction mini-frac" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
-                    <div className="frac-bar narrow" />
-                   <div style={{ fontSize: '20px', fontWeight: 900, color: 'transparent', userSelect: 'none' }}>x</div>
+                    <div className="frac-bar narrow" style={{ width: '100%', margin: '2px 0' }} />
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</div>
                   </div>
                 </div>
               </div>
@@ -803,11 +803,11 @@ export default function ProportionalGraphsModule() {
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span>k =</span>
-                  <div className="fraction mini-frac">
-                    <div style={{ fontSize: '20px', fontWeight: 900 }}>{selectedY}</div>
-                    <div className="frac-bar narrow" />
-                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>k =</span>
+                  <div className="fraction mini-frac" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', verticalAlign: 'middle' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{selectedY}</div>
+                    <div className="frac-bar narrow" style={{ width: '100%', margin: '2px 0' }} />
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
                   </div>
@@ -831,8 +831,9 @@ export default function ProportionalGraphsModule() {
           {currentStep === 9 && (
             <div className="section">
               <div className="step-title">Click Compute to calculate k!</div>
-              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                k = <Fraction numerator={selectedY} denominator={selectedX} />
+              <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>k =</span>
+                <Fraction numerator={selectedY} denominator={selectedX} />
               </div>
               <div className="center">
                 <button 
@@ -851,15 +852,17 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">Now that you know k, what is the equation?</div>
               <div style={{ marginTop: 12, marginBottom: 12, fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <span>k =</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>k =</span>
+                <Fraction numerator={selectedY} denominator={selectedX} />
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>=</span>
                 {calculatedK < 1 ? (
                   <>
                     <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
-                    <span>=</span>
-                    <span>{fractionToDecimal(reducedFraction.num, reducedFraction.den)}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>=</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>{fractionToDecimal(reducedFraction.num, reducedFraction.den)}</span>
                   </>
                 ) : (
-                  <span>{calculatedK}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>{calculatedK}</span>
                 )}
               </div>
               {!selectedEquation && (
