@@ -10,8 +10,20 @@ import { reduceFraction, fractionToDecimal } from "../../lib/mathUtils.js";
 // format to 2 decimal places; returns Number (not string)
 const fmt2 = (n) => Number(n.toFixed(2));
 
+
+// choose a "nice" grid step so we get ~12 lines per axis
+const chooseStep = (range, target = 12) => {
+  const raw = range / target;
+  if (raw <= 1) return 1;
+  if (raw <= 2) return 2;
+  if (raw <= 5) return 5;
+  if (raw <= 10) return 10;
+  return Math.ceil(raw);
+};
+
 // Round up to a “nice” tick (default step = 5)
 const niceCeil = (n, step = 5) => Math.ceil(n / step) * step;
+
 
 /** 
  * Proportional Graphs Module
@@ -141,6 +153,10 @@ if (problem?.isProportional) {
     y2 = maxY;
     x2 = maxY / problem.k;
   }
+    // draw the proportional segment from origin to (x2,y2)
+  ctx.moveTo(toCanvasX(0), toCanvasY(0));
+  ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
+
 } else if (problem.type === 'curved') {
   // Draw curve - stop drawing when y reaches maxY to avoid flat line
   let started = false;
