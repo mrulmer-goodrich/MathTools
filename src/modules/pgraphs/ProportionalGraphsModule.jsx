@@ -137,11 +137,14 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       const endY = Math.min(problem.k * maxX, maxY);
       ctx.lineTo(toCanvasX(maxX), toCanvasY(endY));
     } else if (problem.type === 'curved') {
-      // Draw curve
+      // Draw curve - stop drawing when y reaches maxY to avoid flat line
+      let started = false;
       for (let x = 0; x <= maxX; x += 0.1) {
-        const y = Math.min(problem.curveFunc(x), maxY);
-        if (x === 0) {
+        const y = problem.curveFunc(x);
+        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (!started) {
           ctx.moveTo(toCanvasX(x), toCanvasY(y));
+          started = true;
         } else {
           ctx.lineTo(toCanvasX(x), toCanvasY(y));
         }
@@ -153,11 +156,14 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       ctx.moveTo(toCanvasX(0), toCanvasY(y0));
       ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
     } else if (problem.type === 'curvedNotThrough') {
-      // Draw curve not through origin
+      // Draw curve not through origin - stop drawing when y reaches maxY
+      let started = false;
       for (let x = 0; x <= maxX; x += 0.1) {
-        const y = Math.min(problem.curveFunc(x), maxY);
-        if (x === 0) {
+        const y = problem.curveFunc(x);
+        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (!started) {
           ctx.moveTo(toCanvasX(x), toCanvasY(y));
+          started = true;
         } else {
           ctx.lineTo(toCanvasX(x), toCanvasY(y));
         }
@@ -318,13 +324,13 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
 }
 
 // Fraction display component (horizontal bar, not slash)
-function Fraction({ numerator, denominator, showEquals = false }) {
+function Fraction({ numerator, denominator, showEquals = false, whiteBar = false }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
       {showEquals && <span style={{ fontSize: '20px', fontWeight: 900 }}>=</span>}
       <div className="fraction mini-frac">
         <div style={{ fontSize: '20px', fontWeight: 900 }}>{numerator ?? '—'}</div>
-        <div className="frac-bar narrow" />
+        <div className="frac-bar narrow" style={whiteBar ? { background: '#ffffff' } : {}} />
         <div style={{ fontSize: '20px', fontWeight: 900 }}>{denominator ?? '—'}</div>
       </div>
     </div>
@@ -743,8 +749,8 @@ export default function ProportionalGraphsModule() {
               <div className="step-title">What is the formula to find k?</div>
               <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                 {shuffle([
-                  { key: 'y/x', formula: <Fraction numerator="y" denominator="x" />, correct: true },
-                  { key: 'x/y', formula: <Fraction numerator="x" denominator="y" />, correct: false },
+                  { key: 'y/x', formula: <Fraction numerator="y" denominator="x" whiteBar={true} />, correct: true },
+                  { key: 'x/y', formula: <Fraction numerator="x" denominator="y" whiteBar={true} />, correct: false },
                   { key: 'x+y', formula: 'x + y', correct: false },
                   { key: 'y-x', formula: 'y – x', correct: false }
                 ]).map(({ key, formula, correct }) => (
@@ -767,11 +773,14 @@ export default function ProportionalGraphsModule() {
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <span style={{ position: 'relative', display: 'inline-block' }}>
-                    <Fraction 
-                      numerator={<span className="ptable-pulse" style={{ display: 'inline-block', minWidth: '40px', height: '4px', background: '#f59e0b', borderRadius: '2px' }} />} 
-                      denominator="x" 
-                    />
+                  k = <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <div className="fraction mini-frac">
+                      <div style={{ fontSize: '20px', fontWeight: 900 }}>
+                        <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
+                      </div>
+                      <div className="frac-bar narrow" />
+                      <div style={{ fontSize: '20px', fontWeight: 900 }}>x</div>
+                    </div>
                   </span>
                 </div>
               </div>
@@ -795,11 +804,14 @@ export default function ProportionalGraphsModule() {
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
                 <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <span style={{ position: 'relative', display: 'inline-block' }}>
-                    <Fraction 
-                      numerator={selectedY} 
-                      denominator={<span className="ptable-pulse" style={{ display: 'inline-block', minWidth: '40px', height: '4px', background: '#f59e0b', borderRadius: '2px' }} />} 
-                    />
+                  k = <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    <div className="fraction mini-frac">
+                      <div style={{ fontSize: '20px', fontWeight: 900 }}>{selectedY}</div>
+                      <div className="frac-bar narrow" />
+                      <div style={{ fontSize: '20px', fontWeight: 900 }}>
+                        <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
+                      </div>
+                    </div>
                   </span>
                 </div>
               </div>
