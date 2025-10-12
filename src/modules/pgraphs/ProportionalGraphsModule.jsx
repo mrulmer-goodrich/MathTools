@@ -64,8 +64,8 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const graphHeight = height - 2 * padding;
     
 // Dynamic axis range based on *perfectPoints* so at least one is visible
-let maxX = 10;
-let maxY = 10;
+let maxX = problem?.xMax ?? 10;
+let maxY = problem?.yMax ?? 10;
 
 const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
 if (ppts.length > 0) {
