@@ -886,7 +886,7 @@ function narrativeFor(lang) {
         className="button button-contrast"
         onMouseDown={holdEnglishDown}
         onMouseUp={holdEnglishUp}
-        onMouseLeave={holdEnglishUp}
+        
         onTouchStart={holdEnglishDown}
         onTouchEnd={holdEnglishUp}
         onPointerDown={holdEnglishDown}
