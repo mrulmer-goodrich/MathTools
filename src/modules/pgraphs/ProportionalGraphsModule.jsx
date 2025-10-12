@@ -129,11 +129,24 @@ ctx.lineWidth = 1.25;
     ctx.lineWidth = 4;
     ctx.beginPath();
     
-    if (problem.isProportional) {
-      // Draw straight line through origin
-      ctx.moveTo(toCanvasX(0), toCanvasY(0));
-      const endY = Math.min(problem.k * maxX, maxY);
-      ctx.lineTo(toCanvasX(maxX), toCanvasY(endY));
+// Compute line end while preserving slope y = kx, clipped to viewport
+let x2, y2;
+if (problem?.isProportional) {
+  if (problem.k * maxX <= maxY) {
+    // right edge is hit first
+    x2 = maxX;
+    y2 = problem.k * maxX;
+  } else {
+    // top edge is hit first
+    y2 = maxY;
+    x2 = maxY / problem.k;
+  }
+} else {
+  // non-proportional drawing logic (leave whatever you already have, or default)
+  x2 = maxX;
+  y2 = Math.min(problem.k * maxX, maxY);
+}
+
     } else if (problem.type === 'curved') {
       // Draw curve - stop drawing when y reaches maxY to avoid flat line
       let started = false;
