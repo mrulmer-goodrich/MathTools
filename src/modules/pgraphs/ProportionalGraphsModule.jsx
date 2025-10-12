@@ -263,22 +263,37 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       }
     });
     
-    // Check if this point is in the perfectPoints array
-    const isPerfect = problem.perfectPoints && problem.perfectPoints.some(p => {
-      const match = p.x === roundedX && p.y === roundedY;
-      console.log(`  Checking point (${p.x}, ${p.y}) vs (${roundedX}, ${roundedY}): ${match ? '✅ MATCH!' : '❌'}`);
-      return match;
-    });
-    
-    console.log(`Result: ${isPerfect ? '✅ PERFECT POINT!' : '❌ Not a perfect point'}`);
-    
-    if (isPerfect) {
-      console.log('✅ Accepting point:', { x: roundedX, y: roundedY });
-      setClickedPoint({ x: roundedX, y: roundedY });
-      setTimeout(() => setClickedPoint(null), 500);
-      onPointClick({ x: roundedX, y: roundedY });
-    } else {
-      console.log('❌ Point rejected - not in perfectPoints array');
+    // For proportional graphs, check if the point is on the line with integer coordinates
+    if (problem.isProportional) {
+      const expectedY = problem.k * roundedX;
+      const isOnLine = Math.abs(roundedY - expectedY) < 0.5;
+      const hasIntegerCoords = roundedX >= 0 && roundedY >= 0 && 
+                              roundedX === Math.round(roundedX) && 
+                              roundedY === Math.round(roundedY);
+      const isValidY = Number.isInteger(expectedY) && roundedY === expectedY;
+      
+      console.log('📊 Line check:', {
+        expectedY,
+        actualY: roundedY,
+        isOnLine,
+        hasIntegerCoords,
+        isValidY,
+        inBounds: roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY
+      });
+      
+      // Accept the point if:
+      // 1. It's on the line (y = k*x)
+      // 2. Both x and y are integers
+      // 3. The expected y is also an integer (this is a "perfect" point)
+      // 4. Within graph bounds
+      if (isValidY && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
+        console.log('✅ PERFECT POINT ACCEPTED!');
+        setClickedPoint({ x: roundedX, y: roundedY });
+        setTimeout(() => setClickedPoint(null), 500);
+        onPointClick({ x: roundedX, y: roundedY });
+      } else {
+        console.log('❌ Point rejected - not a valid perfect point');
+      }
     }
   };
   
@@ -515,32 +530,24 @@ export default function ProportionalGraphsModule() {
   // Handle step 4: Click on graph
   const handlePointClick = (point) => {
     console.log('📍 handlePointClick called with:', point);
-    console.log('📍 Current problem.perfectPoints:', problem.perfectPoints);
+    console.log('📍 Current problem.k:', problem.k);
     
-    // Safety check - if perfectPoints doesn't exist, accept any point on the line
-    if (!problem.perfectPoints || problem.perfectPoints.length === 0) {
-      console.log('⚠️ WARNING: perfectPoints array is missing or empty! Accepting any integer point on line.');
-      // Verify point is on the line
-      const expectedY = Math.round(problem.k * point.x);
-      if (Math.abs(point.y - expectedY) < 0.5) {
-        console.log('✅ Point is on line, accepting');
-        setSelectedPoint(point);
-        setCurrentStep(5);
-      } else {
-        console.log('❌ Point is not on line');
-      }
-      return;
-    }
+    // Check if this is a valid perfect point (y = k*x where both x and y are integers)
+    const expectedY = problem.k * point.x;
+    const isValid = expectedY === point.y && Number.isInteger(point.y) && Number.isInteger(point.x);
     
-    const isPerfect = problem.perfectPoints.some(p => p.x === point.x && p.y === point.y);
-    console.log('📍 Is perfect?', isPerfect);
+    console.log('📍 Validation:', {
+      expectedY,
+      actualY: point.y,
+      isValid
+    });
     
-    if (isPerfect) {
-      console.log('✅ Perfect point confirmed, moving to step 5');
+    if (isValid) {
+      console.log('✅ Valid perfect point confirmed, moving to step 5');
       setSelectedPoint(point);
       setCurrentStep(5);
     } else {
-      console.log('❌ Not a perfect point, ignoring');
+      console.log('❌ Not a valid perfect point, ignoring');
     }
   };
   
