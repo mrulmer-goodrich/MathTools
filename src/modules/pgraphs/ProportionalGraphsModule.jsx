@@ -256,37 +256,15 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       }
     });
     
-    // For proportional graphs, check if the point is on the line with integer coordinates
-    if (problem.isProportional) {
-      const expectedY = problem.k * roundedX;
-      const isOnLine = Math.abs(roundedY - expectedY) < 0.5;
-      const hasIntegerCoords = roundedX >= 0 && roundedY >= 0 && 
-                              roundedX === Math.round(roundedX) && 
-                              roundedY === Math.round(roundedY);
-      const isValidY = Number.isInteger(expectedY) && roundedY === expectedY;
-      
-      console.log('📊 Line check:', {
-        expectedY,
-        actualY: roundedY,
-        isOnLine,
-        hasIntegerCoords,
-        isValidY,
-        inBounds: roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY
-      });
-      
-      // Accept the point if:
-      // 1. It's on the line (y = k*x)
-      // 2. Both x and y are integers
-      // 3. The expected y is also an integer (this is a "perfect" point)
-      // 4. Within graph bounds
-      if (isValidY && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
-        console.log('✅ PERFECT POINT ACCEPTED!');
-        setClickedPoint({ x: roundedX, y: roundedY });
-        setTimeout(() => setClickedPoint(null), 500);
-        onPointClick({ x: roundedX, y: roundedY });
-      } else {
-        console.log('❌ Point rejected - not a valid perfect point');
-      }
+    // For proportional graphs, pass the rounded coordinates to the parent handler
+    // The parent will validate against the perfectPoints array
+    if (problem.isProportional && roundedX >= 0 && roundedX <= maxX && roundedY >= 0 && roundedY <= maxY) {
+      console.log('✅ Click coordinates passed to parent handler');
+      setClickedPoint({ x: roundedX, y: roundedY });
+      setTimeout(() => setClickedPoint(null), 500);
+      onPointClick({ x: roundedX, y: roundedY });
+    } else {
+      console.log('❌ Click outside graph bounds');
     }
   };
   
@@ -931,7 +909,7 @@ export default function ProportionalGraphsModule() {
           )}
           
           {/* New Problem button - always visible at bottom of right panel */}
-          <div className="section" style={{ marginTop: 'auto', paddingTop: 20 }}>
+          <div className="section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px solid #e2e8f0' }}>
             <div className="center">
               <BigButton 
                 onClick={handleNewProblem}
