@@ -21,6 +21,14 @@ const chooseStep = (range, target = 12) => {
   return Math.ceil(raw);
 };
 
+/** Align math tokens (variables, '=', Fraction) on the vertical centerline inside chips */
+const Formula = ({ children }) => (
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, lineHeight: 1 }}>
+    {children}
+  </span>
+);
+
+
 // Round up to a “nice” tick (default step = 5)
 const niceCeil = (n, step = 5) => Math.ceil(n / step) * step;
 
@@ -83,8 +91,8 @@ if (ppts.length > 0) {
 ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
 ctx.lineWidth = 1.25;
     
-    const xStep = chooseStep(maxX);
-    const yStep = chooseStep(maxY);
+    const xStep = maxX <= 10 ? 1 : 2;
+    const yStep = maxY <= 10 ? 1 : 2;
     
     for (let i = 0; i <= maxX; i += xStep) {
       // Vertical lines
@@ -260,17 +268,14 @@ ctx.stroke();
     // Dynamic max values (must match rendering)
     let maxX = 10;
     let maxY = 10;
-    {
-      const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
-      if (ppts.length > 0) {
-        const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
-        const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
-        const minYNeeded = (smallest?.y ?? 1) + 1;
-        maxX = niceCeil(Math.max(10, minXNeeded), 5);
-        maxY = niceCeil(Math.max(10, minYNeeded), 5);
-      }
+    if (problem.isProportional && problem.k < 1) {
+      maxX = 20;
+      maxY = 10;
+    } else if (problem.isProportional && problem.k > 1) {
+      maxX = 10;
+      maxY = Math.min(problem.k * 10, 20);
     }
-
+    
     // Convert canvas coordinates to graph coordinates
     const graphX = ((clickX - padding) / graphWidth) * maxX;
     const canvasYFromBottom = canvas.height - clickY;
@@ -478,51 +483,67 @@ export default function ProportionalGraphsModule() {
   // Generate equation choices (randomized)
  const equationChoices = useMemo(() => {
   if (calculatedK === null || !reducedFraction) return [];
-  
   const { num, den } = reducedFraction;
   const kDec2 = fmt2(calculatedK);
 
-  // For display in equation choices: use fraction for k < 1, 2-decimal for k >= 1
-  const kDisplay = calculatedK < 1 ? (
+  // Visual tokens
+  const Y = <span>y</span>;
+  const X = <span>x</span>;
+  const EQ = <span>=</span>;
+  const PLUS = <span>+</span>;
+
+  const Kfrac = (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
       <Fraction numerator={num} denominator={den} whiteBar={true} />
     </span>
-  ) : kDec2.toString();
-  
-  const reciprocalDisplay = calculatedK < 1 ? (
+  );
+  const ReciprocalFrac = (
     <span style={{ display: 'inline-flex', alignItems: 'center' }}>
       <Fraction numerator={den} denominator={num} whiteBar={true} />
     </span>
-  ) : (
-    // plain "1/k" text for k>=1 (avoid fraction with decimal denominator)
-    <span style={{ display: 'inline-flex', alignItems: 'center' }}>1/{kDec2}</span>
   );
 
+  const Kdisplay = calculatedK < 1 ? Kfrac : <span>{kDec2}</span>;
 
-    
-    return shuffle([
-      { 
-        formula: <span>y = {kDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}x`,
-        isCorrect: true 
-      },
-      { 
-        formula: <span>y = {reciprocalDisplay}x</span>, 
-        displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${kDec2})`}x`,
-        isCorrect: false 
-      },
-      { 
-        formula: <span>x = {kDisplay}y</span>, 
-        displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}y`,
-        isCorrect: false 
-      },
-      { 
-        formula: <span>y = x + {kDisplay}</span>, 
-        displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : kDec2}`,
-        isCorrect: false 
-      },
-    ]);
-  }, [calculatedK, reducedFraction]);
+  return shuffle([
+    {
+      formula: (
+        <Formula>
+          {Y}{EQ}{Kdisplay}{X}
+        </Formula>
+      ),
+      displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}x`,
+      isCorrect: true,
+    },
+    {
+      formula: (
+        <Formula>
+          {Y}{EQ}{calculatedK < 1 ? ReciprocalFrac : <span>{`1/${kDec2}`}</span>}{X}
+        </Formula>
+      ),
+      displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${kDec2})`}x`,
+      isCorrect: false,
+    },
+    {
+      formula: (
+        <Formula>
+          <span>x</span>{EQ}{Kdisplay}{Y}
+        </Formula>
+      ),
+      displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}y`,
+      isCorrect: false,
+    },
+    {
+      formula: (
+        <Formula>
+          {Y}{EQ}{X}{PLUS}{Kdisplay}
+        </Formula>
+      ),
+      displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : kDec2}`,
+      isCorrect: false,
+    },
+  ]);
+}, [calculatedK, reducedFraction]);
   
   // Handle step 1: Is proportional?
   const handleProportionalChoice = (choice) => {
@@ -927,7 +948,7 @@ export default function ProportionalGraphsModule() {
                 {calculatedK < 1 ? (
                   <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                 ) : (
-                  <span>{fmt2(calculatedK)}</span>
+                  <span>{calculatedK}</span>
                 )}
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
@@ -939,7 +960,7 @@ export default function ProportionalGraphsModule() {
                 {calculatedK < 1 ? (
                   <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
                 ) : (
-                  <span>{fmt2(calculatedK)}</span>
+                  <span>{calculatedK}</span>
                 )}
                 <span>x</span>
               </div>
