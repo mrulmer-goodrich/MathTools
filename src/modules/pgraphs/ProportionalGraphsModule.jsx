@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.3
+// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.4
 // Proportional Graphs learning tool
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -276,20 +276,22 @@ ctx.stroke();
     }
     
     // Convert canvas coordinates to graph coordinates
-    const paddingLeft = 40;
-    const paddingRight = 20;
-    const paddingTop = 20;
-    const paddingBottom = 40;
+  const { clientX: x, clientY: y } = e;
 
-    const originX = rect.left + paddingLeft;
-    const originY = rect.bottom - paddingBottom;
+  const paddingLeft = 40;
+  const paddingRight = 20;
+  const paddingTop = 20;
+  const paddingBottom = 40;
 
-    const innerW = rect.width - paddingLeft - paddingRight;
-    const innerH = rect.height - paddingTop - paddingBottom;
+  const originX = rect.left + paddingLeft;
+  const originY = rect.bottom - paddingBottom;
 
-    // Map pixel -> graph units (Quadrant I, y increases upward)
-    const graphX = ((x - rect.left) - paddingLeft) / innerW * maxX;
-    const graphY = (originY - y) / innerH * maxY;
+  const innerW = rect.width - paddingLeft - paddingRight;
+  const innerH = rect.height - paddingTop - paddingBottom;
+
+  // Map pixel -> graph units (Quadrant I, y increases upward)
+  const graphX = ((x - rect.left) - paddingLeft) / innerW * maxX;
+  const graphY = (originY - y) / innerH * maxY;
 const roundedX = Math.round(graphX);
     const roundedY = Math.round(graphY);
     
