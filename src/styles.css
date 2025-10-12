@@ -1559,3 +1559,109 @@ body{
 .pgraphs-layout .fraction > div:last-child {
   grid-row: 3;
 }
+
+/* ============================================
+   Proportional Graphs Module - CSS Additions
+   Add these styles to your styles.css file
+   ============================================ */
+
+/* High-contrast answer buttons */
+.pgraph-choice-btn {
+  background: linear-gradient(135deg, #0B4B8C 0%, #0C6B4D 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid transparent !important;
+  font-weight: 900 !important;
+  font-size: 18px !important;
+  padding: 14px 20px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 16px rgba(11, 75, 140, 0.25) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.pgraph-choice-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 24px rgba(11, 75, 140, 0.35) !important;
+}
+
+.pgraph-choice-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 12px rgba(11, 75, 140, 0.25) !important;
+}
+
+/* Pulse animation for blinking orange bar */
+@keyframes ptablePulse {
+  0%, 100% { 
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.ptable-pulse {
+  animation: ptablePulse 0.8s ease-in-out infinite;
+}
+
+/* Wrapper-level blink animation (matches PTables style) */
+.slot-wrap.ptable-blink-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 16px;
+  border: 4px solid #f59e0b;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.45);
+  animation: wrapBlink 0.7s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@keyframes wrapBlink {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+/* Flash animation for compute button */
+@keyframes sfFlashBtn {
+  0%, 100% { filter: none; transform: none; }
+  50% { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6)); transform: translateY(-2px); }
+}
+
+.flash {
+  animation: sfFlashBtn 1s infinite;
+}
+
+/* Graph canvas responsive */
+.pgraphs-layout canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Ensure fraction display matches PTables */
+.pgraphs-layout .fraction {
+  display: inline-grid;
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  justify-items: center;
+  vertical-align: middle;
+  min-width: 40px;
+}
+
+.pgraphs-layout .fraction > div:first-child {
+  grid-row: 1;
+}
+
+.pgraphs-layout .fraction > .frac-bar {
+  grid-row: 2;
+  width: 100%;
+  height: 3px;
+  background: #111827;
+  border-radius: 2px;
+}
+
+.pgraphs-layout .fraction > div:last-child {
+  grid-row: 3;
+}
