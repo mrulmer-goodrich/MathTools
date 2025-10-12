@@ -733,68 +733,99 @@ export function genPGraph(difficulty = 'easy') {
     };
   }
 
-  // --- Proportional case ---
-  function gcd(a, b) { while (b) [a, b] = [b, a % b]; return Math.abs(a); }
+  
 
-  // Bias away from integers to avoid “all perfect points” feel:
-  //  - 15% integers (1..14)
-  //  - 55% proper fractions (num < den, den up to 15)
-  //  - 30% improper fractions (non-integer)
-  let num, den;
-  const roll = Math.random();
-  if (roll < 0.15) {
-    den = 1;
-    num = 1 + Math.floor(Math.random() * 14); // 1..14
-  } else if (roll < 0.70) {
-    den = 3 + Math.floor(Math.random() * 13); // 3..15
-    num = 1 + Math.floor(Math.random() * (den - 1)); // 1..den-1
-  } else {
-    den = 2 + Math.floor(Math.random() * 12); // 2..13
-    let base = den + 1 + Math.floor(Math.random() * 12); // (den+1)..(den+12)
-    if (base % den === 0) base += 1; // ensure non-integer
-    num = base;
-  }
+ // --- Proportional case ---
+// Finite bank of friendly k values and axes (Quadrant I only).
+// All entries ensure at least (baseDen, baseNum) is visible.
+// Integers + terminating fractions only (denominators 1,2,4,5,8,10).
+const BANK = [
+  // Small slopes (k < 1) -> wider x, modest y
+  { num: 1, den: 2, xMax: 24, yMax: 12 },
+  { num: 1, den: 4, xMax: 24, yMax: 8 },
+  { num: 2, den: 5, xMax: 25, yMax: 12 },
+  { num: 3, den: 5, xMax: 25, yMax: 16 },
+  { num: 1, den: 5, xMax: 25, yMax: 8 },
+  { num: 2, den: 8, xMax: 24, yMax: 8 },
+  { num: 3, den: 10, xMax: 30, yMax: 12 },
+  { num: 4, den: 10, xMax: 30, yMax: 16 },
+  { num: 5, den: 8, xMax: 24, yMax: 18 },
+  { num: 3, den: 4, xMax: 24, yMax: 18 },
 
-  // Reduce to lowest terms to define the fundamental lattice step
-  const g = gcd(num, den);
-  const baseNum = num / g;
-  const baseDen = den / g;
+  // Mid slopes (≈1..2) -> balanced axes
+  { num: 1, den: 1, xMax: 14, yMax: 14 },
+  { num: 3, den: 2, xMax: 14, yMax: 22 },
+  { num: 5, den: 4, xMax: 20, yMax: 28 },
+  { num: 6, den: 5, xMax: 20, yMax: 24 },
+  { num: 8, den: 5, xMax: 20, yMax: 36 },
+  { num: 9, den: 8, xMax: 24, yMax: 30 },
+  { num: 7, den: 4, xMax: 20, yMax: 40 },
+  { num: 10, den: 8, xMax: 24, yMax: 34 },
 
-  const k = num / den;
+  // Larger integer slopes (clean) -> taller y
+  { num: 2, den: 1, xMax: 14, yMax: 28 },
+  { num: 3, den: 1, xMax: 12, yMax: 36 },
+  { num: 4, den: 1, xMax: 10, yMax: 40 },
+  { num: 5, den: 1, xMax: 10, yMax: 50 },
+  { num: 6, den: 1, xMax: 10, yMax: 60 },
+  { num: 8, den: 1, xMax: 10, yMax: 80 },
+  { num: 10, den: 1, xMax: 10, yMax: 100 },
 
-  // --- Optional 2-dec display fields (do NOT use for math inside the generator) ---
-  const kRounded = Number(k.toFixed(2));           // numeric 2-dec
-  const kRoundedText = k.toFixed(2);               // string "x.xx"
-  const kFractionText = `${num}/${den}`;
+  // More friendly terminating fractions near 2–3
+  { num: 5, den: 2, xMax: 12, yMax: 32 },
+  { num: 9, den: 4, xMax: 16, yMax: 40 },
+  { num: 7, den: 2, xMax: 12, yMax: 44 },
+  { num: 11, den: 4, xMax: 16, yMax: 48 },
+  { num: 12, den: 5, xMax: 15, yMax: 40 },
+  { num: 15, den: 8, xMax: 16, yMax: 40 },
 
-  // --- Perfect points: return a *subset* (3..6) of lattice points, not every multiple ---
+  // A few smaller ones again, different axes to vary look
+  { num: 4, den: 5, xMax: 25, yMax: 24 },
+  { num: 3, den: 8, xMax: 24, yMax: 12 },
+  { num: 2, den: 10, xMax: 30, yMax: 10 },
+  { num: 5, den: 10, xMax: 30, yMax: 20 },
+  { num: 1, den: 8, xMax: 24, yMax: 6 },
+  { num: 3, den: 4, xMax: 20, yMax: 18 },
+];
+
+// Pick one at random
+const pick = BANK[Math.floor(Math.random() * BANK.length)];
+let num = pick.num, den = pick.den;
+const k = num / den;
+
+// Fundamental lattice step
+function gcd(a, b) { while (b) [a, b] = [b, a % b]; return Math.abs(a); }
+const g = gcd(num, den), baseNum = num / g, baseDen = den / g;
+
+// Build a small subset of perfect integer points (always include m=1)
 const perfectPoints = [];
-const wanted = 3 + Math.floor(Math.random() * 4); // 3..6
-const used = new Set([1]); // ensure m=1
-const mMax = 16;
-
-// always include the smallest lattice point first
-perfectPoints.push({ x: 1 * baseDen, y: 1 * baseNum });
-
+const wanted = 3 + Math.floor(Math.random() * 3); // 3..5
+perfectPoints.push({ x: baseDen, y: baseNum });
+const used = new Set([1]);
+const mMax = 12;
 while (perfectPoints.length < wanted) {
   const m = 2 + Math.floor(Math.random() * (mMax - 1)); // 2..mMax
   if (used.has(m)) continue;
   used.add(m);
-  const x = m * baseDen;
-  const y = m * baseNum;
-  if (x >= 1 && y >= 1) perfectPoints.push({ x, y });
+  perfectPoints.push({ x: m * baseDen, y: m * baseNum });
 }
 
+// 2-dec display helpers (safe for JSX labels)
+const kRounded = Number(k.toFixed(2));
+const kRoundedText = k.toFixed(2);
+const kFractionText = `${num}/${den}`;
 
-  return {
-    isProportional: true,
-    type: 'proportional',
-    k,                 // full-precision for math
-    kNum: num,         // optional helper
-    kDen: den,         // optional helper
-    kRounded,          // optional helper
-    kRoundedText,      // optional helper
-    kFractionText,     // optional helper
-    perfectPoints,     // limited subset for variety
-  };
-}
+return {
+  isProportional: true,
+  type: 'proportional',
+  k,
+  kNum: num,
+  kDen: den,
+  kRounded,
+  kRoundedText,
+  kFractionText,
+  perfectPoints,
+  // NEW: suggested axes; JSX will use these when present
+  xMax: pick.xMax,
+  yMax: pick.yMax,
+};
