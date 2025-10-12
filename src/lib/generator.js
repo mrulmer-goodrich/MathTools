@@ -692,8 +692,6 @@ export function genPTable(difficulty = "easy") {
 
 
 // Generator for Proportional Graphs problems
-
-
 /**
  * Generate a proportional graphs problem
  * @param {string} difficulty - 'easy', 'medium', or 'hard'
@@ -711,20 +709,22 @@ export function genPGraph(difficulty = 'easy') {
     
     if (type === 'curved') {
       whyNot = 'notStraight';
-      // Quadratic curve through origin
-      const a = 0.05 + Math.random() * 0.15;
-      curveFunc = (x) => Math.min(a * x * x, 10);
+      // Quadratic curve through origin - varied coefficients
+      const coefficients = [0.08, 0.1, 0.12, 0.15, 0.18, 0.2];
+      const a = coefficients[Math.floor(Math.random() * coefficients.length)];
+      curveFunc = (x) => a * x * x;
     } else if (type === 'notThroughOrigin') {
       whyNot = 'notThroughOrigin';
       // Straight line not through origin
-      k = 2 + Math.floor(Math.random() * 3);
-      yIntercept = 1 + Math.floor(Math.random() * 3);
+      k = 2 + Math.floor(Math.random() * 4); // 2, 3, 4, 5
+      yIntercept = 1 + Math.floor(Math.random() * 3); // 1, 2, 3
     } else { // curvedNotThrough
       whyNot = 'both';
       // Curved line not through origin
-      const a = 0.05 + Math.random() * 0.1;
-      const b = 1 + Math.floor(Math.random() * 2);
-      curveFunc = (x) => Math.min(a * x * x + b, 10);
+      const coefficients = [0.05, 0.08, 0.1, 0.12];
+      const a = coefficients[Math.floor(Math.random() * coefficients.length)];
+      const b = 1 + Math.floor(Math.random() * 3); // 1, 2, 3
+      curveFunc = (x) => a * x * x + b;
     }
     
     return {
@@ -738,25 +738,32 @@ export function genPGraph(difficulty = 'easy') {
     };
   }
   
-  // Generate proportional graph
+  // Generate proportional graph with MUCH MORE VARIETY
   let k;
   
   // 50% k > 1, 50% k < 1, but NEVER k = 1
   if (Math.random() < 0.5) {
-    // k > 1: simple whole numbers (2, 3, 4, 5) - NEVER 1
-    k = 2 + Math.floor(Math.random() * 4); // 2, 3, 4, 5
+    // k > 1: whole numbers with better distribution
+    const kValues = [2, 3, 4, 5, 6, 7, 8];
+    k = kValues[Math.floor(Math.random() * kValues.length)];
   } else {
-    // k < 1: simple fractions
+    // k < 1: simple fractions with better distribution
     const fractions = [
-      { num: 1, den: 2 }, // 0.5
-      { num: 1, den: 3 }, // 0.333...
-      { num: 2, den: 3 }, // 0.666...
-      { num: 1, den: 4 }, // 0.25
-      { num: 3, den: 4 }, // 0.75
-      { num: 1, den: 5 }, // 0.2
-      { num: 2, den: 5 }, // 0.4
-      { num: 3, den: 5 }, // 0.6
-      { num: 4, den: 5 }, // 0.8
+      { num: 1, den: 2 },  // 0.5
+      { num: 1, den: 3 },  // 0.333...
+      { num: 2, den: 3 },  // 0.666...
+      { num: 1, den: 4 },  // 0.25
+      { num: 3, den: 4 },  // 0.75
+      { num: 1, den: 5 },  // 0.2
+      { num: 2, den: 5 },  // 0.4
+      { num: 3, den: 5 },  // 0.6
+      { num: 4, den: 5 },  // 0.8
+      { num: 1, den: 6 },  // 0.166...
+      { num: 5, den: 6 },  // 0.833...
+      { num: 1, den: 8 },  // 0.125
+      { num: 3, den: 8 },  // 0.375
+      { num: 5, den: 8 },  // 0.625
+      { num: 7, den: 8 },  // 0.875
     ];
     const frac = fractions[Math.floor(Math.random() * fractions.length)];
     k = frac.num / frac.den;
@@ -765,24 +772,31 @@ export function genPGraph(difficulty = 'easy') {
   // Generate perfect points (whole number coordinates on the line)
   const perfectPoints = [];
   const maxX = k < 1 ? 20 : 10; // Expand range for k < 1
+  const maxY = k > 1 ? Math.min(k * 10, 20) : 10;
   
   for (let x = 1; x <= maxX; x++) {
     const y = k * x;
     // Only include if y is a whole number and within reasonable range
-    if (Math.abs(y - Math.round(y)) < 0.01 && y >= 1 && y <= 20) {
+    if (Math.abs(y - Math.round(y)) < 0.001 && y >= 1 && y <= maxY) {
       perfectPoints.push({ x, y: Math.round(y) });
     }
   }
   
-  // Ensure we have at least 3 perfect points
+  // Fallback: if we don't have enough perfect points, use a simpler k
   if (perfectPoints.length < 3) {
-    // Adjust k to ensure perfect points exist
-    k = 2 + Math.floor(Math.random() * 3); // fallback to 2, 3, or 4
+    console.warn(`Not enough perfect points for k=${k}, falling back to simpler value`);
+    // Pick a random k from guaranteed-to-work values
+    const fallbackKs = [2, 3, 4, 5, 0.5, 0.25, 0.75];
+    k = fallbackKs[Math.floor(Math.random() * fallbackKs.length)];
+    
     perfectPoints.length = 0;
-    for (let x = 1; x <= 10; x++) {
+    const newMaxX = k < 1 ? 20 : 10;
+    const newMaxY = k > 1 ? Math.min(k * 10, 20) : 10;
+    
+    for (let x = 1; x <= newMaxX; x++) {
       const y = k * x;
-      if (y <= 10) {
-        perfectPoints.push({ x, y });
+      if (Math.abs(y - Math.round(y)) < 0.001 && y >= 1 && y <= newMaxY) {
+        perfectPoints.push({ x, y: Math.round(y) });
       }
     }
   }
