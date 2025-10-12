@@ -213,7 +213,10 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
   }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates, blinkPoint, blinkState]);
   
   const handleClick = (e) => {
-    if (!onPointClick) return;
+    if (!onPointClick) {
+      console.log('❌ Click handler not active - onPointClick is null');
+      return;
+    }
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -249,13 +252,33 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const roundedX = Math.round(graphX);
     const roundedY = Math.round(graphY);
     
+    console.log('🖱️ CLICK DEBUG:', {
+      canvas: { clickX, clickY },
+      graph: { graphX, graphY },
+      rounded: { x: roundedX, y: roundedY },
+      problem: {
+        k: problem.k,
+        isProportional: problem.isProportional,
+        perfectPoints: problem.perfectPoints
+      }
+    });
+    
     // Check if this point is in the perfectPoints array
-    const isPerfect = problem.perfectPoints.some(p => p.x === roundedX && p.y === roundedY);
+    const isPerfect = problem.perfectPoints && problem.perfectPoints.some(p => {
+      const match = p.x === roundedX && p.y === roundedY;
+      console.log(`  Checking point (${p.x}, ${p.y}) vs (${roundedX}, ${roundedY}): ${match ? '✅ MATCH!' : '❌'}`);
+      return match;
+    });
+    
+    console.log(`Result: ${isPerfect ? '✅ PERFECT POINT!' : '❌ Not a perfect point'}`);
     
     if (isPerfect) {
+      console.log('✅ Accepting point:', { x: roundedX, y: roundedY });
       setClickedPoint({ x: roundedX, y: roundedY });
       setTimeout(() => setClickedPoint(null), 500);
       onPointClick({ x: roundedX, y: roundedY });
+    } else {
+      console.log('❌ Point rejected - not in perfectPoints array');
     }
   };
   
@@ -491,10 +514,33 @@ export default function ProportionalGraphsModule() {
   
   // Handle step 4: Click on graph
   const handlePointClick = (point) => {
+    console.log('📍 handlePointClick called with:', point);
+    console.log('📍 Current problem.perfectPoints:', problem.perfectPoints);
+    
+    // Safety check - if perfectPoints doesn't exist, accept any point on the line
+    if (!problem.perfectPoints || problem.perfectPoints.length === 0) {
+      console.log('⚠️ WARNING: perfectPoints array is missing or empty! Accepting any integer point on line.');
+      // Verify point is on the line
+      const expectedY = Math.round(problem.k * point.x);
+      if (Math.abs(point.y - expectedY) < 0.5) {
+        console.log('✅ Point is on line, accepting');
+        setSelectedPoint(point);
+        setCurrentStep(5);
+      } else {
+        console.log('❌ Point is not on line');
+      }
+      return;
+    }
+    
     const isPerfect = problem.perfectPoints.some(p => p.x === point.x && p.y === point.y);
+    console.log('📍 Is perfect?', isPerfect);
+    
     if (isPerfect) {
+      console.log('✅ Perfect point confirmed, moving to step 5');
       setSelectedPoint(point);
       setCurrentStep(5);
+    } else {
+      console.log('❌ Not a perfect point, ignoring');
     }
   };
   
@@ -663,9 +709,6 @@ export default function ProportionalGraphsModule() {
           {currentStep === 4 && (
             <div className="section">
               <div className="step-title">Find a Punto Perfecto - tap on the line where you can clearly identify both x and y values!</div>
-              <div className="muted" style={{ marginTop: 8, fontSize: '14px' }}>
-                Click directly on a point on the graph line.
-              </div>
             </div>
           )}
           
