@@ -747,23 +747,20 @@ export function genPGraph(difficulty = 'easy') {
     const kValues = [2, 3, 4, 5, 6, 7, 8];
     k = kValues[Math.floor(Math.random() * kValues.length)];
   } else {
-    // k < 1: simple fractions with better distribution
+    // k < 1: ONLY fractions that produce many perfect points within our range
+    // These are guaranteed to work because denominators divide evenly into our maxX range
     const fractions = [
-      { num: 1, den: 2 },  // 0.5
-      { num: 1, den: 3 },  // 0.333...
-      { num: 2, den: 3 },  // 0.666...
-      { num: 1, den: 4 },  // 0.25
-      { num: 3, den: 4 },  // 0.75
-      { num: 1, den: 5 },  // 0.2
-      { num: 2, den: 5 },  // 0.4
-      { num: 3, den: 5 },  // 0.6
-      { num: 4, den: 5 },  // 0.8
-      { num: 1, den: 6 },  // 0.166...
-      { num: 5, den: 6 },  // 0.833...
-      { num: 1, den: 8 },  // 0.125
-      { num: 3, den: 8 },  // 0.375
-      { num: 5, den: 8 },  // 0.625
-      { num: 7, den: 8 },  // 0.875
+      { num: 1, den: 2 },  // 0.5 - perfect points every 2 units
+      { num: 1, den: 4 },  // 0.25 - perfect points every 4 units
+      { num: 3, den: 4 },  // 0.75 - perfect points every 4 units
+      { num: 1, den: 5 },  // 0.2 - perfect points every 5 units
+      { num: 2, den: 5 },  // 0.4 - perfect points every 5 units
+      { num: 3, den: 5 },  // 0.6 - perfect points every 5 units
+      { num: 4, den: 5 },  // 0.8 - perfect points every 5 units
+      { num: 1, den: 10 }, // 0.1 - perfect points every unit
+      { num: 3, den: 10 }, // 0.3 - perfect points every 10 units
+      { num: 7, den: 10 }, // 0.7 - perfect points every 10 units
+      { num: 9, den: 10 }, // 0.9 - perfect points every 10 units
     ];
     const frac = fractions[Math.floor(Math.random() * fractions.length)];
     k = frac.num / frac.den;
@@ -779,25 +776,6 @@ export function genPGraph(difficulty = 'easy') {
     // Only include if y is a whole number and within reasonable range
     if (Math.abs(y - Math.round(y)) < 0.001 && y >= 1 && y <= maxY) {
       perfectPoints.push({ x, y: Math.round(y) });
-    }
-  }
-  
-  // Fallback: if we don't have enough perfect points, use a simpler k
-  if (perfectPoints.length < 3) {
-    console.warn(`Not enough perfect points for k=${k}, falling back to simpler value`);
-    // Pick a random k from guaranteed-to-work values
-    const fallbackKs = [2, 3, 4, 5, 0.5, 0.25, 0.75];
-    k = fallbackKs[Math.floor(Math.random() * fallbackKs.length)];
-    
-    perfectPoints.length = 0;
-    const newMaxX = k < 1 ? 20 : 10;
-    const newMaxY = k > 1 ? Math.min(k * 10, 20) : 10;
-    
-    for (let x = 1; x <= newMaxX; x++) {
-      const y = k * x;
-      if (Math.abs(y - Math.round(y)) < 0.001 && y >= 1 && y <= newMaxY) {
-        perfectPoints.push({ x, y: Math.round(y) });
-      }
     }
   }
   
