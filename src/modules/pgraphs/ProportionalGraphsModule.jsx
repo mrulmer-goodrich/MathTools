@@ -277,12 +277,21 @@ ctx.stroke();
     }
     
     // Convert canvas coordinates to graph coordinates
-    const graphX = ((clickX - padding) / graphWidth) * maxX;
-    const canvasYFromBottom = canvas.height - clickY;
-    const graphY = ((canvasYFromBottom - padding) / graphHeight) * maxY;
-    
-    // Round to nearest integer
-    const roundedX = Math.round(graphX);
+    const paddingLeft = graph.paddingLeft ?? 40;
+    const paddingRight = graph.paddingRight ?? 20;
+    const paddingTop = graph.paddingTop ?? 20;
+    const paddingBottom = graph.paddingBottom ?? 40;
+
+    const originX = canvasRect.left + paddingLeft;
+    const originY = canvasRect.bottom - paddingBottom;
+
+    const innerW = canvasRect.width - paddingLeft - paddingRight;
+    const innerH = canvasRect.height - paddingTop - paddingBottom;
+
+    // Map pixel -> graph units (Quadrant I, y increases upward)
+    const graphX = ((x - canvasRect.left) - paddingLeft) / innerW * maxX;
+    const graphY = (originY - y) / innerH * maxY;
+const roundedX = Math.round(graphX);
     const roundedY = Math.round(graphY);
     
     console.log('🖱️ CLICK DEBUG:', {
