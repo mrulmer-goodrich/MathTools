@@ -145,7 +145,7 @@ if (problem?.isProportional) {
   // non-proportional drawing logic (leave whatever you already have, or default)
   x2 = maxX;
   y2 = Math.min(problem.k * maxX, maxY);
-}
+
 
     } else if (problem.type === 'curved') {
       // Draw curve - stop drawing when y reaches maxY to avoid flat line
