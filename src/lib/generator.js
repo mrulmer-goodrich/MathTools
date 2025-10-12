@@ -694,39 +694,41 @@ export function genPTable(difficulty = "easy") {
 // Generator for Proportional Graphs problems
 /**
  * Generate a proportional graphs problem
- * @param {string} difficulty - 'easy', 'medium', or 'hard'
+ * @param {string} difficulty - 'easy', 'medium', or 'hard' (unused here but preserved for API)
  * @returns {object} Problem data for proportional graphs
  */
 export function genPGraph(difficulty = 'easy') {
-  const isProportional = Math.random() < 0.5;
-  
+  // 65% proportional, 35% non-proportional (was 50/50)
+  const isProportional = Math.random() < 0.65;
+
   if (!isProportional) {
-    // Generate non-proportional graph
+    // --- Non-proportional (unchanged API; variety preserved) ---
     const types = ['curved', 'notThroughOrigin', 'curvedNotThrough'];
     const type = types[Math.floor(Math.random() * types.length)];
-    
+
     let whyNot, curveFunc, yIntercept, k;
-    
+
     if (type === 'curved') {
       whyNot = 'notStraight';
-      // Quadratic curve through origin - varied coefficients
-      const coefficients = [0.08, 0.1, 0.12, 0.15, 0.18, 0.2];
+      // Quadratic through origin with varied coefficients
+      const coefficients = [0.06, 0.08, 0.1, 0.12, 0.15, 0.18, 0.2];
       const a = coefficients[Math.floor(Math.random() * coefficients.length)];
       curveFunc = (x) => a * x * x;
     } else if (type === 'notThroughOrigin') {
       whyNot = 'notThroughOrigin';
       // Straight line not through origin
-      k = 2 + Math.floor(Math.random() * 4); // 2, 3, 4, 5
-      yIntercept = 1 + Math.floor(Math.random() * 3); // 1, 2, 3
-    } else { // curvedNotThrough
+      // Keep simple integer slope variety and small positive y-intercepts
+      k = 1 + Math.floor(Math.random() * 9);      // 1..9
+      yIntercept = 1 + Math.floor(Math.random() * 5); // 1..5
+    } else {
       whyNot = 'both';
-      // Curved line not through origin
-      const coefficients = [0.05, 0.08, 0.1, 0.12];
+      // Curved & not through origin
+      const coefficients = [0.04, 0.06, 0.08, 0.1, 0.12];
       const a = coefficients[Math.floor(Math.random() * coefficients.length)];
-      const b = 1 + Math.floor(Math.random() * 3); // 1, 2, 3
+      const b = 1 + Math.floor(Math.random() * 4); // 1..4
       curveFunc = (x) => a * x * x + b;
     }
-    
+
     return {
       isProportional: false,
       type,
@@ -737,48 +739,68 @@ export function genPGraph(difficulty = 'easy') {
       perfectPoints: [],
     };
   }
-  
-  // Generate proportional graph with MUCH MORE VARIETY
-  let k;
-  
-  // 50% k > 1, 50% k < 1, but NEVER k = 1
-  if (Math.random() < 0.5) {
-    // k > 1: whole numbers with better distribution
-    const kValues = [2, 3, 4, 5, 6, 7, 8];
-    k = kValues[Math.floor(Math.random() * kValues.length)];
-  } else {
-    // k < 1: ONLY fractions that produce many perfect points within our range
-    // These are guaranteed to work because denominators divide evenly into our maxX range
-    const fractions = [
-      { num: 1, den: 2 },  // 0.5 - perfect points every 2 units
-      { num: 1, den: 4 },  // 0.25 - perfect points every 4 units
-      { num: 3, den: 4 },  // 0.75 - perfect points every 4 units
-      { num: 1, den: 5 },  // 0.2 - perfect points every 5 units
-      { num: 2, den: 5 },  // 0.4 - perfect points every 5 units
-      { num: 3, den: 5 },  // 0.6 - perfect points every 5 units
-      { num: 4, den: 5 },  // 0.8 - perfect points every 5 units
-      { num: 1, den: 10 }, // 0.1 - perfect points every unit
-      { num: 3, den: 10 }, // 0.3 - perfect points every 10 units
-      { num: 7, den: 10 }, // 0.7 - perfect points every 10 units
-      { num: 9, den: 10 }, // 0.9 - perfect points every 10 units
-    ];
-    const frac = fractions[Math.floor(Math.random() * fractions.length)];
-    k = frac.num / frac.den;
+
+  // --- Proportional case ---
+  // We construct k as a rational number num/den to *guarantee* perfect integer coordinate points.
+  // Variety strategy:
+  //  - 40% integers (1..12)
+  //  - 40% proper fractions (num < den, 2..12)
+  //  - 20% improper fractions (>1 but non-integer)
+  //  Occasionally allow k = 1 to increase variety (previously disallowed).
+  function gcd(a, b) {
+    while (b) [a, b] = [b, a % b];
+    return Math.abs(a);
   }
-  
-  // Generate perfect points (whole number coordinates on the line)
+
+  let num, den;
+
+  const roll = Math.random();
+  if (roll < 0.40) {
+    // Integers 1..12 (includes 1 occasionally by design)
+    num = 1 + Math.floor(Math.random() * 12);
+    den = 1;
+  } else if (roll < 0.80) {
+    // Proper fraction: num < den, 2..12
+    den = 2 + Math.floor(Math.random() * 11); // 2..12
+    num = 1 + Math.floor(Math.random() * (den - 1)); // 1..den-1
+  } else {
+    // Improper fraction non-integer: choose num > den and avoid multiples
+    den = 2 + Math.floor(Math.random() * 9); // 2..10
+    // Ensure num > den and not a multiple of den to avoid integer slope
+    const base = den + 1 + Math.floor(Math.random() * 10); // (den+1)..(den+10)
+    // If base is a multiple of den, bump by 1 (still >= den+1)
+    num = (base % den === 0) ? base + 1 : base;
+  }
+
+  // Reduce fraction to lowest terms to get the minimal step for perfect points
+  const g = gcd(num, den);
+  const baseNum = num / g;
+  const baseDen = den / g;
+
+  const k = num / den;
+
+  // Build a list of perfect integer points on y = kx.
+  // We don't care about axis limits, but we'll keep values reasonable for UI.
+  // Always include at least one perfect point (m = 1).
   const perfectPoints = [];
-  const maxX = k < 1 ? 20 : 10; // Expand range for k < 1
-  const maxY = k > 1 ? Math.min(k * 10, 20) : 10;
-  
-  for (let x = 1; x <= maxX; x++) {
-    const y = k * x;
-    // Only include if y is a whole number and within reasonable range
-    if (Math.abs(y - Math.round(y)) < 0.001 && y >= 1 && y <= maxY) {
-      perfectPoints.push({ x, y: Math.round(y) });
+  const maxM = 10; // generates up to 10 multiples
+  // Randomize how many we keep (between 3 and 8), but never 0.
+  const targetCount = 3 + Math.floor(Math.random() * 6); // 3..8
+
+  for (let m = 1; m <= maxM && perfectPoints.length < targetCount; m++) {
+    const x = m * baseDen;
+    const y = m * baseNum;
+    // Ensure positive, non-zero for classroom clarity
+    if (x >= 1 && y >= 1) {
+      perfectPoints.push({ x, y });
     }
   }
-  
+
+  // Fallback guard: if something went awry, enforce at least one perfect point
+  if (perfectPoints.length === 0) {
+    perfectPoints.push({ x: baseDen, y: baseNum });
+  }
+
   return {
     isProportional: true,
     k,
