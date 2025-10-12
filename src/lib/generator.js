@@ -768,19 +768,23 @@ export function genPGraph(difficulty = 'easy') {
   const kFractionText = `${num}/${den}`;
 
   // --- Perfect points: return a *subset* (3..6) of lattice points, not every multiple ---
-  const perfectPoints = [];
-  const wanted = 3 + Math.floor(Math.random() * 4); // 3..6
-  const used = new Set();
-  const mMax = 16; // cap size so numbers stay readable
+const perfectPoints = [];
+const wanted = 3 + Math.floor(Math.random() * 4); // 3..6
+const used = new Set([1]); // ensure m=1
+const mMax = 16;
 
-  while (perfectPoints.length < wanted) {
-    const m = 1 + Math.floor(Math.random() * mMax); // 1..mMax
-    if (used.has(m)) continue;
-    used.add(m);
-    const x = m * baseDen;
-    const y = m * baseNum;
-    if (x >= 1 && y >= 1) perfectPoints.push({ x, y });
-  }
+// always include the smallest lattice point first
+perfectPoints.push({ x: 1 * baseDen, y: 1 * baseNum });
+
+while (perfectPoints.length < wanted) {
+  const m = 2 + Math.floor(Math.random() * (mMax - 1)); // 2..mMax
+  if (used.has(m)) continue;
+  used.add(m);
+  const x = m * baseDen;
+  const y = m * baseNum;
+  if (x >= 1 && y >= 1) perfectPoints.push({ x, y });
+}
+
 
   return {
     isProportional: true,
