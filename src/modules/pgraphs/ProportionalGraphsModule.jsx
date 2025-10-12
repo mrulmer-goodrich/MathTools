@@ -462,17 +462,17 @@ export default function ProportionalGraphsModule() {
     // For display in equation choices: use fraction for k < 1, whole number for k >= 1
     const kDisplay = calculatedK < 1 ? (
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={num} denominator={den} />
+        <Fraction numerator={num} denominator={den} whiteBar={true} />
       </span>
     ) : calculatedK.toString();
     
     const reciprocalDisplay = calculatedK < 1 ? (
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={den} denominator={num} />
+        <Fraction numerator={den} denominator={num} whiteBar={true} />
       </span>
     ) : (
       <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-        <Fraction numerator={1} denominator={calculatedK} />
+        <Fraction numerator={1} denominator={calculatedK} whiteBar={true} />
       </span>
     );
     
@@ -772,16 +772,15 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
-                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <div className="fraction mini-frac">
-                      <div style={{ fontSize: '20px', fontWeight: 900 }}>
-                        <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
-                      </div>
-                      <div className="frac-bar narrow" />
-                      <div style={{ fontSize: '20px', fontWeight: 900 }}>x</div>
+                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <span>k =</span>
+                  <div className="fraction mini-frac">
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
-                  </span>
+                    <div className="frac-bar narrow" />
+                    <div style={{ fontSize: '20px', fontWeight: 900', color: 'transparent', userSelect: 'none' }}>x</div>
+                  </div>
                 </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -803,16 +802,15 @@ export default function ProportionalGraphsModule() {
             <div className="section">
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
               <div style={{ marginTop: 12, marginBottom: 12 }}>
-                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0' }}>
-                  k = <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <div className="fraction mini-frac">
-                      <div style={{ fontSize: '20px', fontWeight: 900 }}>{selectedY}</div>
-                      <div className="frac-bar narrow" />
-                      <div style={{ fontSize: '20px', fontWeight: 900 }}>
-                        <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
-                      </div>
+                <div style={{ fontSize: '24px', fontWeight: 900, textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '12px', border: '3px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <span>k =</span>
+                  <div className="fraction mini-frac">
+                    <div style={{ fontSize: '20px', fontWeight: 900 }}>{selectedY}</div>
+                    <div className="frac-bar narrow" />
+                    <div style={{ fontSize: '20px', fontWeight: 900, minHeight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span className="ptable-pulse" style={{ display: 'inline-block', width: '50px', height: '6px', background: '#f59e0b', borderRadius: '3px' }} />
                     </div>
-                  </span>
+                  </div>
                 </div>
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -864,18 +862,34 @@ export default function ProportionalGraphsModule() {
                   <span>{calculatedK}</span>
                 )}
               </div>
-              <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                {equationChoices.map((eq, i) => (
-                  <button
-                    key={i}
-                    className="answer-btn pgraph-choice-btn"
-                    onClick={() => handleEquationSelect(eq)}
-                    style={{ width: '100%' }}
-                  >
-                    {eq.formula}
-                  </button>
-                ))}
-              </div>
+              {!selectedEquation && (
+                <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                  {equationChoices.map((eq, i) => (
+                    <button
+                      key={i}
+                      className="answer-btn pgraph-choice-btn"
+                      onClick={() => handleEquationSelect(eq)}
+                      style={{ width: '100%' }}
+                    >
+                      {eq.formula}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {selectedEquation && !equationChoices.find(eq => eq.displayText === selectedEquation && eq.isCorrect) && (
+                <div className="row" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                  {equationChoices.map((eq, i) => (
+                    <button
+                      key={i}
+                      className="answer-btn pgraph-choice-btn"
+                      onClick={() => handleEquationSelect(eq)}
+                      style={{ width: '100%' }}
+                    >
+                      {eq.formula}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           
@@ -894,8 +908,14 @@ export default function ProportionalGraphsModule() {
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
                 For every 1 unit increase in x, y increases by {calculatedK < 1 ? `${reducedFraction.num}/${reducedFraction.den}` : calculatedK} units.
               </div>
-              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px' }}>
-                {selectedEquation}
+              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <span>y =</span>
+                {calculatedK < 1 ? (
+                  <Fraction numerator={reducedFraction.num} denominator={reducedFraction.den} />
+                ) : (
+                  <span>{calculatedK}</span>
+                )}
+                <span>x</span>
               </div>
             </div>
           )}
