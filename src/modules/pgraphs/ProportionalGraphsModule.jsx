@@ -613,22 +613,40 @@ export default function ProportionalGraphsModule() {
     console.log('📍 Perfect points available:', problem.perfectPoints);
     
     // Check if this point exists in the perfectPoints array
-    const isValid = problem.perfectPoints.some(p => p.x === point.x && p.y === point.y);
-    
-    console.log('📍 Validation:', {
-      clickedPoint: point,
-      isValid,
-      perfectPoints: problem.perfectPoints
-    });
-    
-    if (isValid) {
-      console.log('✅ Valid perfect point confirmed, moving to step 5');
-      setSelectedPoint(point);
-      setCurrentStep(5);
-    } else {
-      console.log('❌ Not a valid perfect point, ignoring');
-    }
-  };
+// Accept ANY integer multiple of the (reduced) slope within graph bounds
+// 1) guard: x must be positive in Quadrant I
+if (point.x <= 0) {
+  console.log('❌ Invalid: x <= 0 in Quadrant I');
+  return;
+}
+
+// 2) reduce the clicked point as a fraction y/x
+const clicked = reduceFraction(point.y, point.x);
+
+// 3) reduce the problem’s k (handles non-reduced entries like 10/8 → 5/4)
+const kReduced = reduceFraction(problem.kNum, problem.kDen);
+
+// 4) check match
+const matchesSlope = (clicked.num === kReduced.num) && (clicked.den === kReduced.den);
+
+// 5) optional bounds check using your axis limits (defensive)
+const withinBounds =
+  Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)
+    ? (point.x >= 0 && point.x <= problem.xMax && point.y >= 0 && point.y <= problem.yMax)
+    : (point.x >= 0 && point.y >= 0);
+
+// 6) final decision
+const isValid = matchesSlope && withinBounds;
+
+console.log('📍 Validation (fractional):', {
+  clickedPoint: point,
+  clickedReduced: clicked,
+  kReduced,
+  matchesSlope,
+  withinBounds,
+  isValid
+});
+
   
   // Handle step 5: Select coordinates
   const handleCoordinateSelect = (coord) => {
