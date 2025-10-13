@@ -1,5 +1,5 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx – v2.5.5
-// Proportional Graphs learning tool
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.0
+// Proportional Graphs learning tool - FIXED grid alignment
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
@@ -29,7 +29,7 @@ const Formula = ({ children }) => (
 );
 
 
-// Round up to a “nice” tick (default step = 5)
+// Round up to a "nice" tick (default step = 5)
 const niceCeil = (n, step = 5) => Math.ceil(n / step) * step;
 
 
@@ -63,29 +63,9 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
     
-// Dynamic axis range: TRUST generator xMax/yMax if provided; else ensure at least one perfect point is visible
-let maxX, maxY;
-
-// 1) Use generator-provided limits when present
-if (Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)) {
-  maxX = problem.xMax;
-  maxY = problem.yMax;
-} else {
-  // 2) Fallback to a “smallest visible perfect point” rule
-  const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
-  if (ppts.length > 0) {
-    const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
-    const minXNeeded = (smallest?.x ?? 1) + 1; // +1 headroom
-    const minYNeeded = (smallest?.y ?? 1) + 1;
-    maxX = niceCeil(Math.max(10, minXNeeded), 5);
-    maxY = niceCeil(Math.max(10, minYNeeded), 5);
-  } else {
-    // 3) Last resort
-    maxX = 10;
-    maxY = 10;
-  }
-}
-
+    // ALWAYS trust generator-provided limits (they're calculated to show all perfect points)
+    const maxX = problem?.xMax || 20;
+    const maxY = problem?.yMax || 20;
     
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -97,10 +77,12 @@ if (Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)) {
     const toCanvasY = (y) => height - padding - (y / maxY) * graphHeight;
     
     // darken grid lines for better visibility
-ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
-ctx.lineWidth = 1.25;
+    ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
+    ctx.lineWidth = 1.25;
     
-    const xStep = chooseStep(maxX); const yStep = chooseStep(maxY);
+    // Use generator-provided steps for perfect grid alignment
+    const xStep = problem?.xStep || chooseStep(maxX);
+    const yStep = problem?.yStep || chooseStep(maxY);
     
     for (let i = 0; i <= maxX; i += xStep) {
       // Vertical lines
@@ -157,56 +139,56 @@ ctx.lineWidth = 1.25;
     ctx.lineWidth = 4;
     ctx.beginPath();
     
-// Compute line end while preserving slope y = kx, clipped to viewport
-let x2, y2;
-if (problem?.isProportional) {
-  if (problem.k * maxX <= maxY) {
-    // right edge is hit first
-    x2 = maxX;
-    y2 = problem.k * maxX;
-  } else {
-    // top edge is hit first
-    y2 = maxY;
-    x2 = maxY / problem.k;
-  }
-    // draw the proportional segment from origin to (x2,y2)
-  ctx.moveTo(toCanvasX(0), toCanvasY(0));
-  ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
+    // Compute line end while preserving slope y = kx, clipped to viewport
+    let x2, y2;
+    if (problem?.isProportional) {
+      if (problem.k * maxX <= maxY) {
+        // right edge is hit first
+        x2 = maxX;
+        y2 = problem.k * maxX;
+      } else {
+        // top edge is hit first
+        y2 = maxY;
+        x2 = maxY / problem.k;
+      }
+      // draw the proportional segment from origin to (x2,y2)
+      ctx.moveTo(toCanvasX(0), toCanvasY(0));
+      ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
 
-} else if (problem.type === 'curved') {
-  // Draw curve - stop drawing when y reaches maxY to avoid flat line
-  let started = false;
-  for (let x = 0; x <= maxX; x += 0.1) {
-    const y = problem.curveFunc(x);
-    if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
-    if (!started) {
-      ctx.moveTo(toCanvasX(x), toCanvasY(y));
-      started = true;
-    } else {
-      ctx.lineTo(toCanvasX(x), toCanvasY(y));
+    } else if (problem.type === 'curved') {
+      // Draw curve - stop drawing when y reaches maxY to avoid flat line
+      let started = false;
+      for (let x = 0; x <= maxX; x += 0.1) {
+        const y = problem.curveFunc(x);
+        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (!started) {
+          ctx.moveTo(toCanvasX(x), toCanvasY(y));
+          started = true;
+        } else {
+          ctx.lineTo(toCanvasX(x), toCanvasY(y));
+        }
+      }
+    } else if (problem.type === 'notThroughOrigin') {
+      // Draw straight line not through origin
+      const y0 = problem.yIntercept;
+      const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
+      ctx.moveTo(toCanvasX(0), toCanvasY(y0));
+      ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
+    } else if (problem.type === 'curvedNotThrough') {
+      // Draw curve not through origin - stop drawing when y reaches maxY
+      let started = false;
+      for (let x = 0; x <= maxX; x += 0.1) {
+        const y = problem.curveFunc(x);
+        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (!started) {
+          ctx.moveTo(toCanvasX(x), toCanvasY(y));
+          started = true;
+        } else {
+          ctx.lineTo(toCanvasX(x), toCanvasY(y));
+        }
+      }
     }
-  }
-} else if (problem.type === 'notThroughOrigin') {
-  // Draw straight line not through origin
-  const y0 = problem.yIntercept;
-  const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
-  ctx.moveTo(toCanvasX(0), toCanvasY(y0));
-  ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
-} else if (problem.type === 'curvedNotThrough') {
-  // Draw curve not through origin - stop drawing when y reaches maxY
-  let started = false;
-  for (let x = 0; x <= maxX; x += 0.1) {
-    const y = problem.curveFunc(x);
-    if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
-    if (!started) {
-      ctx.moveTo(toCanvasX(x), toCanvasY(y));
-      started = true;
-    } else {
-      ctx.lineTo(toCanvasX(x), toCanvasY(y));
-    }
-  }
-}
-ctx.stroke();
+    ctx.stroke();
 
     
     // Highlight origin if requested (only AFTER correct answer)
@@ -253,89 +235,72 @@ ctx.stroke();
     
   }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates]);
   
-const handleClick = (e) => {
-  if (!onPointClick) {
-    console.log('❌ Click handler not active - onPointClick is null');
-    return;
-  }
-
-  const canvas = canvasRef.current;
-  const rect = canvas.getBoundingClientRect();
-
-  // Map browser click → canvas pixel coordinates (works with or without DPR scaling)
-  const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-  // Use the SAME padding and sizes as the draw code
-  const padding = 60;
-  const graphWidth = canvas.width - 2 * padding;
-  const graphHeight = canvas.height - 2 * padding;
-
-  // Recompute maxX/maxY EXACTLY like the draw code (keep in sync!)
-  let maxX, maxY;
-  if (Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)) {
-    maxX = problem.xMax;
-    maxY = problem.yMax;
-  } else {
-    const ppts = Array.isArray(problem?.perfectPoints) ? problem.perfectPoints : [];
-    if (ppts.length > 0) {
-      const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
-      const minXNeeded = (smallest?.x ?? 1) + 1;
-      const minYNeeded = (smallest?.y ?? 1) + 1;
-      // niceCeil: same helper used in draw
-      maxX = niceCeil(Math.max(10, minXNeeded), 5);
-      maxY = niceCeil(Math.max(10, minYNeeded), 5);
-    } else {
-      maxX = 10;
-      maxY = 10;
+  const handleClick = (e) => {
+    if (!onPointClick) {
+      console.log('❌ Click handler not active - onPointClick is null');
+      return;
     }
-  }
 
-  // Plotting rectangle
-  const left = padding;
-  const top = padding;
-  const right = padding + graphWidth;
-  const bottom = padding + graphHeight;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
 
-  // Ignore clicks outside the plotting area
-  if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) {
-    console.log('❌ Click outside plotting area');
-    return;
-  }
+    // Map browser click → canvas pixel coordinates (works with or without DPR scaling)
+    const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-  // Canvas px → graph units (Quadrant I)
-  const graphX = (canvasX - left) / graphWidth * maxX;
-  const graphY = (bottom - canvasY) / graphHeight * maxY;
+    // Use the SAME padding and sizes as the draw code
+    const padding = 60;
+    const graphWidth = canvas.width - 2 * padding;
+    const graphHeight = canvas.height - 2 * padding;
 
-  // Snap to nearest integer lattice intersection (replace roundedX/Y with snappedX/Y)
-  const snappedX = Math.round(graphX);
-  const snappedY = Math.round(graphY);
+    // Use same axis limits as drawing code
+    const maxX = problem?.xMax || 20;
+    const maxY = problem?.yMax || 20;
 
-  // Bounds check on snapped values
-  if (
-    problem.isProportional &&
-    snappedX >= 0 && snappedX <= maxX &&
-    snappedY >= 0 && snappedY <= maxY
-  ) {
-    console.log('🖱️ CLICK DEBUG:', {
-      canvas: { x: canvasX, y: canvasY },
-      graph: { x: graphX, y: graphY },
-      snapped: { x: snappedX, y: snappedY },
-      problem: {
-        k: problem.k,
-        isProportional: problem.isProportional,
-        perfectPoints: problem.perfectPoints
-      }
-    });
+    // Plotting rectangle
+    const left = padding;
+    const top = padding;
+    const right = padding + graphWidth;
+    const bottom = padding + graphHeight;
 
-    setClickedPoint({ x: snappedX, y: snappedY });
-    setTimeout(() => setClickedPoint(null), 500);
-    onPointClick({ x: snappedX, y: snappedY });
-  } else {
-    console.log('❌ Click outside graph bounds (after snap) or not proportional mode');
-  }
-};
+    // Ignore clicks outside the plotting area
+    if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) {
+      console.log('❌ Click outside plotting area');
+      return;
+    }
 
+    // Canvas px → graph units (Quadrant I)
+    const graphX = (canvasX - left) / graphWidth * maxX;
+    const graphY = (bottom - canvasY) / graphHeight * maxY;
+
+    // Snap to nearest integer lattice intersection
+    const snappedX = Math.round(graphX);
+    const snappedY = Math.round(graphY);
+
+    // Bounds check on snapped values
+    if (
+      problem.isProportional &&
+      snappedX >= 0 && snappedX <= maxX &&
+      snappedY >= 0 && snappedY <= maxY
+    ) {
+      console.log('🖱️ CLICK DEBUG:', {
+        canvas: { x: canvasX, y: canvasY },
+        graph: { x: graphX, y: graphY },
+        snapped: { x: snappedX, y: snappedY },
+        problem: {
+          k: problem.k,
+          isProportional: problem.isProportional,
+          perfectPoints: problem.perfectPoints
+        }
+      });
+
+      setClickedPoint({ x: snappedX, y: snappedY });
+      setTimeout(() => setClickedPoint(null), 500);
+      onPointClick({ x: snappedX, y: snappedY });
+    } else {
+      console.log('❌ Click outside graph bounds (after snap) or not proportional mode');
+    }
+  };
 
   
   return (
@@ -608,49 +573,46 @@ export default function ProportionalGraphsModule() {
     }
   };
   
+  // Handle step 4: Click on graph
+  const handlePointClick = (point) => {
+    console.log('🔍 handlePointClick called with:', point);
+    console.log('🔍 Current problem.k:', problem.k);
+    console.log('🔍 Perfect points available:', problem.perfectPoints);
 
-// Handle step 4: Click on graph
-const handlePointClick = (point) => {
-  console.log('📍 handlePointClick called with:', point);
-  console.log('📍 Current problem.k:', problem.k);
-  console.log('📍 Perfect points available:', problem.perfectPoints);
+    // Quadrant I guard
+    if (point.x <= 0) {
+      console.log('❌ Invalid: x <= 0 in Quadrant I');
+      return;
+    }
 
-  // Quadrant I guard
-  if (point.x <= 0) {
-    console.log('❌ Invalid: x <= 0 in Quadrant I');
-    return;
-  }
+    // Validate: point must be on the line y = kx (within tolerance for rounding)
+    const expectedY = problem.k * point.x;
+    const matchesSlope = Math.abs(point.y - expectedY) < 0.01;
 
-  // Reduce clicked ratio y/x
-  const clicked = reduceFraction(point.y, point.x);
-  // Reduce problem’s k (kNum/kDen are provided by generator)
-  const kReduced = reduceFraction(problem.kNum, problem.kDen);
+    // Bounds check using generator-provided limits
+    const withinBounds = point.x > 0 && point.x <= problem.xMax && 
+                          point.y >= 0 && point.y <= problem.yMax;
 
-  const matchesSlope = (clicked.num === kReduced.num) && (clicked.den === kReduced.den);
+    const isValid = problem.isProportional && matchesSlope && withinBounds;
 
-  // Bounds: prefer generator limits, else just require nonnegative
-  const withinBounds =
-    Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)
-      ? (point.x >= 0 && point.x <= problem.xMax && point.y >= 0 && point.y <= problem.yMax)
-      : (point.x >= 0 && point.y >= 0);
+    console.log('🔍 Validation:', {
+      clickedPoint: point, 
+      expectedY, 
+      matchesSlope, 
+      withinBounds, 
+      isValid
+    });
 
-  const isValid = problem.isProportional && matchesSlope && withinBounds;
+    if (!isValid) {
+      console.log('❌ Not a valid perfect point, ignoring');
+      return;
+    }
 
-  console.log('📍 Validation (fractional):', {
-    clickedPoint: point, clickedReduced: clicked, kReduced, matchesSlope, withinBounds, isValid
-  });
-
-  if (!isValid) {
-    console.log('❌ Not a valid perfect point, ignoring');
-    return;
-  }
-
-  // ✅ Valid: lock the point and move to Step 5
-  setSelectedPoint({ x: point.x, y: point.y });
-  setSelectedCoordinates({ x: point.x, y: point.y });
-  setCurrentStep(5);
-};
-
+    // ✅ Valid: lock the point and move to Step 5
+    setSelectedPoint({ x: point.x, y: point.y });
+    setSelectedCoordinates({ x: point.x, y: point.y });
+    setCurrentStep(5);
+  };
 
   
   // Handle step 5: Select coordinates
@@ -844,7 +806,7 @@ const handlePointClick = (point) => {
                   { key: 'y/x', formula: <Fraction numerator="y" denominator="x" whiteBar={true} />, correct: true },
                   { key: 'x/y', formula: <Fraction numerator="x" denominator="y" whiteBar={true} />, correct: false },
                   { key: 'x+y', formula: 'x + y', correct: false },
-                  { key: 'y-x', formula: 'y – x', correct: false }
+                  { key: 'y-x', formula: 'y − x', correct: false }
                 ]).map(({ key, formula, correct }) => (
                   <button 
                     key={key}
@@ -1074,4 +1036,3 @@ const handlePointClick = (point) => {
     </>
   );
 }
-
