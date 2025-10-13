@@ -687,9 +687,9 @@ export function genPTable(difficulty = "easy") {
 
 
 
-// generator.js — v2.0 (plain JS, no JSX)
+// generator.js — v3.0 (plain JS, no JSX)
+// GUARANTEED grid-aligned perfect points for visual clarity
 // Drop-in: exports genPGraph(difficulty) with 35% non-proportional.
-// Proportional uses a finite bank of friendly k with suggested axes.
 
 export function genPGraph(difficulty = 'easy') {
   const isProportional = Math.random() < 0.65;
@@ -729,81 +729,91 @@ export function genPGraph(difficulty = 'easy') {
       yIntercept,
       k,
       perfectPoints: [],
+      xMax: 20,
+      yMax: 20,
+      xStep: 2,
+      yStep: 2,
     };
   }
 
-  // --- Proportional (65%) — finite bank of friendly ratios with axes ---
+  // --- Proportional (65%) — GRID-ALIGNED ratios ---
+  // Each entry guarantees that perfect points fall EXACTLY on grid intersections
+  // xMax and yMax are chosen so grid lines align with perfect points
+  
   const BANK = [
-    // k < 1 (terminating)
-    { num: 1, den: 2, xMax: 24, yMax: 12 },
-    { num: 1, den: 4, xMax: 24, yMax: 8 },
-    { num: 2, den: 5, xMax: 25, yMax: 12 },
-    { num: 3, den: 5, xMax: 25, yMax: 16 },
-    { num: 1, den: 5, xMax: 25, yMax: 8 },
-    { num: 2, den: 8, xMax: 24, yMax: 8 },
-    { num: 3, den: 10, xMax: 30, yMax: 12 },
-    { num: 4, den: 10, xMax: 30, yMax: 16 },
-    { num: 5, den: 8, xMax: 24, yMax: 18 },
-    { num: 3, den: 4, xMax: 24, yMax: 18 },
-
-    // 1..2
-    { num: 1, den: 1, xMax: 14, yMax: 14 },
-    { num: 3, den: 2, xMax: 14, yMax: 22 },
-    { num: 5, den: 4, xMax: 20, yMax: 28 },
-    { num: 6, den: 5, xMax: 20, yMax: 24 },
-    { num: 8, den: 5, xMax: 20, yMax: 36 },
-    { num: 9, den: 8, xMax: 24, yMax: 30 },
-    { num: 7, den: 4, xMax: 20, yMax: 40 },
-    { num: 10, den: 8, xMax: 24, yMax: 34 },
-
-    // integers > 1
-    { num: 2, den: 1, xMax: 14, yMax: 28 },
-    { num: 3, den: 1, xMax: 12, yMax: 36 },
-    { num: 4, den: 1, xMax: 10, yMax: 40 },
-    { num: 5, den: 1, xMax: 10, yMax: 50 },
-    { num: 6, den: 1, xMax: 10, yMax: 60 },
-    { num: 8, den: 1, xMax: 10, yMax: 80 },
-    { num: 10, den: 1, xMax: 10, yMax: 100 },
-
-    // 2..3 terminating
-    { num: 5, den: 2, xMax: 12, yMax: 32 },
-    { num: 9, den: 4, xMax: 16, yMax: 40 },
-    { num: 7, den: 2, xMax: 12, yMax: 44 },
-    { num: 11, den: 4, xMax: 16, yMax: 48 },
-    { num: 12, den: 5, xMax: 15, yMax: 40 },
-    { num: 15, den: 8, xMax: 16, yMax: 40 },
-
-    // variations
-    { num: 4, den: 5, xMax: 25, yMax: 24 },
-    { num: 3, den: 8, xMax: 24, yMax: 12 },
-    { num: 2, den: 10, xMax: 30, yMax: 10 },
-    { num: 5, den: 10, xMax: 30, yMax: 20 },
-    { num: 1, den: 8, xMax: 24, yMax: 6 },
-    { num: 3, den: 4, xMax: 20, yMax: 18 },
+    // k < 1 (fractions) - Grid steps divide evenly into denominators
+    { num: 1, den: 2, xStep: 2, yStep: 1 },   // y = (1/2)x → points like (2,1), (4,2), (6,3)
+    { num: 1, den: 4, xStep: 4, yStep: 1 },   // y = (1/4)x → points like (4,1), (8,2), (12,3)
+    { num: 1, den: 5, xStep: 5, yStep: 1 },   // y = (1/5)x → points like (5,1), (10,2), (15,3)
+    { num: 2, den: 5, xStep: 5, yStep: 2 },   // y = (2/5)x → points like (5,2), (10,4), (15,6)
+    { num: 3, den: 5, xStep: 5, yStep: 3 },   // y = (3/5)x → points like (5,3), (10,6), (15,9)
+    { num: 3, den: 4, xStep: 4, yStep: 3 },   // y = (3/4)x → points like (4,3), (8,6), (12,9)
+    { num: 1, den: 3, xStep: 3, yStep: 1 },   // y = (1/3)x → points like (3,1), (6,2), (9,3)
+    { num: 2, den: 3, xStep: 3, yStep: 2 },   // y = (2/3)x → points like (3,2), (6,4), (9,6)
+    { num: 3, den: 8, xStep: 8, yStep: 3 },   // y = (3/8)x → points like (8,3), (16,6)
+    { num: 5, den: 8, xStep: 8, yStep: 5 },   // y = (5/8)x → points like (8,5), (16,10)
+    
+    // k = 1 - Diagonal, every integer point works
+    { num: 1, den: 1, xStep: 2, yStep: 2 },   // y = x → points like (2,2), (4,4), (6,6)
+    
+    // k between 1 and 2
+    { num: 3, den: 2, xStep: 2, yStep: 3 },   // y = (3/2)x → points like (2,3), (4,6), (6,9)
+    { num: 4, den: 3, xStep: 3, yStep: 4 },   // y = (4/3)x → points like (3,4), (6,8), (9,12)
+    { num: 5, den: 4, xStep: 4, yStep: 5 },   // y = (5/4)x → points like (4,5), (8,10), (12,15)
+    { num: 5, den: 3, xStep: 3, yStep: 5 },   // y = (5/3)x → points like (3,5), (6,10), (9,15)
+    { num: 7, den: 4, xStep: 4, yStep: 7 },   // y = (7/4)x → points like (4,7), (8,14)
+    
+    // k >= 2 (integers and larger fractions)
+    { num: 2, den: 1, xStep: 2, yStep: 4 },   // y = 2x → points like (2,4), (4,8), (6,12)
+    { num: 3, den: 1, xStep: 2, yStep: 6 },   // y = 3x → points like (2,6), (4,12), (6,18)
+    { num: 4, den: 1, xStep: 2, yStep: 8 },   // y = 4x → points like (2,8), (4,16), (6,24)
+    { num: 5, den: 1, xStep: 2, yStep: 10 },  // y = 5x → points like (2,10), (4,20), (6,30)
+    { num: 5, den: 2, xStep: 2, yStep: 5 },   // y = (5/2)x → points like (2,5), (4,10), (6,15)
+    { num: 7, den: 2, xStep: 2, yStep: 7 },   // y = (7/2)x → points like (2,7), (4,14), (6,21)
+    { num: 9, den: 4, xStep: 4, yStep: 9 },   // y = (9/4)x → points like (4,9), (8,18)
   ];
 
   const pick = BANK[Math.floor(Math.random() * BANK.length)];
   const num = pick.num;
   const den = pick.den;
   const k = num / den;
+  const xStep = pick.xStep;
+  const yStep = pick.yStep;
 
-  function gcd(a, b) { while (b) { const t = a % b; a = b; b = t; } return Math.abs(a); }
+  // GCD function
+  function gcd(a, b) { 
+    while (b) { 
+      const t = a % b; 
+      a = b; 
+      b = t; 
+    } 
+    return Math.abs(a); 
+  }
+  
   const g = gcd(num, den);
   const baseNum = num / g;
   const baseDen = den / g;
 
-  // Perfect points (subset; always include m=1)
+  // Generate perfect points - all GUARANTEED to be on grid intersections
+  // Points are multiples of (baseDen, baseNum)
   const perfectPoints = [];
-  perfectPoints.push({ x: baseDen, y: baseNum });
-  const used = new Set([1]);
-  const wanted = 3 + Math.floor(Math.random() * 3); // 3..5
-  const mMax = 12;
-  while (perfectPoints.length < wanted) {
-    const m = 2 + Math.floor(Math.random() * (mMax - 1));
-    if (used.has(m)) continue;
-    used.add(m);
-    perfectPoints.push({ x: m * baseDen, y: m * baseNum });
+  const numPoints = 4 + Math.floor(Math.random() * 3); // 4-6 points
+  
+  for (let m = 1; m <= numPoints; m++) {
+    perfectPoints.push({ 
+      x: m * baseDen, 
+      y: m * baseNum 
+    });
   }
+
+  // Calculate axis ranges to show all perfect points with some headroom
+  // Make sure ranges are multiples of step sizes for clean grids
+  const maxPointX = Math.max(...perfectPoints.map(p => p.x));
+  const maxPointY = Math.max(...perfectPoints.map(p => p.y));
+  
+  // Add 20-30% headroom and round up to next step multiple
+  const xMax = Math.ceil((maxPointX * 1.25) / xStep) * xStep;
+  const yMax = Math.ceil((maxPointY * 1.25) / yStep) * yStep;
 
   const kRounded = Number(k.toFixed(2));
   const kRoundedText = k.toFixed(2);
@@ -819,7 +829,9 @@ export function genPGraph(difficulty = 'easy') {
     kRoundedText,
     kFractionText,
     perfectPoints,
-    xMax: pick.xMax,
-    yMax: pick.yMax,
+    xMax,
+    yMax,
+    xStep,
+    yStep,
   };
 }
