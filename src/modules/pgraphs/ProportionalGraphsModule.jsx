@@ -1071,3 +1071,4 @@ console.log('📍 Validation (fractional):', {
     </>
   );
 }
+}
