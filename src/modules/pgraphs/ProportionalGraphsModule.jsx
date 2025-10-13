@@ -688,7 +688,7 @@ export default function ProportionalGraphsModule() {
               onPointClick={currentStep === 4 ? handlePointClick : null}
               highlightPoint={selectedPoint}
               showOrigin={whyProportional === 'both'} 
-              showCoordinates={selectedCoordinates !== null}
+            showCoordinates={currentStep >= 6}
             />
           </div>
         </div>
