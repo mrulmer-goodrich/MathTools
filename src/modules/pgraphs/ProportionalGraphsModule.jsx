@@ -608,46 +608,49 @@ export default function ProportionalGraphsModule() {
     }
   };
   
-  // Handle step 4: Click on graph
-  const handlePointClick = (point) => {
-    console.log('📍 handlePointClick called with:', point);
-    console.log('📍 Current problem.k:', problem.k);
-    console.log('📍 Perfect points available:', problem.perfectPoints);
-    
-    // Check if this point exists in the perfectPoints array
-// Accept ANY integer multiple of the (reduced) slope within graph bounds
-// 1) guard: x must be positive in Quadrant I
-if (point.x <= 0) {
-  console.log('❌ Invalid: x <= 0 in Quadrant I');
-  return;
-}
 
-// 2) reduce the clicked point as a fraction y/x
-const clicked = reduceFraction(point.y, point.x);
+// Handle step 4: Click on graph
+const handlePointClick = (point) => {
+  console.log('📍 handlePointClick called with:', point);
+  console.log('📍 Current problem.k:', problem.k);
+  console.log('📍 Perfect points available:', problem.perfectPoints);
 
-// 3) reduce the problem’s k (handles non-reduced entries like 10/8 → 5/4)
-const kReduced = reduceFraction(problem.kNum, problem.kDen);
+  // Quadrant I guard
+  if (point.x <= 0) {
+    console.log('❌ Invalid: x <= 0 in Quadrant I');
+    return;
+  }
 
-// 4) check match
-const matchesSlope = (clicked.num === kReduced.num) && (clicked.den === kReduced.den);
+  // Reduce clicked ratio y/x
+  const clicked = reduceFraction(point.y, point.x);
+  // Reduce problem’s k (kNum/kDen are provided by generator)
+  const kReduced = reduceFraction(problem.kNum, problem.kDen);
 
-// 5) optional bounds check using your axis limits (defensive)
-const withinBounds =
-  Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)
-    ? (point.x >= 0 && point.x <= problem.xMax && point.y >= 0 && point.y <= problem.yMax)
-    : (point.x >= 0 && point.y >= 0);
+  const matchesSlope = (clicked.num === kReduced.num) && (clicked.den === kReduced.den);
 
-// 6) final decision
-const isValid = matchesSlope && withinBounds;
+  // Bounds: prefer generator limits, else just require nonnegative
+  const withinBounds =
+    Number.isFinite(problem?.xMax) && Number.isFinite(problem?.yMax)
+      ? (point.x >= 0 && point.x <= problem.xMax && point.y >= 0 && point.y <= problem.yMax)
+      : (point.x >= 0 && point.y >= 0);
 
-console.log('📍 Validation (fractional):', {
-  clickedPoint: point,
-  clickedReduced: clicked,
-  kReduced,
-  matchesSlope,
-  withinBounds,
-  isValid
-});
+  const isValid = problem.isProportional && matchesSlope && withinBounds;
+
+  console.log('📍 Validation (fractional):', {
+    clickedPoint: point, clickedReduced: clicked, kReduced, matchesSlope, withinBounds, isValid
+  });
+
+  if (!isValid) {
+    console.log('❌ Not a valid perfect point, ignoring');
+    return;
+  }
+
+  // ✅ Valid: lock the point and move to Step 5
+  setSelectedPoint({ x: point.x, y: point.y });
+  setSelectedCoordinates({ x: point.x, y: point.y });
+  setCurrentStep(5);
+};
+
 
   
   // Handle step 5: Select coordinates
@@ -1071,4 +1074,4 @@ console.log('📍 Validation (fractional):', {
     </>
   );
 }
-}
+
