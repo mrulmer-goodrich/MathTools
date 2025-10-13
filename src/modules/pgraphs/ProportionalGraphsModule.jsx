@@ -262,8 +262,7 @@ const handleClick = (e) => {
   const canvas = canvasRef.current;
   const rect = canvas.getBoundingClientRect();
 
-  // Map browser click → canvas pixel coordinates
-  // (This works whether or not DPR scaling is used for the backing store.)
+  // Map browser click → canvas pixel coordinates (works with or without DPR scaling)
   const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
   const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
@@ -283,6 +282,7 @@ const handleClick = (e) => {
       const smallest = [...ppts].sort((a, b) => Math.max(a.x, a.y) - Math.max(b.x, b.y))[0];
       const minXNeeded = (smallest?.x ?? 1) + 1;
       const minYNeeded = (smallest?.y ?? 1) + 1;
+      // niceCeil: same helper used in draw
       maxX = niceCeil(Math.max(10, minXNeeded), 5);
       maxY = niceCeil(Math.max(10, minYNeeded), 5);
     } else {
@@ -291,22 +291,23 @@ const handleClick = (e) => {
     }
   }
 
-  // Canvas px → graph units (Quadrant I)
+  // Plotting rectangle
   const left = padding;
   const top = padding;
   const right = padding + graphWidth;
   const bottom = padding + graphHeight;
 
-  // If the click is outside the plotting rectangle, ignore it
+  // Ignore clicks outside the plotting area
   if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) {
     console.log('❌ Click outside plotting area');
     return;
   }
 
+  // Canvas px → graph units (Quadrant I)
   const graphX = (canvasX - left) / graphWidth * maxX;
   const graphY = (bottom - canvasY) / graphHeight * maxY;
 
-  // Standardize to SNAPPED integers (your requested naming)
+  // Snap to nearest integer lattice intersection (replace roundedX/Y with snappedX/Y)
   const snappedX = Math.round(graphX);
   const snappedY = Math.round(graphY);
 
@@ -331,9 +332,10 @@ const handleClick = (e) => {
     setTimeout(() => setClickedPoint(null), 500);
     onPointClick({ x: snappedX, y: snappedY });
   } else {
-    console.log('❌ Click outside graph bounds (after snap)');
+    console.log('❌ Click outside graph bounds (after snap) or not proportional mode');
   }
 };
+
 
   
   return (
