@@ -686,9 +686,8 @@ export function genPTable(difficulty = "easy") {
 }
 
 
-
-// generator.js — v3.0 (plain JS, no JSX)
-// GUARANTEED grid-aligned perfect points for visual clarity
+// generator.js — v4.0 (plain JS, no JSX)
+// GUARANTEED grid-aligned perfect points with SQUARE viewing windows for clear visual slopes
 // Drop-in: exports genPGraph(difficulty) with 35% non-proportional.
 
 export function genPGraph(difficulty = 'easy') {
@@ -736,49 +735,50 @@ export function genPGraph(difficulty = 'easy') {
     };
   }
 
-  // --- Proportional (65%) — GRID-ALIGNED ratios ---
-  // Each entry guarantees that perfect points fall EXACTLY on grid intersections
-  // xMax and yMax are chosen so grid lines align with perfect points
+  // --- Proportional (65%) — SQUARE viewing windows with clear visual slopes ---
+  // Strategy: Create a roughly square graph where axes have similar ranges
+  // This ensures slopes are visually accurate and not distorted
   
   const BANK = [
-    // k < 1 (fractions) - Grid steps divide evenly into denominators
-    { num: 1, den: 2, xStep: 2, yStep: 1 },   // y = (1/2)x → points like (2,1), (4,2), (6,3)
-    { num: 1, den: 4, xStep: 4, yStep: 1 },   // y = (1/4)x → points like (4,1), (8,2), (12,3)
-    { num: 1, den: 5, xStep: 5, yStep: 1 },   // y = (1/5)x → points like (5,1), (10,2), (15,3)
-    { num: 2, den: 5, xStep: 5, yStep: 2 },   // y = (2/5)x → points like (5,2), (10,4), (15,6)
-    { num: 3, den: 5, xStep: 5, yStep: 3 },   // y = (3/5)x → points like (5,3), (10,6), (15,9)
-    { num: 3, den: 4, xStep: 4, yStep: 3 },   // y = (3/4)x → points like (4,3), (8,6), (12,9)
-    { num: 1, den: 3, xStep: 3, yStep: 1 },   // y = (1/3)x → points like (3,1), (6,2), (9,3)
-    { num: 2, den: 3, xStep: 3, yStep: 2 },   // y = (2/3)x → points like (3,2), (6,4), (9,6)
-    { num: 3, den: 8, xStep: 8, yStep: 3 },   // y = (3/8)x → points like (8,3), (16,6)
-    { num: 5, den: 8, xStep: 8, yStep: 5 },   // y = (5/8)x → points like (8,5), (16,10)
+    // k < 1 (fractions) - Balanced viewing windows
+    { num: 1, den: 2, gridSize: 12 },   // y = (1/2)x → 12x12 grid, points like (2,1), (4,2), (6,3)
+    { num: 1, den: 4, gridSize: 16 },   // y = (1/4)x → 16x16 grid, points like (4,1), (8,2), (12,3)
+    { num: 1, den: 5, gridSize: 15 },   // y = (1/5)x → 15x15 grid, points like (5,1), (10,2)
+    { num: 2, den: 5, gridSize: 15 },   // y = (2/5)x → 15x15 grid, points like (5,2), (10,4)
+    { num: 3, den: 5, gridSize: 15 },   // y = (3/5)x → 15x15 grid, points like (5,3), (10,6)
+    { num: 3, den: 4, gridSize: 12 },   // y = (3/4)x → 12x12 grid, points like (4,3), (8,6)
+    { num: 1, den: 3, gridSize: 12 },   // y = (1/3)x → 12x12 grid, points like (3,1), (6,2), (9,3)
+    { num: 2, den: 3, gridSize: 12 },   // y = (2/3)x → 12x12 grid, points like (3,2), (6,4), (9,6)
+    { num: 3, den: 8, gridSize: 16 },   // y = (3/8)x → 16x16 grid, points like (8,3)
+    { num: 5, den: 8, gridSize: 16 },   // y = (5/8)x → 16x16 grid, points like (8,5)
+    { num: 1, den: 6, gridSize: 18 },   // y = (1/6)x → 18x18 grid, points like (6,1), (12,2)
+    { num: 5, den: 6, gridSize: 18 },   // y = (5/6)x → 18x18 grid, points like (6,5), (12,10)
     
-    // k = 1 - Diagonal, every integer point works
-    { num: 1, den: 1, xStep: 2, yStep: 2 },   // y = x → points like (2,2), (4,4), (6,6)
+    // k = 1 - Diagonal at 45 degrees
+    { num: 1, den: 1, gridSize: 12 },   // y = x → 12x12 grid, points like (2,2), (4,4), (6,6)
     
-    // k between 1 and 2
-    { num: 3, den: 2, xStep: 2, yStep: 3 },   // y = (3/2)x → points like (2,3), (4,6), (6,9)
-    { num: 4, den: 3, xStep: 3, yStep: 4 },   // y = (4/3)x → points like (3,4), (6,8), (9,12)
-    { num: 5, den: 4, xStep: 4, yStep: 5 },   // y = (5/4)x → points like (4,5), (8,10), (12,15)
-    { num: 5, den: 3, xStep: 3, yStep: 5 },   // y = (5/3)x → points like (3,5), (6,10), (9,15)
-    { num: 7, den: 4, xStep: 4, yStep: 7 },   // y = (7/4)x → points like (4,7), (8,14)
+    // k between 1 and 2 - Steeper slopes
+    { num: 3, den: 2, gridSize: 12 },   // y = (3/2)x → 12x12 grid, points like (2,3), (4,6), (6,9)
+    { num: 4, den: 3, gridSize: 12 },   // y = (4/3)x → 12x12 grid, points like (3,4), (6,8), (9,12)
+    { num: 5, den: 4, gridSize: 16 },   // y = (5/4)x → 16x16 grid, points like (4,5), (8,10), (12,15)
+    { num: 5, den: 3, gridSize: 15 },   // y = (5/3)x → 15x15 grid, points like (3,5), (6,10)
+    { num: 7, den: 4, gridSize: 16 },   // y = (7/4)x → 16x16 grid, points like (4,7), (8,14)
+    { num: 7, den: 5, gridSize: 15 },   // y = (7/5)x → 15x15 grid, points like (5,7), (10,14)
     
-    // k >= 2 (integers and larger fractions)
-    { num: 2, den: 1, xStep: 2, yStep: 4 },   // y = 2x → points like (2,4), (4,8), (6,12)
-    { num: 3, den: 1, xStep: 2, yStep: 6 },   // y = 3x → points like (2,6), (4,12), (6,18)
-    { num: 4, den: 1, xStep: 2, yStep: 8 },   // y = 4x → points like (2,8), (4,16), (6,24)
-    { num: 5, den: 1, xStep: 2, yStep: 10 },  // y = 5x → points like (2,10), (4,20), (6,30)
-    { num: 5, den: 2, xStep: 2, yStep: 5 },   // y = (5/2)x → points like (2,5), (4,10), (6,15)
-    { num: 7, den: 2, xStep: 2, yStep: 7 },   // y = (7/2)x → points like (2,7), (4,14), (6,21)
-    { num: 9, den: 4, xStep: 4, yStep: 9 },   // y = (9/4)x → points like (4,9), (8,18)
+    // k = 2 and above - Steep slopes (use smaller grids to keep visible)
+    { num: 2, den: 1, gridSize: 10 },   // y = 2x → 10x10 grid, points like (2,4), (4,8)
+    { num: 3, den: 1, gridSize: 9 },    // y = 3x → 9x9 grid, points like (2,6), (3,9)
+    { num: 4, den: 1, gridSize: 8 },    // y = 4x → 8x8 grid, points like (2,8)
+    { num: 5, den: 2, gridSize: 10 },   // y = (5/2)x → 10x10 grid, points like (2,5), (4,10)
+    { num: 7, den: 2, gridSize: 10 },   // y = (7/2)x → 10x10 grid, points like (2,7)
+    { num: 9, den: 4, gridSize: 12 },   // y = (9/4)x → 12x12 grid, points like (4,9), (8,18)
   ];
 
   const pick = BANK[Math.floor(Math.random() * BANK.length)];
   const num = pick.num;
   const den = pick.den;
   const k = num / den;
-  const xStep = pick.xStep;
-  const yStep = pick.yStep;
+  const gridSize = pick.gridSize;
 
   // GCD function
   function gcd(a, b) { 
@@ -797,23 +797,43 @@ export function genPGraph(difficulty = 'easy') {
   // Generate perfect points - all GUARANTEED to be on grid intersections
   // Points are multiples of (baseDen, baseNum)
   const perfectPoints = [];
-  const numPoints = 4 + Math.floor(Math.random() * 3); // 4-6 points
+  
+  // Calculate how many points fit in our grid
+  // We want the furthest point to be around 70-80% of grid size
+  const maxMultiplier = Math.floor((gridSize * 0.75) / Math.max(baseDen, baseNum));
+  const numPoints = Math.min(maxMultiplier, 4 + Math.floor(Math.random() * 3)); // 4-6 points, but not beyond grid
   
   for (let m = 1; m <= numPoints; m++) {
-    perfectPoints.push({ 
-      x: m * baseDen, 
-      y: m * baseNum 
-    });
+    const x = m * baseDen;
+    const y = m * baseNum;
+    // Only add if within grid bounds
+    if (x <= gridSize && y <= gridSize) {
+      perfectPoints.push({ x, y });
+    }
   }
 
-  // Calculate axis ranges to show all perfect points with some headroom
-  // Make sure ranges are multiples of step sizes for clean grids
-  const maxPointX = Math.max(...perfectPoints.map(p => p.x));
-  const maxPointY = Math.max(...perfectPoints.map(p => p.y));
-  
-  // Add 20-30% headroom and round up to next step multiple
-  const xMax = Math.ceil((maxPointX * 1.25) / xStep) * xStep;
-  const yMax = Math.ceil((maxPointY * 1.25) / yStep) * yStep;
+  // Determine grid steps based on the fraction's denominator and numerator
+  // Choose steps that divide evenly into both baseDen and baseNum for perfect alignment
+  function findBestStep(base, maxGrid) {
+    // Prefer steps that are factors of base for perfect alignment
+    const preferredSteps = [1, 2, 3, 4, 5];
+    for (let step of preferredSteps) {
+      if (base % step === 0 && maxGrid / step >= 8 && maxGrid / step <= 15) {
+        return step;
+      }
+    }
+    // Fallback: choose based on grid size
+    if (maxGrid <= 10) return 1;
+    if (maxGrid <= 16) return 2;
+    return 3;
+  }
+
+  const xStep = findBestStep(baseDen, gridSize);
+  const yStep = findBestStep(baseNum, gridSize);
+
+  // For SQUARE viewing window: use same gridSize for both axes
+  const xMax = gridSize;
+  const yMax = gridSize;
 
   const kRounded = Number(k.toFixed(2));
   const kRoundedText = k.toFixed(2);
