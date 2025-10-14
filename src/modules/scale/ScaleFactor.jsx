@@ -589,9 +589,6 @@ export default function ScaleFactorModule({ onProblemComplete, registerReset }) 
           </div>
         </div>
       </div>
-
-      <button className="button primary floating-summary" onClick={()=>setOpenSum(true)}>Summary</button>
-      <SummaryOverlay open={openSum} onClose={()=>setOpenSum(false)} attempts={session.attempts} stepHeads={STEP_HEADS} />
     </div>
   )
 }
