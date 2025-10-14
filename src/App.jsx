@@ -42,8 +42,15 @@ export default function App() {
 
   // Handle New Problem button click
   const handleNewProblem = () => {
-    setShowConfirmNew(true)
+    if (isProblemComplete) {
+      // If the problem is finished, just start a new one with no warning
+      resetCurrentModule();
+    } else {
+      // If not finished, show the warning modal
+      setShowConfirmNew(true);
+    }
   }
+
 
   // Reset the current module
   const resetCurrentModule = () => {
