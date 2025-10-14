@@ -180,7 +180,13 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
     }
   })},[fractions]);
 
-
+  useEffect(()=>{ [0,1,2].forEach(i=>{
+    const f = fractions[i];
+    if (f?.num!=null && f?.den!=null && Number.isFinite(kValues[i]) && !reveal[i]) {
+      if (revealTimers.current[i]) clearTimeout(revealTimers.current[i]);
+      revealTimers.current[i]=setTimeout(()=>{ setReveal(prev=>({...prev,[i]:true})); try { ugConfetti.burst(); } catch {} },2000);
+    }
+  })},[fractions,kValues,reveal]);
 
   const onRowDrop = (i, part, d) => {
     if (!d || !ACCEPT_VALUE.includes(d.type)) return;
