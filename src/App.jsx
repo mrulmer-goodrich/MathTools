@@ -1,7 +1,7 @@
 // src/App.jsx – v9.0.0 (Unified Header with New Problem)
 import React, { useState, useRef } from 'react'
 import BigButton from './components/BigButton.jsx'
-import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
+//import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
@@ -12,7 +12,7 @@ export default function App() {
   const [isProblemComplete, setIsProblemComplete] = useState(false)
   
   // Refs to hold each module's reset function
-  const scaleResetRef = useRef(null)
+ // const scaleResetRef = useRef(null)
   const htableResetRef = useRef(null)
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
@@ -90,9 +90,9 @@ export default function App() {
           </div>
 
           <div className="row home-buttons">
-//<BigButton className="tile-btn" onClick={() => setRoute('scale')}>
-//  Scale Factor
-            </BigButton>
+           // <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
+           //  Scale Factor
+           // </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
               H-Table
             </BigButton>
