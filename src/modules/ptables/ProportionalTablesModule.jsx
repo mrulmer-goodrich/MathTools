@@ -96,7 +96,7 @@ const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
 const ACCEPT_VALUE  = ["value", "number"];
 
 // ANCHOR: Component start
-export default function ProportionalTablesModule() {
+export default function ProportionalTablesModule({ onProblemComplete, registerReset }) {
   // ANCHOR: State declarations
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => genPTable(difficulty));
@@ -167,7 +167,13 @@ export default function ProportionalTablesModule() {
     Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current = {};
   };
 
-  useEffect(()=>{ [0,1,2].forEach(i=>{
+  
+
+  // Register reset with parent (placed after resetAll to avoid TDZ)
+  useEffect(() => {
+    registerReset?.(resetAll)
+  }, [])
+useEffect(()=>{ [0,1,2].forEach(i=>{
     const f = fractions[i];
     if (f?.num!=null && f?.den!=null && f.den!==0) {
       const kv=f.num/f.den; setKValues(prev => (prev[i]===kv?prev:{...prev,[i]:kv}));
@@ -363,11 +369,13 @@ export default function ProportionalTablesModule() {
             </tbody>
           </table>
         </div>
+  <div className="hidden">
 
         <div className="center" style={{ marginTop: 18 }}>
           <BigButton onClick={() => resetAll()}>New Problem</BigButton>
         </div>
-      </div>
+        </div>
+</div>
     );
   }, [problem,xPlaced,yPlaced,kPlaced,headerEqCorrect,fractions,kValues,revealFourthRow,row4Answer,reveal,labelStepTarget,buildTarget,fillRow,fillPart,dragEnabled,currentStep]);
 
@@ -516,7 +524,9 @@ export default function ProportionalTablesModule() {
                           const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
                           if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
                           multiBurstConfetti();
-                        }, 10);
+                        
+                      onProblemComplete?.();
+}, 10);
                       } else {
                         alert("Not quite — try another.");
                       }
