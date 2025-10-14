@@ -1,4 +1,4 @@
-///This is now controlling authority as v.11.0.1 and additional changes should be made from this baseline//
+///This is now controlling authority as v.11.0.2 and additional changes should be made from this baseline//
 // HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
@@ -764,7 +764,7 @@ function narrativeFor(lang) {
       <style>{`
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
-        .problem-body { font-size: 20px; color: inherit; }
+        .problem-body { font-size:  22px; color: inherit; }
 
         /* Keyframes are provided globally by the app shell. Do not declare inline here. */
 
@@ -792,6 +792,7 @@ function narrativeFor(lang) {
         .button.secondary { background: #e2e8f0; color: #0f172a; }
         /* === v9.7.2 panel swap (module-local, no global changes) === */
         .panes { display: flex; gap: 12px; align-items: flex-start; }
+        .left-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
         .card { flex: 1 1 0; min-width: 0; }
         .card.right-steps { order: 1; } /* prompts appear visually on the LEFT */
         .card.hgrid-card  { order: 2; } /* H-table appears visually on the RIGHT */
@@ -877,37 +878,149 @@ function narrativeFor(lang) {
 `}
 </style>
 
+      
       <div className="panes">
-        {/* H-GRID RENDER */}
-{/* LEFT CARD: Problem + H-table */}
-        <div className="card hgrid-card">
-          <div className="section">
+        {/* LEFT COLUMN: Steps + Problem */}
+        <div className="left-col">
+          {/* Prompts (questions) on top */}
+          <div className="card right-steps">
+            <div className="section">
+              <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
+              {/* RIGHT-PANEL: STEP 0 — START */}
+              {step===0 && (
+                <div className="chips with-borders center">
+                 {seededShuffle(STEP1_CHOICES).map(c => (
+                    <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 0 — END */}
+
+              {/* RIGHT-PANEL: STEP 1 — START */}
+              {step===1 && (
+                <div className="chips with-borders center" style={{marginTop:8}}>
+                  {seededShuffle([
+                    { id:'col_units', label:'Units', kind:'col', v:'Units' },
+                    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
+                    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
+                    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
+                  ]).map((h, idx) => (
+                    <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 1 — END */}
+
+              {/* RIGHT-PANEL: STEP 2 — START */}
+              {step===2 && (
+                <div className="chips with-borders center" style={{marginTop:8}}>
+                  {seededShuffle([
+                    { id:'col_units', label:'Units', kind:'col', v:'Units' },
+                    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
+                    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
+                    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
+                  ]).map((h, idx) => (
+                    <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 2 — END */}
+
+              {/* RIGHT-PANEL: STEP 3 — START */}
+              {step===3 && (
+                <div className="chips center mt-8">
+                  {unitChoices.map(c => (
+                    <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 3 — END */}
+
+              {/* RIGHT-PANEL: STEP 4 — START */}
+              {step===4 && (
+                <div className="chips center mt-8">
+                  {seededShuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 4 — END */}
+
+              {/* RIGHT-PANEL: STEP 5 — START */}
+              {step===5 && (
+                <div className="chips center mt-8">
+                  {seededShuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 5 — END */}
+
+              {/* RIGHT-PANEL: STEP 6 — START */}
+              {step===6 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(otherValueChoices).map(c => (
+                    <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 6 — END */}
+
+              {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
+              {step===7 && (<div className="problem-body"> </div>)} 
+              {/* RIGHT-PANEL: STEP 7 — END */}
+
+              {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
+              {step===8 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
+                    <button key={opt.id || idx} className="chip chip-tiny" onClick={()=>chooseNext8(opt)}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 8 — END */}
+
+              {/* RIGHT-PANEL: STEP 9 — START */}
+              {step===9 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
+                    <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 9 — END */}
+
+              {/* RIGHT-PANEL: STEP 10 — START */}
+              {step===10 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(divideChoices).map((c,idx)=>(
+                    <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+              {/* RIGHT-PANEL: STEP 10 — END */}
+
+              {/* RIGHT-PANEL: STEP 11 — START */}
+              {step>=11 && (
+                <div className="problem-body"> </div>
+              )}
+              {/* RIGHT-PANEL: STEP 11 — END */}
+            </div>
+          </div>
+
+          {/* Problem card placed BELOW the question card */}
+          <div className="card problem-card">
+            <div className="section">
             {/* Problem (natural text only) */}
             <div className="problem-banner">
               <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {displayText}
-              </div>
-    <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
-      <button
-        type="button"
-        className="button button-contrast"
-        onMouseDown={holdEnglishDown}
-        onMouseUp={holdEnglishUp}
-        
-        onTouchStart={holdEnglishDown}
-        onTouchEnd={holdEnglishUp}
-        onPointerDown={holdEnglishDown}
-        onPointerUp={holdEnglishUp}
-        onPointerCancel={holdEnglishUp}
-      onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={()=>setIsOverEnglish(false)}>
-        Press for English
-      </button>
-    </div>
 
             </div>
+          </div>
+        </div>
 
+        {/* RIGHT COLUMN: H-grid only */}
+        <div className="card hgrid-card">
+          <div className="section">
             {/* H-table visible AFTER step 0 */}
             {step>=1 && (
               <div className="hwrap" style={{position:'relative', marginTop:12}}>
@@ -1017,137 +1130,14 @@ function narrativeFor(lang) {
                 </div>
               </div>
             )}
-
-          </div>
-        </div>
-
-        {/* RIGHT SIDE – prompts only */}
-        <div className="card right-steps">
-          <div className="section">
-            <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
-
-            {/* RIGHT-PANEL: STEP 0 — START */}
-            {step===0 && (
-              <div className="chips with-borders center">
-               {seededShuffle(STEP1_CHOICES).map(c => (
-                  <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 0 — END */}
-
-            {/* RIGHT-PANEL: STEP 1 — START */}
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {seededShuffle([
-                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ]).map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 1 — END */}
-
-            {/* RIGHT-PANEL: STEP 2 — START */}
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {seededShuffle([
-                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ]).map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 2 — END */}
-
-            {/* RIGHT-PANEL: STEP 3 — START */}
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 3 — END */}
-
-            {/* RIGHT-PANEL: STEP 4 — START */}
-            {step===4 && (
-              <div className="chips center mt-8">
-                {seededShuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 4 — END */}
-
-            {/* RIGHT-PANEL: STEP 5 — START */}
-            {step===5 && (
-              <div className="chips center mt-8">
-                {seededShuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 5 — END */}
-
-            {/* RIGHT-PANEL: STEP 6 — START */}
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(otherValueChoices).map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 6 — END */}
-
-            {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
-            {step===7 && (<div className="problem-body"> </div>)} 
-            {/* RIGHT-PANEL: STEP 7 — END */}
-
-            {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
-                  <button key={opt.id || idx} className="chip chip-tiny" onClick={()=>chooseNext8(opt)}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 8 — END */}
-
-            {/* RIGHT-PANEL: STEP 9 — START */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
-                  <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 9 — END */}
-
-            {/* RIGHT-PANEL: STEP 10 — START */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(divideChoices).map((c,idx)=>(
-                  <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 10 — END */}
-
-            {/* RIGHT-PANEL: STEP 11 — START */}
-            {step>=11 && (
-              <div className="problem-body"> </div>
-            )}
-            {/* RIGHT-PANEL: STEP 11 — END */}
-
-
           </div>
         </div>
       </div>
+
 </div>
-  );
+</div>
+</div>
+)
+  ;
 }
+
