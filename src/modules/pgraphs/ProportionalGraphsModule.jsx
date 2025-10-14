@@ -1,5 +1,5 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.0
-// Proportional Graphs learning tool - FIXED grid alignment
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.1
+
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
@@ -337,11 +337,8 @@ function Fraction({ numerator, denominator, showEquals = false, whiteBar = false
   );
 }
 
-export default function ProportionalGraphsModule() {
-  const [problem, setProblem] = useState(() => genPGraph());
-  const [showConfirmNew, setShowConfirmNew] = useState(false);
-  
-  // Add pulse animation style
+export default function ProportionalGraphsModule({ onProblemComplete, registerReset }) {
+  const [problem, setProblem] = useState(() => genPGraph());  // Add pulse animation style
   useEffect(() => {
     const styleId = 'pgraph-pulse-style';
     if (!document.getElementById(styleId)) {
@@ -415,16 +412,12 @@ export default function ProportionalGraphsModule() {
     setReducedFraction(null);
     setSelectedEquation(null);
     setShowFinalConfetti(false);
-    setShowConfirmNew(false);
   };
-  
-  const handleNewProblem = () => {
-    if (currentStep === 1 || whyNotProportional || selectedEquation) {
-      resetAll();
-    } else {
-      setShowConfirmNew(true);
-    }
-  };
+
+  useEffect(() => {
+  registerReset?.(resetAll)
+}, [])
+
   
   // Generate coordinate choices (randomized)
   const coordinateChoices = useMemo(() => {
@@ -672,7 +665,9 @@ export default function ProportionalGraphsModule() {
     setSelectedEquation(equation.displayText);
     if (equation.isCorrect) {
       setShowFinalConfetti(true);
-    } else {
+    
+      onProblemComplete?.();
+} else {
       setTimeout(() => setSelectedEquation(null), 1000);
     }
   };
@@ -996,43 +991,7 @@ export default function ProportionalGraphsModule() {
       </div>
       
       {/* Confirmation Modal */}
-      {showConfirmNew && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="card" style={{ maxWidth: '400px', padding: '24px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: 16 }}>
-              Start a new problem?
-            </div>
-            <div className="muted" style={{ marginBottom: 20 }}>
-              You'll lose your progress on the current problem.
-            </div>
-            <div className="row" style={{ gap: 12, justifyContent: 'center' }}>
-              <button 
-                className="button primary"
-                onClick={resetAll}
-              >
-                Yes, New Problem
-              </button>
-              <button 
-                className="button"
-                onClick={() => setShowConfirmNew(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </>
   );
 }
