@@ -55,7 +55,7 @@ function Confetti({show}){
   return <div className="sf-confetti">{pieces}</div>
 }
 
-export default function ScaleFactorModule() {
+export default function ScaleFactorModule({ onProblemComplete, registerReset }) {
   const [session, setSession] = useState(loadSession())
 
   const freshSnap = {
@@ -254,7 +254,13 @@ export default function ScaleFactorModule() {
     setMissingResult(null); setShowConfetti(false)
   }
 
-  /* ---------- Step 5 helpers ---------- */
+  
+
+  // Register reset with parent (placed after newProblem to avoid TDZ)
+  useEffect(() => {
+    registerReset?.(newProblem)
+  }, [])
+/* ---------- Step 5 helpers ---------- */
   const onDropS5Word = (slotKey, want) => (d) => {
     if (!testWord(want)(d)) { again(5); return }
     setS5(prev => ({ ...prev, [slotKey]: d }))
@@ -281,6 +287,8 @@ export default function ScaleFactorModule() {
     setS5(prev => ({ ...prev, computed:true }))
     setShowConfetti(true)
     done(5)
+
+    onProblemComplete?.();
   }
 
   /* ---------- Pill / Tag ---------- */
