@@ -12,7 +12,7 @@ export default function App() {
   const [isProblemComplete, setIsProblemComplete] = useState(false)
   
   // Refs to hold each module's reset function
- // const scaleResetRef = useRef(null)
+  const scaleResetRef = useRef(null)
   const htableResetRef = useRef(null)
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
@@ -90,8 +90,8 @@ export default function App() {
           </div>
 
           <div className="row home-buttons">
-            <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
-             Scale Factor
+//<BigButton className="tile-btn" onClick={() => setRoute('scale')}>
+//  Scale Factor
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
               H-Table
