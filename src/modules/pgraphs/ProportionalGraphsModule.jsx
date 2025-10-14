@@ -975,22 +975,11 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
             </div>
           )}
           
-          {/* New Problem button - always visible at bottom of right panel */}
-          <div className="section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px solid #e2e8f0' }}>
-            <div className="center">
-              <BigButton 
-                onClick={handleNewProblem}
-                className={showFinalConfetti ? 'flash' : ''}
-                style={showFinalConfetti ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}}
-              >
-                New Problem
-              </BigButton>
-            </div>
-          </div>
+
         </div>
       </div>
       
-      {/* Confirmation Modal */}
+     
       
     </>
   );
