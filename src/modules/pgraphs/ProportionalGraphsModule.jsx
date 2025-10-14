@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.1
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.1.1
 
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -448,7 +448,7 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
       { value: correct, label: correct.toString(), isCorrect: true },
       { value: xValue, label: xValue.toString(), isCorrect: false },
       { value: correct + 1, label: (correct + 1).toString(), isCorrect: false },
-      { value: otherPoint.y || correct - 1, label: (otherPoint.y || correct - 1).toString(), isCorrect: false },
+      { value: ((otherPoint.y) ?? (correct - 1)), label: (((otherPoint.y) ?? (correct - 1))).toString(), isCorrect: false },
     ]);
   }, [selectedCoordinates, problem]);
   
@@ -464,7 +464,7 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
       { value: correct, label: correct.toString(), isCorrect: true },
       { value: yValue, label: yValue.toString(), isCorrect: false },
       { value: correct + 1, label: (correct + 1).toString(), isCorrect: false },
-      { value: otherPoint.x || correct - 1, label: (otherPoint.x || correct - 1).toString(), isCorrect: false },
+      { value: ((otherPoint.x) ?? (correct - 1)), label: (((otherPoint.x) ?? (correct - 1))).toString(), isCorrect: false },
     ]);
   }, [selectedCoordinates, problem]);
   
@@ -650,14 +650,19 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
   
   // Handle step 9: Compute k
   const handleCompute = () => {
-    const k = selectedY / selectedX;
-    setCalculatedK(k);
     
-    // Reduce the fraction
-    const reduced = reduceFraction(selectedY, selectedX);
-    setReducedFraction(reduced);
-    
-    setCurrentStep(10);
+// Fall back to the locked point’s coordinates if step states are null
+const yVal = (selectedY ?? selectedCoordinates?.y);
+const xVal = (selectedX ?? selectedCoordinates?.x);
+if (yVal == null || xVal == null || xVal === 0) {
+  console.warn('⚠️ Compute guard: missing or invalid values', { yVal, xVal });
+  return;
+}
+const k = yVal / xVal;
+setCalculatedK(k);
+setReducedFraction(reduceFraction(yVal, xVal));
+setCurrentStep(10);
+
   };
   
   // Handle step 10: Select equation
