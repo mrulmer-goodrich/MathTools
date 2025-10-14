@@ -1144,16 +1144,7 @@ function narrativeFor(lang) {
             )}
             {/* RIGHT-PANEL: STEP 11 — END */}
 
-            {/* Sticky footer controls */}
-            <div className="right-footer">
-              <button
-                type="button"
-                className={`button secondary ${npBlink ? 'action-blink-strong' : ''}`}
-                onClick={resetProblem}
-              >
-                New Problem
-              </button>
-            </div>
+
           </div>
         </div>
       </div>
