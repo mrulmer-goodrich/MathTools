@@ -172,7 +172,7 @@ const _assertFour = (arr, tag) => {
 // Component
 // ────────────────────────────────────────────────────────────────────────────────
 // STEP LOGIC (0–11)
-export default function HTableModule(){
+export default function HTableModule({ onProblemComplete, registerReset }){
   const H_SNAP_VERSION = 22;
 
   const persisted = loadSession() || {};
@@ -661,6 +661,9 @@ function applyPostCalculateEffects() {
 
   // Mark done & schedule New Problem blinking
   setDone(11);
+
+  onProblemComplete?.();
+
   if (npBlinkRef.current) clearTimeout(npBlinkRef.current);
   setNpBlink(false);
   npBlinkRef.current = setTimeout(() => setNpBlink(true), 3000);
@@ -689,7 +692,13 @@ setBlinkKey(null); setBlinkUnits(false);
     setPickedUnits([]);
   };
 
-  const ROW_H = 88;
+  
+
+  // Register reset with parent (placed after resetProblem to avoid TDZ)
+  useEffect(() => {
+    registerReset?.(resetProblem)
+  }, [])
+const ROW_H = 88;
   const lineColor = '#0f172a';
   const isBlink = (k)=> blinkKey === k;
 
