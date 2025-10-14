@@ -400,8 +400,8 @@ export default function ScaleFactorModule({ onProblemComplete, registerReset }) 
             <RectWithLabel which="orig" />
             <RectWithLabel which="copy" />
           </div>
-          <button className={newBtnClass} onClick={newProblem}>New Problem</button>
-        </div>
+            {/* New Problem button removed per Implementation Guide */}
+</div>
 
         {/* RIGHT: steps */}
         <div className="card right-steps">
