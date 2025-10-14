@@ -90,8 +90,8 @@ export default function App() {
           </div>
 
           <div className="row home-buttons">
-//<BigButton className="tile-btn" onClick={() => setRoute('scale')}>
-//  Scale Factor
+            <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
+            Scale Factor
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
               H-Table
