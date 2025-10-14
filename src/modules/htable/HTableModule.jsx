@@ -764,7 +764,7 @@ function narrativeFor(lang) {
       <style>{`
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
-        .problem-body { font-size: inherit; color: inherit; }
+        .problem-body { font-size: 20px; color: inherit; }
 
         /* Keyframes are provided globally by the app shell. Do not declare inline here. */
 
