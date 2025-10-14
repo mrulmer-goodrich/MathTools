@@ -1,5 +1,5 @@
 // src/App.jsx – v9.0.0 (Unified Header with New Problem)
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
