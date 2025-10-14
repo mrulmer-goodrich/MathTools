@@ -764,7 +764,7 @@ function narrativeFor(lang) {
       <style>{`
         .problem-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; }
         .problem-title { font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
-        .problem-body { font-size: 22px; color: inherit; }
+        .problem-body { font-size: 20px; color: inherit; }
 
         /* Keyframes are provided globally by the app shell. Do not declare inline here. */
 
@@ -792,6 +792,7 @@ function narrativeFor(lang) {
         .button.secondary { background: #e2e8f0; color: #0f172a; }
         /* === v9.7.2 panel swap (module-local, no global changes) === */
         .panes { display: flex; gap: 12px; align-items: flex-start; }
+.left-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
         .card { flex: 1 1 0; min-width: 0; }
         .card.right-steps { order: 1; } /* prompts appear visually on the LEFT */
         .card.hgrid-card  { order: 2; } /* H-table appears visually on the RIGHT */
@@ -875,7 +876,6 @@ function narrativeFor(lang) {
 }
 
 `}
-        .left-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
 </style>
 
       <div className="panes">
@@ -884,6 +884,30 @@ function narrativeFor(lang) {
         <div className="card hgrid-card">
           <div className="section">
 
+            {/* Problem (natural text only) */}
+            <div className="problem-banner">
+              <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
+              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
+                {displayText}
+              </div>
+    <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
+      <button
+        type="button"
+        className="button button-contrast"
+        onMouseDown={holdEnglishDown}
+        onMouseUp={holdEnglishUp}
+        
+        onTouchStart={holdEnglishDown}
+        onTouchEnd={holdEnglishUp}
+        onPointerDown={holdEnglishDown}
+        onPointerUp={holdEnglishUp}
+        onPointerCancel={holdEnglishUp}
+      onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={()=>setIsOverEnglish(false)}>
+        Press for English
+      </button>
+    </div>
+
+            </div>
 
             {/* H-table visible AFTER step 0 */}
             {step>=1 && (
@@ -999,7 +1023,6 @@ function narrativeFor(lang) {
         </div>
 
         {/* RIGHT SIDE – prompts only */}
-        <div className="left-col">
         <div className="card right-steps">
           <div className="section">
             <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
@@ -1124,35 +1147,6 @@ function narrativeFor(lang) {
 
 
           </div>
-        </div>
-        <div className="card problem-card">
-          <div className="section">
-            {/* Problem (natural text only) */}
-            <div className="problem-banner">
-              <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {displayText}
-              </div>
-    <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
-      <button
-        type="button"
-        className="button button-contrast"
-        onMouseDown={holdEnglishDown}
-        onMouseUp={holdEnglishUp}
-        
-        onTouchStart={holdEnglishDown}
-        onTouchEnd={holdEnglishUp}
-        onPointerDown={holdEnglishDown}
-        onPointerUp={holdEnglishUp}
-        onPointerCancel={holdEnglishUp}
-      onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={()=>setIsOverEnglish(false)}>
-        Press for English
-      </button>
-    </div>
-
-            </div>
-          </div>
-        </div>
         </div>
       </div>
 </div>
