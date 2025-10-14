@@ -1,6 +1,4 @@
-// src/lib/generator.js (v4.0)
-
-
+// src/lib/generator.js (v4.1 - IMPROVED FOR REAL KIDS)
 
 // Ensures the scale fragment always shows "=" with original unit tokens.
 function scaleWithEquals({ a, b, u1, u2 }) {
@@ -67,422 +65,562 @@ const FIRST = [
   "William","Yesica","Zaid","Zaliah","Zoey"
 ]
 
-/* Scenes -> what unit categories fit + which motivations fit (coherence) */
+/* IMPROVED SCENES -> relatable, funny, Mad Lib-able */
 const SCENES = {
-  hamster_parade_map: {
+  hot_cheetos_inventory: {
+    units: ['length','mass','volume','time'],
+    motivations: ['avoid_running_out','impress_the_manager','beat_the_competition','make_money_moves'],
+    nouns: { length: 'shelf space', mass: 'bag weight', volume: 'display bin', time: 'restock time' }
+  },
+  tiktok_dance_challenge: {
+    units: ['time','length'],
+    motivations: ['go_viral','beat_your_cousin','avoid_embarrassment','prove_them_wrong'],
+    nouns: { time: 'dance routine', length: 'camera distance' }
+  },
+  basketball_court_diagram: {
     units: ['length','time'],
-    motivations: ['time_the_snack_route','beat_the_timer','impress_judges'],
-    nouns: { length: 'parade route', time: 'parade lap time' }
+    motivations: ['win_the_game','prove_them_wrong','impress_that_person','avoid_embarrassment'],
+    nouns: { length: 'three-point line', time: 'possession time' }
   },
-  rubber_duck_regatta: {
-    units: ['length','time','volume'],
-    motivations: ['map_to_real','science_fair_demo','impress_judges'],
-    nouns: { length: 'race course', time: 'warm-up lap', volume: 'splash tank' }
-  },
-  pizza_box_diagram: {
-    units: ['length','time','mass','volume'],
-    motivations: ['fit_on_page','convert_systems','avoid_spilling_juice'],
-    nouns: { length: 'box edge', time: 'oven timer', mass: 'dough ball', volume: 'sauce batch' }
-  },
-  cardboard_rollercoaster: {
-    units: ['length','time'],
-    motivations: ['build_to_match','fit_through_door','beat_the_timer'],
-    nouns: { length: 'ramp', time: 'test run' }
-  },
-  marble_run_manual: {
-    units: ['length','time'],
-    motivations: ['science_fair_demo','beat_the_timer','impress_judges'],
-    nouns: { length: 'track segment', time: 'trial run' }
-  },
-  bake_sale_recipe: {
+  abuela_recipe_conversion: {
     units: ['volume','mass','time'],
-    motivations: ['measure_without_spoons','miniature_for_display','avoid_spilling_juice'],
-    nouns: { volume: 'syrup amount', mass: 'bag of flour', time: 'resting time' }
+    motivations: ['not_mess_it_up','impress_the_family','avoid_getting_roasted','make_it_perfect'],
+    nouns: { volume: 'adobo amount', mass: 'chicken weight', time: 'cooking time' }
   },
-  art_poster_resize: {
-    units: ['length','time'],
-    motivations: ['fit_bulletin','convert_systems','fit_on_page'],
-    nouns: { length: 'poster side', time: 'setup time' }
+  sneaker_trading_scheme: {
+    units: ['length','time','mass'],
+    motivations: ['make_money_moves','beat_the_competition','not_get_finessed','prove_them_wrong'],
+    nouns: { length: 'shoe size', time: 'delivery wait', mass: 'box weight' }
   },
-  library_display_map: {
+  hallway_sprint_strategy: {
     units: ['length','time'],
-    motivations: ['map_to_real','fit_on_page','impress_judges'],
-    nouns: { length: 'hallway distance', time: 'tour schedule' }
+    motivations: ['avoid_being_late','beat_the_bell','avoid_embarrassment','prove_you_fast'],
+    nouns: { length: 'hallway distance', time: 'class change period' }
   },
-  kite_festival_plan: {
-    units: ['length','time'],
-    motivations: ['pace_for_event','beat_the_timer','map_to_real'],
-    nouns: { length: 'string length', time: 'launch window' }
+  bodega_sandwich_formula: {
+    units: ['volume','mass','length','time'],
+    motivations: ['make_it_perfect','not_mess_it_up','impress_the_bodega_guy','avoid_getting_roasted'],
+    nouns: { volume: 'sauce amount', mass: 'bacon weight', length: 'hero size', time: 'grill time' }
   },
-  cat_parkour_course: {
-    units: ['length','time'],
-    motivations: ['build_to_match','science_fair_demo','pace_for_event'],
-    nouns: { length: 'jump distance', time: 'practice session' }
+  group_chat_chaos_analysis: {
+    units: ['time','length'],
+    motivations: ['prove_them_wrong','go_viral','avoid_embarrassment','expose_the_truth'],
+    nouns: { time: 'message rate', length: 'screenshot length' }
   },
-  shoebox_city_plan: {
-    units: ['length','time'],
-    motivations: ['miniature_for_display','fit_on_page','convert_systems'],
-    nouns: { length: 'street segment', time: 'tour loop' }
+  phone_screen_time_investigation: {
+    units: ['time','length'],
+    motivations: ['expose_the_truth','avoid_getting_caught','prove_them_wrong','hide_the_evidence'],
+    nouns: { time: 'TikTok hours', length: 'scroll distance' }
   },
-  cafeteria_seating_chart: {
-    units: ['length','time'],
-    motivations: ['fit_bulletin','beat_the_timer','impress_judges'],
-    nouns: { length: 'table row', time: 'lunch period' }
+  pizza_party_economics: {
+    units: ['length','mass','time','volume'],
+    motivations: ['not_get_finessed','make_money_moves','prove_you_smart','avoid_being_broke'],
+    nouns: { length: 'slice size', mass: 'cheese weight', time: 'delivery time', volume: 'soda amount' }
+  },
+  barbershop_wait_calculation: {
+    units: ['time','length'],
+    motivations: ['avoid_wasting_time','beat_the_system','prove_you_smart','not_miss_the_game'],
+    nouns: { time: 'wait time', length: 'line length' }
+  },
+  subway_sandwich_optimization: {
+    units: ['length','mass','volume','time'],
+    motivations: ['not_get_finessed','make_it_perfect','prove_you_smart','avoid_being_hungry'],
+    nouns: { length: 'sandwich length', mass: 'meat weight', volume: 'veggie amount', time: 'lunch period' }
+  },
+  spotify_playlist_engineering: {
+    units: ['time','length'],
+    motivations: ['make_it_perfect','impress_that_person','go_viral','prove_your_taste'],
+    nouns: { time: 'song duration', length: 'playlist length' }
+  },
+  gaming_tournament_bracket: {
+    units: ['time','length'],
+    motivations: ['win_the_tournament','prove_them_wrong','make_money_moves','avoid_embarrassment'],
+    nouns: { time: 'match duration', length: 'bracket size' }
+  },
+  lunch_money_exchange_rate: {
+    units: ['mass','volume','time'],
+    motivations: ['not_get_finessed','make_money_moves','prove_you_smart','avoid_being_hungry'],
+    nouns: { mass: 'chip bag size', volume: 'juice amount', time: 'lunch period' }
+  },
+  instagram_story_timing: {
+    units: ['time','length'],
+    motivations: ['go_viral','avoid_embarrassment','impress_that_person','prove_your_aesthetic'],
+    nouns: { time: 'story duration', length: 'caption length' }
   }
 }
 
-/* Fragment lexicon: place & why (EN/ES/FR/DE/SW/VI) */
+/* Fragment lexicon: place & why (EN/ES/FR/DE/SW/VI) - IMPROVED TO BE FUNNY & LONG */
 const LEX = {
   English: {
     place: {
-      hamster_parade_map: 'a parade map for the hamster club',
-      rubber_duck_regatta: 'the giant rubber-duck regatta course',
-      pizza_box_diagram: 'a pizza-box engineering diagram',
-      cardboard_rollercoaster: 'a cardboard roller-coaster layout',
-      marble_run_manual: 'a manual for an extreme marble run',
-      bake_sale_recipe: 'a recipe card for a bake sale',
-      art_poster_resize: 'an art poster resize',
-      library_display_map: 'a library display map',
-      kite_festival_plan: 'the kite festival plan',
-      cat_parkour_course: 'a blueprint for a cat parkour course',
-      shoebox_city_plan: 'a tiny city plan for a shoebox',
-      cafeteria_seating_chart: 'the (legendary) cafeteria seating chart'
+      hot_cheetos_inventory: 'a highly scientific inventory spreadsheet for the corner store\'s Hot Cheetos and Takis supply situation',
+      tiktok_dance_challenge: 'an extremely detailed breakdown of that one TikTok dance that everyone\'s doing but nobody can get right',
+      basketball_court_diagram: 'a professional-looking (but drawn in pen) basketball court diagram for the ultimate pickup game',
+      abuela_recipe_conversion: 'their abuela\'s secret recipe that was written on a napkin with measurements like "a little bit" and "enough"',
+      sneaker_trading_scheme: 'a complex business plan for trading sneakers with kids from three different schools to maximize drip',
+      hallway_sprint_strategy: 'a tactical map of the fastest route through the hallways that avoids hall monitors and slow walkers',
+      bodega_sandwich_formula: 'the legendary bacon egg and cheese formula that the bodega guy makes different every single time',
+      group_chat_chaos_analysis: 'a forensic investigation of last night\'s group chat that somehow got to 847 messages while they slept',
+      phone_screen_time_investigation: 'their phone\'s screen time report that they\'re definitely NOT showing their parents under any circumstances',
+      pizza_party_economics: 'an economic analysis of the pizza party where someone suggested splitting the cost "equally" (suspicious)',
+      barbershop_wait_calculation: 'a mathematical model of the barbershop wait time that somehow always takes longer than they said',
+      subway_sandwich_optimization: 'a detailed blueprint for getting the maximum amount of sandwich for their money at Subway',
+      spotify_playlist_engineering: 'a carefully curated Spotify playlist where every song has to flow perfectly or the whole vibe is ruined',
+      gaming_tournament_bracket: 'a tournament bracket for the gaming competition where literally everyone claims they\'re gonna win',
+      lunch_money_exchange_rate: 'the complex exchange rate system for trading lunch money, snacks, and favors in the cafeteria',
+      instagram_story_timing: 'a strategic posting schedule for Instagram stories to maximize views from That One Person'
     },
     why: {
-      time_the_snack_route: 'to time the fastest route to the snack table',
-      beat_the_timer: 'to beat the classroom timer by a mile',
-      impress_judges: 'to impress the judges (and maybe the principal)',
-      map_to_real: 'to compare the printed plan to real distance',
-      science_fair_demo: 'for a wildly dramatic science-fair demo',
-      fit_on_page: 'to check if the plan fits the page',
-      convert_systems: 'to convert between two systems accurately',
-      avoid_spilling_juice: 'to avoid spilling juice on the rubric again',
-      build_to_match: 'to build a model that matches the instructions',
-      fit_through_door: 'to check if the giant prop fits through a door',
-      miniature_for_display: 'to make a miniature display version',
-      pace_for_event: 'to pace themselves for an upcoming event',
-      measure_without_spoons: 'to measure ingredients without the original spoons',
-      fit_bulletin: 'to scale the poster for the bulletin board'
+      avoid_running_out: 'because running out means everyone gets mad and they might have to walk to the OTHER store',
+      impress_the_manager: 'to finally prove to the manager that they know what they\'re doing (even though they definitely don\'t)',
+      beat_the_competition: 'to absolutely destroy the competition and prove once and for all who\'s really better at this',
+      make_money_moves: 'because they\'re trying to make some money moves and not stay broke forever like everyone expects',
+      go_viral: 'because this could be the one that finally goes viral and gets them more followers than their annoying cousin',
+      beat_your_cousin: 'to prove their cousin wrong for once in their life and maybe rub it in a little bit (a lot)',
+      avoid_embarrassment: 'to avoid the absolutely devastating embarrassment of messing this up in front of everybody',
+      prove_them_wrong: 'to prove all the haters and doubters wrong because they said it couldn\'t be done but watch this',
+      win_the_game: 'because winning this game means bragging rights for at least the next month or until someone brings up that time they lost',
+      impress_that_person: 'to lowkey impress that one person without making it obvious that that\'s what they\'re trying to do',
+      not_mess_it_up: 'because if they mess this up everyone will remember it forever and bring it up at every family gathering',
+      impress_the_family: 'to finally get some respect from the family instead of being known as "the one who can\'t cook"',
+      avoid_getting_roasted: 'to avoid getting absolutely roasted in the group chat if this goes wrong',
+      make_it_perfect: 'because it has to be absolutely perfect or there\'s literally no point in even doing it',
+      not_get_finessed: 'to make sure they don\'t get finessed like last time when they paid way too much for way too little',
+      avoid_being_late: 'because being late again means detention and their mom already said she\'s not picking them up this time',
+      beat_the_bell: 'to beat the bell before it rings and they get marked late which their teacher definitely keeps track of',
+      prove_you_fast: 'to prove they\'re actually fast and not just talking big like everyone says they always do',
+      impress_the_bodega_guy: 'to impress the bodega guy who always remembers everyone\'s orders and they want to be a legend too',
+      expose_the_truth: 'to expose the truth about what actually happened because somebody\'s lying and the receipts don\'t lie',
+      avoid_getting_caught: 'to cover their tracks and avoid getting caught because if their parents find out it\'s game over',
+      hide_the_evidence: 'to hide the evidence before someone asks questions they definitely don\'t want to answer',
+      prove_you_smart: 'to prove they\'re actually smart and not just "street smart" like everyone always says',
+      avoid_being_broke: 'because being broke is not the vibe and they need to make this money stretch until Friday',
+      avoid_wasting_time: 'because time is money and they\'re not about to waste three hours sitting around waiting',
+      beat_the_system: 'to beat the system like a genius instead of just accepting how things are supposed to work',
+      not_miss_the_game: 'because if they miss the game their friends will never let them hear the end of it',
+      avoid_being_hungry: 'because being hungry for the rest of the day is absolutely not an option when they got classes',
+      prove_your_taste: 'to prove their music taste is superior and everyone else is just following trends',
+      win_the_tournament: 'to win this tournament and claim the title they\'ve been training for (playing for) weeks',
+      prove_your_aesthetic: 'to prove their aesthetic is on point and not "trying too hard" like some people claim'
     }
   },
   Spanish: {
     place: {
-      hamster_parade_map: 'un mapa del desfile del club de hámsters',
-      rubber_duck_regatta: 'el recorrido de la regata de patos gigantes',
-      pizza_box_diagram: 'un diagrama de ingeniería en una caja de pizza',
-      cardboard_rollercoaster: 'un trazado de montaña rusa de cartón',
-      marble_run_manual: 'un manual para una pista extrema de canicas',
-      bake_sale_recipe: 'una tarjeta de receta para una venta de pasteles',
-      art_poster_resize: 'un cartel de arte para redimensionar',
-      library_display_map: 'un mapa de exposición de la biblioteca',
-      kite_festival_plan: 'el plan del festival de cometas',
-      cat_parkour_course: 'un plano para un circuito de parkour felino',
-      shoebox_city_plan: 'un miniplano de ciudad para una caja de zapatos',
-      cafeteria_seating_chart: 'el mítico plano de mesas de la cafetería'
+      hot_cheetos_inventory: 'un inventario científico del suministro de Hot Cheetos y Takis de la tienda de la esquina',
+      tiktok_dance_challenge: 'un desglose súper detallado de ese baile de TikTok que todos hacen pero nadie puede hacer bien',
+      basketball_court_diagram: 'un diagrama de cancha de baloncesto que se ve profesional (pero dibujado con pluma)',
+      abuela_recipe_conversion: 'la receta secreta de su abuela escrita en una servilleta con medidas como "un poquito" y "suficiente"',
+      sneaker_trading_scheme: 'un plan de negocios complejo para cambiar tenis con chicos de tres escuelas diferentes',
+      hallway_sprint_strategy: 'un mapa táctico de la ruta más rápida por los pasillos evitando monitores y gente lenta',
+      bodega_sandwich_formula: 'la fórmula legendaria del sándwich de tocino, huevo y queso que sale diferente cada vez',
+      group_chat_chaos_analysis: 'una investigación forense del chat grupal de anoche que llegó a 847 mensajes mientras dormían',
+      phone_screen_time_investigation: 'el reporte de tiempo en pantalla que definitivamente NO van a mostrar a sus padres',
+      pizza_party_economics: 'un análisis económico de la fiesta de pizza donde alguien sugirió dividir "equitativamente"',
+      barbershop_wait_calculation: 'un modelo matemático del tiempo de espera en la barbería que siempre toma más de lo que dicen',
+      subway_sandwich_optimization: 'un plan detallado para obtener la máxima cantidad de sándwich por su dinero',
+      spotify_playlist_engineering: 'una playlist de Spotify curada donde cada canción tiene que fluir perfectamente',
+      gaming_tournament_bracket: 'un bracket de torneo donde literalmente todos dicen que van a ganar',
+      lunch_money_exchange_rate: 'el sistema complejo de intercambio de dinero de almuerzo, snacks y favores',
+      instagram_story_timing: 'un horario estratégico para publicar stories y maximizar vistas de Esa Persona'
     },
     why: {
-      time_the_snack_route: 'para cronometrar la ruta más rápida a la mesa de snacks',
-      beat_the_timer: 'para ganarle por mucho al temporizador de clase',
-      impress_judges: 'para impresionar al jurado (y quizá a la directora)',
-      map_to_real: 'para comparar el plano impreso con la distancia real',
-      science_fair_demo: 'para una demostración épica de la feria de ciencias',
-      fit_on_page: 'para comprobar si el plano cabe en la página',
-      convert_systems: 'para convertir con precisión entre dos sistemas',
-      avoid_spilling_juice: 'para no derramar jugo sobre la rúbrica',
-      build_to_match: 'para construir un modelo que coincida con las instrucciones',
-      fit_through_door: 'para ver si el objeto gigante cabe por la puerta',
-      miniature_for_display: 'para hacer una versión en miniatura para exhibir',
-      pace_for_event: 'para marcar el ritmo para un evento',
-      measure_without_spoons: 'para medir sin las cucharas originales',
-      fit_bulletin: 'para ajustar el póster al tablón de anuncios'
+      avoid_running_out: 'porque si se acaban todos se enojan y toca caminar a la OTRA tienda',
+      impress_the_manager: 'para probar al manager que saben lo que hacen (aunque claramente no)',
+      beat_the_competition: 'para destruir a la competencia y probar de una vez quién es mejor',
+      make_money_moves: 'porque están tratando de hacer dinero y no quedarse quebrados',
+      go_viral: 'porque esto podría ser lo que finalmente se hace viral',
+      beat_your_cousin: 'para probar que su primo está equivocado por una vez en su vida',
+      avoid_embarrassment: 'para evitar la vergüenza devastadora de arruinar esto frente a todos',
+      prove_them_wrong: 'para probar que todos los haters estaban equivocados',
+      win_the_game: 'porque ganar este juego significa presumir por lo menos el próximo mes',
+      impress_that_person: 'para impresionar a esa persona sin que sea obvio',
+      not_mess_it_up: 'porque si lo arruinan todos lo van a recordar para siempre',
+      impress_the_family: 'para finalmente ganarse respeto en vez de ser "el que no sabe cocinar"',
+      avoid_getting_roasted: 'para evitar que los destruyan en el chat grupal',
+      make_it_perfect: 'porque tiene que ser absolutamente perfecto',
+      not_get_finessed: 'para asegurar que no los timen como la última vez',
+      avoid_being_late: 'porque llegar tarde otra vez significa detención',
+      beat_the_bell: 'para ganarle a la campana antes de que suene',
+      prove_you_fast: 'para probar que son rápidos y no solo hablando',
+      impress_the_bodega_guy: 'para impresionar al tipo de la bodega que recuerda todas las órdenes',
+      expose_the_truth: 'para exponer la verdad porque alguien está mintiendo',
+      avoid_getting_caught: 'para no ser atrapados porque si sus padres se enteran se acabó',
+      hide_the_evidence: 'para ocultar la evidencia antes de que hagan preguntas',
+      prove_you_smart: 'para probar que son inteligentes de verdad',
+      avoid_being_broke: 'porque estar quebrado no es la onda',
+      avoid_wasting_time: 'porque el tiempo es dinero',
+      beat_the_system: 'para vencer el sistema como un genio',
+      not_miss_the_game: 'porque si pierden el juego sus amigos nunca los dejarán olvidarlo',
+      avoid_being_hungry: 'porque tener hambre el resto del día no es opción',
+      prove_your_taste: 'para probar que su gusto musical es superior',
+      win_the_tournament: 'para ganar este torneo y reclamar el título',
+      prove_your_aesthetic: 'para probar que su estética está perfecta'
     }
   },
   French: {
     place: {
-      hamster_parade_map: 'un plan du défilé du club de hamsters',
-      rubber_duck_regatta: 'le parcours de la régate des canards géants',
-      pizza_box_diagram: 'un schéma d’ingénierie sur une boîte à pizza',
-      cardboard_rollercoaster: 'un tracé de montagnes russes en carton',
-      marble_run_manual: 'une notice pour un parcours de billes extrême',
-      bake_sale_recipe: 'une fiche recette pour une vente de gâteaux',
-      art_poster_resize: 'une affiche d’art à redimensionner',
-      library_display_map: 'un plan d’exposition de la bibliothèque',
-      kite_festival_plan: 'le plan du festival de cerfs-volants',
-      cat_parkour_course: 'un plan pour un parcours de parkour pour chats',
-      shoebox_city_plan: 'un mini-plan de ville pour une boîte à chaussures',
-      cafeteria_seating_chart: 'le légendaire plan de la cafétéria'
+      hot_cheetos_inventory: 'un inventaire scientifique des Hot Cheetos et Takis du magasin du coin',
+      tiktok_dance_challenge: 'une analyse détaillée de cette danse TikTok que tout le monde fait mais personne ne réussit',
+      basketball_court_diagram: 'un schéma de terrain de basket qui a l\'air professionnel (mais dessiné au stylo)',
+      abuela_recipe_conversion: 'la recette secrète de grand-mère écrite sur une serviette avec des mesures comme "un peu"',
+      sneaker_trading_scheme: 'un plan d\'affaires complexe pour échanger des baskets avec des jeunes de trois écoles',
+      hallway_sprint_strategy: 'une carte tactique du chemin le plus rapide évitant les surveillants',
+      bodega_sandwich_formula: 'la formule légendaire du sandwich bacon-œuf-fromage qui sort différent chaque fois',
+      group_chat_chaos_analysis: 'une enquête sur le chat de groupe qui a atteint 847 messages pendant leur sommeil',
+      phone_screen_time_investigation: 'le rapport de temps d\'écran qu\'ils ne montreront définitivement PAS à leurs parents',
+      pizza_party_economics: 'une analyse économique de la fête pizza où quelqu\'un a suggéré de partager "équitablement"',
+      barbershop_wait_calculation: 'un modèle mathématique du temps d\'attente qui prend toujours plus longtemps',
+      subway_sandwich_optimization: 'un plan détaillé pour obtenir le maximum de sandwich pour leur argent',
+      spotify_playlist_engineering: 'une playlist Spotify où chaque chanson doit s\'enchaîner parfaitement',
+      gaming_tournament_bracket: 'un tournoi où littéralement tout le monde prétend qu\'ils vont gagner',
+      lunch_money_exchange_rate: 'le système complexe d\'échange d\'argent de repas, snacks et faveurs',
+      instagram_story_timing: 'un calendrier stratégique pour maximiser les vues de Cette Personne'
     },
     why: {
-      time_the_snack_route: 'pour chronométrer la route la plus rapide vers la table des goûters',
-      beat_the_timer: 'pour battre largement le minuteur de la classe',
-      impress_judges: 'pour impressionner le jury (et peut-être la principale)',
-      map_to_real: 'pour comparer le plan imprimé à la distance réelle',
-      science_fair_demo: 'pour une démonstration spectaculaire à la foire scientifique',
-      fit_on_page: 'pour vérifier si le plan tient sur la page',
-      convert_systems: 'pour convertir précisément entre deux systèmes',
-      avoid_spilling_juice: 'pour éviter d’éclabousser la grille d’évaluation',
-      build_to_match: 'pour fabriquer une maquette conforme à la notice',
-      fit_through_door: 'pour vérifier si l’objet géant passe la porte',
-      miniature_for_display: 'pour créer une version miniature d’exposition',
-      pace_for_event: 'pour caler son rythme pour un événement',
-      measure_without_spoons: 'pour doser sans les cuillères d’origine',
-      fit_bulletin: 'pour adapter l’affiche au panneau d’affichage'
+      avoid_running_out: 'parce que manquer de stock énerve tout le monde',
+      impress_the_manager: 'pour prouver au gérant qu\'ils savent ce qu\'ils font',
+      beat_the_competition: 'pour détruire la compétition une fois pour toutes',
+      make_money_moves: 'parce qu\'ils essaient de faire de l\'argent',
+      go_viral: 'parce que ça pourrait enfin devenir viral',
+      beat_your_cousin: 'pour prouver que leur cousin a tort pour une fois',
+      avoid_embarrassment: 'pour éviter l\'embarras dévastateur de rater ça',
+      prove_them_wrong: 'pour prouver que tous les haters avaient tort',
+      win_the_game: 'parce que gagner ce jeu veut dire se vanter pendant un mois',
+      impress_that_person: 'pour impressionner cette personne sans que ce soit évident',
+      not_mess_it_up: 'parce que s\'ils ratent ça tout le monde s\'en souviendra',
+      impress_the_family: 'pour enfin gagner du respect au lieu d\'être "celui qui cuisine mal"',
+      avoid_getting_roasted: 'pour éviter de se faire détruire dans le chat de groupe',
+      make_it_perfect: 'parce que ça doit être absolument parfait',
+      not_get_finessed: 'pour s\'assurer de ne pas se faire arnaquer',
+      avoid_being_late: 'parce qu\'être en retard encore veut dire retenue',
+      beat_the_bell: 'pour battre la cloche avant qu\'elle sonne',
+      prove_you_fast: 'pour prouver qu\'ils sont vraiment rapides',
+      impress_the_bodega_guy: 'pour impressionner le gars qui se souvient de toutes les commandes',
+      expose_the_truth: 'pour exposer la vérité parce que quelqu\'un ment',
+      avoid_getting_caught: 'pour éviter de se faire attraper',
+      hide_the_evidence: 'pour cacher les preuves avant les questions',
+      prove_you_smart: 'pour prouver qu\'ils sont vraiment intelligents',
+      avoid_being_broke: 'parce qu\'être fauché n\'est pas le mood',
+      avoid_wasting_time: 'parce que le temps c\'est de l\'argent',
+      beat_the_system: 'pour battre le système comme un génie',
+      not_miss_the_game: 'parce que manquer le match serait insupportable',
+      avoid_being_hungry: 'parce qu\'avoir faim toute la journée n\'est pas une option',
+      prove_your_taste: 'pour prouver que leur goût musical est supérieur',
+      win_the_tournament: 'pour gagner ce tournoi et réclamer le titre',
+      prove_your_aesthetic: 'pour prouver que leur esthétique est parfaite'
     }
   },
   German: {
     place: {
-      hamster_parade_map: 'einen Paradeplan für den Hamsterclub',
-      rubber_duck_regatta: 'die Strecke der Riesen-Gummienten-Regatta',
-      pizza_box_diagram: 'ein Konstruktionsdiagramm auf einer Pizzaschachtel',
-      cardboard_rollercoaster: 'einen Karton-Achterbahn-Plan',
-      marble_run_manual: 'eine Anleitung für eine extreme Murmelbahn',
-      bake_sale_recipe: 'eine Rezeptkarte für den Kuchenverkauf',
-      art_poster_resize: 'ein Kunstplakat zum Skalieren',
-      library_display_map: 'einen Ausstellungsplan der Bibliothek',
-      kite_festival_plan: 'den Plan für das Drachenfestival',
-      cat_parkour_course: 'einen Plan für einen Katzen-Parkour-Kurs',
-      shoebox_city_plan: 'einen winzigen Stadtplan für eine Schuhschachtel',
-      cafeteria_seating_chart: 'den legendären Sitzplan der Mensa'
+      hot_cheetos_inventory: 'eine wissenschaftliche Bestandsaufnahme der Hot Cheetos und Takis im Eckladen',
+      tiktok_dance_challenge: 'eine detaillierte Analyse dieses TikTok-Tanzes, den alle machen aber niemand hinkriegt',
+      basketball_court_diagram: 'ein professionell aussehendes (aber mit Kugelschreiber gezeichnetes) Basketballfeld-Diagramm',
+      abuela_recipe_conversion: 'das Geheimrezept von Oma auf einer Serviette mit Maßangaben wie "ein bisschen"',
+      sneaker_trading_scheme: 'ein komplexer Geschäftsplan zum Tauschen von Sneakers mit Kids von drei verschiedenen Schulen',
+      hallway_sprint_strategy: 'eine taktische Karte der schnellsten Route durch die Flure',
+      bodega_sandwich_formula: 'die legendäre Speck-Ei-Käse-Formel die jedes Mal anders rauskommt',
+      group_chat_chaos_analysis: 'eine forensische Untersuchung des Gruppenchats mit 847 Nachrichten über Nacht',
+      phone_screen_time_investigation: 'der Bildschirmzeit-Bericht den sie definitiv NICHT ihren Eltern zeigen',
+      pizza_party_economics: 'eine ökonomische Analyse der Pizza-Party mit "gleichmäßiger" Kostenaufteilung',
+      barbershop_wait_calculation: 'ein mathematisches Modell der Wartezeit beim Friseur',
+      subway_sandwich_optimization: 'ein detaillierter Plan für maximalen Sandwich pro Euro',
+      spotify_playlist_engineering: 'eine kuratierte Spotify-Playlist wo jeder Song perfekt passen muss',
+      gaming_tournament_bracket: 'ein Turnier-Bracket wo buchstäblich jeder behauptet zu gewinnen',
+      lunch_money_exchange_rate: 'das komplexe Wechselkurssystem für Pausengeld, Snacks und Gefallen',
+      instagram_story_timing: 'ein strategischer Posting-Plan um Views von Dieser Einen Person zu maximieren'
     },
     why: {
-      time_the_snack_route: 'um die schnellste Route zum Snacktisch zu messen',
-      beat_the_timer: 'um den Klassen-Timer deutlich zu schlagen',
-      impress_judges: 'um die Jury (und vielleicht die Schulleitung) zu beeindrucken',
-      map_to_real: 'um den gedruckten Plan mit echter Entfernung zu vergleichen',
-      science_fair_demo: 'für eine dramatische Wissenschafts-Show',
-      fit_on_page: 'um zu prüfen, ob der Plan auf die Seite passt',
-      convert_systems: 'um genau zwischen zwei Systemen umzurechnen',
-      avoid_spilling_juice: 'um den Bewertungsbogen nicht zu bekleckern',
-      build_to_match: 'um ein Modell passend zur Anleitung zu bauen',
-      fit_through_door: 'um zu prüfen, ob das Riesen-Requisit durch die Tür passt',
-      miniature_for_display: 'um eine Miniatur-Ausgabe zu bauen',
-      pace_for_event: 'um das Tempo für ein Event zu üben',
-      measure_without_spoons: 'um ohne die originellen Löffel zu dosieren',
-      fit_bulletin: 'um das Plakat für die Pinnwand zu skalieren'
+      avoid_running_out: 'weil wenn es ausgeht werden alle sauer',
+      impress_the_manager: 'um dem Manager zu beweisen dass sie wissen was sie tun',
+      beat_the_competition: 'um die Konkurrenz zu vernichten',
+      make_money_moves: 'weil sie Geld machen wollen',
+      go_viral: 'weil das endlich viral gehen könnte',
+      beat_your_cousin: 'um dem Cousin zu beweisen dass er unrecht hat',
+      avoid_embarrassment: 'um die verheerende Peinlichkeit zu vermeiden',
+      prove_them_wrong: 'um allen Hatern zu beweisen dass sie falsch lagen',
+      win_the_game: 'weil das Spiel gewinnen bedeutet einen Monat lang anzugeben',
+      impress_that_person: 'um diese Person zu beeindrucken ohne dass es offensichtlich ist',
+      not_mess_it_up: 'weil wenn sie das vermasseln werden sich alle für immer daran erinnern',
+      impress_the_family: 'um endlich Respekt zu bekommen',
+      avoid_getting_roasted: 'um im Gruppenchat nicht zerstört zu werden',
+      make_it_perfect: 'weil es absolut perfekt sein muss',
+      not_get_finessed: 'um sicherzugehen nicht abgezockt zu werden',
+      avoid_being_late: 'weil zu spät kommen Nachsitzen bedeutet',
+      beat_the_bell: 'um die Glocke zu schlagen',
+      prove_you_fast: 'um zu beweisen dass sie wirklich schnell sind',
+      impress_the_bodega_guy: 'um den Typ zu beeindrucken der sich alle Bestellungen merkt',
+      expose_the_truth: 'um die Wahrheit aufzudecken',
+      avoid_getting_caught: 'um nicht erwischt zu werden',
+      hide_the_evidence: 'um die Beweise zu verstecken',
+      prove_you_smart: 'um zu beweisen dass sie wirklich schlau sind',
+      avoid_being_broke: 'weil pleite sein nicht der Vibe ist',
+      avoid_wasting_time: 'weil Zeit Geld ist',
+      beat_the_system: 'um das System zu schlagen',
+      not_miss_the_game: 'weil das Spiel zu verpassen unerträglich wäre',
+      avoid_being_hungry: 'weil den ganzen Tag Hunger haben keine Option ist',
+      prove_your_taste: 'um zu beweisen dass ihr Musikgeschmack überlegen ist',
+      win_the_tournament: 'um dieses Turnier zu gewinnen',
+      prove_your_aesthetic: 'um zu beweisen dass ihre Ästhetik perfekt ist'
     }
   },
   Swahili: {
     place: {
-      hamster_parade_map: 'ramani ya gwaride la klabu ya hamster',
-      rubber_duck_regatta: 'njia ya mashindano ya bata wa mpira wakubwa',
-      pizza_box_diagram: 'mchoro wa uhandisi kwenye boksi la pizza',
-      cardboard_rollercoaster: 'mpango wa roller-coaster ya katoni',
-      marble_run_manual: 'maelekezo ya njia kali ya marumaru',
-      bake_sale_recipe: 'kadi ya mapishi ya mauzo ya keki',
-      art_poster_resize: 'posti ya sanaa ya kurekebishwa ukubwa',
-      library_display_map: 'ramani ya maonyesho ya maktaba',
-      kite_festival_plan: 'mpango wa tamasha la mandege',
-      cat_parkour_course: 'mchoro wa kozi ya parkour ya paka',
-      shoebox_city_plan: 'mpango mdogo wa jiji kwa boksi la viatu',
-      cafeteria_seating_chart: 'ramani maarufu ya viti ya mkahawa wa shule'
+      hot_cheetos_inventory: 'hesabu ya kisayansi ya Hot Cheetos na Takis katika duka la pembeni',
+      tiktok_dance_challenge: 'uchambuzi wa kina wa dansi ya TikTok ambayo kila mtu anafanya lakini hakuna anayefaulu',
+      basketball_court_diagram: 'mchoro wa uwanja wa basketball unaoonekana wa kitaalamu',
+      abuela_recipe_conversion: 'mapishi ya siri ya bibi yaliyoandikwa kwenye kitambaa',
+      sneaker_trading_scheme: 'mpango wa biashara wa kubadilishana viatu na watoto wa shule tatu',
+      hallway_sprint_strategy: 'ramani ya njia ya haraka zaidi kupitia njia za kusogea',
+      bodega_sandwich_formula: 'fomula ya kihistoria ya sandwich ya bacon, mayai na cheese',
+      group_chat_chaos_analysis: 'uchunguzi wa chat ya kikundi iliyofikia ujumbe 847 usiku',
+      phone_screen_time_investigation: 'ripoti ya muda wa skrini ambayo HAWATAONYESHA wazazi',
+      pizza_party_economics: 'uchambuzi wa uchumi wa pizza party',
+      barbershop_wait_calculation: 'mfano wa hisabati wa muda wa kusubiri kinyozini',
+      subway_sandwich_optimization: 'mpango wa kina wa kupata sandwich zaidi kwa pesa yao',
+      spotify_playlist_engineering: 'playlist ya Spotify iliyopangwa kwa uangalifu',
+      gaming_tournament_bracket: 'bracket ya mashindano ambayo kila mtu anasema watashinda',
+      lunch_money_exchange_rate: 'mfumo mgumu wa kubadilishana pesa ya chakula',
+      instagram_story_timing: 'ratiba ya kimkakati ya kuposti stories'
     },
     why: {
-      time_the_snack_route: 'kupima njia ya haraka kuelekea meza ya vitafunwa',
-      beat_the_timer: 'kushinda kipima-muda cha darasa kwa mbali',
-      impress_judges: 'kuwavutia majaji (na labda mwalimu mkuu)',
-      map_to_real: 'kulinganisha mpango uliyochapishwa na umbali halisi',
-      science_fair_demo: 'kwa onyesho la sayansi la kusisimua',
-      fit_on_page: 'kukagua kama mchoro unaingia kwenye ukurasa',
-      convert_systems: 'kubadili kwa usahihi kati ya mifumo miwili',
-      avoid_spilling_juice: 'kuepuka kumwagia karatasi ya alama',
-      build_to_match: 'kujenga mfano unaolingana na maelekezo',
-      fit_through_door: 'kuona kama reki kubwa inapita mlangoni',
-      miniature_for_display: 'kutengeneza toleo dogo la maonyesho',
-      pace_for_event: 'kujiweka sawa kwa tukio lijalo',
-      measure_without_spoons: 'kupima bila vijiko vya asili',
-      fit_bulletin: 'kupima ukubwa wa bango ili litoshee kwenye ubao'
+      avoid_running_out: 'kwa sababu kukosa inawakasirishisha wote',
+      impress_the_manager: 'kuthibitisha kwa meneja wanajua wanachofanya',
+      beat_the_competition: 'kuangamiza ushindani',
+      make_money_moves: 'kwa sababu wanajaribu kufanya pesa',
+      go_viral: 'kwa sababu hii inaweza kuwa viral',
+      beat_your_cousin: 'kuthibitisha binamu yao wamekosea',
+      avoid_embarrassment: 'kuepuka aibu ya kukosea',
+      prove_them_wrong: 'kuthibitisha wachukizi walikuwa hawana haki',
+      win_the_game: 'kwa sababu kushinda mchezo kunamaana kujivuna',
+      impress_that_person: 'kuwavutia mtu fulani bila kuonyesha wazi',
+      not_mess_it_up: 'kwa sababu kukosea kila mtu atakumbuka',
+      impress_the_family: 'kupata heshima',
+      avoid_getting_roasted: 'kuepuka kuangamizwa kwenye chat',
+      make_it_perfect: 'kwa sababu lazima iwe kamili',
+      not_get_finessed: 'kuhakikisha hawahadaiwi',
+      avoid_being_late: 'kwa sababu kuchelewa tena kunamaana adhabu',
+      beat_the_bell: 'kushinda kengele',
+      prove_you_fast: 'kuthibitisha wao ni wepesi kweli',
+      impress_the_bodega_guy: 'kuwavutia mtu anayekumbuka maagizo yote',
+      expose_the_truth: 'kufichua ukweli',
+      avoid_getting_caught: 'kuepuka kushikwa',
+      hide_the_evidence: 'kuficha ushahidi',
+      prove_you_smart: 'kuthibitisha wao ni werevu kweli',
+      avoid_being_broke: 'kwa sababu kuwa maskini si mood',
+      avoid_wasting_time: 'kwa sababu muda ni pesa',
+      beat_the_system: 'kushinda mfumo',
+      not_miss_the_game: 'kwa sababu kukosa mchezo itakuwa mbaya',
+      avoid_being_hungry: 'kwa sababu njaa siku nzima si chaguo',
+      prove_your_taste: 'kuthibitisha ladha yao ya muziki ni bora',
+      win_the_tournament: 'kushinda mashindano',
+      prove_your_aesthetic: 'kuthibitisha aesthetic yao ni kamili'
     }
   },
   Vietnamese: {
     place: {
-      hamster_parade_map: 'bản đồ diễu hành của câu lạc bộ chuột hamster',
-      rubber_duck_regatta: 'đường đua vịt cao su khổng lồ',
-      pizza_box_diagram: 'sơ đồ kỹ thuật trên hộp pizza',
-      cardboard_rollercoaster: 'bản vẽ tàu lượn bằng bìa cứng',
-      marble_run_manual: 'sổ tay đường chạy bi siêu tốc',
-      bake_sale_recipe: 'thẻ công thức cho buổi bán bánh',
-      art_poster_resize: 'áp phích nghệ thuật cần đổi kích thước',
-      library_display_map: 'sơ đồ trưng bày của thư viện',
-      kite_festival_plan: 'kế hoạch lễ hội thả diều',
-      cat_parkour_course: 'bản vẽ đường chạy parkour cho mèo',
-      shoebox_city_plan: 'bản quy hoạch thành phố mini trong hộp giày',
-      cafeteria_seating_chart: 'sơ đồ chỗ ngồi căn tin (huyền thoại)'
+      hot_cheetos_inventory: 'bảng kiểm kê khoa học về nguồn cung Hot Cheetos và Takis của cửa hàng góc phố',
+      tiktok_dance_challenge: 'phân tích chi tiết về điệu nhảy TikTok mà ai cũng làm nhưng không ai làm đúng',
+      basketball_court_diagram: 'sơ đồ sân bóng rổ trông chuyên nghiệp (nhưng vẽ bằng bút)',
+      abuela_recipe_conversion: 'công thức bí mật của bà được viết trên khăn giấy',
+      sneaker_trading_scheme: 'kế hoạch kinh doanh phức tạp để đổi giày với học sinh từ ba trường khác nhau',
+      hallway_sprint_strategy: 'bản đồ chiến thuật về tuyến đường nhanh nhất qua hành lang',
+      bodega_sandwich_formula: 'công thức huyền thoại bánh mì bacon trứng phô mai',
+      group_chat_chaos_analysis: 'cuộc điều tra về group chat đạt 847 tin nhắn qua đêm',
+      phone_screen_time_investigation: 'báo cáo thời gian màn hình mà họ chắc chắn KHÔNG cho bố mẹ xem',
+      pizza_party_economics: 'phân tích kinh tế về bữa tiệc pizza',
+      barbershop_wait_calculation: 'mô hình toán học về thời gian chờ ở tiệm cắt tóc',
+      subway_sandwich_optimization: 'kế hoạch chi tiết để có bánh mì tối đa với tiền của họ',
+      spotify_playlist_engineering: 'playlist Spotify được chọn lọc cẩn thận',
+      gaming_tournament_bracket: 'bảng đấu giải đấu mà ai cũng nói sẽ thắng',
+      lunch_money_exchange_rate: 'hệ thống tỷ giá phức tạp để đổi tiền ăn trưa',
+      instagram_story_timing: 'lịch trình chiến lược để đăng story'
     },
     why: {
-      time_the_snack_route: 'để bấm giờ đường nhanh nhất tới bàn ăn nhẹ',
-      beat_the_timer: 'để vượt xa đồng hồ bấm giờ của lớp',
-      impress_judges: 'để gây ấn tượng với ban giám khảo (và cô hiệu trưởng)',
-      map_to_real: 'để so kế hoạch in với khoảng cách thật',
-      science_fair_demo: 'cho màn trình diễn khoa học cực ngầu',
-      fit_on_page: 'để kiểm tra bản vẽ có vừa trang giấy không',
-      convert_systems: 'để đổi chính xác giữa hai hệ đo lường',
-      avoid_spilling_juice: 'để khỏi làm đổ nước quả lên phiếu chấm',
-      build_to_match: 'để làm mô hình đúng theo hướng dẫn',
-      fit_through_door: 'để xem đạo cụ khổng lồ có lọt cửa không',
-      miniature_for_display: 'để làm phiên bản thu nhỏ trưng bày',
-      pace_for_event: 'để tập nhịp độ cho sự kiện sắp tới',
-      measure_without_spoons: 'để đong mà không cần muỗng gốc',
-      fit_bulletin: 'để chỉnh tỉ lệ áp phích cho vừa bảng thông báo'
+      avoid_running_out: 'vì hết hàng nghĩa là mọi người sẽ giận',
+      impress_the_manager: 'để chứng minh với quản lý rằng họ biết mình đang làm gì',
+      beat_the_competition: 'để tiêu diệt đối thủ',
+      make_money_moves: 'vì họ đang cố gắng kiếm tiền',
+      go_viral: 'vì cái này cuối cùng có thể viral',
+      beat_your_cousin: 'để chứng minh anh chị em họ sai',
+      avoid_embarrassment: 'để tránh sự xấu hổ tàn khốc',
+      prove_them_wrong: 'để chứng minh tất cả haters đều sai',
+      win_the_game: 'vì thắng trò chơi này nghĩa là khoe khoang',
+      impress_that_person: 'để gây ấn tượng với người đó mà không rõ ràng',
+      not_mess_it_up: 'vì nếu họ làm hỏng mọi người sẽ nhớ mãi',
+      impress_the_family: 'để cuối cùng có được sự tôn trọng',
+      avoid_getting_roasted: 'để tránh bị phá hủy trong group chat',
+      make_it_perfect: 'vì nó phải hoàn hảo',
+      not_get_finessed: 'để chắc chắn không bị lừa',
+      avoid_being_late: 'vì đến muộn nữa nghĩa là bị phạt',
+      beat_the_bell: 'để đánh bại chuông',
+      prove_you_fast: 'để chứng minh họ thực sự nhanh',
+      impress_the_bodega_guy: 'để gây ấn tượng với người nhớ tất cả đơn hàng',
+      expose_the_truth: 'để vạch trần sự thật',
+      avoid_getting_caught: 'để tránh bị bắt',
+      hide_the_evidence: 'để giấu bằng chứng',
+      prove_you_smart: 'để chứng minh họ thực sự thông minh',
+      avoid_being_broke: 'vì hết tiền không phải tâm trạng',
+      avoid_wasting_time: 'vì thời gian là tiền bạc',
+      beat_the_system: 'để đánh bại hệ thống',
+      not_miss_the_game: 'vì lỡ trận đấu sẽ không thể chịu được',
+      avoid_being_hungry: 'vì đói cả ngày không phải là lựa chọn',
+      prove_your_taste: 'để chứng minh gu âm nhạc của họ là tốt hơn',
+      win_the_tournament: 'để thắng giải đấu này',
+      prove_your_aesthetic: 'để chứng minh thẩm mỹ của họ là hoàn hảo'
     }
   }
 }
 
 /* Language list for rotation */
 const LANGS = ['Spanish','French','German','Swahili','Vietnamese']
-const ALT_ORDER = [...LANGS, 'XXXX'] // optional, harmless
+const ALT_ORDER = [...LANGS, 'XXXX']
 
-/* Openers (random verb phrases) */
+/* IMPROVED OPENERS - funnier, more relatable */
 const OPENERS = {
   English: [
-    'is puzzling through', 'has been “voluntold” to decode', 'is heroically mapping out',
-    'is chaotically analyzing', 'is drafting an epic plan for', 'is reverse-engineering',
-    'is stress-testing', 'is choreographing', 'is prototyping', 'is wrangling',
-    'is dangerously enthusiastic about modeling', 'is over-caffeinated and charting',
-    'is curating a dramatic diagram for', 'is beta-testing a blueprint for'
+    'is definitely overthinking', 'got volunteered by their cousin to figure out', 'is procrastinating homework by calculating',
+    'is low-key obsessing over', 'got called out and now has to prove', 'is stress-calculating',
+    'is avoiding doing actual work by analyzing', 'got into a bet about', 'is trying to finesse',
+    'is absolutely convinced they can optimize', 'got challenged on TikTok to solve', 'is making a whole presentation about',
+    'is texting their friend group about', 'spent their entire lunch period working on', 'is about to blow everyone\'s mind with',
+    'stayed up way too late perfecting', 'has receipts and calculations for'
   ],
-  Spanish: ['está descifrando', 'ha sido “reclutado/a” para entender', 'está trazando heroicamente',
-            'está analizando a lo loco', 'está elaborando un plan épico para', 'está re-ingenierizando',
-            'está poniendo a prueba', 'está coreografiando', 'está prototipando', 'está domando'],
-  French:  ['est en train de décortiquer', 'a été “volontaire désigné” pour décrypter', 'cartographie héroïquement',
-            'analyse en mode chaotique', 'réalise un plan épique pour', 'fait de la rétro-ingénierie',
-            'met à l’épreuve', 'chorégraphie', 'prototypage en cours de', 'essaie d’« apprivoiser »'],
-  German:  ['knobelt an', 'wurde “freiwillig bestimmt”, um zu entziffern', 'kartiert heldenhaft',
-            'analysiert chaotisch', 'entwirft einen epischen Plan für', 'führt Reverse-Engineering durch',
-            'unterzieht einem Stresstest', 'choreografiert', 'prototypisiert', 'zähmt das Chaos von'],
-  Swahili: ['anapekua suluhu za', 'amepewa jukumu la “kudecode”', 'anachora ramani kishujaa ya',
-            'anachambua kwa mizaha', 'anatengeneza mpango wa kifahari kwa', 'anafanya uhandisi-tendaji upya wa',
-            'anajaribu kwa shinikizo', 'anaandaa mchujo wa hatua za', 'anabuni mfano wa', 'anajaribu “kuidhibiti”'],
-  Vietnamese: ['đang mày mò với', 'được “chỉ định tự nguyện” để giải mã', 'đang vẽ sơ đồ một cách anh hùng',
-               'đang phân tích hỗn loạn', 'đang phác thảo một kế hoạch hoành tráng cho', 'đang đảo ngược thiết kế của',
-               'đang kiểm tra chịu lực', 'đang biên đạo', 'đang làm nguyên mẫu cho', 'đang cố gắng “thuần hóa”']
+  Spanish: ['está definitivamente pensando demasiado en', 'fue voluntariado por su primo para resolver', 'está procrastinando la tarea calculando',
+            'está obsesionado con', 'lo retaron y ahora tiene que probar', 'está calculando con estrés',
+            'está evitando hacer trabajo real analizando', 'apostó sobre', 'está tratando de optimizar'],
+  French:  ['réfléchit trop à', 'a été volontaire désigné par leur cousin pour résoudre', 'procrastine leurs devoirs en calculant',
+            'est obsédé par', 'a été défié et doit maintenant prouver', 'calcule avec stress',
+            'évite le vrai travail en analysant', 'a parié sur', 'essaie d\'optimiser'],
+  German:  ['denkt definitiv zu viel über', 'wurde von ihrem Cousin verpflichtet zu lösen', 'prokrastiniert Hausaufgaben durch Berechnen',
+            'ist besessen von', 'wurde herausgefordert und muss jetzt beweisen', 'berechnet gestresst',
+            'vermeidet echte Arbeit durch Analysieren', 'hat gewettet über', 'versucht zu optimieren'],
+  Swahili: ['anawaza sana juu ya', 'amejitolea na binamu yake kutatua', 'anachelewesha kazi za nyumbani kwa kuhesabu',
+            'ana obsession na', 'alichanguliwa na sasa lazima athibitishe', 'anahesabu kwa msongo wa mawazo',
+            'anaepuka kazi halisi kwa kuchanganua', 'alifanya bahati juu ya', 'anajaribu kuboresha'],
+  Vietnamese: ['đang suy nghĩ quá nhiều về', 'bị anh chị em họ tình nguyện để giải quyết', 'đang trì hoãn bài tập bằng cách tính toán',
+               'đang ám ảnh với', 'bị thách thức và bây giờ phải chứng minh', 'đang tính toán căng thẳng',
+               'đang tránh công việc thật bằng cách phân tích', 'đã đánh cược về', 'đang cố gắng tối ưu hóa']
 }
 
-/* Scale-line variants (all embed a,b,u1,u2 clearly) */
+/* Scale-line variants (all embed a,b,u1,u2 clearly) - IMPROVED */
 const SCALE_LINES = {
   English: [
-    o => `A sticky note yells: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `The margin scribble claims: ${o.a} ${o.u1} equals ${o.b} ${o.u2}.`,
-    o => `A faded caption reads: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Blueprint footer states: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `There’s a QR label that decodes to ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Someone wrote in marker: ${o.a} ${o.u1} ↔ ${o.b} ${o.u2}.`,
-    o => `Top corner note insists: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `The legend spells out ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `A bold caption announces ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Calibration says ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `According to the notes they found: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Their calculations show that: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `The facts are simple: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `After extensive research (googling for 5 minutes): ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `The conversion rate is crystal clear: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Written in permanent marker on their hand: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `The screenshot they saved says: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `According to that one reliable source: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `The math is mathing: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `No cap, the ratio is: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ],
   Spanish: [
-    o => `Una nota pegada grita: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Un garabato en el margen dice: ${o.a} ${o.u1} equivale a ${o.b} ${o.u2}.`,
-    o => `Un pie de plano indica: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Una etiqueta QR revela ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `En la esquina se lee: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `La leyenda aclara ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `Según las notas que encontraron: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Sus cálculos muestran que: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Los hechos son simples: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `La tasa de conversión es clara: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Escrito en marcador en su mano: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `La matemática está clara: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ],
   French: [
-    o => `Un post-it hurle : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Un gribouillage en marge affirme : ${o.a} ${o.u1} équivaut à ${o.b} ${o.u2}.`,
-    o => `La légende précise : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Une étiquette QR révèle ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `En pied de plan : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Un encadré annonce ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `Selon les notes qu'ils ont trouvées : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Leurs calculs montrent que : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Les faits sont simples : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Le taux de conversion est clair : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Écrit au marqueur sur leur main : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Les maths sont clairs : ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ],
   German: [
-    o => `Ein Klebezettel ruft: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Ein Randkritzel behauptet: ${o.a} ${o.u1} entspricht ${o.b} ${o.u2}.`,
-    o => `Die Legende zeigt: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Ein QR-Label entschlüsselt ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Unten steht: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Ein Hinweis verkündet ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `Laut den Notizen die sie fanden: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Ihre Berechnungen zeigen: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Die Fakten sind einfach: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Die Umrechnungsrate ist klar: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Mit Marker auf ihre Hand geschrieben: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Die Mathematik stimmt: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ],
   Swahili: [
-    o => `Kijikaratasi kinasema: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Mwandiko pembezoni unaeleza: ${o.a} ${o.u1} ni sawa na ${o.b} ${o.u2}.`,
-    o => `Maelezo ya chini yanasema: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Lebo ya QR inaonyesha ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Kona ya juu imeandika ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Ufafanuzi unasema ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `Kulingana na maelezo waliyopata: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Mahesabu yao yanaonyesha: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Ukweli ni rahisi: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Kiwango cha ubadilishaji ni wazi: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Imeandikwa kwa kalamu kwenye mkono wao: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Hisabati inakubali: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ],
   Vietnamese: [
-    o => `Tờ giấy nhớ la lên: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Dòng ghi chú ở mép nói rằng: ${o.a} ${o.u1} bằng ${o.b} ${o.u2}.`,
-    o => `Chú thích mờ ghi: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Nhãn QR giải mã thành: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Góc bản vẽ ghi rõ: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
-    o => `Chú giải xác nhận: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
+    o => `Theo ghi chú họ tìm thấy: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Phép tính của họ cho thấy: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Sự thật rất đơn giản: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Tỷ lệ chuyển đổi rõ ràng: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Viết bằng bút lông trên tay: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`,
+    o => `Toán học đúng: ${o.a} ${o.u1} = ${o.b} ${o.u2}.`
   ]
 }
 
-/* Category-tailored question templates (short, flavorful; must keep math coherent) */
+/* Category-tailored question templates - IMPROVED */
 const QUESTIONS = {
   English: {
     length: [
-      o => `In ${o.place}, one ${o.noun} is ${o.g} ${o.uGiven}. How many is that in ${o.uOther}?`,
-      o => `If a ${o.noun} is ${o.g} ${o.uGiven}, convert to ${o.uOther}.`,
-      o => `The plan marks ${o.g} ${o.uGiven} along the ${o.noun}. What is that in ${o.uOther}?`,
-      o => `Suppose the ${o.noun} needs ${o.g} ${o.uGiven}. Give the value in ${o.uOther}.`,
-      o => `A label says ${o.g} ${o.uGiven} on the ${o.noun}. Convert to ${o.uOther}.`,
-      o => `For the ${o.noun}, use ${o.g} ${o.uGiven}. What is the corresponding amount in ${o.uOther}?`
+      o => `In ${o.place}, one ${o.noun} is ${o.g} ${o.uGiven}. Convert that to ${o.uOther}.`,
+      o => `The ${o.noun} measures ${o.g} ${o.uGiven}. What is that in ${o.uOther}?`,
+      o => `They need ${o.g} ${o.uGiven} for the ${o.noun}. How much is that in ${o.uOther}?`,
+      o => `According to their calculations, the ${o.noun} is ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
+      o => `The measurement shows ${o.g} ${o.uGiven} for the ${o.noun}. What's that in ${o.uOther}?`
     ],
     time: [
-      o => `For ${o.place}, the ${o.noun} is ${o.g} ${o.uGiven}. How many ${o.uOther} is that?`,
-      o => `Schedule shows ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
+      o => `For ${o.place}, the ${o.noun} takes ${o.g} ${o.uGiven}. How many ${o.uOther} is that?`,
+      o => `They calculated ${o.g} ${o.uGiven} for the ${o.noun}. Convert to ${o.uOther}.`,
       o => `The ${o.noun} lasts ${o.g} ${o.uGiven}. Express this in ${o.uOther}.`,
-      o => `If setup takes ${o.g} ${o.uGiven}, what is that in ${o.uOther}?`,
-      o => `Timing note: ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
-      o => `Use the ratio to change ${o.g} ${o.uGiven} into ${o.uOther}.`
+      o => `It takes ${o.g} ${o.uGiven} for the ${o.noun}. What is that in ${o.uOther}?`,
+      o => `The timing is ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`
     ],
     volume: [
-      o => `Recipe calls for ${o.g} ${o.uGiven}. How much is that in ${o.uOther}?`,
-      o => `The ${o.noun} needs ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
-      o => `Measure ${o.g} ${o.uGiven} for the ${o.noun}. What is that in ${o.uOther}?`,
-      o => `Use ${o.g} ${o.uGiven} of liquid. Express in ${o.uOther}.`,
-      o => `Label reads ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
-      o => `How many ${o.uOther} match ${o.g} ${o.uGiven}?`
+      o => `They need ${o.g} ${o.uGiven} of ${o.noun}. How much is that in ${o.uOther}?`,
+      o => `The ${o.noun} requires ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
+      o => `Measurements show ${o.g} ${o.uGiven} for the ${o.noun}. What is that in ${o.uOther}?`,
+      o => `They're using ${o.g} ${o.uGiven} for the ${o.noun}. Express in ${o.uOther}.`,
+      o => `The amount is ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`
     ],
     mass: [
       o => `The ${o.noun} weighs ${o.g} ${o.uGiven}. What is that in ${o.uOther}?`,
-      o => `We measured ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
-      o => `${o.g} ${o.uGiven} of material is required. Express in ${o.uOther}.`,
-      o => `Inventory lists ${o.g} ${o.uGiven}. How many in ${o.uOther}?`,
-      o => `Tag shows ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
-      o => `What is ${o.g} ${o.uGiven} when converted to ${o.uOther}?`
+      o => `They measured ${o.g} ${o.uGiven} for the ${o.noun}. Convert to ${o.uOther}.`,
+      o => `Weight shows ${o.g} ${o.uGiven}. How many in ${o.uOther}?`,
+      o => `It weighs ${o.g} ${o.uGiven}. Convert to ${o.uOther}.`,
+      o => `Mass is ${o.g} ${o.uGiven}. What's that in ${o.uOther}?`
     ]
   },
   Spanish: {
     length: [
       o => `En ${o.place}, un ${o.noun} mide ${o.g} ${o.uGiven}. ¿Cuánto es en ${o.uOther}?`,
-      o => `Si un ${o.noun} es ${o.g} ${o.uGiven}, conviértelo a ${o.uOther}.`,
-      o => `El plano marca ${o.g} ${o.uGiven} en el ${o.noun}. ¿En ${o.uOther}?`,
-      o => `Si el ${o.noun} necesita ${o.g} ${o.uGiven}, exprésalo en ${o.uOther}.`
+      o => `El ${o.noun} mide ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`,
+      o => `Necesitan ${o.g} ${o.uGiven} para el ${o.noun}. ¿Cuánto es en ${o.uOther}?`
     ],
     time: [
-      o => `Para ${o.place}, el ${o.noun} dura ${o.g} ${o.uGiven}. ¿Cuántos ${o.uOther} son?`,
-      o => `La agenda dice ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`,
-      o => `El ${o.noun} toma ${o.g} ${o.uGiven}. Exprésalo en ${o.uOther}.`
+      o => `Para ${o.place}, el ${o.noun} toma ${o.g} ${o.uGiven}. ¿Cuántos ${o.uOther} son?`,
+      o => `El ${o.noun} dura ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`
     ],
     volume: [
-      o => `La receta pide ${o.g} ${o.uGiven}. ¿Cuánto es en ${o.uOther}?`,
-      o => `El ${o.noun} lleva ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`
+      o => `Necesitan ${o.g} ${o.uGiven} de ${o.noun}. ¿Cuánto es en ${o.uOther}?`,
+      o => `El ${o.noun} requiere ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`
     ],
     mass: [
       o => `El ${o.noun} pesa ${o.g} ${o.uGiven}. ¿En ${o.uOther} cuánto es?`,
-      o => `Medimos ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`
+      o => `Midieron ${o.g} ${o.uGiven}. Convierte a ${o.uOther}.`
     ]
   },
   French: {
     length: [
       o => `Dans ${o.place}, un ${o.noun} fait ${o.g} ${o.uGiven}. Combien en ${o.uOther} ?`,
-      o => `Si un ${o.noun} vaut ${o.g} ${o.uGiven}, convertir en ${o.uOther}.`,
-      o => `Le plan indique ${o.g} ${o.uGiven} sur le ${o.noun}. En ${o.uOther} ?`
+      o => `Le ${o.noun} mesure ${o.g} ${o.uGiven}. Convertir en ${o.uOther}.`
     ],
     time: [
       o => `Pour ${o.place}, le ${o.noun} dure ${o.g} ${o.uGiven}. Combien en ${o.uOther} ?`,
-      o => `L’horaire note ${o.g} ${o.uGiven}. Convertir en ${o.uOther}.`
+      o => `Le ${o.noun} prend ${o.g} ${o.uGiven}. Convertir en ${o.uOther}.`
     ],
     volume: [
-      o => `La recette demande ${o.g} ${o.uGiven}. En ${o.uOther}, cela fait combien ?`,
-      o => `Le ${o.noun} utilise ${o.g} ${o.uGiven}. Convertir en ${o.uOther}.`
+      o => `Ils ont besoin de ${o.g} ${o.uGiven} de ${o.noun}. En ${o.uOther} ?`,
+      o => `Le ${o.noun} nécessite ${o.g} ${o.uGiven}. Convertir en ${o.uOther}.`
     ],
     mass: [
       o => `Le ${o.noun} pèse ${o.g} ${o.uGiven}. Combien en ${o.uOther} ?`,
@@ -492,16 +630,15 @@ const QUESTIONS = {
   German: {
     length: [
       o => `In ${o.place} misst ein ${o.noun} ${o.g} ${o.uGiven}. Wie viel ist das in ${o.uOther}?`,
-      o => `Wenn ein ${o.noun} ${o.g} ${o.uGiven} beträgt, wandle in ${o.uOther} um.`,
-      o => `Der Plan markiert ${o.g} ${o.uGiven} am ${o.noun}. In ${o.uOther}?`
+      o => `Der ${o.noun} beträgt ${o.g} ${o.uGiven}. Umrechnen in ${o.uOther}.`
     ],
     time: [
       o => `Für ${o.place} dauert der ${o.noun} ${o.g} ${o.uGiven}. Wieviel in ${o.uOther}?`,
-      o => `Der Zeitplan zeigt ${o.g} ${o.uGiven}. Umrechnen in ${o.uOther}.`
+      o => `Der ${o.noun} nimmt ${o.g} ${o.uGiven}. Umrechnen in ${o.uOther}.`
     ],
     volume: [
-      o => `Das Rezept verlangt ${o.g} ${o.uGiven}. Wieviel ist das in ${o.uOther}?`,
-      o => `Der ${o.noun} braucht ${o.g} ${o.uGiven}. Umrechnen in ${o.uOther}.`
+      o => `Sie brauchen ${o.g} ${o.uGiven} ${o.noun}. Wieviel ist das in ${o.uOther}?`,
+      o => `Der ${o.noun} erfordert ${o.g} ${o.uGiven}. Umrechnen in ${o.uOther}.`
     ],
     mass: [
       o => `Der ${o.noun} wiegt ${o.g} ${o.uGiven}. Wieviel in ${o.uOther}?`,
@@ -511,14 +648,14 @@ const QUESTIONS = {
   Swahili: {
     length: [
       o => `Katika ${o.place}, ${o.noun} ni ${o.g} ${o.uGiven}. Ni ngapi kwa ${o.uOther}?`,
-      o => `Ikiwa ${o.noun} ni ${o.g} ${o.uGiven}, badili kuwa ${o.uOther}.`
+      o => `${o.noun} ni ${o.g} ${o.uGiven}. Badili kuwa ${o.uOther}.`
     ],
     time: [
-      o => `Kwa ${o.place}, ${o.noun} hudumu ${o.g} ${o.uGiven}. Ni ngapi kwa ${o.uOther}?`,
-      o => `Ratiba ina ${o.g} ${o.uGiven}. Badili kuwa ${o.uOther}.`
+      o => `Kwa ${o.place}, ${o.noun} huchukua ${o.g} ${o.uGiven}. Ni ngapi kwa ${o.uOther}?`,
+      o => `${o.noun} huchukua ${o.g} ${o.uGiven}. Badili kuwa ${o.uOther}.`
     ],
     volume: [
-      o => `Mapishi yanahitaji ${o.g} ${o.uGiven}. Ni kiasi gani kwa ${o.uOther}?`
+      o => `Wanahitaji ${o.g} ${o.uGiven} ya ${o.noun}. Ni kiasi gani kwa ${o.uOther}?`
     ],
     mass: [
       o => `${o.noun} una uzito wa ${o.g} ${o.uGiven}. Badili kuwa ${o.uOther}.`
@@ -527,15 +664,14 @@ const QUESTIONS = {
   Vietnamese: {
     length: [
       o => `Trong ${o.place}, một ${o.noun} là ${o.g} ${o.uGiven}. Bao nhiêu ${o.uOther}?`,
-      o => `Nếu ${o.noun} dài ${o.g} ${o.uGiven}, đổi sang ${o.uOther}.`,
-      o => `Bản vẽ ghi ${o.g} ${o.uGiven} ở ${o.noun}. Vậy bằng bao nhiêu ${o.uOther}?`
+      o => `${o.noun} dài ${o.g} ${o.uGiven}. Đổi sang ${o.uOther}.`
     ],
     time: [
       o => `Với ${o.place}, ${o.noun} kéo dài ${o.g} ${o.uGiven}. Đổi sang ${o.uOther}.`,
-      o => `Lịch cho biết ${o.g} ${o.uGiven}. Hãy chuyển thành ${o.uOther}.`
+      o => `${o.noun} mất ${o.g} ${o.uGiven}. Chuyển thành ${o.uOther}.`
     ],
     volume: [
-      o => `Công thức cần ${o.g} ${o.uGiven}. Vậy là bao nhiêu ${o.uOther}?`,
+      o => `Họ cần ${o.g} ${o.uGiven} ${o.noun}. Vậy là bao nhiêu ${o.uOther}?`,
       o => `${o.noun} cần ${o.g} ${o.uGiven}. Đổi sang ${o.uOther}.`
     ],
     mass: [
@@ -599,14 +735,8 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
 
   // Build alts per language
   const alts = {}
-  // Rotation languages with XXXX; validate narratives contain exact '=’ scale fragment
   const rotationLanguages = [...LANGS, 'XXXX'];
   const must = `${a} ${u1} = ${b} ${u2}`;
-  const rotationFiltered = rotationLanguages.filter(lang => {
-    if (lang === 'XXXX') return true;
-    const t = alts[lang];
-    return typeof t === 'string' && t.includes(must);
-  });
 
   for (const lang of languages) {
     const place = tr(lang, 'place', sceneKey)
@@ -619,9 +749,12 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     const qLine  = choice(qBank)({ place, noun, g, uGiven, uOther })
     alts[lang] = `${name} ${opener} ${place} ${why}. ${scale} ${qLine}`
   }
-  // Optional modes preserved (UI filters if you choose): 
-  alts.FadeOut  = ' '
-  alts.BlackOut = ' '
+  
+  const rotationFiltered = rotationLanguages.filter(lang => {
+    if (lang === 'XXXX') return true;
+    const t = alts[lang];
+    return typeof t === 'string' && t.includes(must);
+  });
 
   const answer = computeAnswer({ a, b, g, gRow })
 
@@ -633,12 +766,9 @@ export function genHProblem({ languages = LANGS, enforceInteger = true } = {}) {
     given: { row: gRow, value: g },
     altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
     meta: { baseUnits: { u1, u2, otherUnit: (gRow==='top'?u2:u1) }, languages: rotationFiltered },
-    altOrder: (typeof shuffle==='function' ? shuffle(rotationFiltered) : rotationFiltered),
-    // Extras available if you ever want MC:
     answer
   }
 }
-
 
 
 // src/lib/ptables/generator.js
