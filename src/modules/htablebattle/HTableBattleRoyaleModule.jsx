@@ -133,7 +133,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
 
   // Token System
   const STUDENT_NAMES = [
-    "Abal", "Alexander", "Anderson", "Brandon", "Britany", "Carlos", 
+    "Abel", "Alexander", "Anderson", "Brandon", "Britany", "Carlos", 
     "Claritza", "Emmie", "Isaiah", "Jasmin", "Jonathan", "Luis", 
     "Nazlly", "Niang", "Pablo", "Rylan", "Taylor", "Tra'el", 
     "Unique", "Zaid", "Zaliah", "Zoey"
