@@ -125,21 +125,17 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
   };
 
   const generateRosters = () => {
-    const team1Data = generateTokensAndConstraints(playersPerTeam);
-    const team2Data = generateTokensAndConstraints(playersPerTeam);
+    const teamData = generateTokensAndConstraints(playersPerTeam);
     
+    // BOTH teams get the SAME tokens
     setTeams({
-      team1: team1Data.tokens,
-      team2: team2Data.tokens
+      team1: teamData.tokens,
+      team2: teamData.tokens
     });
     
-    // Merge constraints from both teams
-    const allUnits = [...new Set([...team1Data.constraints.units, ...team2Data.constraints.units])];
-    const allNumbers = [...new Set([...team1Data.constraints.numbers, ...team2Data.constraints.numbers])];
-    
     setGameConstraints({
-      units: allUnits,
-      numbers: allNumbers
+      units: teamData.constraints.units,
+      numbers: teamData.constraints.numbers
     });
     
     setGameState('ready-check');
@@ -156,15 +152,26 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     });
   };
 
-  const bothTeamsReady = () => {
-    return selectedTokens.team1.length === 5 && selectedTokens.team2.length === 5;
-  };
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
 
   const startGame = () => {
-    if (!bothTeamsReady()) {
-      alert('Each team must select exactly 5 tokens!');
+    // Check if either team has selected tokens
+    const team1Count = selectedTokens.team1.length;
+    const team2Count = selectedTokens.team2.length;
+    
+    // If both teams have exactly 5, start immediately
+    if (team1Count === 5 && team2Count === 5) {
+      setGameState('playing');
+      loadNewProblem();
       return;
     }
+    
+    // Otherwise show confirmation
+    setShowStartConfirm(true);
+  };
+
+  const confirmStart = () => {
+    setShowStartConfirm(false);
     setGameState('playing');
     loadNewProblem();
   };
@@ -404,7 +411,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
             textAlign: 'center', 
             marginBottom: '2rem'
           }}>
-            Select Your Tokens (5 per team)
+            Tap the item when team member is selected
           </h1>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
@@ -435,33 +442,40 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
                   fontWeight: 'bold',
-                  fontSize: '1.2rem'
+                  fontSize: '1.2rem',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
+                  zIndex: 10
                 }}>
-                  READY!
+                  ✓ READY!
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                {teams.team1.map((token, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => toggleToken('team1', idx)}
-                    style={{ 
-                      background: selectedTokens.team1.includes(idx) ? '#94a3b8' : 'white',
-                      color: selectedTokens.team1.includes(idx) ? '#fff' : '#1f2937',
-                      borderRadius: '0.5rem', 
-                      padding: '1rem',
-                      textAlign: 'center',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {token}
-                  </button>
-                ))}
+                {teams.team1.map((token, idx) => {
+                  const isSelected = selectedTokens.team1.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleToken('team1', idx)}
+                      style={{ 
+                        background: isSelected ? '#1e40af' : 'white',
+                        color: isSelected ? 'white' : '#1f2937',
+                        borderRadius: '0.5rem', 
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        boxShadow: isSelected ? '0 0 0 4px #60a5fa' : '0 2px 8px rgba(0,0,0,0.1)',
+                        border: isSelected ? '3px solid white' : '3px solid transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        transform: isSelected ? 'scale(0.95)' : 'scale(1)',
+                        opacity: isSelected ? 1 : 0.7
+                      }}
+                    >
+                      {isSelected && '✓ '}{token}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -492,40 +506,46 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
                   padding: '0.5rem 1rem',
                   borderRadius: '0.5rem',
                   fontWeight: 'bold',
-                  fontSize: '1.2rem'
+                  fontSize: '1.2rem',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
+                  zIndex: 10
                 }}>
-                  READY!
+                  ✓ READY!
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                {teams.team2.map((token, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => toggleToken('team2', idx)}
-                    style={{ 
-                      background: selectedTokens.team2.includes(idx) ? '#94a3b8' : 'white',
-                      color: selectedTokens.team2.includes(idx) ? '#fff' : '#1f2937',
-                      borderRadius: '0.5rem', 
-                      padding: '1rem',
-                      textAlign: 'center',
-                      fontSize: '1rem',
-                      fontWeight: '600',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {token}
-                  </button>
-                ))}
+                {teams.team2.map((token, idx) => {
+                  const isSelected = selectedTokens.team2.includes(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleToken('team2', idx)}
+                      style={{ 
+                        background: isSelected ? '#065f46' : 'white',
+                        color: isSelected ? 'white' : '#1f2937',
+                        borderRadius: '0.5rem', 
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        boxShadow: isSelected ? '0 0 0 4px #34d399' : '0 2px 8px rgba(0,0,0,0.1)',
+                        border: isSelected ? '3px solid white' : '3px solid transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        transform: isSelected ? 'scale(0.95)' : 'scale(1)',
+                        opacity: isSelected ? 1 : 0.7
+                      }}
+                    >
+                      {isSelected && '✓ '}{token}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           <button
             onClick={startGame}
-            disabled={!bothTeamsReady()}
             className="button primary gradient-button"
             style={{ 
               width: '100%',
@@ -533,13 +553,59 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
               fontSize: '2rem',
               maxWidth: '600px',
               margin: '0 auto',
-              display: 'block',
-              opacity: bothTeamsReady() ? 1 : 0.5,
-              cursor: bothTeamsReady() ? 'pointer' : 'not-allowed'
+              display: 'block'
             }}
           >
             START GAME
           </button>
+
+          {/* Confirmation Modal */}
+          {showStartConfirm && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10000
+            }}>
+              <div style={{
+                background: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                maxWidth: '500px',
+                textAlign: 'center'
+              }}>
+                <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#1f2937' }}>
+                  Are you ready to start?
+                </h2>
+                <p style={{ fontSize: '1.2rem', marginBottom: '2rem', color: '#6b7280' }}>
+                  Team 1 has {selectedTokens.team1.length} tokens selected.<br/>
+                  Team 2 has {selectedTokens.team2.length} tokens selected.
+                </p>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button
+                    onClick={confirmStart}
+                    className="button primary gradient-button"
+                    style={{ padding: '1rem 2rem', fontSize: '1.2rem' }}
+                  >
+                    Yes, Start!
+                  </button>
+                  <button
+                    onClick={() => setShowStartConfirm(false)}
+                    className="button secondary"
+                    style={{ padding: '1rem 2rem', fontSize: '1.2rem' }}
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
