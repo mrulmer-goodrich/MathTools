@@ -106,12 +106,17 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     const remaining = perTeam - 3;
     const halfRemaining = Math.floor(remaining / 2);
     
+    // FORCE at least 2 units and make sure we have variety
+    const minUnits = Math.max(2, Math.floor(halfRemaining));
+    const numUnits = minUnits;
+    const numNumbers = remaining - numUnits;
+    
     // Select units and numbers
     const shuffledUnits = [...UNIT_POOL].sort(() => Math.random() - 0.5);
     const shuffledNumbers = [...NUMBER_POOL].sort(() => Math.random() - 0.5);
     
-    const selectedUnits = shuffledUnits.slice(0, halfRemaining);
-    const selectedNumbers = shuffledNumbers.slice(0, remaining - halfRemaining);
+    const selectedUnits = shuffledUnits.slice(0, numUnits);
+    const selectedNumbers = shuffledNumbers.slice(0, numNumbers);
     
     const tokens = [...fixed, ...selectedUnits, ...selectedNumbers.map(n => `${n}`)];
     
@@ -182,11 +187,23 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     
     const { units, numbers } = gameConstraints;
     
-    // Pick random units and numbers from constraints
-    const unit1 = units[Math.floor(Math.random() * units.length)];
-    const unit2 = units[Math.floor(Math.random() * units.length)];
+    // ENSURE we have at least 2 different units
+    if (units.length < 2) {
+      console.error('Not enough units! Need at least 2.');
+      return null;
+    }
+    
+    // Pick two DIFFERENT units for the proportion
+    const shuffledUnits = [...units].sort(() => Math.random() - 0.5);
+    const unit1 = shuffledUnits[0]; // What we're measuring (miles, gallons, points)
+    const unit2 = shuffledUnits[1]; // What we're comparing against (hours, days, students)
     
     const validNumbers = numbers.filter(n => n > 1);
+    if (validNumbers.length < 2) {
+      console.error('Not enough numbers!');
+      return null;
+    }
+    
     const k = validNumbers[Math.floor(Math.random() * validNumbers.length)];
     const multiplier = validNumbers[Math.floor(Math.random() * validNumbers.length)];
     const a = k * multiplier;
@@ -197,12 +214,13 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     // Select random students
     const students = [...STUDENT_NAMES].sort(() => Math.random() - 0.5).slice(0, 2);
     
-    // Generate problem text
+    // Generate problem text - PROPER PROPORTIONS NOW!
     const templates = [
-      `${students[0]} completed ${a} ${unit1} in ${k} ${unit2}. At this rate, how many ${unit1} in ${c} ${unit2}?`,
+      `${students[0]} traveled ${a} ${unit1} in ${k} ${unit2}. At this rate, how many ${unit1} in ${c} ${unit2}?`,
       `${students[0]} and ${students[1]} collected ${a} ${unit1} during ${k} ${unit2}. How many ${unit1} in ${c} ${unit2}?`,
       `${students[0]} scored ${a} ${unit1} in ${k} ${unit2}. At this rate, how many ${unit1} in ${c} ${unit2}?`,
-      `${students[0]} used ${a} ${unit1} for ${k} ${unit2}. How many ${unit1} needed for ${c} ${unit2}?`
+      `${students[0]} used ${a} ${unit1} for every ${k} ${unit2}. How many ${unit1} needed for ${c} ${unit2}?`,
+      `${students[0]} completed ${a} ${unit1} in ${k} ${unit2}. How many ${unit1} in ${c} ${unit2}?`
     ];
     
     const text = templates[Math.floor(Math.random() * templates.length)];
@@ -614,11 +632,18 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
   // ========== PLAYING SCREEN ==========
   return (
     <div style={{ 
-      minHeight: '100vh', 
+      minHeight: '100vh',
+      width: '100vw',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       padding: '1.5rem',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'auto'
     }}>
       <style>{`
         .answer-tile {
@@ -696,13 +721,6 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
             margin: 0
           }}>
             {currentProblem.text}
-          </p>
-          <p style={{
-            fontSize: '1.2rem',
-            color: '#6b7280',
-            marginTop: '1rem'
-          }}>
-            Round {roundNumber}
           </p>
         </div>
       )}
