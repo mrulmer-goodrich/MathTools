@@ -1,4 +1,4 @@
-// src/modules/htable/HTableBattleRoyaleModule.jsx
+// src/modules/htablebattle/HTableBattleRoyaleModule.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { generateBattleRoyaleProblem, generateDistractors, buildTokenSet } from '../../lib/generator';
 
