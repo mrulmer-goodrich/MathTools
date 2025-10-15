@@ -985,3 +985,329 @@ export function genPGraph(difficulty = 'easy') {
     yStep,
   };
 }
+
+
+// ============================================
+// H-TABLE BATTLE ROYALE - PROBLEM GENERATOR
+// Mad Libs Edition for Eastway Middle
+// ============================================
+
+const STUDENT_NAMES = [
+  "Abal", "Alexander", "Anderson", "Brandon", "Britany", "Carlos", 
+  "Claritza", "Emmie", "Isaiah", "Jasmin", "Jonathan", "Luis", 
+  "Nazlly", "Niang", "Pablo", "Rylan", "Taylor", "Tra'el", 
+  "Unique", "Zaid", "Zaliah", "Zoey"
+];
+
+// Randomly select 1-3 students for maximum chaos
+function getRandomStudents(min = 1, max = 3) {
+  const count = Math.floor(Math.random() * (max - min + 1)) + min;
+  const shuffled = [...STUDENT_NAMES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+// Problem templates with Charlotte/teen culture flavor
+const PROBLEM_TEMPLATES = [
+  // FOOD CATEGORY
+  {
+    category: "food",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} destroyed ${a} Cookout trays in ${k} hours at the University location. At this unstoppable rate, how many trays can ${students[0]} demolish in ${c} hours?`,
+      visual: "🍔",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "food",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} and ${students[1]} shared ${a} Bojangles biscuits during ${k} class periods (don't tell the teachers). How many biscuits will they sneak in ${c} periods?`,
+      visual: "🥯",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "food",
+    template: (students, a, k, c) => ({
+      text: `The cafeteria served ${a} chicken nuggets to ${k} students. If ${c} students show up tomorrow, how many nuggets does Eastway need? (Assuming nobody shares)`,
+      visual: "🍗",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "food",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} ate ${a} Takis bags in ${k} days. At this spicy pace, how many bags in ${c} days? (RIP ${students[0]}'s stomach)`,
+      visual: "🌶️",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // SOCIAL MEDIA CATEGORY
+  {
+    category: "social",
+    template: (students, a, k, c) => ({
+      text: `${students[0]}'s TikTok got ${a} likes in ${k} hours. At this rate of virality, how many likes in ${c} hours? 💅`,
+      visual: "📱",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "social",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} sent ${a} Snapchat streaks in ${k} minutes. How many streaks can they maintain in ${c} minutes? (No one has that kind of time!)`,
+      visual: "👻",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "social",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} gained ${a} Instagram followers in ${k} days after posting at Freedom Park. At this rate, how many followers in ${c} days?`,
+      visual: "📸",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "social",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} and ${students[1]} watched ${a} YouTube videos during ${k} hours of "homework time." How many videos in ${c} hours?`,
+      visual: "📺",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // GAMING CATEGORY
+  {
+    category: "gaming",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} scored ${a} eliminations in ${k} Fortnite matches. At this rate, how many eliminations in ${c} matches?`,
+      visual: "🎮",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "gaming",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} earned ${a} V-Bucks in ${k} hours of grinding. How many V-Bucks in ${c} hours? (Mom's credit card not included)`,
+      visual: "💰",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "gaming",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} rage-quit ${a} times in ${k} Roblox sessions. At this rate, how many rage-quits in ${c} sessions?`,
+      visual: "😤",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "gaming",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} and ${students[1]} completed ${a} levels in ${k} minutes playing Subway Surfers (when they should be listening in class). How many levels in ${c} minutes?`,
+      visual: "🛹",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // SPORTS CATEGORY
+  {
+    category: "sports",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} scored ${a} points in ${k} minutes at the Panthers vs Falcons watch party. At this rate, how many points in ${c} minutes?`,
+      visual: "🏈",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "sports",
+    template: (students, a, k, c) => ({
+      text: `During PE, ${students[0]} made ${a} basketball shots in ${k} attempts at the Eastway courts. If ${students[0]} takes ${c} shots, how many will they make?`,
+      visual: "🏀",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "sports",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} ran ${a} laps around Eastway in ${k} minutes. At this speed, how many laps in ${c} minutes?`,
+      visual: "🏃",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // SCHOOL LIFE CATEGORY
+  {
+    category: "school",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} forgot their Chromebook password ${a} times in ${k} weeks. At this rate, how many times in ${c} weeks? (Write it down!)`,
+      visual: "💻",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "school",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} asked to go to the bathroom ${a} times during ${k} class periods. How many bathroom trips in ${c} periods?`,
+      visual: "🚽",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "school",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} and ${students[1]} passed ${a} notes in ${k} minutes before getting caught. At this rate, how many notes in ${c} minutes?`,
+      visual: "📝",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "school",
+    template: (students, a, k, c) => ({
+      text: `The line at Eastway's lunch took ${students[0]} exactly ${k} minutes to get ${a} people through. How long for ${c} people?`,
+      visual: "⏱️",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "school",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} got ${a} "stop talking" warnings in ${k} classes. At this rate, how many warnings in ${c} classes? 🤫`,
+      visual: "🤐",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // CHARLOTTE CULTURE CATEGORY
+  {
+    category: "charlotte",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} rode the light rail ${a} stops in ${k} minutes. At this rate, how many stops in ${c} minutes? (Almost to South End!)`,
+      visual: "🚇",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "charlotte",
+    template: (students, a, k, c) => ({
+      text: `At Discovery Place, ${students[0]} pressed ${a} interactive buttons in ${k} minutes. How many buttons in ${c} minutes? (Don't break the exhibits!)`,
+      visual: "🔬",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "charlotte",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} and ${students[1]} spotted ${a} Hornets jerseys in Uptown in ${k} minutes. How many jerseys in ${c} minutes?`,
+      visual: "🐝",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "charlotte",
+    template: (students, a, k, c) => ({
+      text: `${students[0]}'s family spent $${a} at the NASCAR Hall of Fame in ${k} hours. At this rate, how much in ${c} hours?`,
+      visual: "🏁",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+
+  // RANDOM CHAOS CATEGORY
+  {
+    category: "chaos",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} said "no cap" ${a} times in ${k} conversations. At this rate, how many times in ${c} conversations? (Fr fr)`,
+      visual: "🧢",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "chaos",
+    template: (students, a, k, c) => ({
+      text: `${students[0]} dropped their phone ${a} times in ${k} days. At this rate, how many drops in ${c} days? (Get a case!)`,
+      visual: "📱",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+  {
+    category: "chaos",
+    template: (students, a, k, c) => ({
+      text: `${students[0]}, ${students[1]}, and ${students[2]} argued about ${a} different topics in ${k} minutes at lunch. How many arguments in ${c} minutes?`,
+      visual: "💬",
+      setup: { given: a, per: k, find: c }
+    })
+  },
+];
+
+// Generate nice numbers for H-table problems
+function generateNiceTriple() {
+  const multipliers = [2, 3, 4, 5, 6, 8, 10, 12, 15];
+  const k = multipliers[Math.floor(Math.random() * multipliers.length)];
+  const scale = multipliers[Math.floor(Math.random() * multipliers.length)];
+  const a = k * scale;
+  const cMultiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+  const c = k * cMultiplier;
+  
+  return { a, k, c, answer: (a * c) / k };
+}
+
+// Main generator function for Battle Royale
+export function generateBattleRoyaleProblem() {
+  const template = PROBLEM_TEMPLATES[Math.floor(Math.random() * PROBLEM_TEMPLATES.length)];
+  const students = getRandomStudents(1, 3);
+  const { a, k, c, answer } = generateNiceTriple();
+  
+  const problem = template.template(students, a, k, c);
+  
+  return {
+    text: problem.text,
+    visual: problem.visual,
+    category: template.category,
+    correctAnswer: answer,
+    hTableSetup: {
+      topLeft: a,
+      topRight: "?",
+      bottomLeft: k,
+      bottomRight: c
+    },
+    students: students
+  };
+}
+
+// Generate 8 wrong answers that are close but not correct
+export function generateDistractors(correctAnswer) {
+  const distractors = new Set();
+  distractors.add(correctAnswer); // Add correct first
+  
+  while (distractors.size < 8) {
+    const strategies = [
+      () => correctAnswer + Math.floor(Math.random() * 20) - 10, // Off by small amount
+      () => Math.floor(correctAnswer * 1.1), // 10% more
+      () => Math.floor(correctAnswer * 0.9), // 10% less
+      () => Math.floor(correctAnswer / 2), // Half
+      () => correctAnswer * 2, // Double
+      () => correctAnswer + correctAnswer % 10, // Add ones digit
+    ];
+    
+    const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+    const distractor = strategy();
+    
+    if (distractor > 0 && distractor !== correctAnswer) {
+      distractors.add(distractor);
+    }
+  }
+  
+  return Array.from(distractors).sort(() => Math.random() - 0.5).slice(0, 8);
+}
+
+// Token generator for team setup
+export function buildTokenSet(perTeam) {
+  const animals = ["🦁", "🐯", "🐻", "🦅", "🐺", "🦊", "🐉", "🦈", "🐙", "🦖"];
+  const foods = ["🍕", "🌮", "🍔", "🍣", "🍜", "🧇", "🍦", "🍪", "🌭", "🥨"];
+  const things = ["⚡", "🔥", "💎", "🎸", "🚀", "👑", "🎯", "🏆", "💫", "🌟"];
+  
+  const allTokens = [...animals, ...foods, ...things];
+  const shuffled = allTokens.sort(() => Math.random() - 0.5);
+  
+  return shuffled.slice(0, perTeam);
+}
