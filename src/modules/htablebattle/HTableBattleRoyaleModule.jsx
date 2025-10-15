@@ -220,67 +220,70 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     loadNewProblem();
   };
 
-  // Problem Generation - Now uses tokens to constrain the generator
-  const generateProblemFromConstraints = () => {
-    if (!gameConstraints) return null;
-    
-    const { numbers } = gameConstraints;
-    
-    // Generate nice numbers using the token constraints
-    const validNumbers = numbers.filter(n => n >= 2 && n <= 20);
-    if (validNumbers.length < 2) {
-      console.error('Not enough numbers!');
-      return null;
-    }
-    
-    // Pick k first (small number, usually 2-10)
-    const smallNumbers = validNumbers.filter(n => n <= 10);
-    const k = smallNumbers.length > 0 
-      ? smallNumbers[Math.floor(Math.random() * smallNumbers.length)]
-      : validNumbers[0];
-    
-    // Pick a multiplier that keeps 'a' reasonable (under 200)
-    const maxMultiplier = Math.floor(200 / k);
-    const possibleMultipliers = validNumbers.filter(m => m > 1 && m <= maxMultiplier && m !== k);
-    const multiplier = possibleMultipliers.length > 0
-      ? possibleMultipliers[Math.floor(Math.random() * possibleMultipliers.length)]
-      : Math.min(3, maxMultiplier);
-    
-    const a = k * multiplier;
-    
-    // Pick c (also keep reasonable)
-    const possibleC = validNumbers.filter(n => n !== k && n <= 20);
-    const c = possibleC.length > 0
-      ? possibleC[Math.floor(Math.random() * possibleC.length)]
-      : k * 2;
-    
-    const answer = (a * c) / k;
-    
-    // Select random students
-    const students = [...STUDENT_NAMES].sort(() => Math.random() - 0.5).slice(0, 2);
-    
-    // Use contextual problem templates (NO RANDOM UNITS!)
-    const templates = [
-      `${students[0]} ran ${a} laps around Eastway in ${k} minutes. At this speed, how many laps in ${c} minutes?`,
-      `${students[0]} scored ${a} points in ${k} games at the Panthers watch party. At this rate, how many points in ${c} games?`,
-      `${students[0]} completed ${a} math problems in ${k} minutes. How many problems in ${c} minutes?`,
-      `${students[0]} sent ${a} text messages in ${k} hours. At this rate, how many messages in ${c} hours?`,
-      `${students[0]} ate ${a} chicken nuggets in ${k} days at the cafeteria. How many nuggets in ${c} days?`,
-      `${students[0]} gained ${a} Instagram followers in ${k} days after posting at Freedom Park. At this rate, how many followers in ${c} days?`,
-      `${students[0]} watched ${a} YouTube videos during ${k} hours of homework time. How many videos in ${c} hours?`,
-      `${students[0]} made ${a} basketball shots in ${k} games at the Eastway courts. If ${students[0]} plays ${c} games, how many shots will they make?`,
-      `${students[0]} rode the light rail ${a} stops in ${k} minutes. At this rate, how many stops in ${c} minutes?`,
-      `${students[0]} pressed ${a} buttons at Discovery Place in ${k} minutes. How many buttons in ${c} minutes?`,
-      `${students[0]} forgot their Chromebook password ${a} times in ${k} weeks. At this rate, how many times in ${c} weeks?`,
-      `${students[0]} asked to go to the bathroom ${a} times during ${k} class periods. How many bathroom trips in ${c} periods?`,
-      `${students[0]} said "no cap" ${a} times in ${k} conversations. At this rate, how many times in ${c} conversations?`,
-      `${students[0]} dropped their phone ${a} times in ${k} days. At this rate, how many drops in ${c} days?`
-    ];
-    
-    const text = templates[Math.floor(Math.random() * templates.length)];
-    
-    return { text, correctAnswer: answer, a, k, c };
-  };
+const generateProblemFromConstraints = () => {
+  if (!gameConstraints) return null;
+  
+  const { numbers } = gameConstraints;
+  
+  // Ensure we have enough valid numbers
+  const validNumbers = numbers.filter(n => n >= 2 && n <= 20);
+  if (validNumbers.length < 3) {
+    console.error('Not enough numbers in tokens!');
+    return null;
+  }
+  
+  // Pick k first (prefer smaller numbers for k, but stay within tokens)
+  const smallNumbers = validNumbers.filter(n => n <= 10);
+  const k = smallNumbers.length > 0 
+    ? smallNumbers[Math.floor(Math.random() * smallNumbers.length)]
+    : validNumbers[Math.floor(Math.random() * validNumbers.length)];
+  
+  // Pick a multiplier that keeps 'a' reasonable (under 200) - MUST be from tokens
+  const maxMultiplier = Math.floor(200 / k);
+  const possibleMultipliers = validNumbers.filter(m => m > 1 && m <= maxMultiplier && m !== k);
+  
+  // If no valid multipliers, try a different k
+  if (possibleMultipliers.length === 0) {
+    return null; // Skip this problem attempt, loadNewProblem will call again
+  }
+  
+  const multiplier = possibleMultipliers[Math.floor(Math.random() * possibleMultipliers.length)];
+  const a = k * multiplier;
+  
+  // Pick c - MUST be from tokens
+  const possibleC = validNumbers.filter(n => n !== k && n <= 20);
+  if (possibleC.length === 0) {
+    return null; // Skip this problem attempt
+  }
+  const c = possibleC[Math.floor(Math.random() * possibleC.length)];
+  
+  const answer = (a * c) / k;
+  
+  // Select random students
+  const students = [...STUDENT_NAMES].sort(() => Math.random() - 0.5).slice(0, 2);
+  
+  // Use the ORIGINAL contextual problem templates
+  const templates = [
+    `${students[0]} ran ${a} laps around Eastway in ${k} minutes. At this speed, how many laps in ${c} minutes?`,
+    `${students[0]} scored ${a} points in ${k} games at the Panthers watch party. At this rate, how many points in ${c} games?`,
+    `${students[0]} completed ${a} math problems in ${k} minutes. How many problems in ${c} minutes?`,
+    `${students[0]} sent ${a} text messages in ${k} hours. At this rate, how many messages in ${c} hours?`,
+    `${students[0]} ate ${a} chicken nuggets in ${k} days at the cafeteria. How many nuggets in ${c} days?`,
+    `${students[0]} gained ${a} Instagram followers in ${k} days after posting at Freedom Park. At this rate, how many followers in ${c} days?`,
+    `${students[0]} watched ${a} YouTube videos during ${k} hours of homework time. How many videos in ${c} hours?`,
+    `${students[0]} made ${a} basketball shots in ${k} games at the Eastway courts. If ${students[0]} plays ${c} games, how many shots will they make?`,
+    `${students[0]} rode the light rail ${a} stops in ${k} minutes. At this rate, how many stops in ${c} minutes?`,
+    `${students[0]} pressed ${a} buttons at Discovery Place in ${k} minutes. How many buttons in ${c} minutes?`,
+    `${students[0]} forgot their Chromebook password ${a} times in ${k} weeks. At this rate, how many times in ${c} weeks?`,
+    `${students[0]} asked to go to the bathroom ${a} times during ${k} class periods. How many bathroom trips in ${c} periods?`,
+    `${students[0]} said "no cap" ${a} times in ${k} conversations. At this rate, how many times in ${c} conversations?`,
+    `${students[0]} dropped their phone ${a} times in ${k} days. At this rate, how many drops in ${c} days?`
+  ];
+  
+  const text = templates[Math.floor(Math.random() * templates.length)];
+  
+  return { text, correctAnswer: answer, a, k, c };
+};
 
   const generateDistractors = (correctAnswer) => {
     const distractors = new Set();
