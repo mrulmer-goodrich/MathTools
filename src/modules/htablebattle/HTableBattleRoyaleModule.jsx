@@ -9,6 +9,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
   const [teams, setTeams] = useState({ team1: [], team2: [] });
   const [selectedTokens, setSelectedTokens] = useState({ team1: [], team2: [] });
   const [scores, setScores] = useState({ team1: 0, team2: 0 });
+  const [showResumeOption, setShowResumeOption] = useState(false);
   
   const [gameConstraints, setGameConstraints] = useState(null); // Units and numbers to use
   const [currentProblem, setCurrentProblem] = useState(null);
@@ -23,6 +24,56 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
   
   const [showResultOverlay, setShowResultOverlay] = useState({ team1: null, team2: null });
   const [roundNumber, setRoundNumber] = useState(0);
+  const [showStartConfirm, setShowStartConfirm] = useState(false);
+
+  // Check for saved game on mount
+  useEffect(() => {
+    const savedGame = localStorage.getItem('htable-battle-royale-save');
+    if (savedGame) {
+      setShowResumeOption(true);
+      const gameData = JSON.parse(savedGame);
+      setTeamNames(gameData.teamNames);
+      setPlayersPerTeam(gameData.playersPerTeam);
+    }
+  }, []);
+
+  // Save game state whenever playing
+  useEffect(() => {
+    if (gameState === 'playing' && roundNumber > 0) {
+      const gameData = {
+        teamNames,
+        playersPerTeam,
+        teams,
+        scores,
+        roundNumber,
+        gameConstraints
+      };
+      localStorage.setItem('htable-battle-royale-save', JSON.stringify(gameData));
+    }
+  }, [gameState, scores, roundNumber, teamNames, playersPerTeam, teams, gameConstraints]);
+
+  const resumeGame = () => {
+    const savedGame = localStorage.getItem('htable-battle-royale-save');
+    if (savedGame) {
+      const gameData = JSON.parse(savedGame);
+      setTeams(gameData.teams);
+      setScores(gameData.scores);
+      setRoundNumber(gameData.roundNumber);
+      setGameConstraints(gameData.gameConstraints);
+      setGameState('playing');
+      setTimeout(() => loadNewProblem(), 100);
+    }
+    setShowResumeOption(false);
+  };
+
+  const startNewGame = () => {
+    localStorage.removeItem('htable-battle-royale-save');
+    setShowResumeOption(false);
+    setScores({ team1: 0, team2: 0 });
+    setRoundNumber(0);
+    setTeams({ team1: [], team2: [] });
+    setGameConstraints(null);
+  };
 
   // Register reset function
   useEffect(() => {
@@ -94,7 +145,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     "students", "people", "points", "shots", "laps", "orders"
   ];
 
-  const NUMBER_POOL = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20];
+  const NUMBER_POOL = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 21, 24, 25, 27, 30];
 
   const generateTokensAndConstraints = (perTeam) => {
     const fixed = [
@@ -341,6 +392,31 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
             padding: '2rem',
             marginBottom: '2rem'
           }}>
+            {showResumeOption && (
+              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1f2937' }}>
+                  Previous game found!
+                </h2>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button
+                    onClick={resumeGame}
+                    className="button primary gradient-button"
+                    style={{ padding: '1rem 2rem', fontSize: '1.2rem' }}
+                  >
+                    Resume Game
+                  </button>
+                  <button
+                    onClick={startNewGame}
+                    className="button secondary"
+                    style={{ padding: '1rem 2rem', fontSize: '1.2rem' }}
+                  >
+                    New Game
+                  </button>
+                </div>
+                <hr style={{ margin: '2rem 0', border: 'none', borderTop: '2px solid #e5e7eb' }} />
+              </div>
+            )}
+            
             <h2 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Game Setup</h2>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
