@@ -1,8 +1,9 @@
-// src/App.jsx – v9.0.0 (Unified Header with New Problem)
+// src/App.jsx – v10.0.0 (Added Battle Royale)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
+import HTableBattleRoyaleModule from './modules/htable/HTableBattleRoyaleModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 
@@ -14,6 +15,7 @@ export default function App() {
   // Refs to hold each module's reset function
   const scaleResetRef = useRef(null)
   const htableResetRef = useRef(null)
+  const battleRoyaleResetRef = useRef(null)
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
 
@@ -31,6 +33,9 @@ export default function App() {
       case 'htable':
         htableResetRef.current = resetFn
         break
+      case 'battle-royale':
+        battleRoyaleResetRef.current = resetFn
+        break
       case 'ptables':
         ptablesResetRef.current = resetFn
         break
@@ -43,27 +48,26 @@ export default function App() {
   // Handle New Problem button click
   const handleNewProblem = () => {
     if (isProblemComplete) {
-      // If the problem is finished, just start a new one with no warning
       resetCurrentModule();
     } else {
-      // If not finished, show the warning modal
       setShowConfirmNew(true);
     }
   }
-
 
   // Reset the current module
   const resetCurrentModule = () => {
     setIsProblemComplete(false)
     setShowConfirmNew(false)
     
-    // Call the appropriate reset function based on current route
     switch(route) {
       case 'scale':
         scaleResetRef.current?.()
         break
       case 'htable':
         htableResetRef.current?.()
+        break
+      case 'battle-royale':
+        battleRoyaleResetRef.current?.()
         break
       case 'ptables':
         ptablesResetRef.current?.()
@@ -91,10 +95,13 @@ export default function App() {
 
           <div className="row home-buttons">
             <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
-            Scale Factor
+              Scale Factor
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
               H-Table
+            </BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('battle-royale')}>
+              🎮 H-Table Battle Royale
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('ptables')}>
               Proportional Tables
@@ -106,8 +113,8 @@ export default function App() {
         </>
       )}
 
-      {/* Unified header for all modules */}
-      {route !== 'home' && (
+      {/* Unified header for all modules EXCEPT battle royale (it has its own) */}
+      {route !== 'home' && route !== 'battle-royale' && (
         <>
           <div className="module-header">
             <button 
@@ -154,6 +161,32 @@ export default function App() {
               />
             )}
           </div>
+        </>
+      )}
+
+      {/* Battle Royale gets full screen (no header) */}
+      {route === 'battle-royale' && (
+        <>
+          {/* Add a small back button in top-left */}
+          <button 
+            onClick={goHome}
+            className="button secondary"
+            style={{
+              position: 'fixed',
+              top: '1rem',
+              left: '1rem',
+              zIndex: 10000,
+              padding: '0.75rem 1.5rem',
+              fontSize: '1.1rem'
+            }}
+          >
+            ← Back to Home
+          </button>
+          
+          <HTableBattleRoyaleModule 
+            onProblemComplete={handleProblemComplete}
+            registerReset={(fn) => registerReset('battle-royale', fn)}
+          />
         </>
       )}
 
