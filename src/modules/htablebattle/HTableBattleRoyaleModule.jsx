@@ -198,8 +198,6 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     });
   };
 
-  const [showStartConfirm, setShowStartConfirm] = useState(false);
-
   const startGame = () => {
     // Check if either team has selected tokens
     const team1Count = selectedTokens.team1.length;
