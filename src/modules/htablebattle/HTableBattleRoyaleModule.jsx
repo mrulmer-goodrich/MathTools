@@ -1,4 +1,4 @@
-// src/modules/htable/HTableBattleRoyaleModule.jsx
+// src/modules/htablebattle/HTableBattleRoyaleModule.jsx
 import React, { useState, useEffect, useRef } from 'react';
 
 const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
@@ -219,7 +219,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
       `${students[0]} ate ${a} chicken nuggets in ${k} days at the cafeteria. How many nuggets in ${c} days?`,
       `${students[0]} gained ${a} Instagram followers in ${k} days after posting at Freedom Park. At this rate, how many followers in ${c} days?`,
       `${students[0]} watched ${a} YouTube videos during ${k} hours of homework time. How many videos in ${c} hours?`,
-      `${students[0]} made ${a} basketball shots in ${k} attempts at the Eastway courts. If ${students[0]} takes ${c} shots, how many will they make?`,
+      `${students[0]} made ${a} basketball shots in ${k} games at the Eastway courts. If ${students[0]} plays ${c} games, how many shots will they make?`,
       `${students[0]} rode the light rail ${a} stops in ${k} minutes. At this rate, how many stops in ${c} minutes?`,
       `${students[0]} pressed ${a} buttons at Discovery Place in ${k} minutes. How many buttons in ${c} minutes?`,
       `${students[0]} forgot their Chromebook password ${a} times in ${k} weeks. At this rate, how many times in ${c} weeks?`,
