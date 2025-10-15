@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react'
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
 import HTableModule from './modules/htable/HTableModule.jsx'
-import HTableBattleRoyaleModule from './modules/htable/HTableBattleRoyaleModule.jsx'
+import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 
