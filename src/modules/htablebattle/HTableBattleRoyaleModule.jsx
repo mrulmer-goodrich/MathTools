@@ -104,26 +104,17 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     ];
     
     const remaining = perTeam - 3;
-    const halfRemaining = Math.floor(remaining / 2);
     
-    // FORCE at least 2 units and make sure we have variety
-    const minUnits = Math.max(2, Math.floor(halfRemaining));
-    const numUnits = minUnits;
-    const numNumbers = remaining - numUnits;
-    
-    // Select units and numbers
-    const shuffledUnits = [...UNIT_POOL].sort(() => Math.random() - 0.5);
+    // Just generate number tokens for variety
+    // Problems are now contextual and don't use token units
     const shuffledNumbers = [...NUMBER_POOL].sort(() => Math.random() - 0.5);
+    const selectedNumbers = shuffledNumbers.slice(0, remaining);
     
-    const selectedUnits = shuffledUnits.slice(0, numUnits);
-    const selectedNumbers = shuffledNumbers.slice(0, numNumbers);
-    
-    const tokens = [...fixed, ...selectedUnits, ...selectedNumbers.map(n => `${n}`)];
+    const tokens = [...fixed, ...selectedNumbers.map(n => `${n}`)];
     
     return {
       tokens,
       constraints: {
-        units: selectedUnits,
         numbers: selectedNumbers
       }
     };
@@ -139,7 +130,6 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     });
     
     setGameConstraints({
-      units: teamData.constraints.units,
       numbers: teamData.constraints.numbers
     });
     
@@ -181,46 +171,50 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     loadNewProblem();
   };
 
-  // Problem Generation using constraints
+  // Problem Generation - Now uses tokens to constrain the generator
   const generateProblemFromConstraints = () => {
     if (!gameConstraints) return null;
     
     const { units, numbers } = gameConstraints;
     
-    // ENSURE we have at least 2 different units
-    if (units.length < 2) {
-      console.error('Not enough units! Need at least 2.');
-      return null;
-    }
-    
-    // Pick two DIFFERENT units for the proportion
-    const shuffledUnits = [...units].sort(() => Math.random() - 0.5);
-    const unit1 = shuffledUnits[0]; // What we're measuring (miles, gallons, points)
-    const unit2 = shuffledUnits[1]; // What we're comparing against (hours, days, students)
-    
+    // Generate nice numbers using the token constraints
     const validNumbers = numbers.filter(n => n > 1);
     if (validNumbers.length < 2) {
       console.error('Not enough numbers!');
       return null;
     }
     
+    // Pick k and create proportional values
     const k = validNumbers[Math.floor(Math.random() * validNumbers.length)];
-    const multiplier = validNumbers[Math.floor(Math.random() * validNumbers.length)];
+    const multipliers = validNumbers.filter(n => n !== k);
+    const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)] || 2;
     const a = k * multiplier;
-    const cMultiplier = validNumbers[Math.floor(Math.random() * validNumbers.length)];
+    
+    const cMultipliers = validNumbers.filter(n => n !== k);
+    const cMultiplier = cMultipliers[Math.floor(Math.random() * cMultipliers.length)] || 3;
     const c = k * cMultiplier;
+    
     const answer = (a * c) / k;
     
     // Select random students
     const students = [...STUDENT_NAMES].sort(() => Math.random() - 0.5).slice(0, 2);
     
-    // Generate problem text - PROPER PROPORTIONS NOW!
+    // Use contextual problem templates (NO RANDOM UNITS!)
     const templates = [
-      `${students[0]} traveled ${a} ${unit1} in ${k} ${unit2}. At this rate, how many ${unit1} in ${c} ${unit2}?`,
-      `${students[0]} and ${students[1]} collected ${a} ${unit1} during ${k} ${unit2}. How many ${unit1} in ${c} ${unit2}?`,
-      `${students[0]} scored ${a} ${unit1} in ${k} ${unit2}. At this rate, how many ${unit1} in ${c} ${unit2}?`,
-      `${students[0]} used ${a} ${unit1} for every ${k} ${unit2}. How many ${unit1} needed for ${c} ${unit2}?`,
-      `${students[0]} completed ${a} ${unit1} in ${k} ${unit2}. How many ${unit1} in ${c} ${unit2}?`
+      `${students[0]} ran ${a} laps around Eastway in ${k} minutes. At this speed, how many laps in ${c} minutes?`,
+      `${students[0]} scored ${a} points in ${k} games at the Panthers watch party. At this rate, how many points in ${c} games?`,
+      `${students[0]} completed ${a} math problems in ${k} minutes. How many problems in ${c} minutes?`,
+      `${students[0]} sent ${a} text messages in ${k} hours. At this rate, how many messages in ${c} hours?`,
+      `${students[0]} ate ${a} chicken nuggets in ${k} days at the cafeteria. How many nuggets in ${c} days?`,
+      `${students[0]} gained ${a} Instagram followers in ${k} days after posting at Freedom Park. At this rate, how many followers in ${c} days?`,
+      `${students[0]} watched ${a} YouTube videos during ${k} hours of homework time. How many videos in ${c} hours?`,
+      `${students[0]} made ${a} basketball shots in ${k} attempts at the Eastway courts. If ${students[0]} takes ${c} shots, how many will they make?`,
+      `${students[0]} rode the light rail ${a} stops in ${k} minutes. At this rate, how many stops in ${c} minutes?`,
+      `${students[0]} pressed ${a} buttons at Discovery Place in ${k} minutes. How many buttons in ${c} minutes?`,
+      `${students[0]} forgot their Chromebook password ${a} times in ${k} weeks. At this rate, how many times in ${c} weeks?`,
+      `${students[0]} asked to go to the bathroom ${a} times during ${k} class periods. How many bathroom trips in ${c} periods?`,
+      `${students[0]} said "no cap" ${a} times in ${k} conversations. At this rate, how many times in ${c} conversations?`,
+      `${students[0]} dropped their phone ${a} times in ${k} days. At this rate, how many drops in ${c} days?`
     ];
     
     const text = templates[Math.floor(Math.random() * templates.length)];
