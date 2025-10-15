@@ -1,4 +1,4 @@
-// src/modules/htablebattle/HTableBattleRoyaleModule.jsx
+// src/modules/htable/HTableBattleRoyaleModule.jsx
 import React, { useState, useEffect, useRef } from 'react';
 
 const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
@@ -94,7 +94,7 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
     "students", "people", "points", "shots", "laps", "orders"
   ];
 
-  const NUMBER_POOL = [2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 20, 24, 25, 30, 36, 40, 45, 50, 60, 75, 100, 120, 150, 200];
+  const NUMBER_POOL = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20];
 
   const generateTokensAndConstraints = (perTeam) => {
     const fixed = [
@@ -175,24 +175,35 @@ const HTableBattleRoyaleModule = ({ onProblemComplete, registerReset }) => {
   const generateProblemFromConstraints = () => {
     if (!gameConstraints) return null;
     
-    const { units, numbers } = gameConstraints;
+    const { numbers } = gameConstraints;
     
     // Generate nice numbers using the token constraints
-    const validNumbers = numbers.filter(n => n > 1);
+    const validNumbers = numbers.filter(n => n >= 2 && n <= 20);
     if (validNumbers.length < 2) {
       console.error('Not enough numbers!');
       return null;
     }
     
-    // Pick k and create proportional values
-    const k = validNumbers[Math.floor(Math.random() * validNumbers.length)];
-    const multipliers = validNumbers.filter(n => n !== k);
-    const multiplier = multipliers[Math.floor(Math.random() * multipliers.length)] || 2;
+    // Pick k first (small number, usually 2-10)
+    const smallNumbers = validNumbers.filter(n => n <= 10);
+    const k = smallNumbers.length > 0 
+      ? smallNumbers[Math.floor(Math.random() * smallNumbers.length)]
+      : validNumbers[0];
+    
+    // Pick a multiplier that keeps 'a' reasonable (under 200)
+    const maxMultiplier = Math.floor(200 / k);
+    const possibleMultipliers = validNumbers.filter(m => m > 1 && m <= maxMultiplier && m !== k);
+    const multiplier = possibleMultipliers.length > 0
+      ? possibleMultipliers[Math.floor(Math.random() * possibleMultipliers.length)]
+      : Math.min(3, maxMultiplier);
+    
     const a = k * multiplier;
     
-    const cMultipliers = validNumbers.filter(n => n !== k);
-    const cMultiplier = cMultipliers[Math.floor(Math.random() * cMultipliers.length)] || 3;
-    const c = k * cMultiplier;
+    // Pick c (also keep reasonable)
+    const possibleC = validNumbers.filter(n => n !== k && n <= 20);
+    const c = possibleC.length > 0
+      ? possibleC[Math.floor(Math.random() * possibleC.length)]
+      : k * 2;
     
     const answer = (a * c) / k;
     
