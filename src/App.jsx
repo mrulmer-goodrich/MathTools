@@ -1,4 +1,4 @@
-// src/App.jsx – v10.0.0 (Added Battle Royale)
+// src/App.jsx – v10.0.1 (Added Battle Royale)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
