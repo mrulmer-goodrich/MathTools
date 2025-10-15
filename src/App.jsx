@@ -1,4 +1,4 @@
-// src/App.jsx – v10.0.1 (Added Battle Royale)
+// src/App.jsx – v10.0.0 (Added Battle Royale)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -101,7 +101,7 @@ export default function App() {
               H-Table
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('battle-royale')}>
-              🎮 H-Table Battle Royale
+              H-Table Battle Royale
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('ptables')}>
               Proportional Tables
