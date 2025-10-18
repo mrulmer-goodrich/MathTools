@@ -1029,9 +1029,9 @@ function narrativeFor(lang) {
 
             {/* RIGHT-PANEL: STEP 0 — START */}
             {step===0 && (
-              <div className="chips with-borders center .ug-answer.ug-answer--pill">
+              <div className="chips with-borders center">
                {seededShuffle(STEP1_CHOICES).map(c => (
-                  <button key={c.id} className="chip chip-hdraw .ug-answer.ug-answer--pill" onClick={()=>handleStep0(c)}>{c.label}</button>
+                  <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
                 ))}
               </div>
             )}
@@ -1039,7 +1039,7 @@ function narrativeFor(lang) {
 
             {/* RIGHT-PANEL: STEP 1 — START */}
             {step===1 && (
-              <div className="chips with-borders center .ug-answer.ug-answer--pill" style={{marginTop:8}}>
+              <div className="chips with-borders center" style={{marginTop:8}}>
                 {seededShuffle([
                   { id:'col_units', label:'Units', kind:'col', v:'Units' },
                   { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
