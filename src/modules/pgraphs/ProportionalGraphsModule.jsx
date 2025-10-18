@@ -699,14 +699,14 @@ setCurrentStep(10);
           {currentStep === 1 && (
             <div className="section">
               <div className="step-title">Is this graph proportional or not proportional?</div>
-              <div className="row" style={{ gap: 10, marginTop: 12 }}>
+              <div className="row ug-answers-row" style={{ gap: 10, marginTop: 12 }}>
                 {shuffle([
                   { key: 'yes', label: 'Proportional' },
                   { key: 'not', label: 'Not Proportional' }
                 ]).map(choice => (
                   <button 
                     key={choice.key}
-                    className="answer-btn pgraph-choice-btn"
+                    className="answer-btn pgraph-choice-btn ug-answer ug-answer--pill"
                     onClick={() => handleProportionalChoice(choice.key)}
                     style={{ flex: '1 1 calc(50% - 5px)', minWidth: '140px' }}
                   >
