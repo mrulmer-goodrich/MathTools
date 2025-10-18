@@ -384,7 +384,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {shuffle(opts).map((opt) => (
-          <button key={opt} type="button" className="answer-btn"
+          <button key={opt} type="button" className="answer-btn  ug-answer ug-answer--pill"
             onClick={() => {
               if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
               if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
@@ -404,7 +404,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {opts.map((opt) => (
-          <button key={opt} type="button" className="answer-btn"
+          <button key={opt} type="button" className="answer-btn ug-answer ug-answer--pill"
             onClick={() => {
               if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
               if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
@@ -423,7 +423,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
     return (
       <div className="row" style={{ gap: 10, marginTop: 12, flexWrap:"wrap" }}>
         {choices.map((val, i) => (
-          <button key={`${fillPart}-${i}-${val}`} type="button" className="answer-btn"
+          <button key={`${fillPart}-${i}-${val}`} type="button" className="answer-btn ug-answer ug-answer--pill"
             onClick={() => {
               if (val === correct) {
                 if (fillPart === "num") {
@@ -491,7 +491,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
               <div className="step-title">Is this table proportional?</div>
               <div className="row" style={{ gap: 8, justifyContent: "center" }}>
                 {randomizedConcept.map(({ key, label }) => (
-                  <button key={key} className="answer-btn" onClick={() => setConceptAnswer(key)}>{label}</button>
+                  <button key={key} className="answer-btn ug-answer ug-answer--pill" onClick={() => setConceptAnswer(key)}>{label}</button>
                 ))}
               </div>
               {conceptAnswer && (
@@ -515,7 +515,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
                   { key: "add", label: "y = k + x", correct: false },
                   { key: "emd", label: "y = k – x", correct: false },
                 ]).map(({ key, label, correct }) => (
-                  <button key={key} className="answer-btn"
+                  <button key={key} className="answer-btn  ug-answer ug-answer--pill"
                     onClick={() => {
                       if (correct) {
                         setRow4Answer(null);
