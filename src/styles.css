@@ -1970,3 +1970,22 @@ body{
 .gradient-button-full {
   width: 100%;
 }
+
+/* === PTables bridge: adopt UG global answer button look (wins locally) === */
+.ptables, .ptables-layout { /* just a scope host; no styles */ }
+
+.ptables .ug-answer,
+.ptables-layout .ug-answer {
+  background: linear-gradient(135deg, #0B4B8C, #0C6B4D) !important;
+  color:#fff !important;
+  border:0 !important;
+  border-radius:16px !important;
+  box-shadow:0 8px 16px rgba(11,75,140,.18) !important;
+  padding:12px 20px !important;
+  font-weight:900 !important;
+  font-size:18px !important;
+}
+.ptables .ug-answer.ug-answer--pill,
+.ptables-layout .ug-answer.ug-answer--pill {
+  border-radius:999px !important;
+}
