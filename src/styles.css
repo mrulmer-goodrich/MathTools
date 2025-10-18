@@ -904,6 +904,44 @@ body{
 .fraction.mini-frac { width: 60px !important; }
 .fraction.mini-frac .frac-bar { width: 44px !important; }
 
+/* ================================ UG global answer button primitive v1 ============================= */
+.ug-answer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #0B4B8C, #0C6B4D); /* Eastway blue → green */
+  box-shadow: 0 8px 16px rgba(11, 75, 140, .18);
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+}
+.ug-answer:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.ug-answer:active { transform: translateY(0); filter: brightness(.98); }
+.ug-answer:disabled { opacity: .55; cursor: not-allowed; }
+
+.ug-answer--pill { border-radius: 999px; }              /* optional modifier */
+.ug-answers-2x2 { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }  /* layout helper */
+.ug-answers-row { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; } /* alt layout */
+
+.ug-answer:focus-visible{
+  outline: 3px solid #93c5fd;        /* focus ring */
+  outline-offset: 3px;
+}
+
+/* Make BigButton pick up the primitive if it doesn't forward className */
+.BigButton, .big-button { border: 0; } /* don’t fight the gradient borderless look */
+
+
+
 /* === v8.3.0 PTables: make the K drop target visible & above === */
 .ptable-rel { position: relative; overflow: visible; }
 .ptable-k-overlay { 
