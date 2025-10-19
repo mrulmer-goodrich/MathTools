@@ -492,6 +492,7 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
       try { ugConfetti.burst(); } catch {}
       console.log('✅ Non-proportional problem complete, calling updateStats with:', currentProblemErrors);
       updateStats?.(currentProblemErrors, true);
+      onProblemComplete?.();
     } else {
       handleError();
       setTimeout(() => setWhyNotProportional(null), 1000);
