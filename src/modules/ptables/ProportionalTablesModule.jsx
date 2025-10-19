@@ -1,6 +1,5 @@
-// ProportionalTablesModule.jsx — UG Math Tools v8.5.1.2 (replaces v8.5.1.1)
-// SpecOp Sync: Add required anchors; confirm single-target blink gating; no functional changes
-// Changes: Comment-only anchors + header bump; existing pulse/blur logic preserved
+// ProportionalTablesModule.jsx — UG Math Tools v9.0.0 (with Stats Tracking)
+// Added: Error tracking, red X overlay, stats reporting integration
 
 // ANCHOR: Imports
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -9,15 +8,15 @@ import DraggableBase from "../../components/DraggableChip.jsx";
 import DropSlotBase from "../../components/DropSlot.jsx";
 import BigButton from "../../components/BigButton.jsx";
 import ugConfetti from "../../lib/confetti.js";
+import { ErrorOverlay } from "../../components/StatsSystem.jsx";
 
 /** UG Math Tools
  * Module: ProportionalTablesModule.jsx
- * Version: 8.5.1.2  (2025-10-11)
- * Notes: Anchors added; pulse visuals unchanged; single-target gating verified
+ * Version: 9.0.0  (2025-01-20)
+ * Notes: Added stats tracking with error overlay
  */
 
 // Shared, lightweight confetti (same as ScaleFactor)
-// (kept as-is; used after solve step)
 function Confetti({ show }) {
   if (!show) return null;
   const COUNT = 90;
@@ -96,7 +95,7 @@ const ACCEPT_HEADER = ["chip", "sym", "symbol", "header"];
 const ACCEPT_VALUE  = ["value", "number"];
 
 // ANCHOR: Component start
-export default function ProportionalTablesModule({ onProblemComplete, registerReset }) {
+export default function ProportionalTablesModule({ onProblemComplete, registerReset, updateStats }) {
   // ANCHOR: State declarations
   const [difficulty, setDifficulty] = useState(loadDifficulty());
   const [problem, setProblem] = useState(() => genPTable(difficulty));
@@ -116,6 +115,10 @@ export default function ProportionalTablesModule({ onProblemComplete, registerRe
   // ANCHOR: Blink timers
   const revealTimers = useRef({});
   const [conceptAnswer, setConceptAnswer] = useState(null);
+
+  // NEW: Error tracking state
+  const [showError, setShowError] = useState(false);
+  const [currentProblemErrors, setCurrentProblemErrors] = useState(0);
 
   // cache choices
   const fillChoicesRef = useRef({});
@@ -153,6 +156,13 @@ export default function ProportionalTablesModule({ onProblemComplete, registerRe
   const revealFourthRow = (ksEqual===true && conceptCorrect);
   const [row4Answer, setRow4Answer] = useState(null);
 
+  // NEW: Error handler - shows red X and tracks errors
+  const handleError = () => {
+    setShowError(true);
+    setCurrentProblemErrors(prev => prev + 1);
+    setTimeout(() => setShowError(false), 1000);
+  };
+
   // ANCHOR: Step handlers
   const resetAll = (nextDiff = difficulty) => {
     const next = genPTable(nextDiff);
@@ -165,15 +175,15 @@ export default function ProportionalTablesModule({ onProblemComplete, registerRe
     setLabelStepTarget('x'); setBuildTarget('num'); setFillRow(0); setFillPart('num');
     fillChoicesRef.current = {};
     Object.values(revealTimers.current).forEach(clearTimeout); revealTimers.current = {};
+    setCurrentProblemErrors(0);
   };
-
-  
 
   // Register reset with parent (placed after resetAll to avoid TDZ)
   useEffect(() => {
     registerReset?.(resetAll)
   }, [])
-useEffect(()=>{ [0,1,2].forEach(i=>{
+
+  useEffect(()=>{ [0,1,2].forEach(i=>{
     const f = fractions[i];
     if (f?.num!=null && f?.den!=null && f.den!==0) {
       const kv=f.num/f.den; setKValues(prev => (prev[i]===kv?prev:{...prev,[i]:kv}));
@@ -369,13 +379,12 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
             </tbody>
           </table>
         </div>
-  <div className="hidden">
-
-        <div className="center" style={{ marginTop: 18 }}>
-          <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+        <div className="hidden">
+          <div className="center" style={{ marginTop: 18 }}>
+            <BigButton onClick={() => resetAll()}>New Problem</BigButton>
+          </div>
         </div>
-        </div>
-</div>
+      </div>
     );
   }, [problem,xPlaced,yPlaced,kPlaced,headerEqCorrect,fractions,kValues,revealFourthRow,row4Answer,reveal,labelStepTarget,buildTarget,fillRow,fillPart,dragEnabled,currentStep]);
 
@@ -389,7 +398,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
               if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
               if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
               if (labelStepTarget === "k" && opt === "k" && xPlaced && yPlaced && !kPlaced) { setKPlaced(true); return; }
-              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+              handleError();
             }}
             aria-label={`choose ${opt}`}
           >{opt}</button>
@@ -408,7 +417,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
             onClick={() => {
               if (buildTarget === "num" && opt === "y" && !numIsY) { setNumIsY(true); setBuildTarget("den"); return; }
               if (buildTarget === "den" && opt === "x" && numIsY && !denIsX) { setDenIsX(true); return; }
-              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+              handleError();
             }}
             aria-label={`choose ${opt}`}
           >{opt}</button>
@@ -435,7 +444,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
                 }
                 return;
               }
-              try { const el = document.activeElement; if (el) { el.classList.add("shake"); setTimeout(() => el.classList.remove("shake"), 350); } } catch {}
+              handleError();
             }}
             aria-label={`choose ${val}`}
           >{val}</button>
@@ -447,6 +456,8 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
   // ANCHOR: Component end
   return (
     <>
+      <ErrorOverlay show={showError} />
+      
       <style>{`.ptables-layout .ptable{border:3px solid #1f2937;border-radius:12px;overflow:hidden;border-collapse:separate;border-spacing:0}.ptables-layout .ptable th,.ptables-layout .ptable td{border-right:3px solid #1f2937 !important;border-bottom:3px solid #1f2937 !important;height:96px;font-size:22px;color:#0f172a;font-weight:800;padding:8px 12px}.ptables-layout .ptable thead th{background:#e5e7eb;color:#0f172a;font-weight:800}.ptables-layout .ptable tr > *:last-child{border-right:none}.ptables-layout .ptable tr:last-child > *{border-bottom:none}.ptables-layout .ptable .chip,.ptables-layout .ptable .chip-lg{font-size:20px;color:#0f172a;font-weight:800}.ptables-layout .right-steps .step-title{font-size:22px}`}</style>
       <div className="panes ptables-layout">
         <div className="card">
@@ -491,7 +502,15 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
               <div className="step-title">Is this table proportional?</div>
               <div className="row" style={{ gap: 8, justifyContent: "center" }}>
                 {randomizedConcept.map(({ key, label }) => (
-                  <button key={key} className="answer-btn ug-answer ug-answer--pill" onClick={() => setConceptAnswer(key)}>{label}</button>
+                  <button key={key} className="answer-btn ug-answer ug-answer--pill" 
+                    onClick={() => {
+                      setConceptAnswer(key);
+                      const isCorrect = (ksEqual && key === "yes_same") || (!ksEqual && key === "no_diff");
+                      if (!isCorrect) {
+                        handleError();
+                      }
+                    }}
+                  >{label}</button>
                 ))}
               </div>
               {conceptAnswer && (
@@ -513,7 +532,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
                   { key: "dot", label: "y = k • x", correct: true },
                   { key: "div", label: "y = k ÷ x", correct: false },
                   { key: "add", label: "y = k + x", correct: false },
-                  { key: "emd", label: "y = k – x", correct: false },
+                  { key: "emd", label: "y = k − x", correct: false },
                 ]).map(({ key, label, correct }) => (
                   <button key={key} className="answer-btn  ug-answer ug-answer--pill"
                     onClick={() => {
@@ -524,11 +543,11 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
                           const el = document.querySelector(".ptable tbody tr:last-child td:nth-child(2)");
                           if (el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
                           multiBurstConfetti();
-                        
-                      onProblemComplete?.();
-}, 10);
+                          updateStats?.(currentProblemErrors, true);
+                          onProblemComplete?.();
+                        }, 10);
                       } else {
-                        alert("Not quite — try another.");
+                        handleError();
                       }
                     }}
                   >{label}</button>
