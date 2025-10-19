@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v4.0.1 with Stats
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v4.0.4 with Stats
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
@@ -490,6 +490,7 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     const correct = problem.whyNot === reason;
     if (correct) {
       try { ugConfetti.burst(); } catch {}
+      console.log('✅ Non-proportional problem complete, calling updateStats with:', currentProblemErrors);
       updateStats?.(currentProblemErrors, true);
     } else {
       handleError();
