@@ -33,14 +33,17 @@ export default function App() {
   // Update stats when a problem is completed
   const updateStats = (problemErrors, wasCorrect) => {
     setStats(prev => {
+      // Only count as correct if there were NO errors AND wasCorrect is true
+      const isPerfect = wasCorrect && problemErrors === 0
+      
       const newStats = {
         questionsAttempted: prev.questionsAttempted + 1,
         questionsCorrect: wasCorrect ? prev.questionsCorrect + 1 : prev.questionsCorrect,
         totalErrors: prev.totalErrors + problemErrors,
-        currentStreak: wasCorrect ? prev.currentStreak + 1 : 0,
+        currentStreak: isPerfect ? prev.currentStreak + 1 : 0,
       }
       
-      // Check for turkey (3 in a row)
+      // Check for turkey (3 in a row with NO errors)
       if (newStats.currentStreak === 3) {
         setShowTurkey(true)
         setTimeout(() => setShowTurkey(false), 3000)
