@@ -19,6 +19,7 @@ export default function App() {
   const [stats, setStats] = useState({
     questionsAttempted: 0,
     questionsCorrect: 0,
+    questionsPerfect: 0,
     totalErrors: 0,
     currentStreak: 0,
   })
