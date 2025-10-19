@@ -384,7 +384,7 @@ useEffect(()=>{ [0,1,2].forEach(i=>{
     return (
       <div className="row" style={{ gap: 10, marginTop: 12 }}>
         {shuffle(opts).map((opt) => (
-          <button key={opt} type="button" className="answer-btn  ug-answer ug-answer--pill"
+          <button key={opt} type="button" className="ug-answer ug-answer--pill"
             onClick={() => {
               if (labelStepTarget === "x" && opt === "x" && !xPlaced) { setXPlaced(true); setLabelStepTarget("y"); return; }
               if (labelStepTarget === "y" && opt === "y" && xPlaced && !yPlaced) { setYPlaced(true); setLabelStepTarget("k"); return; }
