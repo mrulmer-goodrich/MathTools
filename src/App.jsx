@@ -1,4 +1,4 @@
-// src/App.jsx – v10.0.0 (Added Battle Royale)
+// src/App.jsx — v11.0.0 (Added Stats Tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -6,11 +6,22 @@ import HTableModule from './modules/htable/HTableModule.jsx'
 import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
+import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
   const [route, setRoute] = useState('home')
   const [showConfirmNew, setShowConfirmNew] = useState(false)
   const [isProblemComplete, setIsProblemComplete] = useState(false)
+  
+  // Stats tracking state
+  const [stats, setStats] = useState({
+    questionsAttempted: 0,
+    questionsCorrect: 0,
+    totalErrors: 0,
+    currentStreak: 0,
+  })
+  const [showStatsReport, setShowStatsReport] = useState(false)
+  const [showTurkey, setShowTurkey] = useState(false)
   
   // Refs to hold each module's reset function
   const scaleResetRef = useRef(null)
@@ -18,6 +29,36 @@ export default function App() {
   const battleRoyaleResetRef = useRef(null)
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
+
+  // Update stats when a problem is completed
+  const updateStats = (problemErrors, wasCorrect) => {
+    setStats(prev => {
+      const newStats = {
+        questionsAttempted: prev.questionsAttempted + 1,
+        questionsCorrect: wasCorrect ? prev.questionsCorrect + 1 : prev.questionsCorrect,
+        totalErrors: prev.totalErrors + problemErrors,
+        currentStreak: wasCorrect ? prev.currentStreak + 1 : 0,
+      }
+      
+      // Check for turkey (3 in a row)
+      if (newStats.currentStreak === 3) {
+        setShowTurkey(true)
+        setTimeout(() => setShowTurkey(false), 3000)
+      }
+      
+      return newStats
+    })
+  }
+
+  // Reset stats when changing modules
+  const resetStats = () => {
+    setStats({
+      questionsAttempted: 0,
+      questionsCorrect: 0,
+      totalErrors: 0,
+      currentStreak: 0,
+    })
+  }
 
   // Called by modules when they complete a problem
   const handleProblemComplete = () => {
@@ -82,6 +123,19 @@ export default function App() {
   const goHome = () => {
     setRoute('home')
     setIsProblemComplete(false)
+    resetStats() // Reset stats when going home
+  }
+
+  // Get module name for stats display
+  const getModuleName = () => {
+    switch(route) {
+      case 'scale': return 'Scale Factor'
+      case 'htable': return 'H-Table'
+      case 'battle-royale': return 'H-Table Battle Royale'
+      case 'ptables': return 'Proportional Tables'
+      case 'pgraphs': return 'Proportional Graphs'
+      default: return 'Unknown Module'
+    }
   }
 
   return (
@@ -124,6 +178,28 @@ export default function App() {
               Home
             </button>
             <button 
+              className="header-button gradient-button"
+              onClick={() => setShowStatsReport(true)}
+              style={{ position: 'relative' }}
+            >
+              📊 Report
+              {stats.currentStreak > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  borderRadius: '12px',
+                  padding: '2px 8px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {stats.currentStreak}🔥
+                </span>
+              )}
+            </button>
+            <button 
               className={`header-button gradient-button ${isProblemComplete ? 'pulse-animation' : ''}`}
               onClick={handleNewProblem}
             >
@@ -137,6 +213,7 @@ export default function App() {
               <ScaleFactorModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('scale', fn)}
+                updateStats={updateStats}
               />
             )}
 
@@ -144,6 +221,7 @@ export default function App() {
               <HTableModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('htable', fn)}
+                updateStats={updateStats}
               />
             )}
 
@@ -151,6 +229,7 @@ export default function App() {
               <ProportionalTablesModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('ptables', fn)}
+                updateStats={updateStats}
               />
             )}
 
@@ -158,6 +237,7 @@ export default function App() {
               <ProportionalGraphsModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('pgraphs', fn)}
+                updateStats={updateStats}
               />
             )}
           </div>
@@ -186,9 +266,22 @@ export default function App() {
           <HTableBattleRoyaleModule 
             onProblemComplete={handleProblemComplete}
             registerReset={(fn) => registerReset('battle-royale', fn)}
+            updateStats={updateStats}
           />
         </>
       )}
+
+      {/* Stats Report Modal */}
+      {showStatsReport && (
+        <StatsReport
+          stats={stats}
+          onClose={() => setShowStatsReport(false)}
+          moduleName={getModuleName()}
+        />
+      )}
+
+      {/* Turkey Celebration */}
+      <TurkeyOverlay show={showTurkey} streak={3} />
 
       {/* Confirmation Modal */}
       {showConfirmNew && (
