@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from 're
 import DraggableBase from '../../components/DraggableChip.jsx'
 import DropSlotBase from '../../components/DropSlot.jsx'
 import { ErrorOverlay } from '../../components/StatsSystem.jsx'
+import ugConfetti from '../../lib/confetti.js'
 // Data
 import { genHProblem } from '../../lib/generator.js'
 import { loadSession, saveSession } from '../../lib/localStorage.js'
@@ -210,6 +211,7 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   );
   const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
+  const confettiInterval = useRef(null);
   const [rotLang, setRotLang] = useState('English');
   const [rotationOrder, setRotationOrder] = useState([]);
   const rotationOrderFull = useMemo(()=> ['XXXX', ...rotationOrder], [rotationOrder])
@@ -617,8 +619,12 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
       }, 2000);
     }
 
+    // Start continuous confetti
     setConfettiOn(true);
-    setTimeout(() => setConfettiOn(false), 3500);
+    try { ugConfetti.burst(); } catch {}
+    confettiInterval.current = setInterval(() => {
+      try { ugConfetti.burst(); } catch {}
+    }, 2000);
 
     setDone(11);
 
@@ -638,6 +644,14 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   const resetProblem = ()=>{
     postCalcAppliedRef.current = false; 
     setNpBlink(false);
+    
+    // Stop confetti
+    if (confettiInterval.current) {
+      clearInterval(confettiInterval.current);
+      confettiInterval.current = null;
+    }
+    setConfettiOn(false);
+    
     setProblem(genSaneHProblem());
     setTable({
       head1:'', head2:'',
@@ -650,7 +664,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
     setSteps(STEP_TITLES.map(()=>({misses:0,done:false})));
     setHighlightKeys([]); setOval(null); setTripleUL(null);
     setMathStrip({ a:null, b:null, divisor:null, result:null, showResult:false });
-    setConfettiOn(false);
     setBlinkKey(null); setBlinkUnits(false);
     setPickedOther(null);
     setPickedUnits([]);
@@ -736,7 +749,13 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
 
           .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
           .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
-          .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; font-size: 1.25rem; }
+          .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 700; font-size: 1.75rem; }
+          
+          /* Make all H-table text content consistently large */
+          .hcell span, .hhead span, .hhead-text {
+            font-size: 1.75rem !important;
+            font-weight: 700 !important;
+          }
 
           .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
           .button.secondary { background: #e2e8f0; color: #0f172a; }
@@ -811,16 +830,16 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
           }
 
-          /* Modern answer button styling */
+          /* Modern answer button styling - matches pgraphs exactly */
           .answer-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 16px 24px;
+            padding: 14px 20px;
             border-radius: 12px;
             font-weight: 900;
-            font-size: 18px;
-            line-height: 1.2;
+            font-size: 20px;
+            line-height: 1.3;
             border: 3px solid #1f2937;
             color: #0f172a;
             background: #ffffff;
@@ -828,7 +847,7 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             transition: all 150ms ease;
             cursor: pointer;
             text-align: center;
-            min-height: 60px;
+            min-height: 64px;
           }
           .answer-btn:hover {
             transform: translateY(-2px);
@@ -851,6 +870,15 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             .answers-grid {
               grid-template-columns: 1fr;
             }
+          }
+
+          /* Standardize step title font */
+          .step-title {
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.3;
+            color: #0f172a;
+            margin-bottom: 12px;
           }
         `}</style>
 
@@ -1032,12 +1060,12 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                       {/* Row 1 */}
                       <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
-                          <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
+                          <span className={cellCls('uTop')}>{table.uTop || ''}</span>
                         </Slot>
                       </div>
                       <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={needWildBlink('sTop') || highlightKeys.includes('sTop')} className={`${table.sTop==null ? "empty" : ""}`}>
-                          <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
+                          <span className={cellCls('sTop')}>{table.sTop ?? ''}</span>
                         </Slot>
                       </div>
                       <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
@@ -1051,12 +1079,12 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                       {/* Row 2 */}
                       <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
-                          <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
+                          <span className={cellCls('uBottom')}>{table.uBottom || ''}</span>
                         </Slot>
                       </div>
                       <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={needWildBlink('sBottom') || highlightKeys.includes('sBottom')} className={`${table.sBottom==null ? "empty" : ""}`}>
-                          <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
+                          <span className={cellCls('sBottom')}>{table.sBottom ?? ''}</span>
                         </Slot>
                       </div>
                       <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
