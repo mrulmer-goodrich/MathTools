@@ -25,6 +25,9 @@ export default function App() {
   const [showStatsReport, setShowStatsReport] = useState(false)
   const [showTurkey, setShowTurkey] = useState(false)
   
+  console.log('🔧 Current stats state:', stats)
+  console.log('🔧 About to define updateStats function')
+  
   // Refs to hold each module's reset function
   const scaleResetRef = useRef(null)
   const htableResetRef = useRef(null)
