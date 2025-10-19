@@ -101,8 +101,8 @@ export function TurkeyOverlay({ show, streak }) {
 export function StatsReport({ stats, onClose, moduleName }) {
   if (!stats) return null;
   
-  const accuracy = stats.questionsAttempted > 0 
-    ? ((stats.questionsCorrect / stats.questionsAttempted) * 100).toFixed(1)
+  const firstTryAccuracy = stats.questionsAttempted > 0 
+    ? ((stats.questionsPerfect / stats.questionsAttempted) * 100).toFixed(1)
     : 0;
   
   const avgErrors = stats.questionsAttempted > 0
@@ -133,8 +133,8 @@ export function StatsReport({ stats, onClose, moduleName }) {
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           <StatCard label="Questions Attempted" value={stats.questionsAttempted} />
-          <StatCard label="Questions Correct" value={stats.questionsCorrect} color="#10b981" />
-          <StatCard label="Accuracy" value={`${accuracy}%`} color="#3b82f6" />
+          <StatCard label="First-Try Perfect" value={stats.questionsPerfect} color="#10b981" />
+          <StatCard label="First-Try Accuracy" value={`${firstTryAccuracy}%`} color="#3b82f6" />
           <StatCard label="Avg Errors/Question" value={avgErrors} color="#f59e0b" />
         </div>
         
