@@ -1,5 +1,5 @@
 ///This is now controlling authority as v.11.0.1 and additional changes should be made from this baseline//
-// HTableModule — UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
+// HTableModule – UG Math Tools v10.5.4 was baselined from 10.5.0 with the appropriate updates//
 // src/modules/htable/HTableModule.jsx
 //Ulmer-Goodrich Productions
 
@@ -44,10 +44,10 @@ function genSafeProblem(rawGenFn, maxTries = 25) {
 // ---- End wrapper ----
 
 
-// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // TAP-ONLY WRAPPERS
-// ────────────────────────────────────────────────────────────────────────────────
-// TAP-ONLY WRAPPERS — SLOT/DRAG
+// ────────────────────────────────────────────────────────────────────────────
+// TAP-ONLY WRAPPERS – SLOT/DRAG
 const Draggable = ({ payload, data, label, onClick, tapAction, ...rest }) => {
   const merged = data ?? payload ?? undefined;
   const handleClick = (e) => {
@@ -90,9 +90,9 @@ const Slot = ({ accept, children, className='', blinkWrap=false, onClick, valida
   );
 };
 
-// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // Spec scaffolding & helpers
-// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // STEP TITLES
 const STEP_TITLES = [
   "What's the first step to solve the problem?",
@@ -101,7 +101,7 @@ const STEP_TITLES = [
   "What are the two units in the problem?",
   "What value goes here?",
   "What value goes here?",
-  "What’s the other value from the problem?",
+  "What's the other value from the problem?",
   "Tap the cell where you should place the <value>",
   "What do we do next?",
   "Pick the two numbers we multiply",
@@ -168,9 +168,9 @@ const _assertFour = (arr, tag) => {
   return arr;
 };
 
-// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // Component
-// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // STEP LOGIC (0–11)
 export default function HTableModule({ onProblemComplete, registerReset }){
   const H_SNAP_VERSION = 22;
@@ -208,7 +208,7 @@ const [session, setSession] = useState(persisted || { attempts: [] });
   );
 const [mathStrip, setMathStrip] = useState({ a:null, b:null, divisor:null, result:null, showResult:false });
   const [confettiOn, setConfettiOn] = useState(false);
-  // v10.2.0 — Language rotation state
+  // v10.2.0 – Language rotation state
   const [rotLang, setRotLang] = useState('English');
   const [rotationOrder, setRotationOrder] = useState([]); // excludes English, includes 'XXXX'
   const rotationOrderFull = useMemo(()=> ['XXXX', ...rotationOrder], [rotationOrder])
@@ -241,7 +241,7 @@ const seededShuffle = (arr) => {
     const nextState = { ...(session||{}), hSnap:{ version:H_SNAP_VERSION, problem, table, step, steps } };
     saveSession(nextState); setSession(nextState);
   },[problem, table, step, steps]);
-  // v10.2.0 — initialize rotation order on problem change
+  // v10.2.0 – initialize rotation order on problem change
   useEffect(() => {
     try {
       // Build from actual available alts; ignore placeholders & empties
@@ -496,7 +496,7 @@ setDone(1); next();
   useEffect(()=>{ const onResize = ()=>measure(); window.addEventListener('resize', onResize); return ()=>window.removeEventListener('resize', onResize); },[]);
   
   
-  // v10.2.0 — single 15s rotation interval
+  // v10.2.0 – single 15s rotation interval
   useEffect(() => {
     const id = setInterval(() => {
       if (isHoldingEnglish || isOverEnglish) return;
@@ -536,7 +536,7 @@ setDone(1); next();
   },[highlightKeys]);
 
   
-  // v11.0.— press-and-hold English handlers - hides these actions
+  // v11.0.– press-and-hold English handlers - hides these actions
   //const holdDownEnglish = () => { setIsHoldingEnglish(true); setRotLang('English'); };
   //const holdUpEnglish   = () => { setIsHoldingEnglish(false); };
 
@@ -557,7 +557,7 @@ setDone(1); next();
     const sSame = (givenRow==='top') ? table.sTop : table.sBottom;
     if (v!=null && sSame!=null) list.push({ a:v, b:sSame, label:`${v} × ${sSame}`, keys: [(givenRow==='top')?'vTop':'vBottom', (givenRow==='top')?'sTop':'sBottom'] });
     if (table.sTop!=null && table.sBottom!=null) list.push({ a:table.sTop, b:table.sBottom, label:`${table.sTop} × ${table.sBottom}`, keys:['sTop','sBottom'] });
-    const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
+   const vOpp = (givenRow==='top') ? table.vBottom : table.vTop;
     if (vOpp!=null && sSame!=null) list.push({ a:vOpp, b:sSame, label:`${vOpp} × ${sSame}`, keys: [(givenRow==='top')?'vBottom':'vTop', (givenRow==='top')?'sTop':'sBottom'] });
     // ensure a "random multiple combo"
     if (table.sTop!=null && v!=null) list.push({ a:v, b:1, label:`${v} × 1`, keys: [] });
@@ -640,7 +640,7 @@ function applyPostCalculateEffects() {
     return t;
   });
 
-  // Start blinking on solved cell (module-yellow style) — continuous until New Problem
+  // Start blinking on solved cell (module-yellow style) – continuous until New Problem
   if (solvedKey) { setBlinkKey(solvedKey); }
 
   // Start blinking on solved cell for 2 seconds, then stop and start New Problem pulse
@@ -720,7 +720,7 @@ const cellCls = (key)=> [
   ].filter(Boolean).join(' ');
 
   
-  // v10.2.0 — narrative selection and XXXX masking
+  // v10.2.0 – narrative selection and XXXX masking
   const langLabel = rotLang;
 
   function maskToXXXX(str) {
@@ -756,9 +756,9 @@ function narrativeFor(lang) {
   function enforceEquals(s){ return (s||'').replace(/↔/g,'='); }
   const displayText = enforceEquals(narrativeFor(rotLang));
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // UI + RIGHT PANEL
-  // ──────────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
+  // UI + LAYOUT
+  // ────────────────────────────────────────────────────────────────────────────
   return (
     <div className="container" style={{position:'relative'}}>
       <style>{`
@@ -782,7 +782,7 @@ function narrativeFor(lang) {
           height: ${ROW_H}px !important;
         }
 
-        /* v10.0.1 — HTable cell centering & uniform text */
+        /* v10.0.1 – HTable cell centering & uniform text */
         .hcell, .hhead { display:flex; align-items:center; justify-content:center; text-align:center; }
         .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
         .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 600; font-size: 1.25rem; }
@@ -790,28 +790,27 @@ function narrativeFor(lang) {
 
         .right-footer { position: sticky; bottom: 0; background: #fff; padding: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
         .button.secondary { background: #e2e8f0; color: #0f172a; }
-        /* === v9.7.2 panel swap (module-local, no global changes) === */
-        .panes { display: flex; gap: 12px; align-items: flex-start; }
-.left-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
-        .card { flex: 1 1 0; min-width: 0; }
-        .card.right-steps { order: 1; } /* prompts appear visually on the LEFT */
-        .card.hgrid-card  { order: 2; } /* H-table appears visually on the RIGHT */
-
+        
+        /* === REVISED LAYOUT: Steps+Problem on left, HTable on right === */
+        .panes { display: flex; gap: 24px; align-items: flex-start; }
+        .left-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
+        .right-col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
+        
         @media (max-width: 720px) {
           .panes { flex-direction: column; }
-          .card.right-steps, .card.hgrid-card { order: initial; }
         }
-        /* === v9.7.3 visual tweaks === */
-        .panes { gap: 24px; } /* more space between cards */
-        .card.right-steps { font-size: 1.06rem; } /* match P-Table right card feel */
-        .card.right-steps .chip,
-        .card.right-steps .button { font-size: 1.06rem; }
+        
+        .card { min-width: 0; }
+        .card.steps-card { font-size: 1.06rem; }
+        .card.steps-card .chip,
+        .card.steps-card .button { font-size: 1.06rem; }
         .right-footer { margin-top: 12px; }
 
         /* Lock blink look to the first-step style; remove stray center stripes */
         .ptable-blink-hard.blink-bg { background: transparent !important; }
         .ptable-blink-hard.blink-bg::before,
         .ptable-blink-hard.blink-bg::after { display: none !important; }
+        
 .hcell, .hhead {
   display: flex !important;
   align-items: center !important;
@@ -879,276 +878,268 @@ function narrativeFor(lang) {
 </style>
 
       <div className="panes">
-        {/* H-GRID RENDER */}
-{/* LEFT CARD: Problem + H-table */}
-        <div className="card hgrid-card">
-          <div className="section">
+        {/* LEFT COLUMN: Steps + Problem */}
+        <div className="left-col">
+          {/* Step Prompts Card */}
+          <div className="card steps-card">
+            <div className="section">
+              <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
-            {/* Problem (natural text only) */}
-            <div className="problem-banner">
-              <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
-              <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
-                {displayText}
-              </div>
-    <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
-      <button
-        type="button"
-        className="button button-contrast"
-        onMouseDown={holdEnglishDown}
-        onMouseUp={holdEnglishUp}
-        
-        onTouchStart={holdEnglishDown}
-        onTouchEnd={holdEnglishUp}
-        onPointerDown={holdEnglishDown}
-        onPointerUp={holdEnglishUp}
-        onPointerCancel={holdEnglishUp}
-      onMouseEnter={()=>setIsOverEnglish(true)} onMouseLeave={()=>setIsOverEnglish(false)}>
-        Press for English
-      </button>
-    </div>
+              {/* STEP 0 */}
+              {step===0 && (
+                <div className="chips with-borders center">
+                 {seededShuffle(STEP1_CHOICES).map(c => (
+                    <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
+                  ))}
+                </div>
+              )}
 
+              {/* STEP 1 */}
+              {step===1 && (
+                <div className="chips with-borders center" style={{marginTop:8}}>
+                  {seededShuffle([
+                    { id:'col_units', label:'Units', kind:'col', v:'Units' },
+                    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
+                    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
+                    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
+                  ]).map((h, idx) => (
+                    <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 2 */}
+              {step===2 && (
+                <div className="chips with-borders center" style={{marginTop:8}}>
+                  {seededShuffle([
+                    { id:'col_units', label:'Units', kind:'col', v:'Units' },
+                    { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
+                    { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
+                    { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
+                  ]).map((h, idx) => (
+                    <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 3 */}
+              {step===3 && (
+                <div className="chips center mt-8">
+                  {unitChoices.map(c => (
+                    <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 4 */}
+              {step===4 && (
+                <div className="chips center mt-8">
+                  {seededShuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
+                </div>
+              )}
+
+              {/* STEP 5 */}
+              {step===5 && (
+                <div className="chips center mt-8">
+                  {seededShuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
+                </div>
+              )}
+
+              {/* STEP 6 */}
+              {step===6 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(otherValueChoices).map(c => (
+                    <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 7 */}
+              {step===7 && (<div className="problem-body"> </div>)} 
+
+              {/* STEP 8 */}
+              {step===8 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
+                    <button key={opt.id || idx} className="chip chip-tiny" onClick={()=>chooseNext8(opt)}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 9 */}
+              {step===9 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
+                    <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 10 */}
+              {step===10 && (
+                <div className="chips with-borders center mt-8">
+                  {seededShuffle(divideChoices).map((c,idx)=>(
+                    <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+
+              {/* STEP 11+ */}
+              {step>=11 && (
+                <div className="problem-body"> </div>
+              )}
             </div>
+          </div>
 
-            {/* H-table visible AFTER step 0 */}
-            {step>=1 && (
-              <div className="hwrap" style={{position:'relative', marginTop:12}}>
-                
-{/* Equation display (Step 10+ when equation ready) */}
-{ (step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
-  <div className="eq-display">
-    <span className="frac">
-      <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
-      <span className="bar"></span>
-      <span className="den">{String(mathStrip?.divisor ?? '')}</span>
-    </span>
-    <span className="eq"> = </span>
-{!mathStrip?.showResult ? (
-      <button 
-        className="button action-blink-strong" 
-        onClick={onCalculate} 
-        disabled={((table?.vTop == null) === (table?.vBottom == null))}
-        style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
-      >
-        Calculate
-      </button>
-    ) : (
-      <span className="res">{String(mathStrip?.result ?? '')}</span>
-    )}
-  </div>
-)}
-<div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-                  {/* Headers */}
-                  <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
-                      <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                        <span className="hhead-text">{table.head1 || ''}</span>
+          {/* Problem Card - now below steps */}
+          {step>=0 && (
+            <div className="card">
+              <div className="section">
+                <div className="problem-banner">
+                  <div className="problem-title">Problem <span className="lang-badge" style={{float:"right", fontWeight:600}}>Language: {langLabel}</span></div>
+                  <div className="problem-body" style={{whiteSpace:'pre-wrap'}}>
+                    {displayText}
+                  </div>
+                  <div className="problem-controls" style={{display:'flex', justifyContent:'center', marginTop:8}}>
+                    <button
+                      type="button"
+                      className="button button-contrast"
+                      onMouseDown={holdEnglishDown}
+                      onMouseUp={holdEnglishUp}
+                      onTouchStart={holdEnglishDown}
+                      onTouchEnd={holdEnglishUp}
+                      onPointerDown={holdEnglishDown}
+                      onPointerUp={holdEnglishUp}
+                      onPointerCancel={holdEnglishUp}
+                      onMouseEnter={()=>setIsOverEnglish(true)} 
+                      onMouseLeave={()=>setIsOverEnglish(false)}>
+                      Press for English
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN: H-Table + Math Strip */}
+        <div className="right-col">
+          {step>=1 && (
+            <div className="card">
+              <div className="section">
+                <div className="hwrap" style={{position:'relative'}}>
+                  <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
+                    {/* Headers */}
+                    <div className="hhead" style={{height:ROW_H}}>
+                      <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
+                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+                          <span className="hhead-text">{table.head1 || ''}</span>
+                        </div>
+                      </Slot>
+                    </div>
+                    <div className="hhead" style={{height:ROW_H}}>
+                      <Slot accept={["header"]} blinkWrap={step===2 && !table.head2} className={`${!table.head2 ? "empty" : ""}`}>
+                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
+                          <span className="hhead-text">{table.head2 || ''}</span>
+                        </div>
+                      </Slot>
+                    </div>
+                    <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
+
+                    {/* Row 1 */}
+                    <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
+                        <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
+                      </Slot>
+                    </div>
+                    <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={needWildBlink('sTop') || highlightKeys.includes('sTop')} className={`${table.sTop==null ? "empty" : ""}`}>
+                        <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
+                      </Slot>
+                    </div>
+                    <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={highlightKeys.includes('vTop') || isFinalBlinkKey('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
+                        <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
+                      </Slot>
+                    </div>
+
+                    <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
+
+                    {/* Row 2 */}
+                    <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
+                        <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
+                      </Slot>
+                    </div>
+                    <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={needWildBlink('sBottom') || highlightKeys.includes('sBottom')} className={`${table.sBottom==null ? "empty" : ""}`}>
+                        <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
+                      </Slot>
+                    </div>
+                    <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
+                      <Slot blinkWrap={highlightKeys.includes('vBottom') || isFinalBlinkKey('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
+                        <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
+                      </Slot>
+                    </div>
+
+                    {/* H lines */}
+                    <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
+                    <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+                    <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
+
+                    {/* Red oval (Step 9) */}
+                    {oval && (
+                      <div
+                        style={{
+                          position:'absolute',
+                          left: oval.left, top: oval.top, width: oval.len, height: 62,
+                          transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
+                          border: '5px solid #ef4444', borderRadius: 9999,
+                          pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
+                        }}
+                      />
+                    )}
+                    {/* Red triple underline (Step 10) */}
+                    {tripleUL && (
+                      <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
+                        <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
+                        <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                        <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
                       </div>
-                    </Slot>
+                    )}
                   </div>
-                  <div className="hhead" style={{height:ROW_H}}>
-                    <Slot accept={["header"]} blinkWrap={step===2 && !table.head2} className={`${!table.head2 ? "empty" : ""}`}>
-                      <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
-                        <span className="hhead-text">{table.head2 || ''}</span>
-                      </div>
-                    </Slot>
-                  </div>
-                  <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
-
-                  {/* Row 1 */}
-                  <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
-                      <span className={cellCls('uTop')} style={{fontSize:18}}>{table.uTop || ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.sTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('sTop') || highlightKeys.includes('sTop')} className={`${table.sTop==null ? "empty" : ""}`}>
-                      <span className={cellCls('sTop')} style={{fontSize:22}}>{table.sTop ?? ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.vTop} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vTop') || isFinalBlinkKey('vTop')} className={`${table.vTop==null ? "empty" : ""}`} onClick={tapPlaceValueTop}>
-                      <span className={cellCls('vTop')}>{table.vTop ?? ''}</span>
-                    </Slot>
-                  </div>
-
-                  <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
-
-                  {/* Row 2 */}
-                  <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
-                      <span className={cellCls('uBottom')} style={{fontSize:18}}>{table.uBottom || ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.sBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={needWildBlink('sBottom') || highlightKeys.includes('sBottom')} className={`${table.sBottom==null ? "empty" : ""}`}>
-                      <span className={cellCls('sBottom')} style={{fontSize:22}}>{table.sBottom ?? ''}</span>
-                    </Slot>
-                  </div>
-                  <div ref={refs.vBottom} className="hcell" style={{height:ROW_H}}>
-                    <Slot blinkWrap={highlightKeys.includes('vBottom') || isFinalBlinkKey('vBottom')} className={`${table.vBottom==null ? "empty" : ""}`} onClick={tapPlaceValueBottom}>
-                      <span className={cellCls('vBottom')}>{table.vBottom ?? ''}</span>
-                    </Slot>
-                  </div>
-
-                  {/* H lines */}
-                  <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
-                  <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-                  <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
-
-                  {/* Red oval (Step 9) */}
-                  {oval && (
-                    <div
-                      style={{
-                        position:'absolute',
-                        left: oval.left, top: oval.top, width: oval.len, height: 62,
-                        transform: `translate(-50%, -50%) rotate(${oval.rot}deg)`,
-                        border: '5px solid #ef4444', borderRadius: 9999,
-                        pointerEvents:'none', boxShadow:'0 0 10px rgba(239,68,68,0.6)'
-                      }}
-                    />
-                  )}
-                  {/* Red triple underline (Step 10) */}
-                  {tripleUL && (
-                    <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
-                      <div style={{borderTop:'3px solid #ef4444', marginTop:4}} />
+                  
+                  {/* Math strip - NOW BELOW the H-table */}
+                  {(step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
+                    <div className="eq-display" style={{marginTop: 16}}>
+                      <span className="frac">
+                        <span className="num">{String(mathStrip?.a ?? '')} × {String(mathStrip?.b ?? '')}</span>
+                        <span className="bar"></span>
+                        <span className="den">{String(mathStrip?.divisor ?? '')}</span>
+                      </span>
+                      <span className="eq"> = </span>
+                      {!mathStrip?.showResult ? (
+                        <button 
+                          className="button action-blink-strong" 
+                          onClick={onCalculate} 
+                          disabled={((table?.vTop == null) === (table?.vBottom == null))}
+                          style={{fontSize:'1.3rem', padding:'0.4rem 1rem', fontWeight:700, minHeight:'auto', lineHeight:1.2}}
+                        >
+                          Calculate
+                        </button>
+                      ) : (
+                        <span className="res">{String(mathStrip?.result ?? '')}</span>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* RIGHT SIDE – prompts only */}
-        <div className="card right-steps">
-          <div className="section">
-            <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
-
-            {/* RIGHT-PANEL: STEP 0 — START */}
-            {step===0 && (
-              <div className="chips with-borders center">
-               {seededShuffle(STEP1_CHOICES).map(c => (
-                  <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 0 — END */}
-
-            {/* RIGHT-PANEL: STEP 1 — START */}
-            {step===1 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {seededShuffle([
-                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ]).map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader1(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 1 — END */}
-
-            {/* RIGHT-PANEL: STEP 2 — START */}
-            {step===2 && (
-              <div className="chips with-borders center" style={{marginTop:8}}>
-                {seededShuffle([
-                  { id:'col_units', label:'Units', kind:'col', v:'Units' },
-                  { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
-                  { id:'col_totals', label:'Totals', kind:'col', v:'Totals' },
-                  { id:'col_rates', label:'Rates', kind:'col', v:'Rates' },
-                ]).map((h, idx) => (
-                  <Draggable key={h.id ?? idx} id={h.id ?? idx} label={h.label} data={h} tapAction={(e,d)=>tapHeader2(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 2 — END */}
-
-            {/* RIGHT-PANEL: STEP 3 — START */}
-            {step===3 && (
-              <div className="chips center mt-8">
-                {unitChoices.map(c => (
-                  <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapUnit(d)} />
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 3 — END */}
-
-            {/* RIGHT-PANEL: STEP 4 — START */}
-            {step===4 && (
-              <div className="chips center mt-8">
-                {seededShuffle(numbersTopScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleTop(d)} />)}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 4 — END */}
-
-            {/* RIGHT-PANEL: STEP 5 — START */}
-            {step===5 && (
-              <div className="chips center mt-8">
-                {seededShuffle(numbersBottomScale).map(c => <Draggable key={c.id} id={c.id} label={c.label} data={c} tapAction={(e,d)=>tapScaleBottom(d)} />)}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 5 — END */}
-
-            {/* RIGHT-PANEL: STEP 6 — START */}
-            {step===6 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(otherValueChoices).map(c => (
-                  <button key={c.id} className="chip" onClick={() => { chooseOtherValue(c); }}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 6 — END */}
-
-            {/* RIGHT-PANEL: STEP 7 — START (user taps a cell on left; no pre-blink) */}
-            {step===7 && (<div className="problem-body"> </div>)} 
-            {/* RIGHT-PANEL: STEP 7 — END */}
-
-            {/* RIGHT-PANEL: STEP 8 — START */}            {/* RIGHT-PANEL: STEP 8 — START */}
-            {step===8 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
-                  <button key={opt.id || idx} className="chip chip-tiny" onClick={()=>chooseNext8(opt)}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 8 — END */}
-
-            {/* RIGHT-PANEL: STEP 9 — START */}
-            {step===9 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
-                  <button key={idx} className="chip" onClick={()=>chooseMultiply(pair)}>{pair.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 9 — END */}
-
-            {/* RIGHT-PANEL: STEP 10 — START */}
-            {step===10 && (
-              <div className="chips with-borders center mt-8">
-                {seededShuffle(divideChoices).map((c,idx)=>(
-                  <button key={idx} className="chip" onClick={()=>chooseDivideByNumber(c)}>{c.label}</button>
-                ))}
-              </div>
-            )}
-            {/* RIGHT-PANEL: STEP 10 — END */}
-
-            {/* RIGHT-PANEL: STEP 11 — START */}
-            {step>=11 && (
-              <div className="problem-body"> </div>
-            )}
-            {/* RIGHT-PANEL: STEP 11 — END */}
-
-
-          </div>
+            </div>
+          )}
         </div>
       </div>
-</div>
+    </div>
   );
-}
+} 
