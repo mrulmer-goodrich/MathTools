@@ -1,4 +1,4 @@
-// src/App.jsx — v11.0.0 (Added Stats Tracking)
+// src/App.jsx – v11.0.1 (Fixed questionsPerfect tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -45,6 +45,7 @@ export default function App() {
       const newStats = {
         questionsAttempted: prev.questionsAttempted + 1,
         questionsCorrect: wasCorrect ? prev.questionsCorrect + 1 : prev.questionsCorrect,
+        questionsPerfect: isPerfect ? prev.questionsPerfect + 1 : prev.questionsPerfect,
         totalErrors: prev.totalErrors + problemErrors,
         currentStreak: isPerfect ? prev.currentStreak + 1 : 0,
       }
@@ -64,6 +65,7 @@ export default function App() {
     setStats({
       questionsAttempted: 0,
       questionsCorrect: 0,
+      questionsPerfect: 0,
       totalErrors: 0,
       currentStreak: 0,
     })
