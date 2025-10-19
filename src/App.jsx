@@ -1,4 +1,4 @@
-// src/App.jsx — v11.0.1 (Added Stats Tracking)
+// src/App.jsx — v11.0.0 (Added Stats Tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -9,6 +9,8 @@ import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
+  console.log('🚀 APP COMPONENT RENDERED')
+  
   const [route, setRoute] = useState('home')
   const [showConfirmNew, setShowConfirmNew] = useState(false)
   const [isProblemComplete, setIsProblemComplete] = useState(false)
