@@ -887,7 +887,7 @@ function narrativeFor(lang) {
 
               {/* STEP 0 */}
               {step===0 && (
-                <div className="chips with-borders center">
+                <div className="chips with-borders center ug-answer ug-answer--pill">
                  {seededShuffle(STEP1_CHOICES).map(c => (
                     <button key={c.id} className="chip chip-hdraw" onClick={()=>handleStep0(c)}>{c.label}</button>
                   ))}
@@ -896,7 +896,7 @@ function narrativeFor(lang) {
 
               {/* STEP 1 */}
               {step===1 && (
-                <div className="chips with-borders center" style={{marginTop:8}}>
+                <div className="chips with-borders center ug-answer ug-answer--pill" style={{marginTop:8}}>
                   {seededShuffle([
                     { id:'col_units', label:'Units', kind:'col', v:'Units' },
                     { id:'col_scale', label:'Scale Numbers', kind:'col', v:'ScaleNumbers' },
