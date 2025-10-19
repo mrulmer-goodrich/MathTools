@@ -1,17 +1,13 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v3.1.1
-
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v4.0.0 with Stats
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
-import BigButton from "../../components/BigButton.jsx";
 import ugConfetti from "../../lib/confetti.js";
 import { reduceFraction, fractionToDecimal } from "../../lib/mathUtils.js";
+import { ErrorOverlay } from "../../components/StatsSystem.jsx";
 
-// format to 2 decimal places; returns Number (not string)
 const fmt2 = (n) => Number(n.toFixed(2));
 
-
-// choose a "nice" grid step so we get ~12 lines per axis
 const chooseStep = (range, target = 12) => {
   const raw = range / target;
   if (raw <= 1) return 1;
@@ -21,22 +17,13 @@ const chooseStep = (range, target = 12) => {
   return Math.ceil(raw);
 };
 
-/** Align math tokens (variables, '=', Fraction) on the vertical centerline inside chips */
 const Formula = ({ children }) => (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, lineHeight: 1 }}>
     {children}
   </span>
 );
 
-
-// Round up to a "nice" tick (default step = 5)
 const niceCeil = (n, step = 5) => Math.ceil(n / step) * step;
-
-
-/** 
- * Proportional Graphs Module
- * Teaches students to identify proportional relationships and calculate k
- */
 
 const shuffle = (arr) => { 
   const a = [...arr]; 
@@ -47,7 +34,6 @@ const shuffle = (arr) => {
   return a; 
 };
 
-// Canvas-based graph renderer with dynamic axes
 function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCoordinates }) {
   const canvasRef = useRef(null);
   const [clickedPoint, setClickedPoint] = useState(null);
@@ -63,29 +49,23 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
     
-    // ALWAYS trust generator-provided limits (they're calculated to show all perfect points)
     const maxX = problem?.xMax || 20;
     const maxY = problem?.yMax || 20;
     
-    // Clear canvas
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     
-    // Helper function to convert graph coordinates to canvas coordinates
     const toCanvasX = (x) => padding + (x / maxX) * graphWidth;
     const toCanvasY = (y) => height - padding - (y / maxY) * graphHeight;
     
-    // darken grid lines for better visibility
-    ctx.strokeStyle = '#cbd5e1'; // Tailwind slate-300
+    ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1.25;
     
-    // Use generator-provided steps for perfect grid alignment
     const xStep = problem?.xStep || chooseStep(maxX);
     const yStep = problem?.yStep || chooseStep(maxY);
     
     for (let i = 0; i <= maxX; i += xStep) {
-      // Vertical lines
       ctx.beginPath();
       ctx.moveTo(toCanvasX(i), padding);
       ctx.lineTo(toCanvasX(i), height - padding);
@@ -93,28 +73,23 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
     }
     
     for (let i = 0; i <= maxY; i += yStep) {
-      // Horizontal lines
       ctx.beginPath();
       ctx.moveTo(padding, toCanvasY(i));
       ctx.lineTo(width - padding, toCanvasY(i));
       ctx.stroke();
     }
     
-    // Draw axes
     ctx.strokeStyle = '#1f2937';
     ctx.lineWidth = 3;
-    // X-axis
     ctx.beginPath();
     ctx.moveTo(padding, height - padding);
     ctx.lineTo(width - padding, height - padding);
     ctx.stroke();
-    // Y-axis
     ctx.beginPath();
     ctx.moveTo(padding, padding);
     ctx.lineTo(padding, height - padding);
     ctx.stroke();
     
-    // Draw axis labels
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
@@ -129,38 +104,30 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       ctx.textAlign = 'center';
     }
     
-    // Draw axis titles
     ctx.font = 'bold 18px sans-serif';
     ctx.fillText('x', width - padding + 30, height - padding + 5);
     ctx.fillText('y', padding - 5, padding - 30);
     
-    // Draw the line/curve
     ctx.strokeStyle = '#0b4b8c';
     ctx.lineWidth = 4;
     ctx.beginPath();
     
-    // Compute line end while preserving slope y = kx, clipped to viewport
     let x2, y2;
     if (problem?.isProportional) {
       if (problem.k * maxX <= maxY) {
-        // right edge is hit first
         x2 = maxX;
         y2 = problem.k * maxX;
       } else {
-        // top edge is hit first
         y2 = maxY;
         x2 = maxY / problem.k;
       }
-      // draw the proportional segment from origin to (x2,y2)
       ctx.moveTo(toCanvasX(0), toCanvasY(0));
       ctx.lineTo(toCanvasX(x2), toCanvasY(y2));
-
     } else if (problem.type === 'curved') {
-      // Draw curve - stop drawing when y reaches maxY to avoid flat line
       let started = false;
       for (let x = 0; x <= maxX; x += 0.1) {
         const y = problem.curveFunc(x);
-        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (y > maxY) break;
         if (!started) {
           ctx.moveTo(toCanvasX(x), toCanvasY(y));
           started = true;
@@ -169,17 +136,15 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
         }
       }
     } else if (problem.type === 'notThroughOrigin') {
-      // Draw straight line not through origin
       const y0 = problem.yIntercept;
       const yEnd = Math.min(problem.k * maxX + problem.yIntercept, maxY);
       ctx.moveTo(toCanvasX(0), toCanvasY(y0));
       ctx.lineTo(toCanvasX(maxX), toCanvasY(yEnd));
     } else if (problem.type === 'curvedNotThrough') {
-      // Draw curve not through origin - stop drawing when y reaches maxY
       let started = false;
       for (let x = 0; x <= maxX; x += 0.1) {
         const y = problem.curveFunc(x);
-        if (y > maxY) break; // Stop drawing when curve exceeds graph bounds
+        if (y > maxY) break;
         if (!started) {
           ctx.moveTo(toCanvasX(x), toCanvasY(y));
           started = true;
@@ -189,9 +154,7 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       }
     }
     ctx.stroke();
-
     
-    // Highlight origin if requested (only AFTER correct answer)
     if (showOrigin) {
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
@@ -202,7 +165,6 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       ctx.stroke();
     }
     
-    // Highlight perfect point if provided
     if (highlightPoint) {
       ctx.fillStyle = '#10b981';
       ctx.beginPath();
@@ -212,7 +174,6 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       ctx.lineWidth = 3;
       ctx.stroke();
       
-      // Draw coordinate label ONLY if showCoordinates is true
       if (showCoordinates) {
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 28px sans-serif';
@@ -225,7 +186,6 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
       }
     }
     
-    // Show clicked point temporarily
     if (clickedPoint) {
       ctx.fillStyle = '#6b7280';
       ctx.beginPath();
@@ -236,73 +196,42 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
   }, [problem, highlightPoint, showOrigin, clickedPoint, showCoordinates]);
   
   const handleClick = (e) => {
-    if (!onPointClick) {
-      console.log('❌ Click handler not active - onPointClick is null');
-      return;
-    }
+    if (!onPointClick) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-
-    // Map browser click → canvas pixel coordinates (works with or without DPR scaling)
     const canvasX = (e.clientX - rect.left) * (canvas.width / rect.width);
     const canvasY = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-    // Use the SAME padding and sizes as the draw code
     const padding = 60;
     const graphWidth = canvas.width - 2 * padding;
     const graphHeight = canvas.height - 2 * padding;
-
-    // Use same axis limits as drawing code
     const maxX = problem?.xMax || 20;
     const maxY = problem?.yMax || 20;
 
-    // Plotting rectangle
     const left = padding;
     const top = padding;
     const right = padding + graphWidth;
     const bottom = padding + graphHeight;
 
-    // Ignore clicks outside the plotting area
-    if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) {
-      console.log('❌ Click outside plotting area');
-      return;
-    }
+    if (canvasX < left || canvasX > right || canvasY < top || canvasY > bottom) return;
 
-    // Canvas px → graph units (Quadrant I)
     const graphX = (canvasX - left) / graphWidth * maxX;
     const graphY = (bottom - canvasY) / graphHeight * maxY;
-
-    // Snap to nearest integer lattice intersection
     const snappedX = Math.round(graphX);
     const snappedY = Math.round(graphY);
 
-    // Bounds check on snapped values
     if (
       problem.isProportional &&
       snappedX >= 0 && snappedX <= maxX &&
       snappedY >= 0 && snappedY <= maxY
     ) {
-      console.log('🖱️ CLICK DEBUG:', {
-        canvas: { x: canvasX, y: canvasY },
-        graph: { x: graphX, y: graphY },
-        snapped: { x: snappedX, y: snappedY },
-        problem: {
-          k: problem.k,
-          isProportional: problem.isProportional,
-          perfectPoints: problem.perfectPoints
-        }
-      });
-
       setClickedPoint({ x: snappedX, y: snappedY });
       setTimeout(() => setClickedPoint(null), 500);
       onPointClick({ x: snappedX, y: snappedY });
-    } else {
-      console.log('❌ Click outside graph bounds (after snap) or not proportional mode');
     }
   };
 
-  
   return (
     <canvas
       ref={canvasRef}
@@ -323,7 +252,6 @@ function GraphCanvas({ problem, onPointClick, highlightPoint, showOrigin, showCo
   );
 }
 
-// Fraction display component (horizontal bar, not slash)
 function Fraction({ numerator, denominator, showEquals = false, whiteBar = false }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
@@ -337,8 +265,27 @@ function Fraction({ numerator, denominator, showEquals = false, whiteBar = false
   );
 }
 
-export default function ProportionalGraphsModule({ onProblemComplete, registerReset }) {
-  const [problem, setProblem] = useState(() => genPGraph());  // Add pulse animation style
+export default function ProportionalGraphsModule({ onProblemComplete, registerReset, updateStats }) {
+  const [problem, setProblem] = useState(() => genPGraph());
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedProportional, setSelectedProportional] = useState(null);
+  const [whyNotProportional, setWhyNotProportional] = useState(null);
+  const [whyProportional, setWhyProportional] = useState(null);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
+  const [selectedFormula, setSelectedFormula] = useState(null);
+  const [selectedY, setSelectedY] = useState(null);
+  const [selectedX, setSelectedX] = useState(null);
+  const [calculatedK, setCalculatedK] = useState(null);
+  const [reducedFraction, setReducedFraction] = useState(null);
+  const [selectedEquation, setSelectedEquation] = useState(null);
+  const [showFinalConfetti, setShowFinalConfetti] = useState(false);
+  const confettiInterval = useRef(null);
+  
+  // NEW: Error tracking state
+  const [showError, setShowError] = useState(false);
+  const [currentProblemErrors, setCurrentProblemErrors] = useState(0);
+  
   useEffect(() => {
     const styleId = 'pgraph-pulse-style';
     if (!document.getElementById(styleId)) {
@@ -360,23 +307,6 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     }
   }, []);
   
-  // Step tracking
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedProportional, setSelectedProportional] = useState(null);
-  const [whyNotProportional, setWhyNotProportional] = useState(null);
-  const [whyProportional, setWhyProportional] = useState(null);
-  const [selectedPoint, setSelectedPoint] = useState(null);
-  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
-  const [selectedFormula, setSelectedFormula] = useState(null);
-  const [selectedY, setSelectedY] = useState(null);
-  const [selectedX, setSelectedX] = useState(null);
-  const [calculatedK, setCalculatedK] = useState(null);
-  const [reducedFraction, setReducedFraction] = useState(null);
-  const [selectedEquation, setSelectedEquation] = useState(null);
-  const [showFinalConfetti, setShowFinalConfetti] = useState(false);
-  const confettiInterval = useRef(null);
-  
-  // Continuous confetti effect
   useEffect(() => {
     if (showFinalConfetti) {
       try { ugConfetti.burst(); } catch {}
@@ -396,6 +326,13 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     };
   }, [showFinalConfetti]);
   
+  // NEW: Error handler - shows red X and tracks errors
+  const handleError = () => {
+    setShowError(true);
+    setCurrentProblemErrors(prev => prev + 1);
+    setTimeout(() => setShowError(false), 1000);
+  };
+  
   const resetAll = () => {
     const next = genPGraph();
     setProblem(next);
@@ -412,14 +349,13 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     setReducedFraction(null);
     setSelectedEquation(null);
     setShowFinalConfetti(false);
+    setCurrentProblemErrors(0);
   };
 
   useEffect(() => {
-  registerReset?.(resetAll)
-}, [])
+    registerReset?.(resetAll)
+  }, [])
 
-  
-  // Generate coordinate choices (randomized)
   const coordinateChoices = useMemo(() => {
     if (!problem.isProportional || !selectedPoint) return [];
     
@@ -436,7 +372,6 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     ]);
   }, [problem, selectedPoint]);
   
-  // Generate y-value choices (randomized)
   const yChoices = useMemo(() => {
     if (!selectedCoordinates) return [];
     
@@ -452,7 +387,6 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     ]);
   }, [selectedCoordinates, problem]);
   
-  // Generate x-value choices (randomized)
   const xChoices = useMemo(() => {
     if (!selectedCoordinates) return [];
     
@@ -468,72 +402,69 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     ]);
   }, [selectedCoordinates, problem]);
   
-  // Generate equation choices (randomized)
- const equationChoices = useMemo(() => {
-  if (calculatedK === null || !reducedFraction) return [];
-  const { num, den } = reducedFraction;
-  const kDec2 = fmt2(calculatedK);
+  const equationChoices = useMemo(() => {
+    if (calculatedK === null || !reducedFraction) return [];
+    const { num, den } = reducedFraction;
+    const kDec2 = fmt2(calculatedK);
 
-  // Visual tokens
-  const Y = <span>y</span>;
-  const X = <span>x</span>;
-  const EQ = <span>=</span>;
-  const PLUS = <span>+</span>;
+    const Y = <span>y</span>;
+    const X = <span>x</span>;
+    const EQ = <span>=</span>;
+    const PLUS = <span>+</span>;
 
-  const Kfrac = (
-    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <Fraction numerator={num} denominator={den} whiteBar={true} />
-    </span>
-  );
-  const ReciprocalFrac = (
-    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-      <Fraction numerator={den} denominator={num} whiteBar={true} />
-    </span>
-  );
+    const Kfrac = (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Fraction numerator={num} denominator={den} whiteBar={true} />
+      </span>
+    );
+    const ReciprocalFrac = (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <Fraction numerator={den} denominator={num} whiteBar={true} />
+      </span>
+    );
 
-  const Kdisplay = calculatedK < 1 ? Kfrac : <span>{kDec2}</span>;
+    const Kdisplay = calculatedK < 1 ? Kfrac : <span>{kDec2}</span>;
 
-  return shuffle([
-    {
-      formula: (
-        <Formula>
-          {Y}{EQ}{Kdisplay}{X}
-        </Formula>
-      ),
-      displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}x`,
-      isCorrect: true,
-    },
-    {
-      formula: (
-        <Formula>
-          {Y}{EQ}{calculatedK < 1 ? ReciprocalFrac : <span>{`1/${kDec2}`}</span>}{X}
-        </Formula>
-      ),
-      displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${kDec2})`}x`,
-      isCorrect: false,
-    },
-    {
-      formula: (
-        <Formula>
-          <span>x</span>{EQ}{Kdisplay}{Y}
-        </Formula>
-      ),
-      displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}y`,
-      isCorrect: false,
-    },
-    {
-      formula: (
-        <Formula>
-          {Y}{EQ}{X}{PLUS}{Kdisplay}
-        </Formula>
-      ),
-      displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : kDec2}`,
-      isCorrect: false,
-    },
-  ]);
-}, [calculatedK, reducedFraction]);
+    return shuffle([
+      {
+        formula: (
+          <Formula>
+            {Y}{EQ}{Kdisplay}{X}
+          </Formula>
+        ),
+        displayText: `y = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}x`,
+        isCorrect: true,
+      },
+      {
+        formula: (
+          <Formula>
+            {Y}{EQ}{calculatedK < 1 ? ReciprocalFrac : <span>{`1/${kDec2}`}</span>}{X}
+          </Formula>
+        ),
+        displayText: `y = ${calculatedK < 1 ? `(${den}/${num})` : `(1/${kDec2})`}x`,
+        isCorrect: false,
+      },
+      {
+        formula: (
+          <Formula>
+            <span>x</span>{EQ}{Kdisplay}{Y}
+          </Formula>
+        ),
+        displayText: `x = ${calculatedK < 1 ? `(${num}/${den})` : kDec2}y`,
+        isCorrect: false,
+      },
+      {
+        formula: (
+          <Formula>
+            {Y}{EQ}{X}{PLUS}{Kdisplay}
+          </Formula>
+        ),
+        displayText: `y = x + ${calculatedK < 1 ? `(${num}/${den})` : kDec2}`,
+        isCorrect: false,
+      },
+    ]);
+  }, [calculatedK, reducedFraction]);
   
-  // Handle step 1: Is proportional?
   const handleProportionalChoice = (choice) => {
     setSelectedProportional(choice);
     if (!problem.isProportional && choice === 'not') {
@@ -541,161 +472,135 @@ export default function ProportionalGraphsModule({ onProblemComplete, registerRe
     } else if (problem.isProportional && choice === 'yes') {
       setCurrentStep(3);
     } else {
+      handleError();
       setTimeout(() => setSelectedProportional(null), 1000);
     }
   };
   
-  // Handle step 2: Why not proportional?
   const handleWhyNot = (reason) => {
     setWhyNotProportional(reason);
     const correct = problem.whyNot === reason;
     if (correct) {
       try { ugConfetti.burst(); } catch {}
+      updateStats?.(currentProblemErrors, true);
     } else {
+      handleError();
       setTimeout(() => setWhyNotProportional(null), 1000);
     }
   };
   
-  // Handle step 3: Why proportional?
   const handleWhyProportional = (reason) => {
     setWhyProportional(reason);
     if (reason === 'both') {
       setCurrentStep(4);
     } else {
+      handleError();
       setTimeout(() => setWhyProportional(null), 1000);
     }
   };
   
-  // Handle step 4: Click on graph
   const handlePointClick = (point) => {
-    console.log('🔍 handlePointClick called with:', point);
-    console.log('🔍 Current problem.k:', problem.k);
-    console.log('🔍 Perfect points available:', problem.perfectPoints);
-
-    // Quadrant I guard
     if (point.x <= 0) {
-      console.log('❌ Invalid: x <= 0 in Quadrant I');
+      handleError();
       return;
     }
 
-    // Validate: point must be on the line y = kx (within tolerance for rounding)
     const expectedY = problem.k * point.x;
     const matchesSlope = Math.abs(point.y - expectedY) < 0.01;
-
-    // Bounds check using generator-provided limits
     const withinBounds = point.x > 0 && point.x <= problem.xMax && 
                           point.y >= 0 && point.y <= problem.yMax;
-
     const isValid = problem.isProportional && matchesSlope && withinBounds;
 
-    console.log('🔍 Validation:', {
-      clickedPoint: point, 
-      expectedY, 
-      matchesSlope, 
-      withinBounds, 
-      isValid
-    });
-
     if (!isValid) {
-      console.log('❌ Not a valid perfect point, ignoring');
+      handleError();
       return;
     }
 
-    // ✅ Valid: lock the point and move to Step 5
     setSelectedPoint({ x: point.x, y: point.y });
     setSelectedCoordinates({ x: point.x, y: point.y });
     setCurrentStep(5);
   };
-
   
-  // Handle step 5: Select coordinates
   const handleCoordinateSelect = (coord) => {
     setSelectedCoordinates(coord);
     if (coord.isCorrect) {
       setCurrentStep(6);
     } else {
+      handleError();
       setTimeout(() => setSelectedCoordinates(null), 1000);
     }
   };
   
-  // Handle step 6: Select formula
   const handleFormulaSelect = (formula) => {
     setSelectedFormula(formula);
     if (formula === 'y/x') {
       setCurrentStep(7);
     } else {
+      handleError();
       setTimeout(() => setSelectedFormula(null), 1000);
     }
   };
   
-  // Handle step 7: Select y-value
   const handleYSelect = (choice) => {
     setSelectedY(choice.value);
     if (choice.isCorrect) {
       setCurrentStep(8);
     } else {
+      handleError();
       setTimeout(() => setSelectedY(null), 1000);
     }
   };
   
-  // Handle step 8: Select x-value
   const handleXSelect = (choice) => {
     setSelectedX(choice.value);
     if (choice.isCorrect) {
       setCurrentStep(9);
     } else {
+      handleError();
       setTimeout(() => setSelectedX(null), 1000);
     }
   };
   
-  // Handle step 9: Compute k
   const handleCompute = () => {
-    
-// Fall back to the locked point’s coordinates if step states are null
-const yVal = (selectedY ?? selectedCoordinates?.y);
-const xVal = (selectedX ?? selectedCoordinates?.x);
-if (yVal == null || xVal == null || xVal === 0) {
-  console.warn('⚠️ Compute guard: missing or invalid values', { yVal, xVal });
-  return;
-}
-const k = yVal / xVal;
-setCalculatedK(k);
-setReducedFraction(reduceFraction(yVal, xVal));
-setCurrentStep(10);
-
+    const yVal = (selectedY ?? selectedCoordinates?.y);
+    const xVal = (selectedX ?? selectedCoordinates?.x);
+    if (yVal == null || xVal == null || xVal === 0) return;
+    const k = yVal / xVal;
+    setCalculatedK(k);
+    setReducedFraction(reduceFraction(yVal, xVal));
+    setCurrentStep(10);
   };
   
-  // Handle step 10: Select equation
   const handleEquationSelect = (equation) => {
     setSelectedEquation(equation.displayText);
     if (equation.isCorrect) {
       setShowFinalConfetti(true);
-    
+      updateStats?.(currentProblemErrors, true);
       onProblemComplete?.();
-} else {
+    } else {
+      handleError();
       setTimeout(() => setSelectedEquation(null), 1000);
     }
   };
   
   return (
     <>
+      <ErrorOverlay show={showError} />
+      
       <div className="panes pgraphs-layout">
         <div className="card">
-          {/* Graph */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
             <GraphCanvas 
               problem={problem}
               onPointClick={currentStep === 4 ? handlePointClick : null}
               highlightPoint={selectedPoint}
               showOrigin={whyProportional === 'both'} 
-            showCoordinates={currentStep >= 6}
+              showCoordinates={currentStep >= 6}
             />
           </div>
         </div>
         
-        {/* Right panel - Questions */}
         <div className="card right-steps">
-          {/* Step 1: Is proportional? */}
           {currentStep === 1 && (
             <div className="section">
               <div className="step-title">Is this graph proportional or not proportional?</div>
@@ -717,7 +622,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 2: Why not proportional? */}
           {currentStep === 2 && (
             <div className="section">
               <div className="step-title">Why is this graph NOT proportional?</div>
@@ -747,7 +651,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 3: Why proportional? */}
           {currentStep === 3 && (
             <div className="section">
               <div className="step-title">Why is this graph proportional?</div>
@@ -771,14 +674,12 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 4: Find perfect point */}
           {currentStep === 4 && (
             <div className="section">
               <div className="step-title">Find a Punto Perfecto - tap on the line where you can clearly identify both x and y values!</div>
             </div>
           )}
           
-          {/* Step 5: Identify coordinates */}
           {currentStep === 5 && (
             <div className="section">
               <div className="step-title">What are the coordinates of this point?</div>
@@ -797,7 +698,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 6: Formula for k */}
           {currentStep === 6 && (
             <div className="section">
               <div className="step-title">What is the formula to find k?</div>
@@ -821,7 +721,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 7: Identify y-value */}
           {currentStep === 7 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the y-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
@@ -852,7 +751,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 8: Identify x-value */}
           {currentStep === 8 && selectedCoordinates && (
             <div className="section">
               <div className="step-title">What is the x-value from your point ({selectedCoordinates.x}, {selectedCoordinates.y})?</div>
@@ -883,7 +781,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 9: Compute */}
           {currentStep === 9 && (
             <div className="section">
               <div className="step-title">Click Compute to calculate k!</div>
@@ -903,7 +800,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Step 10: Select equation */}
           {currentStep === 10 && calculatedK !== null && reducedFraction && (
             <div className="section">
               <div className="step-title">Now that you know k, what is the equation?</div>
@@ -952,7 +848,6 @@ setCurrentStep(10);
             </div>
           )}
           
-          {/* Final Result */}
           {selectedEquation && equationChoices.find(eq => eq.displayText === selectedEquation && eq.isCorrect) && reducedFraction && (
             <div className="section">
               <div className="step-title">✓ Excellent!</div>
@@ -966,7 +861,6 @@ setCurrentStep(10);
               </div>
               <div className="muted" style={{ marginTop: 8, textAlign: 'center' }}>
                For every 1 unit increase in x, y increases by {calculatedK < 1 ? `${reducedFraction.num}/${reducedFraction.den}` : fmt2(calculatedK)} units.
-
               </div>
               <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 700, fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                 <span>y =</span>
@@ -979,13 +873,8 @@ setCurrentStep(10);
               </div>
             </div>
           )}
-          
-
         </div>
       </div>
-      
-     
-      
     </>
   );
 }
