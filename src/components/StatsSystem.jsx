@@ -101,13 +101,20 @@ export function TurkeyOverlay({ show, streak }) {
 export function StatsReport({ stats, onClose, moduleName }) {
   if (!stats) return null;
   
-  const firstTryAccuracy = stats.questionsAttempted > 0 
-    ? ((stats.questionsPerfect / stats.questionsAttempted) * 100).toFixed(1)
-    : 0;
+  // Safely access stats with defaults for any missing fields
+  const questionsAttempted = stats.questionsAttempted ?? 0;
+  const questionsPerfect = stats.questionsPerfect ?? 0;
+  const totalErrors = stats.totalErrors ?? 0;
+  const currentStreak = stats.currentStreak ?? 0;
   
-  const avgErrors = stats.questionsAttempted > 0
-    ? (stats.totalErrors / stats.questionsAttempted).toFixed(2)
-    : 0;
+  // Fix divide-by-zero: show 0.0% if no questions attempted, otherwise calculate
+  const firstTryAccuracy = questionsAttempted > 0 
+    ? ((questionsPerfect / questionsAttempted) * 100).toFixed(1)
+    : '0.0';
+  
+  const avgErrors = questionsAttempted > 0
+    ? (totalErrors / questionsAttempted).toFixed(2)
+    : '0.00';
   
   return (
     <div
@@ -132,8 +139,8 @@ export function StatsReport({ stats, onClose, moduleName }) {
         </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <StatCard label="Questions Attempted" value={stats.questionsAttempted} />
-          <StatCard label="First-Try Perfect" value={stats.questionsPerfect} color="#10b981" />
+          <StatCard label="Questions Attempted" value={questionsAttempted} />
+          <StatCard label="First-Try Perfect" value={questionsPerfect} color="#10b981" />
           <StatCard label="First-Try Accuracy" value={`${firstTryAccuracy}%`} color="#3b82f6" />
           <StatCard label="Avg Errors/Question" value={avgErrors} color="#f59e0b" />
         </div>
@@ -141,7 +148,7 @@ export function StatsReport({ stats, onClose, moduleName }) {
         <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#fef3c7', borderRadius: '12px' }}>
           <div style={{ fontSize: '14px', color: '#92400e', marginBottom: '8px' }}>Current Streak</div>
           <div style={{ fontSize: '36px', fontWeight: 900, color: '#b45309', textAlign: 'center' }}>
-            {stats.currentStreak} 🔥
+            {currentStreak} 🔥
           </div>
         </div>
         
