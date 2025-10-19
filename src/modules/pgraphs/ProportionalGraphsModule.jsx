@@ -1,4 +1,4 @@
-// src/modules/pgraphs/ProportionalGraphsModule.jsx — v4.0.0 with Stats
+// src/modules/pgraphs/ProportionalGraphsModule.jsx — v4.0.1 with Stats
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { genPGraph } from "../../lib/generator.js";
@@ -266,6 +266,14 @@ function Fraction({ numerator, denominator, showEquals = false, whiteBar = false
 }
 
 export default function ProportionalGraphsModule({ onProblemComplete, registerReset, updateStats }) {
+  console.log('📐 ProportionalGraphsModule rendered')
+  console.log('📐 Props received:', { 
+    hasOnProblemComplete: !!onProblemComplete, 
+    hasRegisterReset: !!registerReset, 
+    hasUpdateStats: !!updateStats,
+    updateStatsType: typeof updateStats 
+  })
+  
   const [problem, setProblem] = useState(() => genPGraph());
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedProportional, setSelectedProportional] = useState(null);
