@@ -1,4 +1,4 @@
-// src/App.jsx — v11.0.0 (Added Stats Tracking)
+// src/App.jsx — v11.0.1 (Added Stats Tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
