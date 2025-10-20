@@ -216,7 +216,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   const [rotationOrder, setRotationOrder] = useState([]);
   const rotationOrderFull = useMemo(()=> ['XXXX', ...rotationOrder], [rotationOrder])
   const [isHoldingEnglish, setIsHoldingEnglish] = useState(false);
-  const [isOverEnglish, setIsOverEnglish] = useState(false);
   const [rotationId, setRotationId] = useState(null);
   const [npBlink, setNpBlink] = useState(false);
   const npBlinkRef = useRef(null);
@@ -481,7 +480,7 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   
   useEffect(() => {
     const id = setInterval(() => {
-      if (isHoldingEnglish || isOverEnglish) return;
+      if (isHoldingEnglish) return;
       if (!rotationOrderFull || rotationOrderFull.length === 0) return;
       setRotLang(prev => {
         if (prev === 'English') return rotationOrderFull[0];
@@ -494,7 +493,7 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
       clearInterval(id);
       setRotationId(null);
     };
-  }, [rotationOrderFull, isHoldingEnglish, isOverEnglish]);
+  }, [rotationOrderFull, isHoldingEnglish]);
 
   const [highlightKeys, setHighlightKeys] = useState([]);
   useLayoutEffect(()=>{
