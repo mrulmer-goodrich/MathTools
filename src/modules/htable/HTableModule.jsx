@@ -580,13 +580,33 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
     setDone(10); next();
   };
 
-  const holdEnglishDown = () => { setIsHoldingEnglish(true); setRotLang('English'); };
-  const holdEnglishUp = () => { setIsHoldingEnglish(false); setRotLang(prev => {
-    if (!rotationOrderFull?.length) return prev;
-    if (prev === 'English') return rotationOrderFull[0];
-    const idx = rotationOrderFull.indexOf(prev);
-    return (idx === -1 || idx === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[idx + 1];
-  }); };
+  const holdEnglishDown = () => { 
+    setIsHoldingEnglish(true); 
+    setRotLang('English'); 
+  };
+  
+  const holdEnglishUp = () => { 
+    setIsHoldingEnglish(false); 
+  };
+
+  // Global mouse/touch up handler to ensure we always release
+  useEffect(() => {
+    const globalUp = () => {
+      if (isHoldingEnglish) {
+        setIsHoldingEnglish(false);
+      }
+    };
+    
+    window.addEventListener('mouseup', globalUp);
+    window.addEventListener('touchend', globalUp);
+    window.addEventListener('pointerup', globalUp);
+    
+    return () => {
+      window.removeEventListener('mouseup', globalUp);
+      window.removeEventListener('touchend', globalUp);
+      window.removeEventListener('pointerup', globalUp);
+    };
+  }, [isHoldingEnglish]);
 
   function applyPostCalculateEffects() {
     if (postCalcAppliedRef.current) return;
@@ -1011,14 +1031,8 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                         type="button"
                         className="button button-contrast"
                         onMouseDown={holdEnglishDown}
-                        onMouseUp={holdEnglishUp}
                         onTouchStart={holdEnglishDown}
-                        onTouchEnd={holdEnglishUp}
-                        onPointerDown={holdEnglishDown}
-                        onPointerUp={holdEnglishUp}
-                        onPointerCancel={holdEnglishUp}
-                        onMouseEnter={()=>setIsOverEnglish(true)} 
-                        onMouseLeave={()=>setIsOverEnglish(false)}>
+                        onPointerDown={holdEnglishDown}>
                         Press for English
                       </button>
                     </div>
