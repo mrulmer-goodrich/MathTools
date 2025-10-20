@@ -628,7 +628,7 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
 
     setDone(11);
 
-    // Report stats and mark complete
+    // Report stats and mark complete - MUST happen before setting up confetti interval
     updateStats?.(currentProblemErrors, true);
     onProblemComplete?.();
 
@@ -673,6 +673,16 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   useEffect(() => {
     registerReset?.(resetProblem)
   }, [])
+
+  // Cleanup confetti on unmount or route change
+  useEffect(() => {
+    return () => {
+      if (confettiInterval.current) {
+        clearInterval(confettiInterval.current);
+        confettiInterval.current = null;
+      }
+    };
+  }, []);
 
   const ROW_H = 88;
   const lineColor = '#0f172a';
