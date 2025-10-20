@@ -585,7 +585,14 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
   };
   
   const holdEnglishUp = () => { 
-    setIsHoldingEnglish(false); 
+    setIsHoldingEnglish(false);
+    // Immediately rotate to next language when released
+    setRotLang(prev => {
+      if (!rotationOrderFull?.length) return prev;
+      if (prev === 'English') return rotationOrderFull[0];
+      const idx = rotationOrderFull.indexOf(prev);
+      return (idx === -1 || idx === rotationOrderFull.length - 1) ? rotationOrderFull[0] : rotationOrderFull[idx + 1];
+    });
   };
 
   // Global mouse/touch up handler to ensure we always release
