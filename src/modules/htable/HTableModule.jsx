@@ -751,7 +751,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
           .hcell .slot, .hcell .empty, .hhead .empty { display:flex; align-items:center; justify-content:center; text-align:center; }
           .hcell, .hhead, .hcell .slot, .hhead .empty { font-family: inherit; font-weight: 700; font-size: 1.75rem; }
           
-          /* Make all H-table text content consistently large */
           .hcell span, .hhead span, .hhead-text {
             font-size: 1.75rem !important;
             font-weight: 700 !important;
@@ -830,7 +829,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59,130,246,.4); }
           }
 
-          /* Modern answer button styling - matches pgraphs exactly */
           .answer-btn {
             display: inline-flex;
             align-items: center;
@@ -840,23 +838,26 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             font-weight: 900;
             font-size: 20px;
             line-height: 1.3;
-            border: 3px solid #1f2937;
-            color: #0f172a;
-            background: #ffffff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 150ms ease;
+            border: 0;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0B4B8C, #0C6B4D);
+            box-shadow: 0 8px 16px rgba(11, 75, 140, 0.18);
+            transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
             cursor: pointer;
             text-align: center;
             min-height: 64px;
           }
           .answer-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-            background: #f8fafc;
+            transform: translateY(-1px);
+            filter: brightness(1.05);
           }
           .answer-btn:active {
             transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            filter: brightness(0.98);
+          }
+          .answer-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
           }
 
           .answers-grid {
@@ -872,7 +873,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             }
           }
 
-          /* Standardize step title font */
           .step-title {
             font-size: 22px;
             font-weight: 900;
@@ -883,14 +883,11 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
         `}</style>
 
         <div className="panes">
-          {/* LEFT COLUMN: Steps + Problem */}
           <div className="left-col">
-            {/* Step Prompts Card */}
             <div className="card steps-card">
               <div className="section">
                 <div className="step-title">{step>=11 ? "" : (step===7 ? STEP_TITLES[7].replace("<value>", String(displayStep7Value ?? "")) : STEP_TITLES[step])}</div>
 
-                {/* STEP 0 */}
                 {step===0 && (
                   <div className="answers-grid">
                     {seededShuffle(STEP1_CHOICES).map(c => (
@@ -899,7 +896,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 1 */}
                 {step===1 && (
                   <div className="answers-grid">
                     {seededShuffle([
@@ -913,7 +909,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 2 */}
                 {step===2 && (
                   <div className="answers-grid">
                     {seededShuffle([
@@ -927,7 +922,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 3 */}
                 {step===3 && (
                   <div className="answers-grid">
                     {unitChoices.map(c => (
@@ -936,7 +930,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 4 */}
                 {step===4 && (
                   <div className="answers-grid">
                     {seededShuffle(numbersTopScale).map(c => 
@@ -945,7 +938,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 5 */}
                 {step===5 && (
                   <div className="answers-grid">
                     {seededShuffle(numbersBottomScale).map(c => 
@@ -954,7 +946,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 6 */}
                 {step===6 && (
                   <div className="answers-grid">
                     {seededShuffle(otherValueChoices).map(c => (
@@ -963,10 +954,8 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 7 */}
                 {step===7 && (<div className="problem-body"> </div>)} 
 
-                {/* STEP 8 */}
                 {step===8 && (
                   <div className="answers-grid">
                     {seededShuffle(_assertFour(STEP8_CHOICES, "Step8")).map((opt,idx)=>(
@@ -977,7 +966,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 9 */}
                 {step===9 && (
                   <div className="answers-grid">
                     {seededShuffle([crossPair, ...wrongPairs].filter(Boolean)).slice(0,4).map((pair,idx)=>(
@@ -986,7 +974,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 10 */}
                 {step===10 && (
                   <div className="answers-grid">
                     {seededShuffle(divideChoices).map((c,idx)=>(
@@ -995,14 +982,12 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                   </div>
                 )}
 
-                {/* STEP 11+ */}
                 {step>=11 && (
                   <div className="problem-body"> </div>
                 )}
               </div>
             </div>
 
-            {/* Problem Card - now below steps */}
             {step>=0 && (
               <div className="card">
                 <div className="section">
@@ -1033,14 +1018,12 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
             )}
           </div>
 
-          {/* RIGHT COLUMN: H-Table + Math Strip */}
           <div className="right-col">
             {step>=1 && (
               <div className="card">
                 <div className="section">
                   <div className="hwrap" style={{position:'relative'}}>
                     <div ref={gridRef} className="hgrid" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, position:'relative'}}>
-                      {/* Headers */}
                       <div className="hhead" style={{height:ROW_H}}>
                         <Slot accept={["header"]} blinkWrap={step===1 && !table.head1} className={`${!table.head1 ? "empty" : ""}`}>
                           <div style={{display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center', height:ROW_H}}>
@@ -1057,7 +1040,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                       </div>
                       <div className="hhead" style={{height:ROW_H}}>{/* blank */}</div>
 
-                      {/* Row 1 */}
                       <div ref={refs.uTop} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={blinkUnits} className={`${!table.uTop ? "empty" : ""}`}>
                           <span className={cellCls('uTop')}>{table.uTop || ''}</span>
@@ -1076,7 +1058,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
 
                       <div style={{gridColumn:'1 / span 3', height:0, margin:'6px 0'}} />
 
-                      {/* Row 2 */}
                       <div ref={refs.uBottom} className="hcell" style={{height:ROW_H}}>
                         <Slot blinkWrap={blinkUnits} className={`${!table.uBottom ? "empty" : ""}`}>
                           <span className={cellCls('uBottom')}>{table.uBottom || ''}</span>
@@ -1093,12 +1074,10 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                         </Slot>
                       </div>
 
-                      {/* H lines */}
                       <div style={{position:'absolute', pointerEvents:'none', left:0, top:(lines.hTop||0), width:(lines.gridW||0), borderTop:`5px solid ${lineColor}`}} />
                       <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v1Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
                       <div style={{position:'absolute', pointerEvents:'none', top:(lines.vTop||0), left:(lines.v2Left||0), height:(lines.vHeight||0), borderLeft:`5px solid ${lineColor}`}} />
 
-                      {/* Red oval (Step 9) */}
                       {oval && (
                         <div
                           style={{
@@ -1110,7 +1089,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                           }}
                         />
                       )}
-                      {/* Red triple underline (Step 10) */}
                       {tripleUL && (
                         <div style={{position:'absolute', left: tripleUL.left, top: tripleUL.top, width: tripleUL.width, height:18, pointerEvents:'none'}}>
                           <div style={{borderTop:'3px solid #ef4444', marginTop:0}} />
@@ -1120,7 +1098,6 @@ export default function HTableModule({ onProblemComplete, registerReset, updateS
                       )}
                     </div>
                     
-                    {/* Math strip - NOW BELOW the H-table */}
                     {(step >= 10 && (mathStrip?.a!=null && mathStrip?.b!=null && mathStrip?.divisor!=null)) && (
                       <div className="eq-display" style={{marginTop: 16}}>
                         <span className="frac">
