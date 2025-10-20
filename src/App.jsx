@@ -1,4 +1,4 @@
-// src/App.jsx – v11.1.0 (Fixed questionsPerfect tracking)
+// src/App.jsx – v11.0.1 (Fixed questionsPerfect tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -6,7 +6,7 @@ import HTableModule from './modules/htable/HTableModule.jsx'
 import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
-
+import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -96,7 +96,9 @@ export default function App() {
       case 'pgraphs':
         pgraphsResetRef.current = resetFn
         break
-     
+      case 'mixed':
+        mixedResetRef.current = resetFn
+        break
     }
   }
 
@@ -130,7 +132,9 @@ export default function App() {
       case 'pgraphs':
         pgraphsResetRef.current?.()
         break
-     
+      case 'mixed':
+        mixedResetRef.current?.()
+        break
     }
   }
 
@@ -149,7 +153,7 @@ export default function App() {
       case 'battle-royale': return 'H-Table Battle Royale'
       case 'ptables': return 'Proportional Tables'
       case 'pgraphs': return 'Proportional Graphs'
-    
+      case 'mixed': return 'Mixed Numbers'
       default: return 'Unknown Module'
     }
   }
@@ -179,7 +183,9 @@ export default function App() {
             <BigButton className="tile-btn" onClick={() => setRoute('pgraphs')}>
               Proportional Graphs
             </BigButton>
-            
+            <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
+              Mixed Numbers
+            </BigButton>
           </div>
         </>
       )}
@@ -258,7 +264,13 @@ export default function App() {
               />
             )}
 
-         
+            {route === 'mixed' && (
+              <MixedNumbersModule 
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('mixed', fn)}
+                updateStats={updateStats}
+              />
+            )}
           </div>
         </>
       )}
