@@ -6,6 +6,7 @@ import HTableModule from './modules/htable/HTableModule.jsx'
 import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleModule.jsx'
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
+import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -174,6 +175,9 @@ export default function App() {
             <BigButton className="tile-btn" onClick={() => setRoute('pgraphs')}>
               Proportional Graphs
             </BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
+              Mixed Numbers
+            </BigButton>
           </div>
         </>
       )}
@@ -244,6 +248,15 @@ export default function App() {
               />
             )}
 
+{route === 'mixed' && (
+  <MixedNumbersModule 
+    onProblemComplete={handleProblemComplete}
+    registerReset={(fn) => registerReset('mixed', fn)}
+    updateStats={updateStats}
+  />
+)}
+
+            
             {route === 'pgraphs' && (
               <ProportionalGraphsModule 
                 onProblemComplete={handleProblemComplete}
