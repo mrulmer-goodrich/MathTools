@@ -1,4 +1,4 @@
-// src/App.jsx – v11.0.1 (Fixed questionsPerfect tracking)
+// src/App.jsx – v11.1.0 (Fixed questionsPerfect tracking)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -36,6 +36,7 @@ export default function App() {
   const battleRoyaleResetRef = useRef(null)
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
+  const mixedResetRef = useRef(null)
 
   // Update stats when a problem is completed
   const updateStats = (problemErrors, wasCorrect) => {
@@ -95,6 +96,9 @@ export default function App() {
       case 'pgraphs':
         pgraphsResetRef.current = resetFn
         break
+      case 'mixed':
+        mixedResetRef.current = resetFn
+        break
     }
   }
 
@@ -128,6 +132,9 @@ export default function App() {
       case 'pgraphs':
         pgraphsResetRef.current?.()
         break
+      case 'mixed':
+        mixedResetRef.current?.()
+        break
     }
   }
 
@@ -146,6 +153,7 @@ export default function App() {
       case 'battle-royale': return 'H-Table Battle Royale'
       case 'ptables': return 'Proportional Tables'
       case 'pgraphs': return 'Proportional Graphs'
+      case 'mixed': return 'Mixed Numbers'
       default: return 'Unknown Module'
     }
   }
@@ -248,19 +256,18 @@ export default function App() {
               />
             )}
 
-{route === 'mixed' && (
-  <MixedNumbersModule 
-    onProblemComplete={handleProblemComplete}
-    registerReset={(fn) => registerReset('mixed', fn)}
-    updateStats={updateStats}
-  />
-)}
-
-            
             {route === 'pgraphs' && (
               <ProportionalGraphsModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('pgraphs', fn)}
+                updateStats={updateStats}
+              />
+            )}
+
+            {route === 'mixed' && (
+              <MixedNumbersModule 
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('mixed', fn)}
                 updateStats={updateStats}
               />
             )}
