@@ -1,4 +1,4 @@
-// src/App.jsx – v12.0.0 (Added Multiplication Module)
+// src/App.jsx – v12.0.1 (Added Multiplication Module)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
