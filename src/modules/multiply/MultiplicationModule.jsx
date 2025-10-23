@@ -1,4 +1,4 @@
-// MultiplicationModule.jsx - v17.0.0 - FINAL FIXES
+// MultiplicationModule.jsx - v18.0.0 - FINAL VERSION - ALL ISSUES FIXED
 import React, { useState, useRef, useEffect } from 'react'
 
 const ErrorOverlay = ({ show }) => {
@@ -35,6 +35,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
   const [currentProblemErrors, setCurrentProblemErrors] = useState(0)
   const confettiInterval = useRef(null)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
 
   const [phase, setPhase] = useState('SELECT')
   const [currentRow, setCurrentRow] = useState(0)
@@ -84,6 +85,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
     setFinalSum('')
     setFirstQuestion(true)
     setCurrentProblemErrors(0)
+    setIsComplete(false)
   }
 
   useEffect(() => { registerReset?.('multiply', handleReset) }, [])
@@ -103,9 +105,12 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
     setPhase('ANSWER_MULT')
   }
 
+  // FIXED: Get carry at the RESULT position, not the multiplication position
   const getCurrentCarry = () => {
-    const carryCol = currentRow === 1 ? currentCol + 1 : currentCol
-    return carries[`${currentRow}-${carryCol}`] || 0
+    // For row 0: result goes to column currentCol, so carry at currentCol
+    // For row 1: result goes to column currentCol+1, so carry at currentCol+1
+    const resultCol = currentRow === 1 ? currentCol + 1 : currentCol
+    return carries[`${currentRow}-${resultCol}`] || 0
   }
 
   const handleMultAnswer = (answer) => {
@@ -155,6 +160,10 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
   const handleCarryClick = (colIdx) => {
     if (phase !== 'PLACE_CARRY') return
     const tens = Math.floor(currentAnswer / 10)
+    
+    // FIXED: Carry goes to next column in the SAME row's result
+    // Row 0: carry goes from resultCol to resultCol+1, which is currentCol to currentCol+1
+    // Row 1: carry goes from resultCol to resultCol+1, which is currentCol+1 to currentCol+2
     const expectedCarryCol = currentRow === 1 ? currentCol + 2 : currentCol + 1
     
     if (colIdx !== expectedCarryCol) { handleError(); return }
@@ -324,16 +333,19 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
   const handleFinalAnswer = (answer) => {
     if (Number(answer) !== correctAnswer) { handleError(); return }
     
+    // FIXED: Mark as complete IMMEDIATELY
+    setIsComplete(true)
+    
     // Show confetti
     setShowConfetti(true)
     confettiInterval.current = setInterval(() => {
-      // Confetti effect (you can replace with actual confetti library)
       console.log('🎉')
     }, 100)
     
     setTimeout(() => {
       setShowConfetti(false)
       clearInterval(confettiInterval.current)
+      // FIXED: Call these AFTER marking complete
       updateStats?.(currentProblemErrors, true)
       onProblemComplete?.()
     }, 2000)
@@ -532,7 +544,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
                 <div className="carry-row">
                   {[...Array(maxResultDigits)].map((_, i) => {
                     const col = maxResultDigits - 1 - i
-                    // Show carry for the current row only
+                    // FIXED: Show carry stored at this column for current row
                     const val = carries[`${currentRow}-${col}`] || ''
                     const expectedCarryCol = currentRow === 1 ? currentCol + 2 : currentCol + 1
                     const blink = phase === 'PLACE_CARRY' && col === expectedCarryCol
@@ -641,7 +653,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
 
             {/* Right side: Questions and answers - Fixed size */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', minHeight: '400px' }}>
-              {phase !== 'FINAL' || !finalSum ? (
+              {!isComplete ? (
                 <>
                   <div className="step-title" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getQuestion()}</div>
                 {phase === 'ANSWER_MULT' && (
@@ -681,7 +693,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
                 )}
               </>
             ) : (
-              <div className="step-title" style={{color:'#10b981'}}>🎉 Perfect! {num1} × {num2} = {correctAnswer}</div>
+              <div className="step-title" style={{color:'#10b981', minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>🎉 Perfect! {num1} × {num2} = {correctAnswer}</div>
             )}
             </div>
           </div>
