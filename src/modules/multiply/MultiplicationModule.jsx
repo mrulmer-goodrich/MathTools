@@ -653,7 +653,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
 
             {/* Right side: Questions and answers - Fixed size */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', minHeight: '400px' }}>
-              {phase !== 'FINAL' || !finalSum ? (
+              {!isComplete ? (
                 <>
                   <div className="step-title" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getQuestion()}</div>
                 {phase === 'ANSWER_MULT' && (
