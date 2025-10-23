@@ -1,4 +1,4 @@
-// src/App.jsx – v11.0.1 (Fixed questionsPerfect tracking)
+// src/App.jsx – v12.0.0 (Added Multiplication Module)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -7,6 +7,7 @@ import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleM
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
+import MultiplicationModule from './modules/multiply/Multiplication.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
   const ptablesResetRef = useRef(null)
   const pgraphsResetRef = useRef(null)
   const mixedResetRef = useRef(null)
+  const multiplyResetRef = useRef(null)
 
   // Update stats when a problem is completed
   const updateStats = (problemErrors, wasCorrect) => {
@@ -99,6 +101,9 @@ export default function App() {
       case 'mixed':
         mixedResetRef.current = resetFn
         break
+      case 'multiply':
+        multiplyResetRef.current = resetFn
+        break
     }
   }
 
@@ -135,6 +140,9 @@ export default function App() {
       case 'mixed':
         mixedResetRef.current?.()
         break
+      case 'multiply':
+        multiplyResetRef.current?.()
+        break
     }
   }
 
@@ -154,6 +162,7 @@ export default function App() {
       case 'ptables': return 'Proportional Tables'
       case 'pgraphs': return 'Proportional Graphs'
       case 'mixed': return 'Mixed Numbers'
+      case 'multiply': return 'Multiplication'
       default: return 'Unknown Module'
     }
   }
@@ -185,6 +194,9 @@ export default function App() {
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
               Mixed Numbers
+            </BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
+              Multiplication
             </BigButton>
           </div>
         </>
@@ -268,6 +280,14 @@ export default function App() {
               <MixedNumbersModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('mixed', fn)}
+                updateStats={updateStats}
+              />
+            )}
+
+            {route === 'multiply' && (
+              <Multiplication
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('multiply', fn)}
                 updateStats={updateStats}
               />
             )}
