@@ -30,7 +30,7 @@ const genProblem = () => {
 const shuffle = (arr) => arr.slice().sort(() => Math.random() - 0.5)
 
 export default function MultiplicationModule({ onProblemComplete, registerReset, updateStats }) {
-  const [problem] = useState(genProblem())
+  const [problem, setProblem] = useState(genProblem())
   const [showError, setShowError] = useState(false)
   const [currentProblemErrors, setCurrentProblemErrors] = useState(0)
   const confettiInterval = useRef(null)
@@ -63,10 +63,30 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
 
   const handleReset = () => {
     if (confettiInterval.current) clearInterval(confettiInterval.current)
-    window.location.reload()
+    setShowConfetti(false)
+    
+    // Generate new problem
+    const newProblem = genProblem()
+    setProblem(newProblem)
+    
+    // Reset all state
+    setPhase('SELECT')
+    setCurrentRow(0)
+    setCurrentCol(0)
+    setSelectedTop(null)
+    setSelectedBottom(null)
+    setProductBeforeCarry(null)
+    setCurrentAnswer(null)
+    setCarries({})
+    setPlaced({})
+    setAddCarries({})
+    setAddCol(0)
+    setFinalSum('')
+    setFirstQuestion(true)
+    setCurrentProblemErrors(0)
   }
 
-  useEffect(() => { registerReset?.(handleReset) }, [])
+  useEffect(() => { registerReset?.('multiply', handleReset) }, [])
   useEffect(() => () => { if (confettiInterval.current) clearInterval(confettiInterval.current) }, [])
 
   const handleTopClick = (colIdx) => {
@@ -314,7 +334,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
     setTimeout(() => {
       setShowConfetti(false)
       clearInterval(confettiInterval.current)
-      updateStats?.({ correct: true, errors: currentProblemErrors })
+      updateStats?.(currentProblemErrors, true)
       onProblemComplete?.()
     }, 2000)
   }
@@ -494,8 +514,8 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
           .mult-times { margin-right: 8px; }
           .answer-btn { display: inline-flex; align-items: center; justify-content: center; padding: 16px 24px; border-radius: 12px; font-weight: 700; font-size: 1.25rem; border: 0; color: #fff; background: linear-gradient(135deg, #0B4B8C, #0C6B4D); box-shadow: 0 8px 16px rgba(11, 75, 140, 0.18); cursor: pointer; min-height: 60px; font-family: inherit; transition: transform 150ms ease; }
           .answer-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
-          .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-          .step-title { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin-bottom: 16px; text-align: center; font-family: inherit; }
+          .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; min-height: 140px; }
+          .step-title { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin-bottom: 16px; text-align: center; font-family: inherit; padding: 0 16px; }
           .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto; }
           @keyframes blink-kf { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); } 50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); } }
@@ -504,8 +524,9 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
 
         <div className="card">
           <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {/* Left side: Math grid */}
-            <div className="mult-grid">
+            {/* Left side: Math grid - Fixed size */}
+            <div style={{ minWidth: '500px', display: 'flex', justifyContent: 'center' }}>
+              <div className="mult-grid">
               {/* Carry row for multiplication */}
               {(phase !== 'ADD_PROMPT' && phase !== 'ADD_SELECT' && phase !== 'ADD_ANSWER' && phase !== 'ADD_PLACE_CARRY' && phase !== 'ADD_PLACE_ONES' && phase !== 'FINAL') && (
                 <div className="carry-row">
@@ -616,12 +637,13 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
                 </>
               )}
             </div>
+            </div>
 
-            {/* Right side: Questions and answers */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '300px', maxWidth: '400px' }}>
+            {/* Right side: Questions and answers - Fixed size */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', minHeight: '400px' }}>
               {phase !== 'FINAL' || !finalSum ? (
                 <>
-                  <div className="step-title">{getQuestion()}</div>
+                  <div className="step-title" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getQuestion()}</div>
                 {phase === 'ANSWER_MULT' && (
                   <div className="answers-grid">
                     {shuffle(generateMultChoices()).map((c, i) => <button key={i} className="answer-btn" onClick={()=>handleMultAnswer(c)}>{c}</button>)}
