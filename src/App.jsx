@@ -7,7 +7,7 @@ import HTableBattleRoyaleModule from './modules/htablebattle/HTableBattleRoyaleM
 import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule.jsx'
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
-import MultiplicationModule from './modules/multiply/Multiplication.jsx'
+import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -285,7 +285,7 @@ export default function App() {
             )}
 
             {route === 'multiply' && (
-              <Multiplication
+              <MultiplicationModule 
                 onProblemComplete={handleProblemComplete}
                 registerReset={(fn) => registerReset('multiply', fn)}
                 updateStats={updateStats}
