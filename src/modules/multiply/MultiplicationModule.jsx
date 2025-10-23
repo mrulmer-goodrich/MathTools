@@ -653,7 +653,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
 
             {/* Right side: Questions and answers - Fixed size */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '450px', minHeight: '400px' }}>
-              {!isComplete ? (
+              {phase !== 'FINAL' || !finalSum ? (
                 <>
                   <div className="step-title" style={{ minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getQuestion()}</div>
                 {phase === 'ANSWER_MULT' && (
@@ -686,7 +686,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
                     {shuffle(generateAdditionChoices()).map((c,i)=><button key={i} className="answer-btn" onClick={()=>handleAdditionAnswer(c)}>{c}</button>)}
                   </div>
                 )}
-                {phase === 'FINAL' && !finalSum && (
+                {phase === 'FINAL' && !isComplete && (
                   <div className="answers-grid">
                     {shuffle(generateFinalChoices()).map((c,i)=><button key={i} className="answer-btn" onClick={()=>handleFinalAnswer(c)}>{c}</button>)}
                   </div>
