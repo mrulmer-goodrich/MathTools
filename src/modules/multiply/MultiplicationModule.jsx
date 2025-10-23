@@ -496,14 +496,15 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
           .answer-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
           .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
           .step-title { font-size: 1.5rem; font-weight: 900; color: #0f172a; margin-bottom: 16px; text-align: center; font-family: inherit; }
-          .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+          .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 1200px; margin: 0 auto; }
           @keyframes blink-kf { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
           @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); } 50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); } }
           @media (max-width: 600px) { .answers-grid { grid-template-columns: 1fr; } }
         `}</style>
 
         <div className="card">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {/* Left side: Math grid */}
             <div className="mult-grid">
               {/* Carry row for multiplication */}
               {(phase !== 'ADD_PROMPT' && phase !== 'ADD_SELECT' && phase !== 'ADD_ANSWER' && phase !== 'ADD_PLACE_CARRY' && phase !== 'ADD_PLACE_ONES' && phase !== 'FINAL') && (
@@ -616,9 +617,11 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
               )}
             </div>
 
-            {phase !== 'FINAL' || !finalSum ? (
-              <>
-                <div className="step-title">{getQuestion()}</div>
+            {/* Right side: Questions and answers */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '300px', maxWidth: '400px' }}>
+              {phase !== 'FINAL' || !finalSum ? (
+                <>
+                  <div className="step-title">{getQuestion()}</div>
                 {phase === 'ANSWER_MULT' && (
                   <div className="answers-grid">
                     {shuffle(generateMultChoices()).map((c, i) => <button key={i} className="answer-btn" onClick={()=>handleMultAnswer(c)}>{c}</button>)}
@@ -658,6 +661,7 @@ export default function MultiplicationModule({ onProblemComplete, registerReset,
             ) : (
               <div className="step-title" style={{color:'#10b981'}}>🎉 Perfect! {num1} × {num2} = {correctAnswer}</div>
             )}
+            </div>
           </div>
         </div>
       </div>
