@@ -1,4 +1,4 @@
-// src/App.jsx – v12.0.1 (Added Multiplication Module)
+// src/App.jsx — v12.1.0 (Fixed turkey rewards - now shows every 3, golden at 9!)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -27,9 +27,11 @@ export default function App() {
   })
   const [showStatsReport, setShowStatsReport] = useState(false)
   const [showTurkey, setShowTurkey] = useState(false)
+  const [turkeyStreak, setTurkeyStreak] = useState(0)
+  const [isGoldenTurkey, setIsGoldenTurkey] = useState(false)
   
-  console.log('🔧 Current stats state:', stats)
-  console.log('🔧 About to define updateStats function')
+  console.log('📧 Current stats state:', stats)
+  console.log('📧 About to define updateStats function')
   
   // Refs to hold each module's reset function
   const scaleResetRef = useRef(null)
@@ -54,10 +56,18 @@ export default function App() {
         currentStreak: isPerfect ? prev.currentStreak + 1 : 0,
       }
       
-      // Check for turkey (3 in a row with NO errors)
-      if (newStats.currentStreak === 3) {
+      // ENHANCED TURKEY LOGIC: Show turkey every 3 perfect answers!
+      // Check if streak is a multiple of 3 AND greater than 0
+      if (newStats.currentStreak > 0 && newStats.currentStreak % 3 === 0) {
+        // Check if it's a golden turkey (multiples of 9: 9, 18, 27, etc.)
+        const isGolden = newStats.currentStreak % 9 === 0
+        
+        setTurkeyStreak(newStats.currentStreak)
+        setIsGoldenTurkey(isGolden)
         setShowTurkey(true)
-        setTimeout(() => setShowTurkey(false), 3000)
+        
+        // Hide turkey after 4 seconds (golden gets extra time)
+        setTimeout(() => setShowTurkey(false), isGolden ? 5000 : 4000)
       }
       
       return newStats
@@ -331,8 +341,12 @@ export default function App() {
         />
       )}
 
-      {/* Turkey Celebration */}
-      <TurkeyOverlay show={showTurkey} streak={3} />
+      {/* Enhanced Turkey Celebration - shows every 3, golden at 9! */}
+      <TurkeyOverlay 
+        show={showTurkey} 
+        streak={turkeyStreak}
+        isGolden={isGoldenTurkey}
+      />
 
       {/* Confirmation Modal */}
       {showConfirmNew && (
