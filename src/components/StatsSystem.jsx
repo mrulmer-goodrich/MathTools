@@ -1,4 +1,4 @@
-// src/components/StatsSystem.jsx
+// src/components/StatsSystem.jsx - ENHANCED with recurring turkey rewards!
 import React from 'react';
 
 // Red X Overlay Component
@@ -56,9 +56,12 @@ export function ErrorOverlay({ show }) {
   );
 }
 
-// Turkey Celebration Overlay
-export function TurkeyOverlay({ show, streak }) {
+// ENHANCED Turkey Celebration Overlay - Now bigger, centered, and shows for 3, 6, 9, etc!
+export function TurkeyOverlay({ show, streak, isGolden = false }) {
   if (!show) return null;
+  
+  // Determine if this is a golden turkey (multiples of 9)
+  const showGolden = isGolden || (streak >= 9 && streak % 9 === 0);
   
   return (
     <div
@@ -69,7 +72,9 @@ export function TurkeyOverlay({ show, streak }) {
         right: 0,
         bottom: 0,
         zIndex: 10000,
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        background: showGolden 
+          ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.95) 0%, rgba(245, 158, 11, 0.95) 100%)'
+          : 'linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(16, 185, 129, 0.95) 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -77,20 +82,141 @@ export function TurkeyOverlay({ show, streak }) {
         animation: 'turkeyFadeIn 0.5s ease-out',
       }}
     >
-      <div style={{ fontSize: '120px', marginBottom: '20px' }}>🦃</div>
-      <div style={{ fontSize: '48px', fontWeight: 900, color: '#10b981', marginBottom: '10px' }}>
-        TURKEY!
+      {/* Giant Turkey Emoji */}
+      <div 
+        style={{ 
+          fontSize: '180px', 
+          marginBottom: '30px',
+          animation: 'turkeyBounce 0.6s ease-out',
+          filter: showGolden ? 'drop-shadow(0 0 30px rgba(234, 179, 8, 0.8))' : 'none',
+        }}
+      >
+        🦃
       </div>
-      <div style={{ fontSize: '32px', fontWeight: 700, color: '#059669' }}>
-        {streak} in a row!
+      
+      {/* Title */}
+      <div 
+        style={{ 
+          fontSize: '72px', 
+          fontWeight: 900, 
+          color: showGolden ? '#854d0e' : 'white',
+          marginBottom: '15px',
+          textShadow: showGolden 
+            ? '0 4px 8px rgba(0, 0, 0, 0.3)' 
+            : '0 4px 8px rgba(0, 0, 0, 0.2)',
+          animation: 'titlePulse 0.8s ease-out',
+        }}
+      >
+        {showGolden ? '🏆 GOLDEN TURKEY! 🏆' : 'TURKEY!'}
       </div>
-      <div style={{ fontSize: '72px', fontWeight: 900, color: '#10b981', marginTop: '20px' }}>
+      
+      {/* Streak display */}
+      <div 
+        style={{ 
+          fontSize: '42px', 
+          fontWeight: 700, 
+          color: showGolden ? '#78350f' : 'white',
+          marginBottom: '25px',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+        }}
+      >
+        {streak} Perfect in a Row! 🔥
+      </div>
+      
+      {/* 100% Badge */}
+      <div 
+        style={{ 
+          fontSize: '96px', 
+          fontWeight: 900, 
+          color: showGolden ? '#a16207' : '#ecfdf5',
+          textShadow: showGolden 
+            ? '0 6px 12px rgba(0, 0, 0, 0.4)' 
+            : '0 6px 12px rgba(0, 0, 0, 0.3)',
+          animation: 'percentGrow 0.7s ease-out',
+        }}
+      >
         100%
       </div>
+      
+      {/* Special message for golden turkey */}
+      {showGolden && (
+        <div 
+          style={{ 
+            fontSize: '32px', 
+            fontWeight: 700, 
+            color: '#78350f',
+            marginTop: '20px',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            animation: 'fadeInUp 0.8s ease-out',
+          }}
+        >
+          ✨ LEGENDARY! ✨
+        </div>
+      )}
+      
       <style>{`
         @keyframes turkeyFadeIn {
-          0% { opacity: 0; transform: scale(0.8); }
-          100% { opacity: 1; transform: scale(1); }
+          0% { 
+            opacity: 0; 
+            transform: scale(0.8); 
+          }
+          100% { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+        }
+        
+        @keyframes turkeyBounce {
+          0% { 
+            transform: translateY(-100px) scale(0.5); 
+            opacity: 0;
+          }
+          60% { 
+            transform: translateY(10px) scale(1.1); 
+          }
+          100% { 
+            transform: translateY(0) scale(1); 
+            opacity: 1;
+          }
+        }
+        
+        @keyframes titlePulse {
+          0% { 
+            transform: scale(0.5); 
+            opacity: 0;
+          }
+          50% { 
+            transform: scale(1.05); 
+          }
+          100% { 
+            transform: scale(1); 
+            opacity: 1;
+          }
+        }
+        
+        @keyframes percentGrow {
+          0% { 
+            transform: scale(0); 
+            opacity: 0;
+          }
+          70% { 
+            transform: scale(1.15); 
+          }
+          100% { 
+            transform: scale(1); 
+            opacity: 1;
+          }
+        }
+        
+        @keyframes fadeInUp {
+          0% { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateY(0); 
+          }
         }
       `}</style>
     </div>
