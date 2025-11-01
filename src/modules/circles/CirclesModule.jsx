@@ -1,9 +1,6 @@
 // CirclesModule.jsx — Circles: One Shape, Two Formulas, Three Words
 
-import React, { useEffect, useRef, useState } from "react";
-import { ErrorOverlay } from "../../components/StatsSystem.jsx";
-import BigButton from "../../components/BigButton.jsx";
-import ugConfetti from "../../lib/confetti.js";
+import React, { useEffect, useState } from "react";
 
 const PI = 3.14159265359;
 
@@ -14,6 +11,34 @@ const shuffle = (arr) => {
     [a[i], a[j]] = [a[j], a[i]]; 
   } 
   return a; 
+};
+
+// ErrorOverlay
+const ErrorOverlay = ({ show }) => {
+  if (!show) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'rgba(239, 68, 68, 0.3)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', zIndex: 10000, pointerEvents: 'none'
+    }}>
+      <div style={{ fontSize: '120px', color: '#dc2626', fontWeight: 'bold', animation: 'shake 0.5s' }}>✗</div>
+    </div>
+  );
+};
+
+// Success overlay with green checkmark
+const SuccessOverlay = ({ show }) => {
+  if (!show) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'rgba(34, 197, 94, 0.3)', display: 'flex',
+      alignItems: 'center', justifyContent: 'center', zIndex: 10000, pointerEvents: 'none'
+    }}>
+      <div style={{ fontSize: '120px', color: '#16a34a', fontWeight: 'bold', animation: 'scaleIn 0.3s' }}>✓</div>
+    </div>
+  );
 };
 
 // Confetti
@@ -37,7 +62,7 @@ const Confetti = ({ show }) => {
     );
   });
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 9999 }}>
       {pieces}
     </div>
   );
@@ -71,7 +96,7 @@ const generateProblem = (stage) => {
 const SHAPE_BANK = [
   { type: 'circle', emoji: '⭕' },
   { type: 'square', emoji: '⬜' },
-  { type: 'triangle', emoji: '' },
+  { type: 'triangle', emoji: '🔺' },
   { type: 'rectangle', emoji: '▭' },
 ];
 
@@ -81,7 +106,8 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
   
   const hasRadius = r !== null && r > 0;
   const size = 350;
-  const displayR = 110;
+  const scale = hasRadius ? Math.min((size * 0.35) / r, 20) : 10;
+  const displayR = hasRadius ? r * scale : size * 0.3;
   const center = size / 2;
   
   // Calculate positions
@@ -129,14 +155,14 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
   const showArea = stage >= 2; // Always show in stage 2+ so students can click it
   
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} >
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', margin: '0 auto' }}>
       <rect width={size} height={size} fill="#f0f9ff" rx="12" />
       
       {showCircle ? (
         <>
           {/* Area (filled) - clickable for stage 2 with wider hit zone */}
           {showArea && (
-            <g onClick={() => stage === 2 && onCircleClick?.('area')} >
+            <g onClick={() => stage === 2 && onCircleClick?.('area')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
               <circle 
                 cx={center} cy={center} r={displayR} 
                 fill={colors.area} fillOpacity="0.3"
@@ -150,7 +176,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
           )}
           
           {/* Circumference (outline) - clickable for stage 2 with wider hit zone */}
-          <g onClick={() => stage === 2 && onCircleClick?.('circumference')} >
+          <g onClick={() => stage === 2 && onCircleClick?.('circumference')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
             <circle 
               cx={center} cy={center} r={displayR} 
               fill="none" stroke={colors.circumference} strokeWidth="5"
@@ -164,7 +190,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
           
           {/* Diameter line - clickable for stage 2 with wider hit zone */}
           {showDiameter && (
-            <g onClick={() => stage === 2 && onCircleClick?.('diameter')} >
+            <g onClick={() => stage === 2 && onCircleClick?.('diameter')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
               <line 
                 x1={diamStart.x} y1={diamStart.y} 
                 x2={diamEnd.x} y2={diamEnd.y} 
@@ -180,7 +206,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
           )}
           
           {/* Radius line - clickable for stage 2 with wider hit zone */}
-          <g onClick={() => stage === 2 && onCircleClick?.('radius')} >
+          <g onClick={() => stage === 2 && onCircleClick?.('radius')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
             <line 
               x1={center} y1={center} 
               x2={radiusEnd.x} y2={radiusEnd.y} 
@@ -293,33 +319,9 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
   );
 };
 
-// Local Success overlay (green check), no external import required
-function SuccessOverlay({ show }) {
-  if (!show) return null;
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(34,197,94,0.28)', animation: 'scaleIn 0.3s ease-out'
-    }}>
-      <div style={{ fontSize: '120px', color: '#16a34a', fontWeight: 900 }}>✓</div>
-    </div>
-  );
-}
-
-
-
 // Main component
-export default function CirclesModule({ onProblemComplete, registerReset, updateStats }) {
-  // ------------------------------
-  // Core state
-  // ------------------------------
+export default function CirclesModule() {
   const [stage, setStage] = useState(1);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [scoreLocked, setScoreLocked] = useState(false);
-  const timerRef = useRef(null);
-
   const [problem, setProblem] = useState(() => generateProblem(1));
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -328,87 +330,25 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [showMoveOnChoice, setShowMoveOnChoice] = useState(false);
   const [currentFormula, setCurrentFormula] = useState(''); // e.g., "d = r × 2"
   const [totalCoins, setTotalCoins] = useState(0); // Total coins earned
-
-  // ------------------------------
-  // Stage-specific state
-  // ------------------------------
-  // Stage 1
+  
+  // Stage 1 state
   const [shapes, setShapes] = useState([]);
-
-  // Stage 2
+  
+  // Stage 2 state
   const [termToPlace, setTermToPlace] = useState(null);
   const [placedTerms, setPlacedTerms] = useState({});
-
-  // Stages 3+
+  
+  // Stages 3+ state
   const [visibleValues, setVisibleValues] = useState({});
   const [currentStep, setCurrentStep] = useState(null); // 'operation' or 'value'
   const [currentTarget, setCurrentTarget] = useState(null);
   const [questionQueue, setQuestionQueue] = useState([]);
 
-  // ------------------------------
-  // Timer controls
-  // ------------------------------
-  const startTimer = (minutes) => {
-    if (scoreLocked) return;
-    setTimeRemaining(minutes * 60);
-    setTimerRunning(true);
-  };
-
-  // Tick every second while running
-  useEffect(() => {
-    if (!timerRunning || scoreLocked) return;
-
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          setTimerRunning(false);
-          setScoreLocked(true); // lock score/coins until reload
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [timerRunning, scoreLocked]);
-
-  // Expose a reset to the parent header "New Problem" button
-  useEffect(() => {
-    if (!registerReset) return;
-    const resetAll = () => {
-      setTimerRunning(false);
-      if (timerRef.current) clearInterval(timerRef.current);
-      setScoreLocked(false);
-      setTimeRemaining(0);
-      setShowError(false);
-      setShowSuccess(false);
-      setShowConfetti(false);
-      setShowMoveOnChoice(false);
-      setCurrentFormula('');
-      setProblemCount(0);
-      setVisibleValues({});
-      setCurrentStep(null);
-      setCurrentTarget(null);
-      setQuestionQueue([]);
-      setTermToPlace(null);
-      setPlacedTerms({});
-      setShapes([]);
-      // regenerate based on current stage
-      setProblem(generateProblem(stage));
-    };
-    registerReset(resetAll);
-  }, [registerReset, stage]);
-
-  // ------------------------------
-  // Error helper (kept as-is)
-  // ------------------------------
   const handleError = () => {
     setShowError(true);
     setTimeout(() => setShowError(false), 1000);
   };
+
   // Get stage configuration
   const getStageConfig = (stageNum) => {
     switch(stageNum) {
@@ -497,7 +437,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   // Stage 1: Shape selection
   const handleShapeSelect = (shape) => {
     if (shape.type === 'circle') {
-      try { ugConfetti.burst(); } catch {}
+      setShowSuccess(true);
       setShowConfetti(true);
       const coinsEarned = 10;
       setTotalCoins(prev => prev + coinsEarned);
@@ -531,7 +471,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       const allPlaced = allTerms.every(t => newPlaced[t]);
       
       if (allPlaced) {
-        try { ugConfetti.burst(); } catch {}
+        setShowSuccess(true);
         setShowConfetti(true);
         const coinsEarned = 10;
         setTotalCoins(prev => prev + coinsEarned);
@@ -654,7 +594,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         // All done for this problem - show success
         const coinsEarned = 10 * questionQueue.length;
         setTotalCoins(prev => prev + coinsEarned);
-        try { ugConfetti.burst(); } catch {}
+        setShowSuccess(true);
         setShowConfetti(true);
         setTimeout(() => {
           setShowSuccess(false);
@@ -696,14 +636,8 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const fromValue = currentQuestion?.from ? visibleValues[currentQuestion.from] : null;
 
   return (
-    <div >
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px' }}>
       <ErrorOverlay show={showError} />
-      {/* Fixed coin badge (avoids layout issues) */}
-      <div className="fixed right-4 top-4 z-20 bg-amber-100 border-2 border-amber-400 rounded-lg px-4 py-2 flex items-center gap-2 shadow">
-        <div className="font-semibold text-amber-700">Coins:</div>
-        <div className="font-bold text-amber-700 text-xl">{totalCoins}</div>
-      </div>
-
       <SuccessOverlay show={showSuccess} />
       {showConfetti && <Confetti show={true} />}
       
@@ -713,47 +647,107 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         @keyframes scaleIn { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
       `}</style>
       
-      <div >
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* Title */}
-        <div className="relative mb-6">
+        <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative' }}>
           {/* Skip to Stage 10 button (only show if not already on stage 10) */}
           {stage < 10 && (
-            <BigButton className="ug-button mb-2"
+            <button
               onClick={() => {
                 setStage(10);
                 setProblemCount(0);
                 setTotalCoins(prev => prev * 2); // Double coins for skipping
               }}
-              
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '2px solid #f59e0b',
+                background: '#fef3c7',
+                color: '#92400e',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
             >
               Skip to Stage 10 (2× coins!)
-            </BigButton>
+            </button>
           )}
           
           {/* Coins display */}
+          <div style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            padding: '8px 16px',
+            borderRadius: '8px',
+            background: '#fef3c7',
+            border: '2px solid #f59e0b',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: '24px' }}>🪙</span>
+            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#92400e' }}>{totalCoins}</span>
+          </div>
           
-          <h1 className="text-3xl font-extrabold text-gray-800">
+          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
             Circles
           </h1>
-          <p className="text-gray-600">One Shape, Two Formulas, Three Words</p>
-          <p className="text-sm text-gray-400 mt-1">Stage {stage}</p>
+          <p style={{ fontSize: '18px', color: '#6b7280' }}>
+            One Shape, Two Formulas, Three Words
+          </p>
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '4px' }}>
+            Stage {stage}
+          </p>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         
           {/* LEFT: Visual */}
-          <div className="bg-white rounded-xl shadow-md p-4">
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             
             {/* Formula display (stage 3+ when formula exists) */}
             {stage >= 3 && currentFormula && (
-              <div className="inline-block mb-3 px-3 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-mono">
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: '16px', 
+                padding: '12px', 
+                background: '#f0f9ff', 
+                borderRadius: '8px',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#1f2937'
+              }}>
                 {currentFormula}
               </div>
             )}
             
             {/* Stage 1: Show shapes */}
-                        {/* Stage 2+: Show circle */}
+            {stage === 1 && (
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {shapes.map((shape, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleShapeSelect(shape)}
+                    style={{
+                      fontSize: '80px', padding: '32px', border: '3px solid #e5e7eb',
+                      borderRadius: '12px', background: 'white', cursor: 'pointer',
+                      transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  >
+                    {shape.emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {/* Stage 2+: Show circle */}
             {stage >= 2 && (
               <CircleVisualization 
                 problem={problem}
@@ -767,16 +761,36 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           </div>
 
           {/* RIGHT: Questions */}
-          <div className="bg-white rounded-xl shadow-md p-4">
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             
             {showMoveOnChoice ? (
-              <div className="text-center">
-                <div className="text-4xl mb-2">✓</div>
-                <div className="text-xl font-bold mb-4">Great job!</div>
-                <div className="flex justify-center gap-3">
-                  <BigButton onClick={() => handlePracticeChoice(false)} className="ug-button">More practice</BigButton>
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <div style={{ fontSize: '64px', marginBottom: '24px' }}>🎉</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '32px', color: '#1f2937' }}>
+                  Great job!
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => handlePracticeChoice(false)}
+                    style={{
+                      padding: '16px 32px', borderRadius: '24px', border: '2px solid #4f46e5',
+                      background: 'white', color: '#4f46e5', fontWeight: 'bold',
+                      cursor: 'pointer', fontSize: '18px'
+                    }}
+                  >
+                    More practice
+                  </button>
                   {stage < 10 && (
-                    <BigButton onClick={() => handlePracticeChoice(true)} className="ug-button">Move on →</BigButton>
+                    <button
+                      onClick={() => handlePracticeChoice(true)}
+                      style={{
+                        padding: '16px 32px', borderRadius: '24px', border: '2px solid #4f46e5',
+                        background: '#4f46e5', color: 'white', fontWeight: 'bold',
+                        cursor: 'pointer', fontSize: '18px'
+                      }}
+                    >
+                      Move on →
+                    </button>
                   )}
                 </div>
               </div>
@@ -785,29 +799,24 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                 {/* Stage 1 */}
                 {stage === 1 && (
                   <div>
-                    <div className="text-xl font-semibold mb-2">Which one is a circle?</div>
-                    <p className="text-slate-600">Click the circle among the options below.</p>
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {shapes.map((shape, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleShapeSelect(shape)}
-                          className="ug-answer ug-answer--pill text-lg px-5 py-3"
-                          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                        >
-                          {shape.emoji || 'shape'}
-                        </button>
-                      ))}
+                    <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
+                      Which one is a circle?
                     </div>
+                    <p style={{ color: '#6b7280', fontSize: '16px' }}>
+                      Click on the circle shape on the left.
+                    </p>
                   </div>
                 )}
 
                 {/* Stage 2 */}
                 {stage === 2 && (
                   <div>
-                    <div className="text-xl font-semibold mb-2">Where is the {termToPlace}?</div>
-                    <p className="text-slate-600">Click on the {termToPlace} on the circle to the left.</p>
+                    <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
+                      Where is the {termToPlace}?
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '16px' }}>
+                      Click on the {termToPlace} on the circle to the left.
+                    </p>
                   </div>
                 )}
 
@@ -816,15 +825,19 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                   <div>
                     {currentStep === 'operation' ? (
                       <>
-                        <div className="text-lg font-semibold mb-2">
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
                           {currentTarget} = {currentQuestion?.fromLabel} _____
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {getOperationChoices(currentTarget).map((op, i) => (
                             <button
                               key={i}
                               onClick={() => handleOperationSelect(op)}
-                              className="ug-answer ug-answer--pill"
+                              style={{
+                                padding: '16px 24px', borderRadius: '24px', border: '2px solid #4f46e5',
+                                background: 'white', color: '#1f2937', fontWeight: 'bold',
+                                cursor: 'pointer', fontSize: '18px'
+                              }}
                             >
                               {op}
                             </button>
@@ -833,15 +846,19 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                       </>
                     ) : (
                       <>
-                        <div className="text-lg font-semibold mb-2">
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
                           What is {currentTarget}?
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {getValueChoices(currentTarget).map((val, i) => (
                             <button
                               key={i}
                               onClick={() => handleValueSelect(val)}
-                              className="ug-answer ug-answer--pill"
+                              style={{
+                                padding: '16px 24px', borderRadius: '24px', border: '2px solid #4f46e5',
+                                background: 'white', color: '#1f2937', fontWeight: 'bold',
+                                cursor: 'pointer', fontSize: '18px'
+                              }}
                             >
                               {val % 1 === 0 ? val : val.toFixed(1)}
                             </button>
