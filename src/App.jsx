@@ -8,6 +8,11 @@ import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
+//import CirclesModule from './modules/circles/CirclesModule.jsx'
+//
+//
+//
+
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -41,6 +46,7 @@ export default function App() {
   const pgraphsResetRef = useRef(null)
   const mixedResetRef = useRef(null)
   const multiplyResetRef = useRef(null)
+  const circlesResetRef = useRef(null)
 
   // Update stats when a problem is completed
   const updateStats = (problemErrors, wasCorrect) => {
@@ -114,6 +120,9 @@ export default function App() {
       case 'multiply':
         multiplyResetRef.current = resetFn
         break
+        case 'circles':
+  circlesResetRef.current = resetFn
+  break
     }
   }
 
@@ -153,6 +162,9 @@ export default function App() {
       case 'multiply':
         multiplyResetRef.current?.()
         break
+        case 'circles':
+  circlesResetRef.current?.()
+  break
     }
   }
 
@@ -205,6 +217,9 @@ export default function App() {
             <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
               Mixed Numbers
             </BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('circles')}>
+  Circles
+</BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
               Multiplication
             </BigButton>
@@ -294,6 +309,13 @@ export default function App() {
               />
             )}
 
+            {route === 'circles' && (
+          <CirclesModule 
+    onProblemComplete={handleProblemComplete}
+    registerReset={(fn) => registerReset('circles', fn)}
+    updateStats={updateStats}
+  />
+)}
             {route === 'multiply' && (
               <MultiplicationModule 
                 onProblemComplete={handleProblemComplete}
