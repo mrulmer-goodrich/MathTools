@@ -710,10 +710,10 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       <div >
         
         {/* Title */}
-        <div >
+        <div className="relative mb-6">
           {/* Skip to Stage 10 button (only show if not already on stage 10) */}
           {stage < 10 && (
-            <button
+            <BigButton className="ug-button mb-2"
               onClick={() => {
                 setStage(10);
                 setProblemCount(0);
@@ -722,50 +722,46 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               
             >
               Skip to Stage 10 (2× coins!)
-            </button>
+            </BigButton>
           )}
           
           {/* Coins display */}
-          <div >
-            <span ></span>
-            <span >{totalCoins}</span>
+          <div className="absolute right-0 top-0 bg-amber-100 border-2 border-amber-400 rounded-lg px-4 py-2 flex items-center gap-2">
+            <span className="text-xl">🪙</span>
+            <span className="font-bold text-amber-700 text-xl">{totalCoins}</span>
           </div>
           
-          <h1 >
+          <h1 className="text-3xl font-extrabold text-gray-800">
             Circles
           </h1>
-          <p >
-            One Shape, Two Formulas, Three Words
-          </p>
-          <p >
-            Stage {stage}
-          </p>
+          <p className="text-gray-600">One Shape, Two Formulas, Three Words</p>
+          <p className="text-sm text-gray-400 mt-1">Stage {stage}</p>
         </div>
         
-        <div >
+        <div className="grid md:grid-cols-2 gap-4">
         
           {/* LEFT: Visual */}
-          <div >
+          <div className="bg-white rounded-xl shadow-md p-4">
             
             {/* Formula display (stage 3+ when formula exists) */}
             {stage >= 3 && currentFormula && (
-              <div >
+              <div className="inline-block mb-3 px-3 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-mono">
                 {currentFormula}
               </div>
             )}
             
             {/* Stage 1: Show shapes */}
             {stage === 1 && (
-              <div >
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
                     onClick={() => handleShapeSelect(shape)}
-                    
-                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                    className="ug-answer ug-answer--pill text-2xl py-3"
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                   >
-                    {shape.emoji}
+                    {shape.emoji || 'shape'}
                   </button>
                 ))}
               </div>
@@ -785,7 +781,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           </div>
 
           {/* RIGHT: Questions */}
-          <div >
+          <div className="bg-white rounded-xl shadow-md p-4">
             
             {showMoveOnChoice ? (
               <div >
