@@ -293,6 +293,22 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
   );
 };
 
+// Local Success overlay (green check), no external import required
+function SuccessOverlay({ show }) {
+  if (!show) return null;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000, pointerEvents: 'none',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(34,197,94,0.28)', animation: 'scaleIn 0.3s ease-out'
+    }}>
+      <div style={{ fontSize: '120px', color: '#16a34a', fontWeight: 900 }}>✓</div>
+    </div>
+  );
+}
+
+
+
 // Main component
 export default function CirclesModule({ onProblemComplete, registerReset, updateStats }) {
   // ------------------------------
