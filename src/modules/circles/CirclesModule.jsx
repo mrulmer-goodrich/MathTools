@@ -1,27 +1,6 @@
 // CirclesModule.jsx — Circles: One Shape, Two Formulas, Three Words
 
-import React, { 
-  useEffect(() => {
-    if (!timerRunning) return;
-    if (scoreLocked) return;
-    timerRef.current = setInterval(() => {
-      setTimeRemaining((t) => {
-        if (t <= 1) {
-          clearInterval(timerRef.current);
-          setScoreLocked(true);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [timerRunning, scoreLocked]);
-
-  const startTimer = (minutes) => {
-    setTimerRunning(true);
-    setTimeRemaining(minutes * 60);
-  };
-useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ErrorOverlay } from "@/components/StatsSystem.jsx";
 import BigButton from "@/components/BigButton.jsx";
 import ugConfetti from "@/lib/confetti.js";
@@ -315,13 +294,16 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, onCir
 };
 
 // Main component
-export default function CirclesModule() {
-  const [stage, setStage] = 
+export default function CirclesModule({ onProblemComplete, registerReset, updateStats }) {
+  // ------------------------------
+  // Core state
+  // ------------------------------
+  const [stage, setStage] = useState(1);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [scoreLocked, setScoreLocked] = useState(false);
   const timerRef = useRef(null);
-useState(1);
+
   const [problem, setProblem] = useState(() => generateProblem(1));
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -330,22 +312,87 @@ useState(1);
   const [showMoveOnChoice, setShowMoveOnChoice] = useState(false);
   const [currentFormula, setCurrentFormula] = useState(''); // e.g., "d = r × 2"
   const [totalCoins, setTotalCoins] = useState(0); // Total coins earned
-  
-  // Stage 1 state
+
+  // ------------------------------
+  // Stage-specific state
+  // ------------------------------
+  // Stage 1
   const [shapes, setShapes] = useState([]);
-  // Stage 2 state
+
+  // Stage 2
   const [termToPlace, setTermToPlace] = useState(null);
   const [placedTerms, setPlacedTerms] = useState({});
-  // Stages 3+ state
+
+  // Stages 3+
   const [visibleValues, setVisibleValues] = useState({});
   const [currentStep, setCurrentStep] = useState(null); // 'operation' or 'value'
   const [currentTarget, setCurrentTarget] = useState(null);
   const [questionQueue, setQuestionQueue] = useState([]);
+
+  // ------------------------------
+  // Timer controls
+  // ------------------------------
+  const startTimer = (minutes) => {
+    if (scoreLocked) return;
+    setTimeRemaining(minutes * 60);
+    setTimerRunning(true);
+  };
+
+  // Tick every second while running
+  useEffect(() => {
+    if (!timerRunning || scoreLocked) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          setTimerRunning(false);
+          setScoreLocked(true); // lock score/coins until reload
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [timerRunning, scoreLocked]);
+
+  // Expose a reset to the parent header "New Problem" button
+  useEffect(() => {
+    if (!registerReset) return;
+    const resetAll = () => {
+      setTimerRunning(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+      setScoreLocked(false);
+      setTimeRemaining(0);
+      setShowError(false);
+      setShowSuccess(false);
+      setShowConfetti(false);
+      setShowMoveOnChoice(false);
+      setCurrentFormula('');
+      setProblemCount(0);
+      setVisibleValues({});
+      setCurrentStep(null);
+      setCurrentTarget(null);
+      setQuestionQueue([]);
+      setTermToPlace(null);
+      setPlacedTerms({});
+      setShapes([]);
+      // regenerate based on current stage
+      setProblem(generateProblem(stage));
+    };
+    registerReset(resetAll);
+  }, [registerReset, stage]);
+
+  // ------------------------------
+  // Error helper (kept as-is)
+  // ------------------------------
   const handleError = () => {
     setShowError(true);
     setTimeout(() => setShowError(false), 1000);
   };
-
   // Get stage configuration
   const getStageConfig = (stageNum) => {
     switch(stageNum) {
