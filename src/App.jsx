@@ -8,11 +8,7 @@ import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
-//import CirclesModule from './modules/circles/CirclesModule.jsx'
-//
-//
-//
-
+import CirclesModule from './modules/circles/CirclesModule.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
