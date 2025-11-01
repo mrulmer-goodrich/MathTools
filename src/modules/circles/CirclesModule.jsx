@@ -698,6 +698,12 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   return (
     <div >
       <ErrorOverlay show={showError} />
+      {/* Fixed coin badge (avoids layout issues) */}
+      <div className="fixed right-4 top-4 z-20 bg-amber-100 border-2 border-amber-400 rounded-lg px-4 py-2 flex items-center gap-2 shadow">
+        <div className="font-semibold text-amber-700">Coins:</div>
+        <div className="font-bold text-amber-700 text-xl">{totalCoins}</div>
+      </div>
+
       <SuccessOverlay show={showSuccess} />
       {showConfetti && <Confetti show={true} />}
       
@@ -726,10 +732,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           )}
           
           {/* Coins display */}
-          <div className="absolute right-0 top-0 bg-amber-100 border-2 border-amber-400 rounded-lg px-4 py-2 flex items-center gap-2">
-            <span className="text-xl">🪙</span>
-            <span className="font-bold text-amber-700 text-xl">{totalCoins}</span>
-          </div>
           
           <h1 className="text-3xl font-extrabold text-gray-800">
             Circles
