@@ -1,9 +1,9 @@
 // CirclesModule.jsx — Circles: One Shape, Two Formulas, Three Words
 
 import React, { useEffect, useRef, useState } from "react";
-import { ErrorOverlay } from "@/components/StatsSystem.jsx";
-import BigButton from "@/components/BigButton.jsx";
-import ugConfetti from "@/lib/confetti.js";
+import { ErrorOverlay } from "../../components/StatsSystem.jsx";
+import BigButton from "../../components/BigButton.jsx";
+import ugConfetti from "../../lib/confetti.js";
 
 const PI = 3.14159265359;
 
