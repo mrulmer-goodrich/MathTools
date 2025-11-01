@@ -37,7 +37,7 @@ const Confetti = ({ show }) => {
     );
   });
   return (
-    <div >
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
       {pieces}
     </div>
   );
@@ -753,23 +753,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
             )}
             
             {/* Stage 1: Show shapes */}
-            {stage === 1 && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {shapes.map((shape, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleShapeSelect(shape)}
-                    className="ug-answer ug-answer--pill text-2xl py-3"
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    {shape.emoji || 'shape'}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* Stage 2+: Show circle */}
+                        {/* Stage 2+: Show circle */}
             {stage >= 2 && (
               <CircleVisualization 
                 problem={problem}
@@ -786,25 +770,13 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           <div className="bg-white rounded-xl shadow-md p-4">
             
             {showMoveOnChoice ? (
-              <div >
-                <div ></div>
-                <div >
-                  Great job!
-                </div>
-                <div >
-                  <button
-                    onClick={() => handlePracticeChoice(false)}
-                    
-                  >
-                    More practice
-                  </button>
+              <div className="text-center">
+                <div className="text-4xl mb-2">✓</div>
+                <div className="text-xl font-bold mb-4">Great job!</div>
+                <div className="flex justify-center gap-3">
+                  <BigButton onClick={() => handlePracticeChoice(false)} className="ug-button">More practice</BigButton>
                   {stage < 10 && (
-                    <button
-                      onClick={() => handlePracticeChoice(true)}
-                      
-                    >
-                      Move on →
-                    </button>
+                    <BigButton onClick={() => handlePracticeChoice(true)} className="ug-button">Move on →</BigButton>
                   )}
                 </div>
               </div>
@@ -813,24 +785,29 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                 {/* Stage 1 */}
                 {stage === 1 && (
                   <div>
-                    <div >
-                      Which one is a circle?
+                    <div className="text-xl font-semibold mb-2">Which one is a circle?</div>
+                    <p className="text-slate-600">Click the circle among the options below.</p>
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {shapes.map((shape, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleShapeSelect(shape)}
+                          className="ug-answer ug-answer--pill text-lg px-5 py-3"
+                          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                        >
+                          {shape.emoji || 'shape'}
+                        </button>
+                      ))}
                     </div>
-                    <p >
-                      Click on the circle shape on the left.
-                    </p>
                   </div>
                 )}
 
                 {/* Stage 2 */}
                 {stage === 2 && (
                   <div>
-                    <div >
-                      Where is the {termToPlace}?
-                    </div>
-                    <p >
-                      Click on the {termToPlace} on the circle to the left.
-                    </p>
+                    <div className="text-xl font-semibold mb-2">Where is the {termToPlace}?</div>
+                    <p className="text-slate-600">Click on the {termToPlace} on the circle to the left.</p>
                   </div>
                 )}
 
@@ -839,15 +816,15 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                   <div>
                     {currentStep === 'operation' ? (
                       <>
-                        <div >
+                        <div className="text-lg font-semibold mb-2">
                           {currentTarget} = {currentQuestion?.fromLabel} _____
                         </div>
-                        <div >
+                        <div className="flex flex-wrap gap-2">
                           {getOperationChoices(currentTarget).map((op, i) => (
                             <button
                               key={i}
                               onClick={() => handleOperationSelect(op)}
-                              
+                              className="ug-answer ug-answer--pill"
                             >
                               {op}
                             </button>
@@ -856,15 +833,15 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                       </>
                     ) : (
                       <>
-                        <div >
+                        <div className="text-lg font-semibold mb-2">
                           What is {currentTarget}?
                         </div>
-                        <div >
+                        <div className="flex flex-wrap gap-2">
                           {getValueChoices(currentTarget).map((val, i) => (
                             <button
                               key={i}
                               onClick={() => handleValueSelect(val)}
-                              
+                              className="ug-answer ug-answer--pill"
                             >
                               {val % 1 === 0 ? val : val.toFixed(1)}
                             </button>
