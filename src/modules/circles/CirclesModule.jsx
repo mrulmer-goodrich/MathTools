@@ -813,13 +813,16 @@ export default function CirclesModule({ onBack }) {
       setCorrectStreak(newStreak);
       
       if (newStreak >= 2) {
-        setShowMoveOnChoice(true);
+        // Show move on choice after animation
+        setTimeout(() => {
+          setShowMoveOnChoice(true);
+        }, 1600);
       } else {
-        // Generate new problem
+        // Generate new problem after animation
         setTimeout(() => {
           if (stage === 1) {
-            setShapes(generateShapes());
-            setStage1Answered(false);
+            setStage1Answered(false); // Reset FIRST
+            setShapes(generateShapes()); // Then generate new shapes
           } else if (stage === 2) {
             setProblem(generateProblem());
             setTermToPlace('center');
@@ -830,12 +833,12 @@ export default function CirclesModule({ onBack }) {
         }, 1600);
       }
     } else {
-      // Had errors, reset streak
+      // Had errors, reset streak and generate new problem
       setCorrectStreak(0);
       setTimeout(() => {
         if (stage === 1) {
-          setShapes(generateShapes());
           setStage1Answered(false);
+          setShapes(generateShapes());
         } else if (stage === 2) {
           setProblem(generateProblem());
           setTermToPlace('center');
@@ -987,14 +990,15 @@ export default function CirclesModule({ onBack }) {
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
-                    onClick={() => handleShapeSelect(shape)}
+                    onClick={stage1Answered ? undefined : () => handleShapeSelect(shape)}
                     disabled={stage1Answered}
                     style={{
                       fontSize: '80px', padding: '32px', border: '3px solid #e5e7eb',
                       borderRadius: '12px', background: 'white', 
                       cursor: stage1Answered ? 'not-allowed' : 'pointer',
                       transition: 'transform 0.2s',
-                      opacity: stage1Answered ? 0.5 : 1
+                      opacity: stage1Answered ? 0.5 : 1,
+                      pointerEvents: stage1Answered ? 'none' : 'auto'
                     }}
                     onMouseEnter={(e) => !stage1Answered && (e.target.style.transform = 'scale(1.05)')}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
