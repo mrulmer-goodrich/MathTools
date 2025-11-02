@@ -17,45 +17,64 @@ const shuffle = (arr) => {
   return a; 
 };
 
-// Success overlay with green checkmark
+// Success overlay - HUGE animated green checkmark
 const SuccessOverlay = ({ show }) => {
   if (!show) return null;
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      background: 'rgba(34, 197, 94, 0.3)', display: 'flex',
+      background: 'rgba(34, 197, 94, 0.2)', display: 'flex',
       alignItems: 'center', justifyContent: 'center', zIndex: 10000, pointerEvents: 'none'
     }}>
-      <div style={{ fontSize: '120px', color: '#16a34a', fontWeight: 'bold', animation: 'scaleIn 0.3s' }}>✓</div>
+      <div style={{ 
+        fontSize: '280px', 
+        color: '#16a34a', 
+        fontWeight: '900',
+        textShadow: '0 8px 32px rgba(22, 163, 74, 0.5)',
+        animation: 'successPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        filter: 'drop-shadow(0 0 20px rgba(22, 163, 74, 0.8))'
+      }}>
+        ✓
+      </div>
+      <style>{`
+        @keyframes successPop {
+          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
 
-// Flying coins animation with SVG circles
+// Exploding coins animation - burst from center in all directions
 const FlyingCoins = ({ show }) => {
   if (!show) return null;
-  const COUNT = 30;
+  const COUNT = 40;
   const coins = Array.from({ length: COUNT }).map((_, i) => {
-    const left = 20 + Math.random() * 60;
-    const delay = Math.random() * 0.5;
-    const duration = 1.5 + Math.random() * 1;
-    const rotation = Math.random() * 360;
-    const drift = (Math.random() - 0.5) * 100;
+    const angle = (i / COUNT) * 360; // Spread evenly in circle
+    const distance = 200 + Math.random() * 100; // How far they travel
+    const duration = 1.2 + Math.random() * 0.6;
+    const delay = Math.random() * 0.2;
+    const rotation = Math.random() * 720;
+    
     return (
       <div
         key={i}
         style={{
           position: 'absolute',
-          left: left + '%',
-          animation: `coinFloat ${duration}s ease-out ${delay}s forwards`,
+          left: '50%',
           top: '50%',
-          '--drift': `${drift}px`
+          animation: `coinExplode ${duration}s ease-out ${delay}s forwards`,
+          '--angle': `${angle}deg`,
+          '--distance': `${distance}px`,
+          '--rotation': `${rotation}deg`
         }}
       >
-        <svg width="32" height="32" viewBox="0 0 32 32">
+        <svg width="40" height="40" viewBox="0 0 32 32">
           <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
           <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
-          <text x="16" y="20" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#78350f">¢</text>
+          <text x="16" y="21" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#78350f">¢</text>
         </svg>
       </div>
     );
@@ -63,10 +82,31 @@ const FlyingCoins = ({ show }) => {
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 9999 }}>
       <style>{`
-        @keyframes coinFloat {
-          0% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1; }
-          50% { transform: translateY(-200px) translateX(var(--drift)) rotate(180deg) scale(1.2); opacity: 1; }
-          100% { transform: translateY(-400px) translateX(var(--drift)) rotate(360deg) scale(0.5); opacity: 0; }
+        @keyframes coinExplode {
+          0% { 
+            transform: translate(-50%, -50%) rotate(0deg) scale(0);
+            opacity: 1;
+          }
+          60% { 
+            transform: 
+              translate(
+                calc(-50% + cos(var(--angle)) * var(--distance)),
+                calc(-50% + sin(var(--angle)) * var(--distance))
+              )
+              rotate(var(--rotation))
+              scale(1.2);
+            opacity: 1;
+          }
+          100% { 
+            transform: 
+              translate(
+                calc(-50% + cos(var(--angle)) * var(--distance)),
+                calc(-50% + sin(var(--angle)) * var(--distance))
+              )
+              rotate(var(--rotation))
+              scale(0.5);
+            opacity: 0;
+          }
         }
       `}</style>
       {coins}
@@ -143,29 +183,35 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Label positions - strategically placed to NEVER overlap
-  // Radius: on the radius line, perpendicular offset
+  // Dynamic label positioning based on line angles - ALWAYS clear of lines
+  // Radius label: perpendicular to radius, outside the line
   const radiusLabelPos = {
-    x: center + (displayR * 0.6) * Math.cos(radAngle) + 55 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.6) * Math.sin(radAngle) + 55 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.7) * Math.cos(radAngle) + 40 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.7) * Math.sin(radAngle) + 40 * Math.sin(radAngle + Math.PI/2)
   };
   
-  // Diameter: perpendicular to diameter line, opposite side from radius
+  // Diameter label: perpendicular to diameter, pushed away from radius
+  // Check which side to push it based on radius angle
+  const diamPerpOffset = Math.PI/2;
   const diameterLabelPos = {
-    x: center + 60 * Math.cos(diamAngle + Math.PI/2),
-    y: center + 60 * Math.sin(diamAngle + Math.PI/2)
+    x: center + 50 * Math.cos(diamAngle + diamPerpOffset),
+    y: center + 50 * Math.sin(diamAngle + diamPerpOffset)
   };
   
-  // Circumference: outside the circle
+  // Circumference: outside circle, avoiding both lines
+  // Place at angle that's 135° from radius (in safe quadrant)
+  const circumAngle = radAngle + (135 * Math.PI / 180);
   const circumferenceLabelPos = {
-    x: center + (displayR + 50) * Math.cos(radAngle - Math.PI/4),
-    y: center + (displayR + 50) * Math.sin(radAngle - Math.PI/4)
+    x: center + (displayR + 45) * Math.cos(circumAngle),
+    y: center + (displayR + 45) * Math.sin(circumAngle)
   };
   
-  // Area: inside, top-left quadrant
+  // Area: inside circle, in quadrant opposite to radius
+  // Place at angle opposite to radius
+  const areaAngle = radAngle + Math.PI; // 180° opposite
   const areaLabelPos = {
-    x: center - displayR * 0.45,
-    y: center - displayR * 0.45
+    x: center + (displayR * 0.5) * Math.cos(areaAngle),
+    y: center + (displayR * 0.5) * Math.sin(areaAngle)
   };
   
   const showCircle = stage >= 2;
@@ -281,6 +327,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [currentStep, setCurrentStep] = useState(null);
   const [currentTarget, setCurrentTarget] = useState(null);
   const [questionQueue, setQuestionQueue] = useState([]);
+  const [currentAnswerChoices, setCurrentAnswerChoices] = useState([]); // Prevent re-shuffling
 
   // Register reset with parent
   useEffect(() => {
@@ -363,6 +410,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setCurrentTarget(null);
     setQuestionQueue([]);
     setCurrentFormula('');
+    setCurrentAnswerChoices([]); // Clear stored choices
     setShowMoveOnChoice(false);
     
     if (stage === 1) {
@@ -515,6 +563,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         formula = `${currentTarget} = ${currentQuestion.fromLabel} ${operation}`;
       }
       setCurrentFormula(formula);
+      
+      // Generate answer choices ONCE and store them
+      const choices = getValueChoices(currentTarget);
+      setCurrentAnswerChoices(choices);
+      
       setCurrentStep('value');
     } else {
       handleError();
@@ -536,6 +589,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         setCurrentTarget(remainingQuestions[0].target);
         setCurrentStep('operation');
         setCurrentFormula('');
+        setCurrentAnswerChoices([]); // Clear for next question
       }
     } else {
       handleError();
@@ -616,7 +670,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       {showConfetti && <FlyingCoins show={true} />}
       
       <style>{`
-        @keyframes scaleIn { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes successPop {
+          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
       `}</style>
       
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -778,7 +836,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                           What is {currentTarget}?
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {getValueChoices(currentTarget).map((val, i) => (
+                          {currentAnswerChoices.map((val, i) => (
                             <button
                               key={i}
                               onClick={() => handleValueSelect(val)}
