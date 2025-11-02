@@ -31,12 +31,12 @@ const SuccessOverlay = ({ show }) => {
   );
 };
 
-// Flying coins animation
+// Flying coins animation with SVG circles
 const FlyingCoins = ({ show }) => {
   if (!show) return null;
   const COUNT = 30;
   const coins = Array.from({ length: COUNT }).map((_, i) => {
-    const left = 20 + Math.random() * 60; // Center area
+    const left = 20 + Math.random() * 60;
     const delay = Math.random() * 0.5;
     const duration = 1.5 + Math.random() * 1;
     const rotation = Math.random() * 360;
@@ -47,14 +47,16 @@ const FlyingCoins = ({ show }) => {
         style={{
           position: 'absolute',
           left: left + '%',
-          fontSize: '32px',
           animation: `coinFloat ${duration}s ease-out ${delay}s forwards`,
-          transform: `rotate(${rotation}deg)`,
           top: '50%',
           '--drift': `${drift}px`
         }}
       >
-        🪙
+        <svg width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
+          <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
+          <text x="16" y="20" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#78350f">¢</text>
+        </svg>
       </div>
     );
   });
@@ -89,8 +91,12 @@ const generateProblem = (stage) => {
   const d = r * 2;
   const C = 2 * PI * r;
   const A = PI * r * r;
-  const radiusAngle = Math.floor(Math.random() * 360);
+  
+  // Limited rotation angles - every 45 degrees to prevent overlaps
+  const safeAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+  const radiusAngle = safeAngles[Math.floor(Math.random() * safeAngles.length)];
   const diameterAngle = (radiusAngle + 90) % 360;
+  
   const colors = generateColors();
   return { r, d, C, A, radiusAngle, diameterAngle, colors, stage };
 };
@@ -458,37 +464,44 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
 
   const getValueChoices = (target) => {
     const correct = problem[target];
-    const distractors = new Set();
+    const distractors = [];
     
+    // Generate distractors based on actual problem values
     if (target === 'd') {
-      distractors.add(problem.r / 2);
-      distractors.add(problem.r * 3);
-      distractors.add(problem.C / 2);
+      distractors.push(problem.r); // Just the radius
+      distractors.push(problem.r * 3); // Triple radius
+      distractors.push(problem.C / PI); // C divided by pi
     } else if (target === 'r') {
-      distractors.add(problem.d * 2);
-      distractors.add(problem.d / 4);
-      distractors.add(problem.C);
+      distractors.push(problem.d); // Just the diameter
+      distractors.push(problem.d / 4); // Quarter diameter
+      distractors.push(problem.C / (2 * PI) * 1.5); // Off by 50%
     } else if (target === 'C') {
-      distractors.add(problem.d * 2);
-      distractors.add(problem.r * 6);
-      distractors.add(problem.A / 3);
+      distractors.push(problem.d * PI); // Forgot the 2
+      distractors.push(problem.r * 2 * PI * 1.5); // Off by 50%
+      distractors.push(problem.A / problem.r); // Wrong formula
     } else if (target === 'A') {
-      distractors.add(problem.r * 3);
-      distractors.add(problem.C);
-      distractors.add(problem.d * 3);
+      distractors.push(problem.r * problem.r); // Forgot pi
+      distractors.push(PI * problem.d * problem.d / 4 * 1.5); // Off calculation
+      distractors.push(problem.C * problem.r / 2 * 1.2); // Alternative wrong
     }
     
-    distractors.delete(correct);
-    const distractorArray = Array.from(distractors).slice(0, 3);
+    // Filter out the correct answer and ensure unique values
+    const uniqueDistractors = distractors
+      .filter(val => Math.abs(val - correct) > 0.5)
+      .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.5) === idx)
+      .slice(0, 3);
     
-    while (distractorArray.length < 3) {
-      const randomValue = problem[['r', 'd', 'C', 'A'][Math.floor(Math.random() * 4)]];
-      if (randomValue !== correct && !distractorArray.includes(randomValue)) {
-        distractorArray.push(randomValue);
+    // If we don't have enough distractors, add some more
+    while (uniqueDistractors.length < 3) {
+      const factor = [0.5, 0.75, 1.25, 1.5, 2, 3][Math.floor(Math.random() * 6)];
+      const distractor = correct * factor;
+      if (Math.abs(distractor - correct) > 0.5 && 
+          !uniqueDistractors.find(v => Math.abs(v - distractor) < 0.5)) {
+        uniqueDistractors.push(distractor);
       }
     }
     
-    return shuffle([correct, ...distractorArray]);
+    return shuffle([correct, ...uniqueDistractors.slice(0, 3)]);
   };
 
   const handleOperationSelect = (operation) => {
@@ -627,7 +640,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
             gap: '8px',
             boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
           }}>
-            <span style={{ fontSize: '26px' }}>🪙</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="11" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
+              <circle cx="12" cy="12" r="8" fill="#fbbf24" opacity="0.7"/>
+              <text x="12" y="16" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#78350f">¢</text>
+            </svg>
             <span>{totalCoins}</span>
           </div>
         </div>
