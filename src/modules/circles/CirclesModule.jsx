@@ -505,7 +505,6 @@ export default function CirclesModule({ onBack }) {
   
   // Stage 1 state
   const [shapes, setShapes] = useState([]);
-  const [stage1Answered, setStage1Answered] = useState(false);
   
   // Stage 2 state
   const [termToPlace, setTermToPlace] = useState('');
@@ -554,7 +553,6 @@ export default function CirclesModule({ onBack }) {
   useEffect(() => {
     setProblem(generateProblem());
     setShapes(generateShapes());
-    setStage1Answered(false);
     if (stage === 2) {
       setTermToPlace('center');
       setPlacedTerms([]);
@@ -574,45 +572,45 @@ export default function CirclesModule({ onBack }) {
     
     if (stage === 3) {
       // Given: r, Find: d
-      queue = [{ target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', calcValue: prob.r, calcLabel: 'r', formula: 'd = r × 2' }];
+      queue = [{ target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' }];
       given = 'r';
     } else if (stage === 4) {
       // Given: d, Find: r
-      queue = [{ target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', calcValue: prob.d, calcLabel: 'd', formula: 'r = d ÷ 2' }];
+      queue = [{ target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' }];
       given = 'd';
     } else if (stage === 5) {
       // Given: d, Find: r, then C
       queue = [
-        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', calcValue: prob.d, calcLabel: 'd', formula: 'r = d ÷ 2' },
-        { target: 'C', from: 'd', fromValue: prob.d, fromLabel: 'd', calcValue: prob.d, calcLabel: 'd', formula: 'C = d × π' }
+        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' },
+        { target: 'C', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'C = d × π' }
       ];
       given = 'd';
     } else if (stage === 6) {
       // Given: r, Find: d, then C
       queue = [
-        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', calcValue: prob.r, calcLabel: 'r', formula: 'd = r × 2' },
-        { target: 'C', from: 'd', fromValue: prob.r, fromLabel: 'r', calcValue: prob.d, calcLabel: 'd', formula: 'C = d × π' }
+        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' },
+        { target: 'C', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'C = d × π' }
       ];
       given = 'r';
     } else if (stage === 7) {
       // Given: C, Find: d, then r
       queue = [
-        { target: 'd', from: 'C', fromValue: prob.C, fromLabel: 'C', calcValue: prob.C, calcLabel: 'C', formula: 'd = C ÷ π' },
-        { target: 'r', from: 'd', fromValue: prob.C, fromLabel: 'C', calcValue: prob.d, calcLabel: 'd', formula: 'r = d ÷ 2' }
+        { target: 'd', from: 'C', fromValue: prob.C, fromLabel: 'C', formula: 'd = C ÷ π' },
+        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' }
       ];
       given = 'C';
     } else if (stage === 8) {
       // Given: r, Find: d, then A
       queue = [
-        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', calcValue: prob.r, calcLabel: 'r', formula: 'd = r × 2' },
-        { target: 'A', from: 'r', fromValue: prob.r, fromLabel: 'r', calcValue: prob.r, calcLabel: 'r', formula: 'A = πr²' }
+        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' },
+        { target: 'A', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'A = πr²' }
       ];
       given = 'r';
     } else if (stage === 9) {
       // Given: d, Find: r, then A
       queue = [
-        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', calcValue: prob.d, calcLabel: 'd', formula: 'r = d ÷ 2' },
-        { target: 'A', from: 'r', fromValue: prob.d, fromLabel: 'd', calcValue: prob.r, calcLabel: 'r', formula: 'A = πr²' }
+        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' },
+        { target: 'A', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'A = πr²' }
       ];
       given = 'd';
     } else if (stage === 10) {
@@ -713,10 +711,7 @@ export default function CirclesModule({ onBack }) {
   
   // Handle Stage 1: Shape selection
   const handleShapeSelect = (shape) => {
-    if (stage1Answered) return; // Prevent multiple clicks
-    
     if (shape.isCircle) {
-      setStage1Answered(true);
       handleCorrect(10);
     } else {
       handleError();
@@ -747,11 +742,7 @@ export default function CirclesModule({ onBack }) {
     if (operation === correct) {
       // Show success briefly
       setShowSuccess(true);
-      try {
-        if (typeof ugConfetti === 'function') ugConfetti();
-      } catch (err) {
-        console.warn('Confetti error:', err);
-      }
+      ugConfetti();
       setTimeout(() => setShowSuccess(false), 800);
       
       // Set formula and generate answer choices ONCE
@@ -778,11 +769,7 @@ export default function CirclesModule({ onBack }) {
       
       // Show success
       setShowSuccess(true);
-      try {
-        if (typeof ugConfetti === 'function') ugConfetti();
-      } catch (err) {
-        console.warn('Confetti error:', err);
-      }
+      ugConfetti();
       setTimeout(() => setShowSuccess(false), 800);
       
       // Check if all steps done
@@ -808,15 +795,7 @@ export default function CirclesModule({ onBack }) {
     setTotalCoins(prev => prev + coins);
     setShowSuccess(true);
     setShowCoins(true);
-    
-    // Try to show confetti, but don't break if it fails
-    try {
-      if (typeof ugConfetti === 'function') {
-        ugConfetti();
-      }
-    } catch (err) {
-      console.warn('Confetti error:', err);
-    }
+    ugConfetti();
     
     setTimeout(() => {
       setShowSuccess(false);
@@ -829,16 +808,12 @@ export default function CirclesModule({ onBack }) {
       setCorrectStreak(newStreak);
       
       if (newStreak >= 2) {
-        // Show move on choice after animation
-        setTimeout(() => {
-          setShowMoveOnChoice(true);
-        }, 1600);
+        setShowMoveOnChoice(true);
       } else {
-        // Generate new problem after animation
+        // Generate new problem
         setTimeout(() => {
           if (stage === 1) {
-            setStage1Answered(false); // Reset FIRST
-            setShapes(generateShapes()); // Then generate new shapes
+            setShapes(generateShapes());
           } else if (stage === 2) {
             setProblem(generateProblem());
             setTermToPlace('center');
@@ -849,11 +824,10 @@ export default function CirclesModule({ onBack }) {
         }, 1600);
       }
     } else {
-      // Had errors, reset streak and generate new problem
+      // Had errors, reset streak
       setCorrectStreak(0);
       setTimeout(() => {
         if (stage === 1) {
-          setStage1Answered(false);
           setShapes(generateShapes());
         } else if (stage === 2) {
           setProblem(generateProblem());
@@ -896,7 +870,6 @@ export default function CirclesModule({ onBack }) {
       
       if (stage === 1) {
         setShapes(generateShapes());
-        setStage1Answered(false);
       } else if (stage === 2) {
         setProblem(generateProblem());
         setTermToPlace('center');
@@ -1006,17 +979,13 @@ export default function CirclesModule({ onBack }) {
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
-                    onClick={stage1Answered ? undefined : () => handleShapeSelect(shape)}
-                    disabled={stage1Answered}
+                    onClick={() => handleShapeSelect(shape)}
                     style={{
                       fontSize: '80px', padding: '32px', border: '3px solid #e5e7eb',
-                      borderRadius: '12px', background: 'white', 
-                      cursor: stage1Answered ? 'not-allowed' : 'pointer',
-                      transition: 'transform 0.2s',
-                      opacity: stage1Answered ? 0.5 : 1,
-                      pointerEvents: stage1Answered ? 'none' : 'auto'
+                      borderRadius: '12px', background: 'white', cursor: 'pointer',
+                      transition: 'transform 0.2s'
                     }}
-                    onMouseEnter={(e) => !stage1Answered && (e.target.style.transform = 'scale(1.05)')}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   >
                     {shape.emoji}
@@ -1124,7 +1093,7 @@ export default function CirclesModule({ onBack }) {
                         fontWeight: 'bold',
                         color: '#0c4a6e'
                       }}>
-                        {currentTarget} = {currentQuestion.calcValue} {selectedOperation}
+                        {currentQuestion.fromLabel} = {currentQuestion.fromValue} {selectedOperation}
                       </div>
                     )}
                     
