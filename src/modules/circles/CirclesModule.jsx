@@ -17,6 +17,129 @@ const shuffle = (arr) => {
   return a; 
 };
 
+// Simple calculator for π calculations
+const Calculator = ({ show, onClose }) => {
+  if (!show) return null;
+  const [display, setDisplay] = useState('');
+  
+  const calculate = () => {
+    try {
+      // Replace π with actual value
+      const expr = display.replace(/π/g, Math.PI.toString());
+      const result = eval(expr);
+      setDisplay(result.toFixed(2));
+    } catch {
+      setDisplay('Error');
+    }
+  };
+  
+  return (
+    <div style={{
+      position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+      background: 'white', borderRadius: '16px', padding: '20px',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 10001
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h3 style={{ margin: 0 }}>Calculator</h3>
+        <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+      </div>
+      <input 
+        type="text" 
+        value={display}
+        onChange={(e) => setDisplay(e.target.value)}
+        style={{ 
+          width: '100%', 
+          padding: '12px', 
+          fontSize: '20px', 
+          marginBottom: '12px',
+          border: '2px solid #e5e7eb',
+          borderRadius: '8px'
+        }}
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        {['7','8','9','÷','4','5','6','×','1','2','3','-','0','π','.','+',' '].map(btn => (
+          <button
+            key={btn}
+            onClick={() => btn === ' ' ? calculate() : setDisplay(d => d + btn)}
+            style={{
+              padding: '16px',
+              fontSize: '18px',
+              border: '2px solid #e5e7eb',
+              borderRadius: '8px',
+              background: btn === ' ' ? '#3b82f6' : 'white',
+              color: btn === ' ' ? 'white' : 'black',
+              cursor: 'pointer'
+            }}
+          >
+            {btn === ' ' ? '=' : btn}
+          </button>
+        ))}
+        <button 
+          onClick={() => setDisplay('')}
+          style={{
+            padding: '16px',
+            fontSize: '18px',
+            gridColumn: 'span 4',
+            border: '2px solid #ef4444',
+            borderRadius: '8px',
+            background: '#fee2e2',
+            cursor: 'pointer'
+          }}
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Stage Unlock overlay - BIG celebration
+const StageUnlockOverlay = ({ show, nextStage }) => {
+  if (!show) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'rgba(59, 130, 246, 0.3)', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', zIndex: 10000, pointerEvents: 'none'
+    }}>
+      <div style={{ 
+        fontSize: '80px', 
+        color: '#2563eb', 
+        fontWeight: '900',
+        textShadow: '0 8px 32px rgba(37, 99, 235, 0.5)',
+        animation: 'stageUnlock 2.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        marginBottom: '20px'
+      }}>
+        🎉 STAGE {nextStage} UNLOCKED! 🎉
+      </div>
+      <div style={{ fontSize: '40px' }}>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <span key={i} style={{
+            display: 'inline-block',
+            animation: `coinBounce ${1 + Math.random()}s ease-in-out ${i * 0.1}s infinite`
+          }}>
+            <svg width="40" height="40" viewBox="0 0 32 32" style={{ margin: '0 4px' }}>
+              <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
+              <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
+            </svg>
+          </span>
+        ))}
+      </div>
+      <style>{`
+        @keyframes stageUnlock {
+          0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes coinBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 // Success overlay - HUGE animated green checkmark
 const SuccessOverlay = ({ show }) => {
   if (!show) return null;
@@ -125,9 +248,9 @@ const generateColors = () => {
   return colorSets[Math.floor(Math.random() * colorSets.length)];
 };
 
-// Generate problem
+// Generate problem - ALWAYS r = 1-20, all values calculated from r
 const generateProblem = (stage) => {
-  const r = Math.floor(Math.random() * 7) + 4; // 4-10 for good sizing
+  const r = Math.floor(Math.random() * 20) + 1; // ALWAYS 1-20
   const d = r * 2;
   const C = 2 * PI * r;
   const A = PI * r * r;
@@ -319,6 +442,10 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [showMoveOnChoice, setShowMoveOnChoice] = useState(false);
   const [currentFormula, setCurrentFormula] = useState('');
   const [totalCoins, setTotalCoins] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0); // Track consecutive correct
+  const [problemWasCorrect, setProblemWasCorrect] = useState(true); // Track if current problem all correct
+  const [showCalculator, setShowCalculator] = useState(false); // Calculator visibility
+  const [showStageUnlock, setShowStageUnlock] = useState(false); // Stage unlock animation
   
   const [shapes, setShapes] = useState([]);
   const [termToPlace, setTermToPlace] = useState(null);
@@ -346,12 +473,8 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
 
   const handleError = () => {
     setShowError(true);
-    // Penalty: lose 5 coins, but Stage 10 resets to 0
-    if (stage === 10) {
-      setTotalCoins(0);
-    } else {
-      setTotalCoins(prev => Math.max(0, prev - 5));
-    }
+    setProblemWasCorrect(false); // Mark this problem as incorrect
+    setTotalCoins(prev => Math.max(0, prev - 5)); // ALWAYS deduct 5 coins
     setTimeout(() => setShowError(false), 1000);
   };
 
@@ -410,8 +533,9 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setCurrentTarget(null);
     setQuestionQueue([]);
     setCurrentFormula('');
-    setCurrentAnswerChoices([]); // Clear stored choices
+    setCurrentAnswerChoices([]);
     setShowMoveOnChoice(false);
+    setProblemWasCorrect(true); // Reset for new problem
     
     if (stage === 1) {
       const otherShapes = shuffle(SHAPE_BANK.filter(s => s.type !== 'circle')).slice(0, 3);
@@ -463,13 +587,21 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       setShowSuccess(false);
       setShowConfetti(false);
       
-      const newCount = problemCount + 1;
-      setProblemCount(newCount);
-      
-      if (stage === 10 || newCount < 2) {
-        resetAll();
+      // Only count toward streak if entire problem was correct
+      if (problemWasCorrect) {
+        const newStreak = correctStreak + 1;
+        setCorrectStreak(newStreak);
+        
+        // Check if should show move-on choice (2 correct in a row)
+        if (newStreak >= 2 && stage < 10) {
+          setShowMoveOnChoice(true);
+        } else {
+          resetAll();
+        }
       } else {
-        setShowMoveOnChoice(true);
+        // Problem completed but had errors - don't count toward streak
+        setCorrectStreak(0);
+        resetAll();
       }
     }, 1500);
   };
@@ -600,9 +732,16 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setShowMoveOnChoice(false);
     
     if (moveOn && stage < 10) {
-      setStage(stage + 1);
-      setProblemCount(0);
+      // Show "Stage Unlocked" animation
+      setShowStageUnlock(true);
+      setTimeout(() => {
+        setShowStageUnlock(false);
+        setStage(stage + 1);
+        setCorrectStreak(0);
+        setProblemCount(0);
+      }, 2500);
     } else {
+      setCorrectStreak(0); // Reset streak if staying
       resetAll();
     }
   };
@@ -667,6 +806,8 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px' }}>
       <ErrorOverlay show={showError} />
       <SuccessOverlay show={showSuccess} />
+      <StageUnlockOverlay show={showStageUnlock} nextStage={stage + 1} />
+      <Calculator show={showCalculator} onClose={() => setShowCalculator(false)} />
       {showConfetti && <FlyingCoins show={true} />}
       
       <style>{`
@@ -685,25 +826,47 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
             {getStageTitle(stage)}
           </div>
           
-          <div style={{
-            padding: '10px 18px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-            border: '2px solid #f59e0b',
-            fontSize: '22px',
-            fontWeight: 'bold',
-            color: '#78350f',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
-          }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="11" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
-              <circle cx="12" cy="12" r="8" fill="#fbbf24" opacity="0.7"/>
-              <text x="12" y="16" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#78350f">¢</text>
-            </svg>
-            <span>{totalCoins}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Calculator Button */}
+            {stage >= 3 && (
+              <button
+                onClick={() => setShowCalculator(true)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  background: 'white',
+                  border: '2px solid #3b82f6',
+                  color: '#3b82f6',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                🔢 Calculator
+              </button>
+            )}
+            
+            {/* Coins Display */}
+            <div style={{
+              padding: '10px 18px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+              border: '2px solid #f59e0b',
+              fontSize: '22px',
+              fontWeight: 'bold',
+              color: '#78350f',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="11" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
+                <circle cx="12" cy="12" r="8" fill="#fbbf24" opacity="0.7"/>
+                <text x="12" y="16" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#78350f">¢</text>
+              </svg>
+              <span>{totalCoins}</span>
+            </div>
           </div>
         </div>
         
