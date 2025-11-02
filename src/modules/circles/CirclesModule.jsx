@@ -1,6 +1,6 @@
 // CirclesModule.jsx — UG Math Tools
 // Circles: One Shape, Two Formulas, Three Words
-// FULLY CORRECTED VERSION
+// FINAL CORRECTED VERSION - All Issues Resolved
 
 import React, { useEffect, useState } from "react";
 import { ErrorOverlay } from "../../components/StatsSystem.jsx";
@@ -25,7 +25,6 @@ const Calculator = ({ show, onClose }) => {
   
   const calculate = () => {
     try {
-      // Replace π with actual value
       const expr = display.replace(/π/g, Math.PI.toString());
       const result = eval(expr);
       setDisplay(result.toFixed(2));
@@ -175,7 +174,7 @@ const SuccessOverlay = ({ show }) => {
   );
 };
 
-// Exploding coins animation - burst from center in all directions
+// Exploding coins animation
 const FlyingCoins = ({ show }) => {
   if (!show) return null;
   const COUNT = 40;
@@ -253,7 +252,7 @@ const generateColors = () => {
   return colorSets[Math.floor(Math.random() * colorSets.length)];
 };
 
-// Generate problem - ALWAYS r = 1-20, all values calculated from r
+// Generate problem
 const generateProblem = (stage) => {
   const r = Math.floor(Math.random() * 20) + 1;
   const d = r * 2;
@@ -268,7 +267,7 @@ const generateProblem = (stage) => {
   return { r, d, C, A, radiusAngle, diameterAngle, colors, stage };
 };
 
-// Extended shape bank with variety
+// Extended shape bank
 const SHAPE_BANK = [
   { type: 'circle', label: 'Circle', emoji: '⭕' },
   { type: 'square', label: 'Square', emoji: '⬜' },
@@ -283,7 +282,7 @@ const SHAPE_BANK = [
 ];
 
 // Circle visualization
-const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleValues, askedValues = [], onCircleClick }) => {
+const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleValues, currentTargetValue, onCircleClick }) => {
   const { r, d, C, A, radiusAngle, diameterAngle, colors } = problem;
   
   const size = 400;
@@ -308,7 +307,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Dynamic label positioning - consistent for stages 2 and 3+
+  // Dynamic label positioning
   const radiusLabelPos = {
     x: center + (displayR * 0.7) * Math.cos(radAngle) + 40 * Math.cos(radAngle + Math.PI/2),
     y: center + (displayR * 0.7) * Math.sin(radAngle) + 40 * Math.sin(radAngle + Math.PI/2)
@@ -335,12 +334,6 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
   const showCircle = stage >= 2;
   const showDiameter = stage >= 2;
   const showArea = stage >= 2;
-  
-  // Stage 3+: Only show labels for given value initially
-  const showRLabel = stage === 2 || (stage >= 3 && givenValue === 'r');
-  const showDLabel = stage === 2 || (stage >= 3 && givenValue === 'd');
-  const showCLabel = stage === 2 || (stage >= 3 && givenValue === 'C');
-  const showALabel = stage === 2 || (stage >= 3 && givenValue === 'A');
   
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', margin: '0 auto' }}>
@@ -374,25 +367,25 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
           
           <circle cx={center} cy={center} r="5" fill="#1f2937" />
           
-          {/* Stage 2: Show ?? markers at proper positions */}
-          {stage === 2 && (
+          {/* Stage 2: Show ?? ONLY for the current target being asked */}
+          {stage === 2 && currentTargetValue && (
             <>
-              {showRLabel && (
+              {currentTargetValue === 'radius' && (
                 <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.radius ? 'r' : '??'}
                 </text>
               )}
-              {showDLabel && showDiameter && (
+              {currentTargetValue === 'diameter' && showDiameter && (
                 <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.diameter ? 'd' : '??'}
                 </text>
               )}
-              {showCLabel && (
+              {currentTargetValue === 'circumference' && (
                 <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.circumference ? 'C' : '??'}
                 </text>
               )}
-              {showALabel && showArea && (
+              {currentTargetValue === 'area' && showArea && (
                 <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.area ? 'A' : '??'}
                 </text>
@@ -403,7 +396,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
           {/* Stage 3+: Show values that are visible */}
           {stage >= 3 && (
             <>
-              {showRLabel && visibleValues.r !== undefined && (
+              {givenValue === 'r' && visibleValues.r !== undefined && (
                 <g>
                   <rect 
                     x={radiusLabelPos.x - 35} 
@@ -421,7 +414,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {showDLabel && visibleValues.d !== undefined && (
+              {givenValue === 'd' && visibleValues.d !== undefined && (
                 <g>
                   <rect 
                     x={diameterLabelPos.x - 35} 
@@ -439,7 +432,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {showCLabel && visibleValues.C !== undefined && (
+              {givenValue === 'C' && visibleValues.C !== undefined && (
                 <g>
                   <rect 
                     x={circumferenceLabelPos.x - 45} 
@@ -457,7 +450,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {showALabel && visibleValues.A !== undefined && (
+              {givenValue === 'A' && visibleValues.A !== undefined && (
                 <g>
                   <rect 
                     x={areaLabelPos.x - 45} 
@@ -505,13 +498,13 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [shapes, setShapes] = useState([]);
   const [termToPlace, setTermToPlace] = useState(null);
   const [placedTerms, setPlacedTerms] = useState({});
-  const [givenValue, setGivenValue] = useState(null); // Track which value is given
+  const [givenValue, setGivenValue] = useState(null);
   const [visibleValues, setVisibleValues] = useState({});
   const [currentStep, setCurrentStep] = useState(null);
   const [currentTarget, setCurrentTarget] = useState(null);
   const [questionQueue, setQuestionQueue] = useState([]);
   const [currentAnswerChoices, setCurrentAnswerChoices] = useState([]);
-  const [selectedOperation, setSelectedOperation] = useState(null); // Track selected operation
+  const [selectedOperation, setSelectedOperation] = useState(null);
 
   // Register reset with parent
   useEffect(() => {
@@ -533,7 +526,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setProblemWasCorrect(false);
     setTotalCoins(prev => Math.max(0, prev - 5));
     setTimeout(() => setShowError(false), 1000);
-    // CRITICAL: Do NOT reshuffle answer choices
   };
 
   const getStageConfig = (stageNum) => {
@@ -561,7 +553,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         { target: 'A', operation: 'π r²', fromLabel: 'r' }
       ]};
       case 10: {
-        // Randomly pick from stages 3-9
         const randomStage = Math.floor(Math.random() * 7) + 3;
         return getStageConfig(randomStage);
       }
@@ -687,36 +678,51 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
 
   const getValueChoices = (target) => {
     const correct = problem[target];
-    const distractors = [];
+    let distractors = [];
     
+    // Pedagogically-sound distractors based on common misconceptions
     if (target === 'd') {
-      distractors.push(problem.r);
-      distractors.push(problem.r / 2);
-      distractors.push(problem.r + 2);
+      // Stage 3: Find d from r (d = r × 2)
+      distractors = [
+        problem.r,          // Forgot to multiply
+        problem.r / 2,      // Divided instead
+        problem.r + 2       // Added instead
+      ];
     } else if (target === 'r') {
-      distractors.push(problem.d);
-      distractors.push(problem.d * 2);
-      distractors.push(problem.d - 2);
+      // Stage 4: Find r from d (r = d ÷ 2)
+      distractors = [
+        problem.d * 2,      // Multiplied instead
+        problem.d,          // Forgot to divide
+        problem.d - 2       // Subtracted instead
+      ];
     } else if (target === 'C') {
-      distractors.push(problem.d * PI);
-      distractors.push(problem.r * PI);
-      distractors.push(problem.d * 2);
+      // Find C from d (C = d × π)
+      distractors = [
+        problem.r * PI,     // Used r instead of d
+        problem.d * 2,      // Forgot π
+        problem.d / PI      // Divided instead
+      ];
     } else if (target === 'A') {
-      distractors.push(problem.r * problem.r);
-      distractors.push(PI * problem.r);
-      distractors.push(PI * problem.d * problem.d);
+      // Find A from r (A = π r²)
+      distractors = [
+        PI * problem.r,           // Forgot to square
+        PI * problem.d * problem.d, // Used d instead of r
+        problem.r * problem.r     // Forgot π
+      ];
     }
     
+    // Filter out correct answer and ensure unique values
     const uniqueDistractors = distractors
-      .filter(val => Math.abs(val - correct) > 0.5)
-      .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.5) === idx)
+      .filter(val => Math.abs(val - correct) > 0.1)
+      .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.1) === idx)
       .slice(0, 3);
     
+    // If we don't have enough, add fallback distractors
     while (uniqueDistractors.length < 3) {
-      const factor = [0.5, 0.75, 1.25, 1.5, 2, 3][Math.floor(Math.random() * 6)];
+      const factor = [0.5, 0.75, 1.25, 1.5, 2][Math.floor(Math.random() * 5)];
       const distractor = correct * factor;
-      if (Math.abs(distractor - correct) > 0.5 && 
-          !uniqueDistractors.find(v => Math.abs(v - distractor) < 0.5)) {
+      if (Math.abs(distractor - correct) > 0.1 && 
+          !uniqueDistractors.find(v => Math.abs(v - distractor) < 0.1)) {
         uniqueDistractors.push(distractor);
       }
     }
@@ -870,7 +876,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Calculator Button */}
             {stage >= 3 && (
               <button
                 onClick={() => setShowCalculator(true)}
@@ -889,7 +894,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               </button>
             )}
             
-            {/* Coins Display */}
             <div style={{
               padding: '10px 18px',
               borderRadius: '12px',
@@ -917,41 +921,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           
           {/* LEFT: Visual */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-            {/* Formula strip at top */}
-            {stage >= 3 && currentFormula && (
-              <div style={{ 
-                textAlign: 'center', 
-                marginBottom: '16px', 
-                padding: '14px 24px', 
-                background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
-                borderRadius: '24px',
-                border: '2px solid #3b82f6',
-                fontSize: '24px',
-                fontWeight: 'bold',
-                color: '#1e40af',
-                boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
-              }}>
-                {currentFormula}
-              </div>
-            )}
-            
-            {/* Given value strip - shows calculation after operation selected */}
-            {stage >= 3 && selectedOperation && currentStep === 'value' && currentQuestion && (
-              <div style={{
-                textAlign: 'center',
-                marginBottom: '16px',
-                padding: '12px 20px',
-                background: '#fef3c7',
-                borderRadius: '16px',
-                border: '2px solid #f59e0b',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#78350f'
-              }}>
-                {currentTarget} = {visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]} {selectedOperation}
-              </div>
-            )}
-            
             {stage === 1 ? (
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '40px 0' }}>
                 {shapes.map((shape, i) => (
@@ -977,7 +946,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                 placedTerms={placedTerms}
                 givenValue={givenValue}
                 visibleValues={visibleValues}
-                askedValues={questionQueue.map(q => q.target)}
+                currentTargetValue={termToPlace}
                 onCircleClick={handleCircleClick}
               />
             )}
@@ -1057,6 +1026,41 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                       </>
                     ) : (
                       <>
+                        {/* Formula strip - blue */}
+                        {currentFormula && (
+                          <div style={{ 
+                            textAlign: 'center', 
+                            marginBottom: '16px', 
+                            padding: '14px 24px', 
+                            background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
+                            borderRadius: '24px',
+                            border: '2px solid #3b82f6',
+                            fontSize: '24px',
+                            fontWeight: 'bold',
+                            color: '#1e40af',
+                            boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
+                          }}>
+                            {currentFormula}
+                          </div>
+                        )}
+                        
+                        {/* Calculation strip - yellow */}
+                        {selectedOperation && currentQuestion && (
+                          <div style={{
+                            textAlign: 'center',
+                            marginBottom: '24px',
+                            padding: '12px 20px',
+                            background: '#fef3c7',
+                            borderRadius: '16px',
+                            border: '2px solid #f59e0b',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                            color: '#78350f'
+                          }}>
+                            {currentTarget} = {visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]} {selectedOperation}
+                          </div>
+                        )}
+                        
                         <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
                           What is {currentTarget}?
                         </div>
