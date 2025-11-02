@@ -323,26 +323,26 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
   };
   
   const radiusLabelPos = {
-    x: center + (displayR * 0.7) * Math.cos(radAngle) + 40 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.7) * Math.sin(radAngle) + 40 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.6) * Math.cos(radAngle) + 50 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.6) * Math.sin(radAngle) + 50 * Math.sin(radAngle + Math.PI/2)
   };
   
   const diamPerpOffset = Math.PI/2;
   const diameterLabelPos = {
-    x: center + 50 * Math.cos(diamAngle + diamPerpOffset),
-    y: center + 50 * Math.sin(diamAngle + diamPerpOffset)
+    x: center + 60 * Math.cos(diamAngle + diamPerpOffset),
+    y: center + 60 * Math.sin(diamAngle + diamPerpOffset)
   };
   
   const circumAngle = radAngle + (135 * Math.PI / 180);
   const circumferenceLabelPos = {
-    x: center + (displayR + 45) * Math.cos(circumAngle),
-    y: center + (displayR + 45) * Math.sin(circumAngle)
+    x: center + (displayR + 55) * Math.cos(circumAngle),
+    y: center + (displayR + 55) * Math.sin(circumAngle)
   };
   
   const areaAngle = radAngle + Math.PI;
   const areaLabelPos = {
-    x: center + (displayR * 0.5) * Math.cos(areaAngle),
-    y: center + (displayR * 0.5) * Math.sin(areaAngle)
+    x: center + (displayR * 0.4) * Math.cos(areaAngle),
+    y: center + (displayR * 0.4) * Math.sin(areaAngle)
   };
   
   const showCircle = stage >= 2;
@@ -381,27 +381,27 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
           
           <circle cx={center} cy={center} r="5" fill="#1f2937" />
           
-          {/* Stage 2: Show ?? only for current target, then keep revealed after placement */}
+          {/* Stage 2: Only show labels AFTER they've been correctly placed */}
           {stage === 2 && (
             <>
-              {(currentTargetValue === 'radius' || placedTerms.radius) && (
+              {placedTerms.radius && (
                 <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="32" fontWeight="bold" textAnchor="middle">
-                  {placedTerms.radius ? 'r' : '??'}
+                  r
                 </text>
               )}
-              {(currentTargetValue === 'diameter' || placedTerms.diameter) && showDiameter && (
+              {placedTerms.diameter && showDiameter && (
                 <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="32" fontWeight="bold" textAnchor="middle">
-                  {placedTerms.diameter ? 'd' : '??'}
+                  d
                 </text>
               )}
-              {(currentTargetValue === 'circumference' || placedTerms.circumference) && (
+              {placedTerms.circumference && (
                 <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="32" fontWeight="bold" textAnchor="middle">
-                  {placedTerms.circumference ? 'C' : '??'}
+                  C
                 </text>
               )}
-              {(currentTargetValue === 'area' || placedTerms.area) && showArea && (
+              {placedTerms.area && showArea && (
                 <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="32" fontWeight="bold" textAnchor="middle">
-                  {placedTerms.area ? 'A' : '??'}
+                  A
                 </text>
               )}
             </>
@@ -711,30 +711,46 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     let distractors = [];
     
     if (target === 'd') {
+      // d = r × 2, so if r=7, d=14
+      // Distractors: r itself, r/2, r+2
       distractors = [problem.r, problem.r / 2, problem.r + 2];
     } else if (target === 'r') {
+      // r = d ÷ 2, so if d=14, r=7
+      // Distractors: d×2, d itself, d-2
       distractors = [problem.d * 2, problem.d, problem.d - 2];
     } else if (target === 'C') {
+      // C = d × π (or 2πr), so if d=14, C≈43.98
+      // Distractors: r×π, d×2, d÷π
       distractors = [problem.r * PI, problem.d * 2, problem.d / PI];
     } else if (target === 'A') {
+      // A = π r², so if r=7, A≈153.94
+      // Distractors: π×r, π×d², r²
       distractors = [PI * problem.r, PI * problem.d * problem.d, problem.r * problem.r];
     }
     
-    const uniqueDistractors = distractors
-      .filter(val => Math.abs(val - correct) > 0.1)
-      .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.1) === idx)
-      .slice(0, 3);
+    // Remove any that are too close to correct answer
+    let validDistractors = distractors.filter(val => Math.abs(val - correct) > 0.5);
     
-    while (uniqueDistractors.length < 3) {
-      const factor = [0.5, 0.75, 1.25, 1.5, 2][Math.floor(Math.random() * 5)];
-      const distractor = correct * factor;
-      if (Math.abs(distractor - correct) > 0.1 && 
-          !uniqueDistractors.find(v => Math.abs(v - distractor) < 0.1)) {
-        uniqueDistractors.push(distractor);
+    // If we lost some due to filtering, keep the original values anyway (they're pedagogically important)
+    if (validDistractors.length < 3) {
+      validDistractors = distractors;
+    }
+    
+    // Take first 3 distractors
+    const finalDistractors = validDistractors.slice(0, 3);
+    
+    // Ensure we have exactly 3 distractors by adding fallbacks if needed
+    while (finalDistractors.length < 3) {
+      const factor = [0.5, 1.5, 2.5][finalDistractors.length];
+      const fallback = correct * factor;
+      if (Math.abs(fallback - correct) > 0.5 && 
+          !finalDistractors.find(v => Math.abs(v - fallback) < 0.5)) {
+        finalDistractors.push(fallback);
       }
     }
     
-    return shuffle([correct, ...uniqueDistractors.slice(0, 3)]);
+    // CRITICAL: Always include correct answer
+    return shuffle([correct, ...finalDistractors.slice(0, 3)]);
   };
 
   const handleOperationSelect = (operation) => {
@@ -924,14 +940,14 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           {/* LEFT: Visual */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             {stage === 1 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', padding: '40px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', padding: '20px 40px' }}>
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
                     onClick={() => handleShapeSelect(shape)}
                     style={{
-                      fontSize: '80px', 
-                      padding: '32px', 
+                      fontSize: '60px', 
+                      padding: '20px', 
                       border: '3px solid #e5e7eb',
                       borderRadius: '12px', 
                       background: 'white', 
@@ -1064,7 +1080,10 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                             fontWeight: 'bold',
                             color: '#78350f'
                           }}>
-                            {currentTarget} = {visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]} {selectedOperation}
+                            {currentTarget === 'A' 
+                              ? `${currentTarget} = π ${visibleValues.r || problem.r}²`
+                              : `${currentTarget} = ${visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]} ${selectedOperation}`
+                            }
                           </div>
                         )}
                         
