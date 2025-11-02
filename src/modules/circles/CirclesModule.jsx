@@ -31,32 +31,43 @@ const SuccessOverlay = ({ show }) => {
   );
 };
 
-// Confetti
-const Confetti = ({ show }) => {
+// Flying coins animation
+const FlyingCoins = ({ show }) => {
   if (!show) return null;
-  const COUNT = 90;
-  const pieces = Array.from({ length: COUNT }).map((_, i) => {
-    const left = Math.random() * 100;
-    const delay = Math.random() * 2;
-    const duration = 3.8 + Math.random() * 2.2;
-    const size = 6 + Math.floor(Math.random() * 8);
-    const rot = Math.floor(Math.random() * 360);
-    const colors = ['#16a34a', '#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9'];
-    const color = colors[i % colors.length];
+  const COUNT = 30;
+  const coins = Array.from({ length: COUNT }).map((_, i) => {
+    const left = 20 + Math.random() * 60; // Center area
+    const delay = Math.random() * 0.5;
+    const duration = 1.5 + Math.random() * 1;
+    const rotation = Math.random() * 360;
+    const drift = (Math.random() - 0.5) * 100;
     return (
       <div
         key={i}
         style={{
-          position: 'absolute', left: left + 'vw', width: size + 'px', height: size + 4 + 'px',
-          background: color, transform: `rotate(${rot}deg)`,
-          animation: `fall ${duration}s linear ${delay}s forwards`, top: '-20px'
+          position: 'absolute',
+          left: left + '%',
+          fontSize: '32px',
+          animation: `coinFloat ${duration}s ease-out ${delay}s forwards`,
+          transform: `rotate(${rotation}deg)`,
+          top: '50%',
+          '--drift': `${drift}px`
         }}
-      />
+      >
+        🪙
+      </div>
     );
   });
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 9999 }}>
-      {pieces}
+      <style>{`
+        @keyframes coinFloat {
+          0% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+          50% { transform: translateY(-200px) translateX(var(--drift)) rotate(180deg) scale(1.2); opacity: 1; }
+          100% { transform: translateY(-400px) translateX(var(--drift)) rotate(360deg) scale(0.5); opacity: 0; }
+        }
+      `}</style>
+      {coins}
     </div>
   );
 };
@@ -126,25 +137,29 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Label positions - positioned FAR from lines with larger circle
+  // Label positions - strategically placed to NEVER overlap
+  // Radius: on the radius line, perpendicular offset
   const radiusLabelPos = {
-    x: center + (displayR * 0.5) * Math.cos(radAngle) + 50 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.5) * Math.sin(radAngle) + 50 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.6) * Math.cos(radAngle) + 55 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.6) * Math.sin(radAngle) + 55 * Math.sin(radAngle + Math.PI/2)
   };
   
+  // Diameter: perpendicular to diameter line, opposite side from radius
   const diameterLabelPos = {
-    x: center + 55 * Math.cos(diamAngle + Math.PI/2),
-    y: center + 55 * Math.sin(diamAngle + Math.PI/2)
+    x: center + 60 * Math.cos(diamAngle + Math.PI/2),
+    y: center + 60 * Math.sin(diamAngle + Math.PI/2)
   };
   
+  // Circumference: outside the circle
   const circumferenceLabelPos = {
-    x: center + (displayR + 45) * Math.cos(radAngle + Math.PI/3),
-    y: center + (displayR + 45) * Math.sin(radAngle + Math.PI/3)
+    x: center + (displayR + 50) * Math.cos(radAngle - Math.PI/4),
+    y: center + (displayR + 50) * Math.sin(radAngle - Math.PI/4)
   };
   
+  // Area: inside, top-left quadrant
   const areaLabelPos = {
-    x: center - displayR * 0.4,
-    y: center - displayR * 0.4
+    x: center - displayR * 0.45,
+    y: center - displayR * 0.45
   };
   
   const showCircle = stage >= 2;
@@ -305,28 +320,28 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       ]};
       case 8: return { given: 'r', steps: [
         { target: 'd', operation: '× 2', fromLabel: 'r' },
-        { target: 'A', operation: 'πr²', fromLabel: '' }
+        { target: 'A', operation: 'π r²', fromLabel: '' }
       ]};
       case 9: return { given: 'd', steps: [
         { target: 'r', operation: '÷ 2', fromLabel: 'd' },
-        { target: 'A', operation: 'πr²', fromLabel: '' }
+        { target: 'A', operation: 'π r²', fromLabel: '' }
       ]};
       case 10: {
         const configs = [
           { given: 'r', steps: [
             { target: 'd', operation: '× 2', fromLabel: 'r' },
             { target: 'C', operation: '× π', fromLabel: 'd' },
-            { target: 'A', operation: 'πr²', fromLabel: '' }
+            { target: 'A', operation: 'π r²', fromLabel: '' }
           ]},
           { given: 'd', steps: [
             { target: 'r', operation: '÷ 2', fromLabel: 'd' },
             { target: 'C', operation: '× π', fromLabel: 'd' },
-            { target: 'A', operation: 'πr²', fromLabel: '' }
+            { target: 'A', operation: 'π r²', fromLabel: '' }
           ]},
           { given: 'C', steps: [
             { target: 'd', operation: '÷ π', fromLabel: 'C' },
             { target: 'r', operation: '÷ 2', fromLabel: 'd' },
-            { target: 'A', operation: 'πr²', fromLabel: '' }
+            { target: 'A', operation: 'π r²', fromLabel: '' }
           ]},
         ];
         return configs[Math.floor(Math.random() * configs.length)];
@@ -433,7 +448,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   };
 
   const getOperationChoices = (target) => {
-    const allOps = ['× 2', '÷ 2', '× π', '÷ π', 'πr²'];
+    const allOps = ['× 2', '÷ 2', '× π', '÷ π', 'π r²'];
     const currentQuestion = questionQueue.find(q => q.target === target);
     const correct = currentQuestion?.operation;
     const availableDistractors = allOps.filter(op => op !== correct);
@@ -585,10 +600,9 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px' }}>
       <ErrorOverlay show={showError} />
       <SuccessOverlay show={showSuccess} />
-      {showConfetti && <Confetti show={true} />}
+      {showConfetti && <FlyingCoins show={true} />}
       
       <style>{`
-        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
         @keyframes scaleIn { 0% { transform: scale(0); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
       `}</style>
       
@@ -601,18 +615,20 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           </div>
           
           <div style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            background: '#fef3c7',
+            padding: '10px 18px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
             border: '2px solid #f59e0b',
-            fontSize: '18px',
+            fontSize: '22px',
             fontWeight: 'bold',
-            color: '#92400e',
+            color: '#78350f',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px'
+            gap: '8px',
+            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
           }}>
-            🪙 <span>{totalCoins}</span>
+            <span style={{ fontSize: '26px' }}>🪙</span>
+            <span>{totalCoins}</span>
           </div>
         </div>
         
@@ -624,12 +640,14 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               <div style={{ 
                 textAlign: 'center', 
                 marginBottom: '16px', 
-                padding: '12px', 
-                background: '#f0f9ff', 
-                borderRadius: '8px',
+                padding: '14px 24px', 
+                background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
+                borderRadius: '24px',
+                border: '2px solid #3b82f6',
                 fontSize: '24px',
                 fontWeight: 'bold',
-                color: '#1f2937'
+                color: '#1e40af',
+                boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
               }}>
                 {currentFormula}
               </div>
@@ -678,7 +696,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                   <button
                     onClick={() => handlePracticeChoice(false)}
                     className="ug-answer ug-answer--pill"
-                    style={{ fontSize: '18px', padding: '12px 24px' }}
+                    style={{ fontSize: '20px', padding: '14px 28px' }}
                   >
                     More practice
                   </button>
@@ -686,7 +704,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                     <button
                       onClick={() => handlePracticeChoice(true)}
                       className="ug-answer ug-answer--pill"
-                      style={{ fontSize: '18px', padding: '12px 24px' }}
+                      style={{ fontSize: '20px', padding: '14px 28px' }}
                     >
                       Move on →
                     </button>
@@ -730,7 +748,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                               key={i}
                               onClick={() => handleOperationSelect(op)}
                               className="ug-answer ug-answer--pill"
-                              style={{ fontSize: '18px', padding: '12px 24px' }}
+                              style={{ fontSize: '22px', padding: '16px 28px' }}
                             >
                               {op}
                             </button>
@@ -748,7 +766,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                               key={i}
                               onClick={() => handleValueSelect(val)}
                               className="ug-answer ug-answer--pill"
-                              style={{ fontSize: '18px', padding: '12px 24px' }}
+                              style={{ fontSize: '22px', padding: '16px 28px' }}
                             >
                               {val % 1 === 0 ? val : val.toFixed(1)}
                             </button>
