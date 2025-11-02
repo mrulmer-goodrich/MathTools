@@ -747,7 +747,11 @@ export default function CirclesModule({ onBack }) {
     if (operation === correct) {
       // Show success briefly
       setShowSuccess(true);
-      ugConfetti();
+      try {
+        if (typeof ugConfetti === 'function') ugConfetti();
+      } catch (err) {
+        console.warn('Confetti error:', err);
+      }
       setTimeout(() => setShowSuccess(false), 800);
       
       // Set formula and generate answer choices ONCE
@@ -774,7 +778,11 @@ export default function CirclesModule({ onBack }) {
       
       // Show success
       setShowSuccess(true);
-      ugConfetti();
+      try {
+        if (typeof ugConfetti === 'function') ugConfetti();
+      } catch (err) {
+        console.warn('Confetti error:', err);
+      }
       setTimeout(() => setShowSuccess(false), 800);
       
       // Check if all steps done
@@ -800,7 +808,15 @@ export default function CirclesModule({ onBack }) {
     setTotalCoins(prev => prev + coins);
     setShowSuccess(true);
     setShowCoins(true);
-    ugConfetti();
+    
+    // Try to show confetti, but don't break if it fails
+    try {
+      if (typeof ugConfetti === 'function') {
+        ugConfetti();
+      }
+    } catch (err) {
+      console.warn('Confetti error:', err);
+    }
     
     setTimeout(() => {
       setShowSuccess(false);
