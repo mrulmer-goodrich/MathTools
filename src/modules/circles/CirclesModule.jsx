@@ -1,6 +1,5 @@
 // CirclesModule.jsx — UG Math Tools
 // Circles: One Shape, Two Formulas, Three Words
-// FINAL CORRECTED VERSION - All Issues Resolved
 
 import React, { useEffect, useState } from "react";
 import { ErrorOverlay } from "../../components/StatsSystem.jsx";
@@ -18,7 +17,7 @@ const shuffle = (arr) => {
   return a; 
 };
 
-// Simple calculator for π calculations
+// Calculator
 const Calculator = ({ show, onClose }) => {
   if (!show) return null;
   const [display, setDisplay] = useState('');
@@ -93,7 +92,7 @@ const Calculator = ({ show, onClose }) => {
   );
 };
 
-// Stage Unlock overlay with pulsate animation
+// Stage Unlock with coin animations
 const StageUnlockOverlay = ({ show, nextStage }) => {
   if (!show) return null;
   return (
@@ -112,17 +111,25 @@ const StageUnlockOverlay = ({ show, nextStage }) => {
       }}>
         🎉 STAGE {nextStage} UNLOCKED! 🎉
       </div>
-      <div style={{ fontSize: '40px' }}>
+      <div style={{ fontSize: '40px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {Array.from({ length: 20 }).map((_, i) => (
-          <span key={i} style={{
-            display: 'inline-block',
-            animation: `coinBounce ${1 + Math.random()}s ease-in-out ${i * 0.1}s infinite`
+          <div key={i} style={{
+            animation: `coinBounce ${1 + Math.random()}s ease-in-out ${i * 0.1}s infinite`,
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+            border: '3px solid #d97706',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#78350f',
+            boxShadow: '0 4px 8px rgba(217, 119, 6, 0.3)'
           }}>
-            <svg width="40" height="40" viewBox="0 0 32 32" style={{ margin: '0 4px' }}>
-              <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
-              <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
-            </svg>
-          </span>
+            ¢
+          </div>
         ))}
       </div>
       <style>{`
@@ -136,15 +143,15 @@ const StageUnlockOverlay = ({ show, nextStage }) => {
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes coinBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(180deg); }
         }
       `}</style>
     </div>
   );
 };
 
-// Success overlay - HUGE animated green checkmark
+// Success overlay
 const SuccessOverlay = ({ show }) => {
   if (!show) return null;
   return (
@@ -174,7 +181,7 @@ const SuccessOverlay = ({ show }) => {
   );
 };
 
-// Exploding coins animation
+// Exploding coins
 const FlyingCoins = ({ show }) => {
   if (!show) return null;
   const COUNT = 40;
@@ -198,11 +205,22 @@ const FlyingCoins = ({ show }) => {
           '--rotation': `${rotation}deg`
         }}
       >
-        <svg width="40" height="40" viewBox="0 0 32 32">
-          <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
-          <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
-          <text x="16" y="21" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#78350f">¢</text>
-        </svg>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+          border: '3px solid #d97706',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#78350f',
+          boxShadow: '0 4px 8px rgba(217, 119, 6, 0.3)'
+        }}>
+          ¢
+        </div>
       </div>
     );
   });
@@ -241,7 +259,6 @@ const FlyingCoins = ({ show }) => {
   );
 };
 
-// Generate colors
 const generateColors = () => {
   const colorSets = [
     { radius: '#ef4444', diameter: '#8b5cf6', circumference: '#3b82f6', area: '#f59e0b' },
@@ -252,7 +269,6 @@ const generateColors = () => {
   return colorSets[Math.floor(Math.random() * colorSets.length)];
 };
 
-// Generate problem
 const generateProblem = (stage) => {
   const r = Math.floor(Math.random() * 20) + 1;
   const d = r * 2;
@@ -267,7 +283,6 @@ const generateProblem = (stage) => {
   return { r, d, C, A, radiusAngle, diameterAngle, colors, stage };
 };
 
-// Extended shape bank
 const SHAPE_BANK = [
   { type: 'circle', label: 'Circle', emoji: '⭕' },
   { type: 'square', label: 'Square', emoji: '⬜' },
@@ -307,7 +322,6 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Dynamic label positioning
   const radiusLabelPos = {
     x: center + (displayR * 0.7) * Math.cos(radAngle) + 40 * Math.cos(radAngle + Math.PI/2),
     y: center + (displayR * 0.7) * Math.sin(radAngle) + 40 * Math.sin(radAngle + Math.PI/2)
@@ -367,25 +381,25 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
           
           <circle cx={center} cy={center} r="5" fill="#1f2937" />
           
-          {/* Stage 2: Show ?? ONLY for the current target being asked */}
-          {stage === 2 && currentTargetValue && (
+          {/* Stage 2: Show ?? only for current target, then keep revealed after placement */}
+          {stage === 2 && (
             <>
-              {currentTargetValue === 'radius' && (
+              {(currentTargetValue === 'radius' || placedTerms.radius) && (
                 <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.radius ? 'r' : '??'}
                 </text>
               )}
-              {currentTargetValue === 'diameter' && showDiameter && (
+              {(currentTargetValue === 'diameter' || placedTerms.diameter) && showDiameter && (
                 <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.diameter ? 'd' : '??'}
                 </text>
               )}
-              {currentTargetValue === 'circumference' && (
+              {(currentTargetValue === 'circumference' || placedTerms.circumference) && (
                 <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.circumference ? 'C' : '??'}
                 </text>
               )}
-              {currentTargetValue === 'area' && showArea && (
+              {(currentTargetValue === 'area' || placedTerms.area) && showArea && (
                 <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="32" fontWeight="bold" textAnchor="middle">
                   {placedTerms.area ? 'A' : '??'}
                 </text>
@@ -393,10 +407,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
             </>
           )}
           
-          {/* Stage 3+: Show values that are visible */}
+          {/* Stage 3+: Show only given value, then reveal as calculated */}
           {stage >= 3 && (
             <>
-              {givenValue === 'r' && visibleValues.r !== undefined && (
+              {visibleValues.r !== undefined && (
                 <g>
                   <rect 
                     x={radiusLabelPos.x - 35} 
@@ -414,7 +428,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {givenValue === 'd' && visibleValues.d !== undefined && (
+              {visibleValues.d !== undefined && (
                 <g>
                   <rect 
                     x={diameterLabelPos.x - 35} 
@@ -432,7 +446,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {givenValue === 'C' && visibleValues.C !== undefined && (
+              {visibleValues.C !== undefined && (
                 <g>
                   <rect 
                     x={circumferenceLabelPos.x - 45} 
@@ -450,7 +464,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
                 </g>
               )}
               
-              {givenValue === 'A' && visibleValues.A !== undefined && (
+              {visibleValues.A !== undefined && (
                 <g>
                   <rect 
                     x={areaLabelPos.x - 45} 
@@ -485,15 +499,15 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [problem, setProblem] = useState(() => generateProblem(1));
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [problemCount, setProblemCount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showMoveOnChoice, setShowMoveOnChoice] = useState(false);
   const [currentFormula, setCurrentFormula] = useState('');
-  const [totalCoins, setTotalCoins] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
   const [correctStreak, setCorrectStreak] = useState(0);
   const [problemWasCorrect, setProblemWasCorrect] = useState(true);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showStageUnlock, setShowStageUnlock] = useState(false);
+  const [skippedToAdvanced, setSkippedToAdvanced] = useState(false);
   
   const [shapes, setShapes] = useState([]);
   const [termToPlace, setTermToPlace] = useState(null);
@@ -506,17 +520,16 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [currentAnswerChoices, setCurrentAnswerChoices] = useState([]);
   const [selectedOperation, setSelectedOperation] = useState(null);
 
-  // Register reset with parent
   useEffect(() => {
     registerReset?.(() => {
       setStage(null);
       setProblem(generateProblem(1));
-      setProblemCount(0);
-      setTotalCoins(0);
+      setTotalPoints(0);
       setShowError(false);
       setShowSuccess(false);
       setShowConfetti(false);
       setShowMoveOnChoice(false);
+      setSkippedToAdvanced(false);
       resetStageState();
     });
   }, [registerReset]);
@@ -524,7 +537,18 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const handleError = () => {
     setShowError(true);
     setProblemWasCorrect(false);
-    setTotalCoins(prev => Math.max(0, prev - 5));
+    
+    // Point deduction logic
+    let deduction;
+    if (stage === 10 && skippedToAdvanced) {
+      deduction = totalPoints; // Everything - back to zero
+    } else if (stage === 10) {
+      deduction = 5;
+    } else {
+      deduction = 1;
+    }
+    
+    setTotalPoints(prev => Math.max(0, prev - deduction));
     setTimeout(() => setShowError(false), 1000);
   };
 
@@ -607,9 +631,15 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   }, [stage]);
 
   const handleCorrectAnswer = () => {
-    const coinsEarned = stage <= 2 ? 10 : 10 * (questionQueue.length || 1);
-    setTotalCoins(prev => prev + coinsEarned);
+    // Points logic
+    let pointsEarned;
+    if (stage === 10 && skippedToAdvanced) {
+      pointsEarned = 20;
+    } else {
+      pointsEarned = stage;
+    }
     
+    setTotalPoints(prev => prev + pointsEarned);
     setShowSuccess(true);
     setShowConfetti(true);
     
@@ -672,7 +702,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     const currentQuestion = questionQueue.find(q => q.target === target);
     const correct = currentQuestion?.operation;
     const availableDistractors = allOps.filter(op => op !== correct);
-    const selectedDistractors = shuffle(availableDistractors).slice(0, 2);
+    const selectedDistractors = shuffle(availableDistractors).slice(0, 3);
     return shuffle([correct, ...selectedDistractors]);
   };
 
@@ -680,44 +710,21 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     const correct = problem[target];
     let distractors = [];
     
-    // Pedagogically-sound distractors based on common misconceptions
     if (target === 'd') {
-      // Stage 3: Find d from r (d = r × 2)
-      distractors = [
-        problem.r,          // Forgot to multiply
-        problem.r / 2,      // Divided instead
-        problem.r + 2       // Added instead
-      ];
+      distractors = [problem.r, problem.r / 2, problem.r + 2];
     } else if (target === 'r') {
-      // Stage 4: Find r from d (r = d ÷ 2)
-      distractors = [
-        problem.d * 2,      // Multiplied instead
-        problem.d,          // Forgot to divide
-        problem.d - 2       // Subtracted instead
-      ];
+      distractors = [problem.d * 2, problem.d, problem.d - 2];
     } else if (target === 'C') {
-      // Find C from d (C = d × π)
-      distractors = [
-        problem.r * PI,     // Used r instead of d
-        problem.d * 2,      // Forgot π
-        problem.d / PI      // Divided instead
-      ];
+      distractors = [problem.r * PI, problem.d * 2, problem.d / PI];
     } else if (target === 'A') {
-      // Find A from r (A = π r²)
-      distractors = [
-        PI * problem.r,           // Forgot to square
-        PI * problem.d * problem.d, // Used d instead of r
-        problem.r * problem.r     // Forgot π
-      ];
+      distractors = [PI * problem.r, PI * problem.d * problem.d, problem.r * problem.r];
     }
     
-    // Filter out correct answer and ensure unique values
     const uniqueDistractors = distractors
       .filter(val => Math.abs(val - correct) > 0.1)
       .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.1) === idx)
       .slice(0, 3);
     
-    // If we don't have enough, add fallback distractors
     while (uniqueDistractors.length < 3) {
       const factor = [0.5, 0.75, 1.25, 1.5, 2][Math.floor(Math.random() * 5)];
       const distractor = correct * factor;
@@ -727,7 +734,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       }
     }
     
-    // CRITICAL: Include the correct answer
     return shuffle([correct, ...uniqueDistractors.slice(0, 3)]);
   };
 
@@ -745,7 +751,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       }
       setCurrentFormula(formula);
       
-      // Generate answer choices ONCE and store them
       const choices = getValueChoices(currentTarget);
       setCurrentAnswerChoices(choices);
       
@@ -787,7 +792,6 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         setShowStageUnlock(false);
         setStage(stage + 1);
         setCorrectStreak(0);
-        setProblemCount(0);
       }, 2500);
     } else {
       setCorrectStreak(0);
@@ -818,8 +822,9 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: 'white', borderRadius: '12px', padding: '48px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxWidth: '500px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>⭕</div>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>
-            🏭 Circles
+            Circles
           </h1>
           <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '32px' }}>
             One Shape, Two Formulas, Three Words
@@ -831,21 +836,17 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               className="ug-button"
               style={{ fontSize: '18px', padding: '16px 32px' }}
             >
-              Start at Stage 1
+              Begin Practice
             </BigButton>
             
             <BigButton 
-              onClick={() => setStage(10)}
+              onClick={() => { setStage(10); setSkippedToAdvanced(true); }}
               className="ug-button"
               style={{ fontSize: '18px', padding: '16px 32px', background: '#f59e0b', borderColor: '#f59e0b' }}
             >
-              Skip to Stage 10 (2× coins!)
+              Advanced Mode
             </BigButton>
           </div>
-          
-          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '24px' }}>
-            Choose your starting point
-          </p>
         </div>
       </div>
     );
@@ -859,17 +860,8 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       <Calculator show={showCalculator} onClose={() => setShowCalculator(false)} />
       {showConfetti && <FlyingCoins show={true} />}
       
-      <style>{`
-        @keyframes successPop {
-          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
-          50% { transform: scale(1.2) rotate(10deg); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-      `}</style>
-      
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Compact Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>
             {getStageTitle(stage)}
@@ -907,12 +899,22 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               gap: '8px',
               boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="11" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
-                <circle cx="12" cy="12" r="8" fill="#fbbf24" opacity="0.7"/>
-                <text x="12" y="16" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#78350f">¢</text>
-              </svg>
-              <span>{totalCoins}</span>
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                border: '2px solid #d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: '#78350f'
+              }}>
+                ¢
+              </div>
+              <span>{totalPoints}</span>
             </div>
           </div>
         </div>
@@ -922,15 +924,23 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           {/* LEFT: Visual */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             {stage === 1 ? (
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '40px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', padding: '40px 0' }}>
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
                     onClick={() => handleShapeSelect(shape)}
                     style={{
-                      fontSize: '80px', padding: '32px', border: '3px solid #e5e7eb',
-                      borderRadius: '12px', background: 'white', cursor: 'pointer',
-                      transition: 'transform 0.2s'
+                      fontSize: '80px', 
+                      padding: '32px', 
+                      border: '3px solid #e5e7eb',
+                      borderRadius: '12px', 
+                      background: 'white', 
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      aspectRatio: '1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
@@ -1009,7 +1019,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                     {currentStep === 'operation' ? (
                       <>
                         <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
-                          If {currentQuestion.fromLabel} = {visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]}, what is {currentTarget}?
+                          {currentTarget} = {currentQuestion.fromLabel} _____
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {getOperationChoices(currentTarget).map((op, i) => (
@@ -1026,34 +1036,31 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                       </>
                     ) : (
                       <>
-                        {/* Formula strip - blue */}
                         {currentFormula && (
                           <div style={{ 
                             textAlign: 'center', 
-                            marginBottom: '16px', 
-                            padding: '14px 24px', 
+                            marginBottom: '12px', 
+                            padding: '16px 24px', 
                             background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
-                            borderRadius: '24px',
+                            borderRadius: '16px',
                             border: '2px solid #3b82f6',
-                            fontSize: '24px',
+                            fontSize: '22px',
                             fontWeight: 'bold',
-                            color: '#1e40af',
-                            boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
+                            color: '#1e40af'
                           }}>
                             {currentFormula}
                           </div>
                         )}
                         
-                        {/* Calculation strip - yellow */}
                         {selectedOperation && currentQuestion && (
                           <div style={{
                             textAlign: 'center',
                             marginBottom: '24px',
-                            padding: '12px 20px',
+                            padding: '16px 24px',
                             background: '#fef3c7',
                             borderRadius: '16px',
                             border: '2px solid #f59e0b',
-                            fontSize: '20px',
+                            fontSize: '22px',
                             fontWeight: 'bold',
                             color: '#78350f'
                           }}>
