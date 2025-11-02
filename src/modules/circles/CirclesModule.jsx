@@ -322,27 +322,31 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
     y: center + displayR * Math.sin(diamAngle)
   };
   
+  // Label positioning - clearly associated with elements
+  // Radius: along the radius line, between center and edge
   const radiusLabelPos = {
-    x: center + (displayR * 0.6) * Math.cos(radAngle) + 50 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.6) * Math.sin(radAngle) + 50 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.65) * Math.cos(radAngle),
+    y: center + (displayR * 0.65) * Math.sin(radAngle)
   };
   
-  const diamPerpOffset = Math.PI/2;
+  // Diameter: at the opposite end from radius, perpendicular offset
   const diameterLabelPos = {
-    x: center + 60 * Math.cos(diamAngle + diamPerpOffset),
-    y: center + 60 * Math.sin(diamAngle + diamPerpOffset)
+    x: center - (displayR * 0.8) * Math.cos(diamAngle),
+    y: center - (displayR * 0.8) * Math.sin(diamAngle)
   };
   
-  const circumAngle = radAngle + (135 * Math.PI / 180);
+  // Circumference: outside the circle, opposite quadrant from radius
+  const circumAngle = radAngle + Math.PI; // 180° from radius
   const circumferenceLabelPos = {
-    x: center + (displayR + 55) * Math.cos(circumAngle),
-    y: center + (displayR + 55) * Math.sin(circumAngle)
+    x: center + (displayR + 50) * Math.cos(circumAngle),
+    y: center + (displayR + 50) * Math.sin(circumAngle)
   };
   
-  const areaAngle = radAngle + Math.PI;
+  // Area: inside center, 90° from radius to avoid overlap
+  const areaAngle = radAngle + (Math.PI / 2);
   const areaLabelPos = {
-    x: center + (displayR * 0.4) * Math.cos(areaAngle),
-    y: center + (displayR * 0.4) * Math.sin(areaAngle)
+    x: center + (displayR * 0.35) * Math.cos(areaAngle),
+    y: center + (displayR * 0.35) * Math.sin(areaAngle)
   };
   
   const showCircle = stage >= 2;
@@ -710,47 +714,46 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     const correct = problem[target];
     let distractors = [];
     
+    // Generate pedagogically-sound distractors based on common errors
     if (target === 'd') {
-      // d = r × 2, so if r=7, d=14
-      // Distractors: r itself, r/2, r+2
-      distractors = [problem.r, problem.r / 2, problem.r + 2];
+      // d = r × 2, so if r=10, d=20
+      // Common errors: forgot multiply (10), divided (5), added (12)
+      distractors = [
+        problem.r,          // 10 - forgot to multiply
+        problem.r / 2,      // 5 - divided instead
+        problem.r + 2       // 12 - added instead
+      ];
     } else if (target === 'r') {
-      // r = d ÷ 2, so if d=14, r=7
-      // Distractors: d×2, d itself, d-2
-      distractors = [problem.d * 2, problem.d, problem.d - 2];
+      // r = d ÷ 2, so if d=20, r=10
+      // Common errors: multiplied (40), forgot divide (20), subtracted (18)
+      distractors = [
+        problem.d * 2,      // multiplied instead
+        problem.d,          // forgot to divide
+        problem.d - 2       // subtracted instead
+      ];
     } else if (target === 'C') {
-      // C = d × π (or 2πr), so if d=14, C≈43.98
-      // Distractors: r×π, d×2, d÷π
-      distractors = [problem.r * PI, problem.d * 2, problem.d / PI];
+      // C = d × π, so if d=20, C≈62.83
+      // Common errors: used r (31.4), forgot π (40), divided (6.4)
+      distractors = [
+        problem.r * PI,     // used r instead of d
+        problem.d * 2,      // forgot π
+        problem.d / PI      // divided instead
+      ];
     } else if (target === 'A') {
-      // A = π r², so if r=7, A≈153.94
-      // Distractors: π×r, π×d², r²
-      distractors = [PI * problem.r, PI * problem.d * problem.d, problem.r * problem.r];
+      // A = π r², so if r=10, A≈314.16
+      // Common errors: forgot square (31.4), used d (1256.6), forgot π (100)
+      distractors = [
+        PI * problem.r,           // forgot to square
+        PI * problem.d * problem.d, // used d instead of r
+        problem.r * problem.r     // forgot π
+      ];
     }
     
-    // Remove any that are too close to correct answer
-    let validDistractors = distractors.filter(val => Math.abs(val - correct) > 0.5);
+    // DO NOT filter out distractors - they are pedagogically important
+    // Just ensure we have exactly 4 choices: 3 distractors + 1 correct
+    const finalChoices = [correct, distractors[0], distractors[1], distractors[2]];
     
-    // If we lost some due to filtering, keep the original values anyway (they're pedagogically important)
-    if (validDistractors.length < 3) {
-      validDistractors = distractors;
-    }
-    
-    // Take first 3 distractors
-    const finalDistractors = validDistractors.slice(0, 3);
-    
-    // Ensure we have exactly 3 distractors by adding fallbacks if needed
-    while (finalDistractors.length < 3) {
-      const factor = [0.5, 1.5, 2.5][finalDistractors.length];
-      const fallback = correct * factor;
-      if (Math.abs(fallback - correct) > 0.5 && 
-          !finalDistractors.find(v => Math.abs(v - fallback) < 0.5)) {
-        finalDistractors.push(fallback);
-      }
-    }
-    
-    // CRITICAL: Always include correct answer
-    return shuffle([correct, ...finalDistractors.slice(0, 3)]);
+    return shuffle(finalChoices);
   };
 
   const handleOperationSelect = (operation) => {
