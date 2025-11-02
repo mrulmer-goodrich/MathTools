@@ -102,10 +102,11 @@ const SHAPE_BANK = [
 const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, askedValues = [], onCircleClick }) => {
   const { r, d, C, A, radiusAngle, diameterAngle, colors } = problem;
   
-  const size = 350;
-  const scale = Math.min((size * 0.7) / r, 35); // Increased from 0.35 to 0.7, scale from 20 to 35
-  const displayR = r * scale;
+  const size = 400; // Increased canvas size
   const center = size / 2;
+  
+  // Fixed radius - circle should be large and consistent
+  const displayR = 120; // Fixed large radius (was calculated before)
   
   const radAngle = (radiusAngle * Math.PI) / 180;
   const diamAngle = (diameterAngle * Math.PI) / 180;
@@ -125,25 +126,25 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Label positions - positioned FAR from lines to avoid overlaps
+  // Label positions - positioned FAR from lines with larger circle
   const radiusLabelPos = {
-    x: center + (displayR * 0.5) * Math.cos(radAngle) + 45 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.5) * Math.sin(radAngle) + 45 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.5) * Math.cos(radAngle) + 50 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.5) * Math.sin(radAngle) + 50 * Math.sin(radAngle + Math.PI/2)
   };
   
   const diameterLabelPos = {
-    x: center + 45 * Math.cos(diamAngle + Math.PI/2),
-    y: center + 45 * Math.sin(diamAngle + Math.PI/2)
+    x: center + 55 * Math.cos(diamAngle + Math.PI/2),
+    y: center + 55 * Math.sin(diamAngle + Math.PI/2)
   };
   
   const circumferenceLabelPos = {
-    x: center + (displayR + 50) * Math.cos(radAngle + Math.PI/4),
-    y: center + (displayR + 50) * Math.sin(radAngle + Math.PI/4)
+    x: center + (displayR + 45) * Math.cos(radAngle + Math.PI/3),
+    y: center + (displayR + 45) * Math.sin(radAngle + Math.PI/3)
   };
   
   const areaLabelPos = {
-    x: center - displayR * 0.6,
-    y: center - displayR * 0.6
+    x: center - displayR * 0.4,
+    y: center - displayR * 0.4
   };
   
   const showCircle = stage >= 2;
@@ -152,7 +153,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
   
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', margin: '0 auto' }}>
-      <rect width={size} height={size} fill="#f0f9ff" rx="12" />
+      <rect width={size} height={size} fill="#ffffff" rx="12" />
       
       {showCircle ? (
         <>
@@ -164,39 +165,39 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
           )}
           
           <g onClick={() => stage === 2 && onCircleClick?.('circumference')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
-            <circle cx={center} cy={center} r={displayR} fill="none" stroke={colors.circumference} strokeWidth="5" />
-            <circle cx={center} cy={center} r={displayR} fill="none" strokeWidth="25" stroke="transparent" />
+            <circle cx={center} cy={center} r={displayR} fill="none" stroke={colors.circumference} strokeWidth="6" />
+            <circle cx={center} cy={center} r={displayR} fill="none" strokeWidth="30" stroke="transparent" />
           </g>
           
           {showDiameter && (
             <g onClick={() => stage === 2 && onCircleClick?.('diameter')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
-              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke={colors.diameter} strokeWidth="4" />
-              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke="transparent" strokeWidth="20" />
+              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke={colors.diameter} strokeWidth="5" />
+              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke="transparent" strokeWidth="25" />
             </g>
           )}
           
           <g onClick={() => stage === 2 && onCircleClick?.('radius')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
-            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke={colors.radius} strokeWidth="4" />
-            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke="transparent" strokeWidth="20" />
+            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke={colors.radius} strokeWidth="5" />
+            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke="transparent" strokeWidth="25" />
           </g>
           
-          <circle cx={center} cy={center} r="4" fill="#1f2937" />
+          <circle cx={center} cy={center} r="5" fill="#1f2937" />
           
           {stage === 2 && (
             <>
-              <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="20" fontWeight="bold" textAnchor="middle">
+              <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="24" fontWeight="bold" textAnchor="middle">
                 {placedTerms.radius ? 'r' : '?'}
               </text>
               {showDiameter && (
-                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="20" fontWeight="bold" textAnchor="middle">
+                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="24" fontWeight="bold" textAnchor="middle">
                   {placedTerms.diameter ? 'd' : '?'}
                 </text>
               )}
-              <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="20" fontWeight="bold" textAnchor="middle">
+              <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="24" fontWeight="bold" textAnchor="middle">
                 {placedTerms.circumference ? 'C' : '?'}
               </text>
               {showArea && (
-                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="20" fontWeight="bold" textAnchor="middle">
+                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="24" fontWeight="bold" textAnchor="middle">
                   {placedTerms.area ? 'A' : '?'}
                 </text>
               )}
@@ -206,25 +207,25 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
           {stage >= 3 && (
             <>
               {(visibleValues.r !== undefined || askedValues.includes('r')) && (
-                <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="18" fontWeight="bold" textAnchor="middle">
+                <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="20" fontWeight="bold" textAnchor="middle">
                   r {visibleValues.r !== undefined ? `= ${visibleValues.r % 1 === 0 ? visibleValues.r : visibleValues.r.toFixed(1)}` : ''}
                 </text>
               )}
               
               {(visibleValues.d !== undefined || askedValues.includes('d')) && (
-                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="18" fontWeight="bold" textAnchor="middle">
+                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="20" fontWeight="bold" textAnchor="middle">
                   d {visibleValues.d !== undefined ? `= ${visibleValues.d % 1 === 0 ? visibleValues.d : visibleValues.d.toFixed(1)}` : ''}
                 </text>
               )}
               
               {(visibleValues.C !== undefined || askedValues.includes('C')) && (
-                <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="16" fontWeight="bold" textAnchor="middle">
+                <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="18" fontWeight="bold" textAnchor="middle">
                   C {visibleValues.C !== undefined ? `= ${visibleValues.C.toFixed(1)}` : ''}
                 </text>
               )}
               
               {(visibleValues.A !== undefined || askedValues.includes('A')) && (
-                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="18" fontWeight="bold" textAnchor="middle">
+                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="20" fontWeight="bold" textAnchor="middle">
                   A {visibleValues.A !== undefined ? `= ${visibleValues.A.toFixed(1)}` : ''}
                 </text>
               )}
