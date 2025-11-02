@@ -988,12 +988,15 @@ export default function CirclesModule({ onBack }) {
                   <button
                     key={i}
                     onClick={() => handleShapeSelect(shape)}
+                    disabled={stage1Answered}
                     style={{
                       fontSize: '80px', padding: '32px', border: '3px solid #e5e7eb',
-                      borderRadius: '12px', background: 'white', cursor: 'pointer',
-                      transition: 'transform 0.2s'
+                      borderRadius: '12px', background: 'white', 
+                      cursor: stage1Answered ? 'not-allowed' : 'pointer',
+                      transition: 'transform 0.2s',
+                      opacity: stage1Answered ? 0.5 : 1
                     }}
-                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseEnter={(e) => !stage1Answered && (e.target.style.transform = 'scale(1.05)')}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   >
                     {shape.emoji}
