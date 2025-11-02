@@ -329,10 +329,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
     y: center + (displayR * 0.5) * Math.sin(radAngle) + 25 * Math.sin(radAngle + Math.PI/2)
   };
   
-  // Diameter: at one end of diameter line, offset perpendicular
+  // Diameter: closer to center on the diameter line
   const diameterLabelPos = {
-    x: center + (displayR * 0.9) * Math.cos(diamAngle) + 35 * Math.cos(diamAngle + Math.PI/2),
-    y: center + (displayR * 0.9) * Math.sin(diamAngle) + 35 * Math.sin(diamAngle + Math.PI/2)
+    x: center - (displayR * 0.4) * Math.cos(diamAngle),
+    y: center - (displayR * 0.4) * Math.sin(diamAngle)
   };
   
   // Circumference: just outside the circle edge, in different quadrant from r and d
@@ -417,10 +417,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
               {visibleValues.r !== undefined && (
                 <g>
                   <rect 
-                    x={radiusLabelPos.x - 35} 
-                    y={radiusLabelPos.y - 18} 
-                    width="70" 
-                    height="36" 
+                    x={radiusLabelPos.x - 40} 
+                    y={radiusLabelPos.y - 20} 
+                    width="80" 
+                    height="40" 
                     fill="white" 
                     stroke={colors.radius} 
                     strokeWidth="2" 
@@ -435,10 +435,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
               {visibleValues.d !== undefined && (
                 <g>
                   <rect 
-                    x={diameterLabelPos.x - 35} 
-                    y={diameterLabelPos.y - 18} 
-                    width="70" 
-                    height="36" 
+                    x={diameterLabelPos.x - 40} 
+                    y={diameterLabelPos.y - 20} 
+                    width="80" 
+                    height="40" 
                     fill="white" 
                     stroke={colors.diameter} 
                     strokeWidth="2" 
@@ -453,10 +453,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
               {visibleValues.C !== undefined && (
                 <g>
                   <rect 
-                    x={circumferenceLabelPos.x - 45} 
-                    y={circumferenceLabelPos.y - 18} 
-                    width="90" 
-                    height="36" 
+                    x={circumferenceLabelPos.x - 50} 
+                    y={circumferenceLabelPos.y - 20} 
+                    width="100" 
+                    height="40" 
                     fill="white" 
                     stroke={colors.circumference} 
                     strokeWidth="2" 
@@ -471,10 +471,10 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
               {visibleValues.A !== undefined && (
                 <g>
                   <rect 
-                    x={areaLabelPos.x - 45} 
-                    y={areaLabelPos.y - 18} 
-                    width="90" 
-                    height="36" 
+                    x={areaLabelPos.x - 50} 
+                    y={areaLabelPos.y - 20} 
+                    width="100" 
+                    height="40" 
                     fill="white" 
                     stroke={colors.area} 
                     strokeWidth="2" 
@@ -574,11 +574,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       ]};
       case 8: return { given: 'r', steps: [
         { target: 'd', operation: '× 2', fromLabel: 'r' },
-        { target: 'A', operation: 'π r²', fromLabel: 'r' }
+        { target: 'A', operation: 'πr²', fromLabel: 'r' }
       ]};
       case 9: return { given: 'd', steps: [
         { target: 'r', operation: '÷ 2', fromLabel: 'd' },
-        { target: 'A', operation: 'π r²', fromLabel: 'r' }
+        { target: 'A', operation: 'πr²', fromLabel: 'r' }
       ]};
       case 10: {
         const randomStage = Math.floor(Math.random() * 7) + 3;
@@ -702,7 +702,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   };
 
   const getOperationChoices = (target) => {
-    const allOps = ['× 2', '÷ 2', '× π', '÷ π', 'π r²'];
+    const allOps = ['× 2', '÷ 2', '× π', '÷ π', 'πr²'];
     const currentQuestion = questionQueue.find(q => q.target === target);
     const correct = currentQuestion?.operation;
     const availableDistractors = allOps.filter(op => op !== correct);
@@ -1037,7 +1037,10 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                     {currentStep === 'operation' ? (
                       <>
                         <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
-                          {currentTarget} = {currentQuestion.fromLabel} _____
+                          {currentTarget === 'A' 
+                            ? `${currentTarget} = _____`
+                            : `${currentTarget} = ${currentQuestion.fromLabel} _____`
+                          }
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {getOperationChoices(currentTarget).map((op, i) => (
@@ -1083,8 +1086,14 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                             color: '#78350f'
                           }}>
                             {currentTarget === 'A' 
-                              ? `${currentTarget} = π ${visibleValues.r || problem.r}²`
-                              : `${currentTarget} = ${visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]} ${selectedOperation}`
+                              ? `${currentTarget} = π × ${visibleValues.r || problem.r}²`
+                              : `${currentTarget} = ${
+                                  typeof (visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]) === 'number' 
+                                    ? ((visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]) % 1 === 0 
+                                        ? (visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel])
+                                        : (visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel]).toFixed(1))
+                                    : (visibleValues[currentQuestion.fromLabel] || problem[currentQuestion.fromLabel])
+                                } ${selectedOperation}`
                             }
                           </div>
                         )}
