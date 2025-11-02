@@ -323,30 +323,30 @@ const CircleVisualization = ({ problem, stage, placedTerms, givenValue, visibleV
   };
   
   // Label positioning - clearly associated with elements
-  // Radius: along the radius line, between center and edge
+  // Radius: along the radius line, slightly offset perpendicular to avoid overlap
   const radiusLabelPos = {
-    x: center + (displayR * 0.65) * Math.cos(radAngle),
-    y: center + (displayR * 0.65) * Math.sin(radAngle)
+    x: center + (displayR * 0.5) * Math.cos(radAngle) + 25 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.5) * Math.sin(radAngle) + 25 * Math.sin(radAngle + Math.PI/2)
   };
   
-  // Diameter: at the opposite end from radius, perpendicular offset
+  // Diameter: at one end of diameter line, offset perpendicular
   const diameterLabelPos = {
-    x: center - (displayR * 0.8) * Math.cos(diamAngle),
-    y: center - (displayR * 0.8) * Math.sin(diamAngle)
+    x: center + (displayR * 0.9) * Math.cos(diamAngle) + 35 * Math.cos(diamAngle + Math.PI/2),
+    y: center + (displayR * 0.9) * Math.sin(diamAngle) + 35 * Math.sin(diamAngle + Math.PI/2)
   };
   
-  // Circumference: outside the circle, opposite quadrant from radius
-  const circumAngle = radAngle + Math.PI; // 180° from radius
+  // Circumference: just outside the circle edge, in different quadrant from r and d
+  const circumAngle = radAngle + (Math.PI * 0.6); // 108° from radius
   const circumferenceLabelPos = {
-    x: center + (displayR + 50) * Math.cos(circumAngle),
-    y: center + (displayR + 50) * Math.sin(circumAngle)
+    x: center + (displayR + 35) * Math.cos(circumAngle),
+    y: center + (displayR + 35) * Math.sin(circumAngle)
   };
   
-  // Area: inside center, 90° from radius to avoid overlap
-  const areaAngle = radAngle + (Math.PI / 2);
+  // Area: inside, in the open semicircle area (opposite side from radius)
+  const areaAngle = radAngle + Math.PI; // 180° opposite from radius
   const areaLabelPos = {
-    x: center + (displayR * 0.35) * Math.cos(areaAngle),
-    y: center + (displayR * 0.35) * Math.sin(areaAngle)
+    x: center + (displayR * 0.4) * Math.cos(areaAngle),
+    y: center + (displayR * 0.4) * Math.sin(areaAngle)
   };
   
   const showCircle = stage >= 2;
@@ -588,7 +588,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     }
   };
 
-  const resetStageState = () => {
+  const resetStageState = (prob = problem) => {
     setPlacedTerms({});
     setVisibleValues({});
     setGivenValue(null);
@@ -615,7 +615,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     if (stage >= 3) {
       const config = getStageConfig(stage);
       setGivenValue(config.given);
-      setVisibleValues({ [config.given]: problem[config.given] });
+      setVisibleValues({ [config.given]: prob[config.given] });
       setQuestionQueue(config.steps);
       setCurrentTarget(config.steps[0].target);
       setCurrentStep('operation');
@@ -625,7 +625,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const resetAll = () => {
     const newProblem = generateProblem(stage);
     setProblem(newProblem);
-    resetStageState();
+    resetStageState(newProblem);
   };
 
   useEffect(() => {
@@ -716,32 +716,32 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     
     // Generate pedagogically-sound distractors based on common errors
     if (target === 'd') {
-      // d = r × 2, so if r=10, d=20
-      // Common errors: forgot multiply (10), divided (5), added (12)
+      // d = r × 2, so if r=18, d=36
+      // Common errors: forgot multiply (18), divided (9), added (20)
       distractors = [
-        problem.r,          // 10 - forgot to multiply
-        problem.r / 2,      // 5 - divided instead
-        problem.r + 2       // 12 - added instead
+        problem.r,          // forgot to multiply
+        problem.r / 2,      // divided instead  
+        problem.r + 2       // added instead
       ];
     } else if (target === 'r') {
-      // r = d ÷ 2, so if d=20, r=10
-      // Common errors: multiplied (40), forgot divide (20), subtracted (18)
+      // r = d ÷ 2, so if d=36, r=18
+      // Common errors: multiplied (72), forgot divide (36), subtracted (34)
       distractors = [
         problem.d * 2,      // multiplied instead
         problem.d,          // forgot to divide
         problem.d - 2       // subtracted instead
       ];
     } else if (target === 'C') {
-      // C = d × π, so if d=20, C≈62.83
-      // Common errors: used r (31.4), forgot π (40), divided (6.4)
+      // C = d × π, so if d=36, C≈113.1
+      // Common errors: used r (56.5), forgot π (72), divided (11.5)
       distractors = [
         problem.r * PI,     // used r instead of d
         problem.d * 2,      // forgot π
         problem.d / PI      // divided instead
       ];
     } else if (target === 'A') {
-      // A = π r², so if r=10, A≈314.16
-      // Common errors: forgot square (31.4), used d (1256.6), forgot π (100)
+      // A = π r², so if r=18, A≈1017.9
+      // Common errors: forgot square (56.5), used d (4071.5), forgot π (324)
       distractors = [
         PI * problem.r,           // forgot to square
         PI * problem.d * problem.d, // used d instead of r
@@ -749,8 +749,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       ];
     }
     
-    // DO NOT filter out distractors - they are pedagogically important
-    // Just ensure we have exactly 4 choices: 3 distractors + 1 correct
+    // DO NOT filter - keep all pedagogically important distractors
     const finalChoices = [correct, distractors[0], distractors[1], distractors[2]];
     
     return shuffle(finalChoices);
