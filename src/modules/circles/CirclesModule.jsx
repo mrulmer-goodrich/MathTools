@@ -103,7 +103,7 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
   const { r, d, C, A, radiusAngle, diameterAngle, colors } = problem;
   
   const size = 350;
-  const scale = Math.min((size * 0.35) / r, 20);
+  const scale = Math.min((size * 0.7) / r, 35); // Increased from 0.35 to 0.7, scale from 20 to 35
   const displayR = r * scale;
   const center = size / 2;
   
@@ -125,25 +125,25 @@ const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, asked
     y: center + displayR * Math.sin(diamAngle)
   };
   
-  // Label positions - positioned to avoid lines
+  // Label positions - positioned FAR from lines to avoid overlaps
   const radiusLabelPos = {
-    x: center + (displayR * 0.5) * Math.cos(radAngle) + 30 * Math.cos(radAngle + Math.PI/2),
-    y: center + (displayR * 0.5) * Math.sin(radAngle) + 30 * Math.sin(radAngle + Math.PI/2)
+    x: center + (displayR * 0.5) * Math.cos(radAngle) + 45 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.5) * Math.sin(radAngle) + 45 * Math.sin(radAngle + Math.PI/2)
   };
   
   const diameterLabelPos = {
-    x: center + 30 * Math.cos(diamAngle + Math.PI/2),
-    y: center + 30 * Math.sin(diamAngle + Math.PI/2)
+    x: center + 45 * Math.cos(diamAngle + Math.PI/2),
+    y: center + 45 * Math.sin(diamAngle + Math.PI/2)
   };
   
   const circumferenceLabelPos = {
-    x: center + (displayR + 40) * Math.cos(radAngle + Math.PI/4),
-    y: center + (displayR + 40) * Math.sin(radAngle + Math.PI/4)
+    x: center + (displayR + 50) * Math.cos(radAngle + Math.PI/4),
+    y: center + (displayR + 50) * Math.sin(radAngle + Math.PI/4)
   };
   
   const areaLabelPos = {
-    x: center - displayR * 0.5,
-    y: center - displayR * 0.5
+    x: center - displayR * 0.6,
+    y: center - displayR * 0.6
   };
   
   const showCircle = stage >= 2;
@@ -524,6 +524,22 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     }
   };
 
+  const getStageTitle = (stg) => {
+    const titles = {
+      1: 'Stage 1: Identify a Circle',
+      2: 'Stage 2: Label Circle Parts',
+      3: 'Stage 3: Find Diameter from Radius',
+      4: 'Stage 4: Find Radius from Diameter',
+      5: 'Stage 5: Find Radius and Circumference',
+      6: 'Stage 6: Find Diameter and Circumference',
+      7: 'Stage 7: Work Backwards from Circumference',
+      8: 'Stage 8: Find Diameter and Area',
+      9: 'Stage 9: Find Radius and Area',
+      10: 'Stage 10: Mixed Practice'
+    };
+    return titles[stg] || `Stage ${stg}`;
+  };
+
   const currentQuestion = questionQueue.find(q => q.target === currentTarget);
 
   // Entry screen
@@ -577,33 +593,26 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
       
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative' }}>
-          <div style={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            padding: '12px 20px',
-            borderRadius: '12px',
-            background: '#fef3c7',
-            border: '3px solid #f59e0b',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#92400e',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}>
-            🪙 {totalCoins}
+        {/* Compact Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>
+            {getStageTitle(stage)}
           </div>
           
-          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', marginBottom: '8px' }}>
-            Circles
-          </h1>
-          <p style={{ fontSize: '18px', color: '#6b7280' }}>
-            One Shape, Two Formulas, Three Words
-          </p>
-          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '4px' }}>
-            Stage {stage}
-          </p>
+          <div style={{
+            padding: '8px 16px',
+            borderRadius: '8px',
+            background: '#fef3c7',
+            border: '2px solid #f59e0b',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            color: '#92400e',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            🪙 <span>{totalCoins}</span>
+          </div>
         </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
