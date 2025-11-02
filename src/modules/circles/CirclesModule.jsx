@@ -1,23 +1,12 @@
-// CirclesModule.jsx — SYSTEMATIC FIXES APPLIED
-// Core Issues Fixed:
-// 1. Answer choices include correct value
-// 2. ?? markers properly aligned and hidden until placed
-// 3. Labels show only given value initially
-// 4. Question format: "If r = 7, what is d?"
-// 5. Formula strip between question and answers
-// 6. Given value strip after operation selected
-// 7. No shuffling on wrong clicks - locked until new problem
-// 8. Stage 10 = random from stages 3-9
-// 9. Better π symbol (Unicode)
-// 10. Stage unlock = pulsate/grow animation
-// 11. Calculate overlay button after perfect run
+// CirclesModule.jsx — UG Math Tools
+// Circles: One Shape, Two Formulas, Three Words
 
 import React, { useEffect, useState } from "react";
 import { ErrorOverlay } from "../../components/StatsSystem.jsx";
 import BigButton from "../../components/BigButton.jsx";
 import ugConfetti from "../../lib/confetti.js";
 
-const PI = Math.PI;
+const PI = 3.14159265359;
 
 const shuffle = (arr) => { 
   const a = [...arr]; 
@@ -35,6 +24,7 @@ const Calculator = ({ show, onClose }) => {
   
   const calculate = () => {
     try {
+      // Replace π with actual value
       const expr = display.replace(/π/g, Math.PI.toString());
       const result = eval(expr);
       setDisplay(result.toFixed(2));
@@ -103,7 +93,7 @@ const Calculator = ({ show, onClose }) => {
   );
 };
 
-// Stage Unlock overlay - PULSATE/GROW animation
+// Stage Unlock overlay - BIG celebration
 const StageUnlockOverlay = ({ show, nextStage }) => {
   if (!show) return null;
   return (
@@ -117,20 +107,33 @@ const StageUnlockOverlay = ({ show, nextStage }) => {
         color: '#2563eb', 
         fontWeight: '900',
         textShadow: '0 8px 32px rgba(37, 99, 235, 0.5)',
-        animation: 'stageUnlockPulse 2s ease-out',
+        animation: 'stageUnlock 2.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         marginBottom: '20px'
       }}>
         🎉 STAGE {nextStage} UNLOCKED! 🎉
       </div>
+      <div style={{ fontSize: '40px' }}>
+        {Array.from({ length: 20 }).map((_, i) => (
+          <span key={i} style={{
+            display: 'inline-block',
+            animation: `coinBounce ${1 + Math.random()}s ease-in-out ${i * 0.1}s infinite`
+          }}>
+            <svg width="40" height="40" viewBox="0 0 32 32" style={{ margin: '0 4px' }}>
+              <circle cx="16" cy="16" r="15" fill="#f59e0b" stroke="#d97706" strokeWidth="2"/>
+              <circle cx="16" cy="16" r="12" fill="#fbbf24" opacity="0.7"/>
+            </svg>
+          </span>
+        ))}
+      </div>
       <style>{`
-        @keyframes stageUnlockPulse {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.3); opacity: 1; }
-          60% { transform: scale(0.9); }
-          70% { transform: scale(1.1); }
-          80% { transform: scale(0.95); }
-          90% { transform: scale(1.05); }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes stageUnlock {
+          0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes coinBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
         }
       `}</style>
     </div>
@@ -158,22 +161,22 @@ const SuccessOverlay = ({ show }) => {
       </div>
       <style>{`
         @keyframes successPop {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
+          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
       `}</style>
     </div>
   );
 };
 
-// Exploding coins animation
+// Exploding coins animation - burst from center in all directions
 const FlyingCoins = ({ show }) => {
   if (!show) return null;
   const COUNT = 40;
   const coins = Array.from({ length: COUNT }).map((_, i) => {
-    const angle = (i / COUNT) * 360;
-    const distance = 200 + Math.random() * 100;
+    const angle = (i / COUNT) * 360; // Spread evenly in circle
+    const distance = 200 + Math.random() * 100; // How far they travel
     const duration = 1.2 + Math.random() * 0.6;
     const delay = Math.random() * 0.2;
     const rotation = Math.random() * 720;
@@ -207,11 +210,24 @@ const FlyingCoins = ({ show }) => {
             transform: translate(-50%, -50%) rotate(0deg) scale(0);
             opacity: 1;
           }
+          60% { 
+            transform: 
+              translate(
+                calc(-50% + cos(var(--angle)) * var(--distance)),
+                calc(-50% + sin(var(--angle)) * var(--distance))
+              )
+              rotate(var(--rotation))
+              scale(1.2);
+            opacity: 1;
+          }
           100% { 
-            transform: translate(
-              calc(-50% + cos(var(--angle)) * var(--distance)),
-              calc(-50% + sin(var(--angle)) * var(--distance))
-            ) rotate(var(--rotation)) scale(1);
+            transform: 
+              translate(
+                calc(-50% + cos(var(--angle)) * var(--distance)),
+                calc(-50% + sin(var(--angle)) * var(--distance))
+              )
+              rotate(var(--rotation))
+              scale(0.5);
             opacity: 0;
           }
         }
@@ -221,709 +237,593 @@ const FlyingCoins = ({ show }) => {
   );
 };
 
-// Circle visualization component
-const CircleVisualization = ({ problem, stage, onCircleClick, showLabels, givenValue }) => {
-  const { r, d, C, A, rotation } = problem;
+// Generate colors
+const generateColors = () => {
+  const colorSets = [
+    { radius: '#ef4444', diameter: '#8b5cf6', circumference: '#3b82f6', area: '#f59e0b' },
+    { radius: '#10b981', diameter: '#ec4899', circumference: '#f59e0b', area: '#06b6d4' },
+    { radius: '#3b82f6', diameter: '#10b981', circumference: '#ef4444', area: '#8b5cf6' },
+    { radius: '#f59e0b', diameter: '#06b6d4', circumference: '#8b5cf6', area: '#10b981' },
+  ];
+  return colorSets[Math.floor(Math.random() * colorSets.length)];
+};
+
+// Generate problem - ALWAYS r = 1-20, all values calculated from r
+const generateProblem = (stage) => {
+  const r = Math.floor(Math.random() * 20) + 1; // ALWAYS 1-20
+  const d = r * 2;
+  const C = 2 * PI * r;
+  const A = PI * r * r;
   
-  const centerX = 250;
-  const centerY = 250;
-  const displayR = r * 10;
+  // Limited rotation angles - every 45 degrees to prevent overlaps
+  const safeAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+  const radiusAngle = safeAngles[Math.floor(Math.random() * safeAngles.length)];
+  const diameterAngle = (radiusAngle + 90) % 360;
   
-  // Calculate endpoints for radius and diameter
-  const radAngle = rotation * Math.PI / 180;
-  const radEndX = centerX + displayR * Math.cos(radAngle);
-  const radEndY = centerY + displayR * Math.sin(radAngle);
+  const colors = generateColors();
+  return { r, d, C, A, radiusAngle, diameterAngle, colors, stage };
+};
+
+// Extended shape bank with variety
+const SHAPE_BANK = [
+  { type: 'circle', label: 'Circle', emoji: '⭕' },
+  { type: 'square', label: 'Square', emoji: '⬜' },
+  { type: 'triangle', label: 'Triangle', emoji: '🔺' },
+  { type: 'rectangle', label: 'Rectangle', emoji: '▭' },
+  { type: 'pentagon', label: 'Pentagon', emoji: '⬟' },
+  { type: 'hexagon', label: 'Hexagon', emoji: '⬡' },
+  { type: 'star', label: 'Star', emoji: '⭐' },
+  { type: 'heart', label: 'Heart', emoji: '❤️' },
+  { type: 'oval', label: 'Oval', emoji: '🥚' },
+  { type: 'diamond', label: 'Diamond', emoji: '💎' },
+];
+
+// Circle visualization
+const CircleVisualization = ({ problem, stage, placedTerms, visibleValues, askedValues = [], onCircleClick }) => {
+  const { r, d, C, A, radiusAngle, diameterAngle, colors } = problem;
   
-  const diamAngle = rotation * Math.PI / 180;
-  const diam1X = centerX - displayR * Math.cos(diamAngle);
-  const diam1Y = centerY - displayR * Math.sin(diamAngle);
-  const diam2X = centerX + displayR * Math.cos(diamAngle);
-  const diam2Y = centerY + displayR * Math.sin(diamAngle);
+  const size = 400; // Increased canvas size
+  const center = size / 2;
   
-  // Label positioning - ONLY show given value initially
-  const getLabelPosition = (type) => {
-    if (type === 'r') {
-      const midX = centerX + (displayR * 0.7) * Math.cos(radAngle);
-      const midY = centerY + (displayR * 0.7) * Math.sin(radAngle);
-      const perpAngle = radAngle + Math.PI / 2;
-      return {
-        x: midX + 40 * Math.cos(perpAngle),
-        y: midY + 40 * Math.sin(perpAngle)
-      };
-    } else if (type === 'd') {
-      const perpAngle = diamAngle + Math.PI / 2;
-      return {
-        x: centerX + 50 * Math.cos(perpAngle),
-        y: centerY + 50 * Math.sin(perpAngle)
-      };
-    } else if (type === 'C') {
-      const labelAngle = (rotation + 135) * Math.PI / 180;
-      return {
-        x: centerX + (displayR + 45) * Math.cos(labelAngle),
-        y: centerY + (displayR + 45) * Math.sin(labelAngle)
-      };
-    } else if (type === 'A') {
-      const labelAngle = (rotation + 180) * Math.PI / 180;
-      return {
-        x: centerX + (displayR * 0.5) * Math.cos(labelAngle),
-        y: centerY + (displayR * 0.5) * Math.sin(labelAngle)
-      };
-    }
-    return { x: 0, y: 0 };
+  // Fixed radius - circle should be large and consistent
+  const displayR = 120; // Fixed large radius (was calculated before)
+  
+  const radAngle = (radiusAngle * Math.PI) / 180;
+  const diamAngle = (diameterAngle * Math.PI) / 180;
+  
+  const radiusEnd = {
+    x: center + displayR * Math.cos(radAngle),
+    y: center + displayR * Math.sin(radAngle)
   };
   
-  // Determine which label to show based on givenValue
-  const showR = showLabels && givenValue === 'r';
-  const showD = showLabels && givenValue === 'd';
-  const showC = showLabels && givenValue === 'C';
-  const showA = showLabels && givenValue === 'A';
+  const diamStart = {
+    x: center - displayR * Math.cos(diamAngle),
+    y: center - displayR * Math.sin(diamAngle)
+  };
   
-  const rPos = getLabelPosition('r');
-  const dPos = getLabelPosition('d');
-  const cPos = getLabelPosition('C');
-  const aPos = getLabelPosition('A');
+  const diamEnd = {
+    x: center + displayR * Math.cos(diamAngle),
+    y: center + displayR * Math.sin(diamAngle)
+  };
+  
+  // Dynamic label positioning based on line angles - ALWAYS clear of lines
+  // Radius label: perpendicular to radius, outside the line
+  const radiusLabelPos = {
+    x: center + (displayR * 0.7) * Math.cos(radAngle) + 40 * Math.cos(radAngle + Math.PI/2),
+    y: center + (displayR * 0.7) * Math.sin(radAngle) + 40 * Math.sin(radAngle + Math.PI/2)
+  };
+  
+  // Diameter label: perpendicular to diameter, pushed away from radius
+  // Check which side to push it based on radius angle
+  const diamPerpOffset = Math.PI/2;
+  const diameterLabelPos = {
+    x: center + 50 * Math.cos(diamAngle + diamPerpOffset),
+    y: center + 50 * Math.sin(diamAngle + diamPerpOffset)
+  };
+  
+  // Circumference: outside circle, avoiding both lines
+  // Place at angle that's 135° from radius (in safe quadrant)
+  const circumAngle = radAngle + (135 * Math.PI / 180);
+  const circumferenceLabelPos = {
+    x: center + (displayR + 45) * Math.cos(circumAngle),
+    y: center + (displayR + 45) * Math.sin(circumAngle)
+  };
+  
+  // Area: inside circle, in quadrant opposite to radius
+  // Place at angle opposite to radius
+  const areaAngle = radAngle + Math.PI; // 180° opposite
+  const areaLabelPos = {
+    x: center + (displayR * 0.5) * Math.cos(areaAngle),
+    y: center + (displayR * 0.5) * Math.sin(areaAngle)
+  };
+  
+  const showCircle = stage >= 2;
+  const showDiameter = stage >= 2;
+  const showArea = stage >= 2;
   
   return (
-    <svg width="500" height="500" viewBox="0 0 500 500" style={{ background: '#f9fafb', borderRadius: '8px' }}>
-      {/* Circle */}
-      <circle 
-        cx={centerX} 
-        cy={centerY} 
-        r={displayR} 
-        fill="none" 
-        stroke="#3b82f6" 
-        strokeWidth="3"
-        style={{ cursor: stage === 2 ? 'pointer' : 'default' }}
-        onClick={() => stage === 2 && onCircleClick && onCircleClick('circumference')}
-      />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', margin: '0 auto' }}>
+      <rect width={size} height={size} fill="#ffffff" rx="12" />
       
-      {/* Radius line */}
-      <line 
-        x1={centerX} 
-        y1={centerY} 
-        x2={radEndX} 
-        y2={radEndY} 
-        stroke="#ef4444" 
-        strokeWidth="2"
-        style={{ cursor: stage === 2 ? 'pointer' : 'default' }}
-        onClick={() => stage === 2 && onCircleClick && onCircleClick('radius')}
-      />
-      
-      {/* Diameter line */}
-      <line 
-        x1={diam1X} 
-        y1={diam1Y} 
-        x2={diam2X} 
-        y2={diam2Y} 
-        stroke="#10b981" 
-        strokeWidth="2" 
-        strokeDasharray="5,5"
-        style={{ cursor: stage === 2 ? 'pointer' : 'default' }}
-        onClick={() => stage === 2 && onCircleClick && onCircleClick('diameter')}
-      />
-      
-      {/* Center dot */}
-      <circle 
-        cx={centerX} 
-        cy={centerY} 
-        r="4" 
-        fill="#1f2937"
-        style={{ cursor: stage === 2 ? 'pointer' : 'default' }}
-        onClick={() => stage === 2 && onCircleClick && onCircleClick('center')}
-      />
-      
-      {/* Labels - ONLY show given value */}
-      {showR && (
-        <g>
-          <rect 
-            x={rPos.x - 25} 
-            y={rPos.y - 18} 
-            width="50" 
-            height="36" 
-            fill="white" 
-            stroke="#ef4444" 
-            strokeWidth="2" 
-            rx="6"
-          />
-          <text 
-            x={rPos.x} 
-            y={rPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="20" 
-            fontWeight="bold" 
-            fill="#ef4444"
-          >
-            r={r}
-          </text>
-        </g>
-      )}
-      
-      {showD && (
-        <g>
-          <rect 
-            x={dPos.x - 25} 
-            y={dPos.y - 18} 
-            width="50" 
-            height="36" 
-            fill="white" 
-            stroke="#10b981" 
-            strokeWidth="2" 
-            rx="6"
-          />
-          <text 
-            x={dPos.x} 
-            y={dPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="20" 
-            fontWeight="bold" 
-            fill="#10b981"
-          >
-            d={d}
-          </text>
-        </g>
-      )}
-      
-      {showC && (
-        <g>
-          <rect 
-            x={cPos.x - 35} 
-            y={cPos.y - 18} 
-            width="70" 
-            height="36" 
-            fill="white" 
-            stroke="#3b82f6" 
-            strokeWidth="2" 
-            rx="6"
-          />
-          <text 
-            x={cPos.x} 
-            y={cPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="18" 
-            fontWeight="bold" 
-            fill="#3b82f6"
-          >
-            C={C.toFixed(1)}
-          </text>
-        </g>
-      )}
-      
-      {showA && (
-        <g>
-          <rect 
-            x={aPos.x - 35} 
-            y={aPos.y - 18} 
-            width="70" 
-            height="36" 
-            fill="white" 
-            stroke="#8b5cf6" 
-            strokeWidth="2" 
-            rx="6"
-          />
-          <text 
-            x={aPos.x} 
-            y={aPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="18" 
-            fontWeight="bold" 
-            fill="#8b5cf6"
-          >
-            A={A.toFixed(1)}
-          </text>
-        </g>
-      )}
-      
-      {/* Question marks for Stage 2 - PROPERLY POSITIONED */}
-      {stage === 2 && (
+      {showCircle ? (
         <>
-          {/* Center ?? */}
-          <text 
-            x={centerX} 
-            y={centerY - 15} 
-            textAnchor="middle" 
-            fontSize="32" 
-            fontWeight="bold" 
-            fill="#9ca3af"
-          >
-            ??
-          </text>
+          {showArea && (
+            <g onClick={() => stage === 2 && onCircleClick?.('area')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
+              <circle cx={center} cy={center} r={displayR} fill={colors.area} fillOpacity="0.3" />
+              <circle cx={center} cy={center} r={displayR} fill="transparent" strokeWidth="20" stroke="transparent" />
+            </g>
+          )}
           
-          {/* Radius ?? */}
-          <text 
-            x={rPos.x} 
-            y={rPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="32" 
-            fontWeight="bold" 
-            fill="#9ca3af"
-          >
-            ??
-          </text>
+          <g onClick={() => stage === 2 && onCircleClick?.('circumference')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
+            <circle cx={center} cy={center} r={displayR} fill="none" stroke={colors.circumference} strokeWidth="6" />
+            <circle cx={center} cy={center} r={displayR} fill="none" strokeWidth="30" stroke="transparent" />
+          </g>
           
-          {/* Diameter ?? */}
-          <text 
-            x={dPos.x} 
-            y={dPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="32" 
-            fontWeight="bold" 
-            fill="#9ca3af"
-          >
-            ??
-          </text>
+          {showDiameter && (
+            <g onClick={() => stage === 2 && onCircleClick?.('diameter')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
+              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke={colors.diameter} strokeWidth="5" />
+              <line x1={diamStart.x} y1={diamStart.y} x2={diamEnd.x} y2={diamEnd.y} stroke="transparent" strokeWidth="25" />
+            </g>
+          )}
           
-          {/* Circumference ?? */}
-          <text 
-            x={cPos.x} 
-            y={cPos.y + 6} 
-            textAnchor="middle" 
-            fontSize="32" 
-            fontWeight="bold" 
-            fill="#9ca3af"
-          >
-            ??
-          </text>
+          <g onClick={() => stage === 2 && onCircleClick?.('radius')} style={{ cursor: stage === 2 ? 'pointer' : 'default' }}>
+            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke={colors.radius} strokeWidth="5" />
+            <line x1={center} y1={center} x2={radiusEnd.x} y2={radiusEnd.y} stroke="transparent" strokeWidth="25" />
+          </g>
+          
+          <circle cx={center} cy={center} r="5" fill="#1f2937" />
+          
+          {stage === 2 && (
+            <>
+              <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="24" fontWeight="bold" textAnchor="middle">
+                {placedTerms.radius ? 'r' : '?'}
+              </text>
+              {showDiameter && (
+                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="24" fontWeight="bold" textAnchor="middle">
+                  {placedTerms.diameter ? 'd' : '?'}
+                </text>
+              )}
+              <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="24" fontWeight="bold" textAnchor="middle">
+                {placedTerms.circumference ? 'C' : '?'}
+              </text>
+              {showArea && (
+                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="24" fontWeight="bold" textAnchor="middle">
+                  {placedTerms.area ? 'A' : '?'}
+                </text>
+              )}
+            </>
+          )}
+          
+          {stage >= 3 && (
+            <>
+              {(visibleValues.r !== undefined || askedValues.includes('r')) && (
+                <text x={radiusLabelPos.x} y={radiusLabelPos.y} fill={colors.radius} fontSize="20" fontWeight="bold" textAnchor="middle">
+                  r {visibleValues.r !== undefined ? `= ${visibleValues.r % 1 === 0 ? visibleValues.r : visibleValues.r.toFixed(1)}` : ''}
+                </text>
+              )}
+              
+              {(visibleValues.d !== undefined || askedValues.includes('d')) && (
+                <text x={diameterLabelPos.x} y={diameterLabelPos.y} fill={colors.diameter} fontSize="20" fontWeight="bold" textAnchor="middle">
+                  d {visibleValues.d !== undefined ? `= ${visibleValues.d % 1 === 0 ? visibleValues.d : visibleValues.d.toFixed(1)}` : ''}
+                </text>
+              )}
+              
+              {(visibleValues.C !== undefined || askedValues.includes('C')) && (
+                <text x={circumferenceLabelPos.x} y={circumferenceLabelPos.y} fill={colors.circumference} fontSize="18" fontWeight="bold" textAnchor="middle">
+                  C {visibleValues.C !== undefined ? `= ${visibleValues.C.toFixed(1)}` : ''}
+                </text>
+              )}
+              
+              {(visibleValues.A !== undefined || askedValues.includes('A')) && (
+                <text x={areaLabelPos.x} y={areaLabelPos.y} fill={colors.area} fontSize="20" fontWeight="bold" textAnchor="middle">
+                  A {visibleValues.A !== undefined ? `= ${visibleValues.A.toFixed(1)}` : ''}
+                </text>
+              )}
+            </>
+          )}
         </>
+      ) : (
+        <text x={center} y={center} fill="#9ca3af" fontSize="18" textAnchor="middle" dominantBaseline="middle">
+          Circle appears here...
+        </text>
       )}
     </svg>
   );
 };
 
-// Main component
-export default function CirclesModule({ onBack }) {
-  const [stage, setStage] = useState(1);
-  const [problem, setProblem] = useState(null);
-  const [totalCoins, setTotalCoins] = useState(0);
-  const [correctStreak, setCorrectStreak] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
+// MAIN COMPONENT
+export default function CirclesModule({ onProblemComplete, registerReset, updateStats }) {
+  const [stage, setStage] = useState(null); // null = entry screen
+  const [problem, setProblem] = useState(() => generateProblem(1));
   const [showError, setShowError] = useState(false);
-  const [showCoins, setShowCoins] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [problemCount, setProblemCount] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [showMoveOnChoice, setShowMoveOnChoice] = useState(false);
-  const [showCalculator, setShowCalculator] = useState(false);
-  const [showStageUnlock, setShowStageUnlock] = useState(false);
-  const [unlockedStages, setUnlockedStages] = useState([1, 2]);
-  
-  // Stage 1 state
-  const [shapes, setShapes] = useState([]);
-  
-  // Stage 2 state
-  const [termToPlace, setTermToPlace] = useState('');
-  const [placedTerms, setPlacedTerms] = useState([]);
-  
-  // Stage 3+ state
-  const [currentStep, setCurrentStep] = useState('question'); // 'question' or 'operation' or 'value'
-  const [currentTarget, setCurrentTarget] = useState(null);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [currentAnswerChoices, setCurrentAnswerChoices] = useState([]);
-  const [questionQueue, setQuestionQueue] = useState([]);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState([]);
-  const [problemWasCorrect, setProblemWasCorrect] = useState(true);
   const [currentFormula, setCurrentFormula] = useState('');
-  const [givenValue, setGivenValue] = useState(''); // Track which value is given
-  const [selectedOperation, setSelectedOperation] = useState(''); // Track selected operation
+  const [totalCoins, setTotalCoins] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0); // Track consecutive correct
+  const [problemWasCorrect, setProblemWasCorrect] = useState(true); // Track if current problem all correct
+  const [showCalculator, setShowCalculator] = useState(false); // Calculator visibility
+  const [showStageUnlock, setShowStageUnlock] = useState(false); // Stage unlock animation
   
-  // Generate problem
-  const generateProblem = () => {
-    const r = Math.floor(Math.random() * 20) + 1; // 1-20
-    const d = r * 2;
-    const C = 2 * PI * r;
-    const A = PI * r * r;
-    
-    // Limited rotation angles for predictable label placement
-    const rotations = [0, 45, 90, 135, 180, 225, 270, 315];
-    const rotation = rotations[Math.floor(Math.random() * rotations.length)];
-    
-    return { r, d, C, A, rotation };
-  };
-  
-  // Generate shapes for Stage 1
-  const generateShapes = () => {
-    const allShapes = [
-      { emoji: '⬜', isCircle: false },
-      { emoji: '🔺', isCircle: false },
-      { emoji: '⬟', isCircle: false },
-      { emoji: '⭐', isCircle: false },
-      { emoji: '🔶', isCircle: false },
-      { emoji: '⚫', isCircle: true }
-    ];
-    return shuffle(allShapes);
-  };
-  
-  // Initialize
+  const [shapes, setShapes] = useState([]);
+  const [termToPlace, setTermToPlace] = useState(null);
+  const [placedTerms, setPlacedTerms] = useState({});
+  const [visibleValues, setVisibleValues] = useState({});
+  const [currentStep, setCurrentStep] = useState(null);
+  const [currentTarget, setCurrentTarget] = useState(null);
+  const [questionQueue, setQuestionQueue] = useState([]);
+  const [currentAnswerChoices, setCurrentAnswerChoices] = useState([]); // Prevent re-shuffling
+
+  // Register reset with parent
   useEffect(() => {
-    setProblem(generateProblem());
-    setShapes(generateShapes());
-    if (stage === 2) {
-      setTermToPlace('center');
-      setPlacedTerms([]);
+    registerReset?.(() => {
+      setStage(null); // Back to entry
+      setProblem(generateProblem(1));
+      setProblemCount(0);
+      setTotalCoins(0);
+      setShowError(false);
+      setShowSuccess(false);
+      setShowConfetti(false);
+      setShowMoveOnChoice(false);
+      resetStageState();
+    });
+  }, [registerReset]);
+
+  const handleError = () => {
+    setShowError(true);
+    setProblemWasCorrect(false); // Mark this problem as incorrect
+    setTotalCoins(prev => Math.max(0, prev - 5)); // ALWAYS deduct 5 coins
+    setTimeout(() => setShowError(false), 1000);
+  };
+
+  const getStageConfig = (stageNum) => {
+    switch(stageNum) {
+      case 3: return { given: 'r', steps: [{ target: 'd', operation: '× 2', fromLabel: 'r' }] };
+      case 4: return { given: 'd', steps: [{ target: 'r', operation: '÷ 2', fromLabel: 'd' }] };
+      case 5: return { given: 'd', steps: [
+        { target: 'r', operation: '÷ 2', fromLabel: 'd' },
+        { target: 'C', operation: '× π', fromLabel: 'd' }
+      ]};
+      case 6: return { given: 'r', steps: [
+        { target: 'd', operation: '× 2', fromLabel: 'r' },
+        { target: 'C', operation: '× π', fromLabel: 'd' }
+      ]};
+      case 7: return { given: 'C', steps: [
+        { target: 'd', operation: '÷ π', fromLabel: 'C' },
+        { target: 'r', operation: '÷ 2', fromLabel: 'd' }
+      ]};
+      case 8: return { given: 'r', steps: [
+        { target: 'd', operation: '× 2', fromLabel: 'r' },
+        { target: 'A', operation: 'π r²', fromLabel: '' }
+      ]};
+      case 9: return { given: 'd', steps: [
+        { target: 'r', operation: '÷ 2', fromLabel: 'd' },
+        { target: 'A', operation: 'π r²', fromLabel: '' }
+      ]};
+      case 10: {
+        const configs = [
+          { given: 'r', steps: [
+            { target: 'd', operation: '× 2', fromLabel: 'r' },
+            { target: 'C', operation: '× π', fromLabel: 'd' },
+            { target: 'A', operation: 'π r²', fromLabel: '' }
+          ]},
+          { given: 'd', steps: [
+            { target: 'r', operation: '÷ 2', fromLabel: 'd' },
+            { target: 'C', operation: '× π', fromLabel: 'd' },
+            { target: 'A', operation: 'π r²', fromLabel: '' }
+          ]},
+          { given: 'C', steps: [
+            { target: 'd', operation: '÷ π', fromLabel: 'C' },
+            { target: 'r', operation: '÷ 2', fromLabel: 'd' },
+            { target: 'A', operation: 'π r²', fromLabel: '' }
+          ]},
+        ];
+        return configs[Math.floor(Math.random() * configs.length)];
+      }
+      default: return { given: null, steps: [] };
     }
+  };
+
+  const resetStageState = () => {
+    setPlacedTerms({});
+    setVisibleValues({});
+    setCurrentStep(null);
+    setCurrentTarget(null);
+    setQuestionQueue([]);
+    setCurrentFormula('');
+    setCurrentAnswerChoices([]);
+    setShowMoveOnChoice(false);
+    setProblemWasCorrect(true); // Reset for new problem
+    
+    if (stage === 1) {
+      const otherShapes = shuffle(SHAPE_BANK.filter(s => s.type !== 'circle')).slice(0, 3);
+      const allShapes = shuffle([SHAPE_BANK[0], ...otherShapes]);
+      setShapes(allShapes);
+    }
+    
+    if (stage === 2) {
+      const terms = shuffle(['radius', 'diameter', 'circumference', 'area']);
+      setTermToPlace(terms[0]);
+    }
+    
     if (stage >= 3) {
-      setupQuestionQueue();
+      const config = getStageConfig(stage);
+      setVisibleValues({ [config.given]: problem[config.given] });
+      setQuestionQueue(config.steps);
+      setCurrentTarget(config.steps[0].target);
+      setCurrentStep('operation');
+    }
+  };
+
+  const resetAll = () => {
+    const newProblem = generateProblem(stage);
+    setProblem(newProblem);
+    resetStageState();
+  };
+
+  useEffect(() => {
+    if (stage !== null) {
+      resetAll();
     }
   }, [stage]);
-  
-  // Setup question queue for multi-step stages
-  const setupQuestionQueue = () => {
-    const prob = problem || generateProblem();
-    setProblem(prob);
+
+  const handleCorrectAnswer = () => {
+    const coinsEarned = stage <= 2 ? 10 : 10 * (questionQueue.length || 1);
+    setTotalCoins(prev => prev + coinsEarned);
     
-    let queue = [];
-    let given = '';
+    setShowSuccess(true);
+    setShowConfetti(true);
     
-    if (stage === 3) {
-      // Given: r, Find: d
-      queue = [{ target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' }];
-      given = 'r';
-    } else if (stage === 4) {
-      // Given: d, Find: r
-      queue = [{ target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' }];
-      given = 'd';
-    } else if (stage === 5) {
-      // Given: d, Find: r, then C
-      queue = [
-        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' },
-        { target: 'C', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'C = d × π' }
-      ];
-      given = 'd';
-    } else if (stage === 6) {
-      // Given: r, Find: d, then C
-      queue = [
-        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' },
-        { target: 'C', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'C = d × π' }
-      ];
-      given = 'r';
-    } else if (stage === 7) {
-      // Given: C, Find: d, then r
-      queue = [
-        { target: 'd', from: 'C', fromValue: prob.C, fromLabel: 'C', formula: 'd = C ÷ π' },
-        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' }
-      ];
-      given = 'C';
-    } else if (stage === 8) {
-      // Given: r, Find: d, then A
-      queue = [
-        { target: 'd', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'd = r × 2' },
-        { target: 'A', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'A = πr²' }
-      ];
-      given = 'r';
-    } else if (stage === 9) {
-      // Given: d, Find: r, then A
-      queue = [
-        { target: 'r', from: 'd', fromValue: prob.d, fromLabel: 'd', formula: 'r = d ÷ 2' },
-        { target: 'A', from: 'r', fromValue: prob.r, fromLabel: 'r', formula: 'A = πr²' }
-      ];
-      given = 'd';
-    } else if (stage === 10) {
-      // Mixed: randomly pick one of stages 3-9
-      const randomStage = Math.floor(Math.random() * 7) + 3; // 3-9
-      const tempStage = stage;
-      setStage(randomStage);
-      setupQuestionQueue();
-      setStage(tempStage);
-      return;
-    }
+    try {
+      ugConfetti?.burst?.();
+    } catch {}
     
-    setQuestionQueue(queue);
-    setCurrentQuestion(queue[0]);
-    setCurrentTarget(queue[0].target);
-    setCurrentStep('operation');
-    setAnsweredCorrectly([]);
-    setProblemWasCorrect(true);
-    setCurrentFormula('');
-    setGivenValue(given);
-    setSelectedOperation('');
-    setCurrentAnswerChoices([]);
+    onProblemComplete?.({ module: "circles", stage, correct: true });
+    updateStats?.({ module: "circles", problemsSolved: 1, lastStage: stage });
+    
+    setTimeout(() => {
+      setShowSuccess(false);
+      setShowConfetti(false);
+      
+      // Only count toward streak if entire problem was correct
+      if (problemWasCorrect) {
+        const newStreak = correctStreak + 1;
+        setCorrectStreak(newStreak);
+        
+        // Check if should show move-on choice (2 correct in a row)
+        if (newStreak >= 2 && stage < 10) {
+          setShowMoveOnChoice(true);
+        } else {
+          resetAll();
+        }
+      } else {
+        // Problem completed but had errors - don't count toward streak
+        setCorrectStreak(0);
+        resetAll();
+      }
+    }, 1500);
   };
-  
-  // Get operation choices based on target
-  const getOperationChoices = (target) => {
-    const q = questionQueue.find(q => q.target === target);
-    if (!q) return [];
-    
-    if (target === 'd' && q.from === 'r') return ['× 2', '÷ 2', '+ 2'];
-    if (target === 'r' && q.from === 'd') return ['× 2', '÷ 2', '- 2'];
-    if (target === 'C' && q.from === 'd') return ['× π', '÷ π', '× 2'];
-    if (target === 'd' && q.from === 'C') return ['× π', '÷ π', '÷ 2'];
-    if (target === 'A' && q.from === 'r') return ['× π', '× πr²', 'r²'];
-    
-    return [];
-  };
-  
-  // Get correct operation
-  const getCorrectOperation = (target) => {
-    const q = questionQueue.find(q => q.target === target);
-    if (!q) return '';
-    
-    if (target === 'd' && q.from === 'r') return '× 2';
-    if (target === 'r' && q.from === 'd') return '÷ 2';
-    if (target === 'C' && q.from === 'd') return '× π';
-    if (target === 'd' && q.from === 'C') return '÷ π';
-    if (target === 'A' && q.from === 'r') return '× πr²';
-    
-    return '';
-  };
-  
-  // Get value choices with distractors INCLUDING correct answer
-  const getValueChoices = (target) => {
-    const correct = problem[target];
-    let distractors = [];
-    
-    if (target === 'd') {
-      distractors = [
-        problem.r, // forgot to multiply
-        problem.r / 2, // divided instead
-        problem.r + 2 // added instead
-      ];
-    } else if (target === 'r') {
-      distractors = [
-        problem.d * 2, // multiplied instead
-        problem.d, // forgot to divide
-        problem.d - 2 // subtracted
-      ];
-    } else if (target === 'C') {
-      distractors = [
-        problem.r * PI, // used r not d
-        problem.d * 2, // forgot π
-        problem.d / PI // divided instead
-      ];
-    } else if (target === 'A') {
-      distractors = [
-        PI * problem.r, // forgot to square
-        PI * problem.d * problem.d, // used d instead
-        problem.r * problem.r // forgot π
-      ];
-    }
-    
-    // Filter out any that match the correct answer
-    distractors = distractors.filter(d => Math.abs(d - correct) > 0.1);
-    
-    // Take first 3 unique distractors
-    const unique = [...new Set(distractors)].slice(0, 3);
-    
-    // Add correct answer and shuffle
-    return shuffle([correct, ...unique]);
-  };
-  
-  // Get correct value
-  const getCorrectValue = (target) => {
-    return problem[target];
-  };
-  
-  // Handle Stage 1: Shape selection
+
   const handleShapeSelect = (shape) => {
-    if (shape.isCircle) {
-      handleCorrect(10);
+    if (shape.type === 'circle') {
+      handleCorrectAnswer();
     } else {
       handleError();
     }
   };
-  
-  // Handle Stage 2: Click on circle parts
+
   const handleCircleClick = (term) => {
     if (term === termToPlace) {
-      const newPlaced = [...placedTerms, term];
+      const newPlaced = { ...placedTerms, [term]: true };
       setPlacedTerms(newPlaced);
       
-      if (newPlaced.length === 4) {
-        handleCorrect(10);
+      const allTerms = ['radius', 'diameter', 'circumference', 'area'];
+      const allPlaced = allTerms.every(t => newPlaced[t]);
+      
+      if (allPlaced) {
+        handleCorrectAnswer();
       } else {
-        const next = ['center', 'radius', 'diameter', 'circumference'][newPlaced.length];
-        setTermToPlace(next);
+        const remaining = allTerms.filter(t => !newPlaced[t]);
+        setTermToPlace(remaining[0]);
       }
     } else {
       handleError();
     }
   };
-  
-  // Handle Stage 3+: Operation selection
-  const handleOperationSelect = (operation) => {
-    const correct = getCorrectOperation(currentTarget);
+
+  const getOperationChoices = (target) => {
+    const allOps = ['× 2', '÷ 2', '× π', '÷ π', 'π r²'];
+    const currentQuestion = questionQueue.find(q => q.target === target);
+    const correct = currentQuestion?.operation;
+    const availableDistractors = allOps.filter(op => op !== correct);
+    const selectedDistractors = shuffle(availableDistractors).slice(0, 3);
+    return shuffle([correct, ...selectedDistractors]);
+  };
+
+  const getValueChoices = (target) => {
+    const correct = problem[target];
+    const distractors = [];
     
-    if (operation === correct) {
-      // Show success briefly
-      setShowSuccess(true);
-      ugConfetti();
-      setTimeout(() => setShowSuccess(false), 800);
+    // Generate distractors based on actual problem values
+    if (target === 'd') {
+      distractors.push(problem.r); // Just the radius
+      distractors.push(problem.r * 3); // Triple radius
+      distractors.push(problem.C / PI); // C divided by pi
+    } else if (target === 'r') {
+      distractors.push(problem.d); // Just the diameter
+      distractors.push(problem.d / 4); // Quarter diameter
+      distractors.push(problem.C / (2 * PI) * 1.5); // Off by 50%
+    } else if (target === 'C') {
+      distractors.push(problem.d * PI); // Forgot the 2
+      distractors.push(problem.r * 2 * PI * 1.5); // Off by 50%
+      distractors.push(problem.A / problem.r); // Wrong formula
+    } else if (target === 'A') {
+      distractors.push(problem.r * problem.r); // Forgot pi
+      distractors.push(PI * problem.d * problem.d / 4 * 1.5); // Off calculation
+      distractors.push(problem.C * problem.r / 2 * 1.2); // Alternative wrong
+    }
+    
+    // Filter out the correct answer and ensure unique values
+    const uniqueDistractors = distractors
+      .filter(val => Math.abs(val - correct) > 0.5)
+      .filter((val, idx, arr) => arr.findIndex(v => Math.abs(v - val) < 0.5) === idx)
+      .slice(0, 3);
+    
+    // If we don't have enough distractors, add some more
+    while (uniqueDistractors.length < 3) {
+      const factor = [0.5, 0.75, 1.25, 1.5, 2, 3][Math.floor(Math.random() * 6)];
+      const distractor = correct * factor;
+      if (Math.abs(distractor - correct) > 0.5 && 
+          !uniqueDistractors.find(v => Math.abs(v - distractor) < 0.5)) {
+        uniqueDistractors.push(distractor);
+      }
+    }
+    
+    return shuffle([correct, ...uniqueDistractors.slice(0, 3)]);
+  };
+
+  const handleOperationSelect = (operation) => {
+    const currentQuestion = questionQueue.find(q => q.target === currentTarget);
+    
+    if (operation === currentQuestion.operation) {
+      let formula;
+      if (currentTarget === 'A') {
+        formula = `${currentTarget} = ${operation}`;
+      } else {
+        formula = `${currentTarget} = ${currentQuestion.fromLabel} ${operation}`;
+      }
+      setCurrentFormula(formula);
       
-      // Set formula and generate answer choices ONCE
-      setCurrentFormula(currentQuestion.formula);
-      setSelectedOperation(operation);
+      // Generate answer choices ONCE and store them
       const choices = getValueChoices(currentTarget);
       setCurrentAnswerChoices(choices);
       
-      // Move to value selection
       setCurrentStep('value');
     } else {
       handleError();
     }
   };
-  
-  // Handle Stage 3+: Value selection
+
   const handleValueSelect = (value) => {
-    const correct = getCorrectValue(currentTarget);
+    const correctValue = problem[currentTarget];
     
-    if (Math.abs(value - correct) < 0.1) {
-      // Mark this step as answered correctly
-      const newAnswered = [...answeredCorrectly, currentTarget];
-      setAnsweredCorrectly(newAnswered);
+    if (Math.abs(value - correctValue) < 0.01) {
+      const newVisible = { ...visibleValues, [currentTarget]: value };
+      setVisibleValues(newVisible);
       
-      // Show success
-      setShowSuccess(true);
-      ugConfetti();
-      setTimeout(() => setShowSuccess(false), 800);
+      const remainingQuestions = questionQueue.filter(q => newVisible[q.target] === undefined);
       
-      // Check if all steps done
-      if (newAnswered.length === questionQueue.length) {
-        handleCorrect(10 * questionQueue.length);
+      if (remainingQuestions.length === 0) {
+        handleCorrectAnswer();
       } else {
-        // Move to next question
-        const nextQ = questionQueue[newAnswered.length];
-        setCurrentQuestion(nextQ);
-        setCurrentTarget(nextQ.target);
+        setCurrentTarget(remainingQuestions[0].target);
         setCurrentStep('operation');
         setCurrentFormula('');
-        setSelectedOperation('');
-        setCurrentAnswerChoices([]);
+        setCurrentAnswerChoices([]); // Clear for next question
       }
     } else {
       handleError();
     }
   };
-  
-  // Handle correct answer
-  const handleCorrect = (coins) => {
-    setTotalCoins(prev => prev + coins);
-    setShowSuccess(true);
-    setShowCoins(true);
-    ugConfetti();
-    
-    setTimeout(() => {
-      setShowSuccess(false);
-      setShowCoins(false);
-    }, 1500);
-    
-    // Check streak
-    if (problemWasCorrect) {
-      const newStreak = correctStreak + 1;
-      setCorrectStreak(newStreak);
-      
-      if (newStreak >= 2) {
-        setShowMoveOnChoice(true);
-      } else {
-        // Generate new problem
-        setTimeout(() => {
-          if (stage === 1) {
-            setShapes(generateShapes());
-          } else if (stage === 2) {
-            setProblem(generateProblem());
-            setTermToPlace('center');
-            setPlacedTerms([]);
-          } else {
-            setupQuestionQueue();
-          }
-        }, 1600);
-      }
-    } else {
-      // Had errors, reset streak
-      setCorrectStreak(0);
-      setTimeout(() => {
-        if (stage === 1) {
-          setShapes(generateShapes());
-        } else if (stage === 2) {
-          setProblem(generateProblem());
-          setTermToPlace('center');
-          setPlacedTerms([]);
-        } else {
-          setupQuestionQueue();
-        }
-      }, 1600);
-    }
-  };
-  
-  // Handle error
-  const handleError = () => {
-    setShowError(true);
-    setProblemWasCorrect(false);
-    setTotalCoins(prev => Math.max(0, prev - 5));
-    setTimeout(() => setShowError(false), 1000);
-    // NO SHUFFLING - everything stays locked
-  };
-  
-  // Handle practice choice
+
   const handlePracticeChoice = (moveOn) => {
+    setShowMoveOnChoice(false);
+    
     if (moveOn && stage < 10) {
-      const nextStage = stage + 1;
+      // Show "Stage Unlocked" animation
       setShowStageUnlock(true);
-      
       setTimeout(() => {
         setShowStageUnlock(false);
-        setStage(nextStage);
-        setUnlockedStages(prev => [...new Set([...prev, nextStage])]);
+        setStage(stage + 1);
         setCorrectStreak(0);
-        setShowMoveOnChoice(false);
-        setProblemWasCorrect(true);
+        setProblemCount(0);
       }, 2500);
     } else {
-      setShowMoveOnChoice(false);
-      setCorrectStreak(0);
-      setProblemWasCorrect(true);
-      
-      if (stage === 1) {
-        setShapes(generateShapes());
-      } else if (stage === 2) {
-        setProblem(generateProblem());
-        setTermToPlace('center');
-        setPlacedTerms([]);
-      } else {
-        setupQuestionQueue();
-      }
+      setCorrectStreak(0); // Reset streak if staying
+      resetAll();
     }
   };
-  
-  // Get stage title
-  const getStageTitle = (s) => {
+
+  const getStageTitle = (stg) => {
     const titles = {
-      1: "Stage 1: Identify a Circle",
-      2: "Stage 2: Label Circle Parts",
-      3: "Stage 3: Find d from r",
-      4: "Stage 4: Find r from d",
-      5: "Stage 5: Find r and C from d",
-      6: "Stage 6: Find d and C from r",
-      7: "Stage 7: Work Backwards from C",
-      8: "Stage 8: Find d and A from r",
-      9: "Stage 9: Find r and A from d",
-      10: "Stage 10: Mixed Practice"
+      1: 'Stage 1: Identify a Circle',
+      2: 'Stage 2: Label Circle Parts',
+      3: 'Stage 3: Find Diameter from Radius',
+      4: 'Stage 4: Find Radius from Diameter',
+      5: 'Stage 5: Find Radius and Circumference',
+      6: 'Stage 6: Find Diameter and Circumference',
+      7: 'Stage 7: Work Backwards from Circumference',
+      8: 'Stage 8: Find Diameter and Area',
+      9: 'Stage 9: Find Radius and Area',
+      10: 'Stage 10: Mixed Practice'
     };
-    return titles[s] || "Circles";
+    return titles[stg] || `Stage ${stg}`;
   };
-  
+
+  const currentQuestion = questionQueue.find(q => q.target === currentTarget);
+
+  // Entry screen
+  if (stage === null) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: 'white', borderRadius: '12px', padding: '48px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxWidth: '500px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>
+            🏭 Circles
+          </h1>
+          <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '32px' }}>
+            One Shape, Two Formulas, Three Words
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <BigButton 
+              onClick={() => setStage(1)}
+              className="ug-button"
+              style={{ fontSize: '18px', padding: '16px 32px' }}
+            >
+              Start at Stage 1
+            </BigButton>
+            
+            <BigButton 
+              onClick={() => setStage(10)}
+              className="ug-button"
+              style={{ fontSize: '18px', padding: '16px 32px', background: '#f59e0b', borderColor: '#f59e0b' }}
+            >
+              Skip to Stage 10 (2× coins!)
+            </BigButton>
+          </div>
+          
+          <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '24px' }}>
+            Choose your starting point
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: '24px', minHeight: '100vh', background: '#f3f4f6' }}>
-      {showSuccess && <SuccessOverlay show={true} />}
-      {showError && <ErrorOverlay show={true} />}
-      {showCoins && <FlyingCoins show={true} />}
-      {showStageUnlock && <StageUnlockOverlay show={true} nextStage={stage + 1} />}
-      {showCalculator && <Calculator show={true} onClose={() => setShowCalculator(false)} />}
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px' }}>
+      <ErrorOverlay show={showError} />
+      <SuccessOverlay show={showSuccess} />
+      <StageUnlockOverlay show={showStageUnlock} nextStage={stage + 1} />
+      <Calculator show={showCalculator} onClose={() => setShowCalculator(false)} />
+      {showConfetti && <FlyingCoins show={true} />}
+      
+      <style>{`
+        @keyframes successPop {
+          0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+      `}</style>
       
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Header */}
+        {/* Compact Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button onClick={onBack} style={{ 
-              padding: '8px 16px', 
-              borderRadius: '8px', 
-              border: '2px solid #e5e7eb',
-              background: 'white',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}>
-              ← Back
-            </button>
-            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>
-              {getStageTitle(stage)}
-            </div>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937' }}>
+            {getStageTitle(stage)}
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -974,6 +874,23 @@ export default function CirclesModule({ onBack }) {
           
           {/* LEFT: Visual */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            {stage >= 3 && currentFormula && (
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: '16px', 
+                padding: '14px 24px', 
+                background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
+                borderRadius: '24px',
+                border: '2px solid #3b82f6',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#1e40af',
+                boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
+              }}>
+                {currentFormula}
+              </div>
+            )}
+            
             {stage === 1 ? (
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '40px 0' }}>
                 {shapes.map((shape, i) => (
@@ -996,9 +913,10 @@ export default function CirclesModule({ onBack }) {
               <CircleVisualization 
                 problem={problem}
                 stage={stage}
+                placedTerms={placedTerms}
+                visibleValues={visibleValues}
+                askedValues={questionQueue.map(q => q.target)}
                 onCircleClick={handleCircleClick}
-                showLabels={stage >= 3}
-                givenValue={givenValue}
               />
             )}
           </div>
@@ -1055,52 +973,12 @@ export default function CirclesModule({ onBack }) {
                   </div>
                 )}
 
-                {stage >= 3 && currentTarget && currentQuestion && (
+                {stage >= 3 && currentTarget && (
                   <div>
-                    {/* Question: "If r = 7, what is d?" */}
-                    <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>
-                      If {currentQuestion.fromLabel} = {currentQuestion.fromValue}, what is {currentTarget}?
-                    </div>
-                    
-                    {/* Formula strip (shown between question and answers) */}
-                    {currentFormula && (
-                      <div style={{ 
-                        textAlign: 'center', 
-                        marginBottom: '16px', 
-                        padding: '14px 24px', 
-                        background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)', 
-                        borderRadius: '24px',
-                        border: '2px solid #3b82f6',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        color: '#1e40af',
-                        boxShadow: '0 2px 6px rgba(59, 130, 246, 0.2)'
-                      }}>
-                        {currentFormula}
-                      </div>
-                    )}
-                    
-                    {/* Given value strip (shown after operation selected) */}
-                    {selectedOperation && currentStep === 'value' && (
-                      <div style={{ 
-                        textAlign: 'center', 
-                        marginBottom: '16px', 
-                        padding: '12px 20px', 
-                        background: 'linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%)', 
-                        borderRadius: '16px',
-                        border: '2px solid #0ea5e9',
-                        fontSize: '20px',
-                        fontWeight: 'bold',
-                        color: '#0c4a6e'
-                      }}>
-                        {currentQuestion.fromLabel} = {currentQuestion.fromValue} {selectedOperation}
-                      </div>
-                    )}
-                    
                     {currentStep === 'operation' ? (
                       <>
-                        <div style={{ fontSize: '18px', marginBottom: '16px', color: '#6b7280' }}>
-                          Choose the correct operation:
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
+                          {currentTarget} = {currentQuestion?.fromLabel || ''} _____
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {getOperationChoices(currentTarget).map((op, i) => (
@@ -1117,8 +995,8 @@ export default function CirclesModule({ onBack }) {
                       </>
                     ) : (
                       <>
-                        <div style={{ fontSize: '18px', marginBottom: '16px', color: '#6b7280' }}>
-                          Choose the correct value:
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1f2937' }}>
+                          What is {currentTarget}?
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           {currentAnswerChoices.map((val, i) => (
