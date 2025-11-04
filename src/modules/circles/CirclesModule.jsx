@@ -24,7 +24,9 @@ const Calculator = ({ show, onClose }) => {
   
   const calculate = () => {
     try {
-      const expr = display.replace(/π/g, Math.PI.toString());
+      let expr = display.replace(/π/g, Math.PI.toString());
+      expr = expr.replace(/×/g, '*');
+      expr = expr.replace(/÷/g, '/');
       const result = eval(expr);
       setDisplay(result.toFixed(2));
     } catch {
@@ -1263,7 +1265,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                               key={i}
                               onClick={() => handleOperationSelect(op)}
                               className="ug-answer ug-answer--pill"
-                              style={{ fontSize: '22px', padding: '16px 28px' }}
+                              style={{ fontSize: '28px', padding: '16px 28px' }}
                             >
                               {op}
                             </button>
@@ -1322,7 +1324,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                               key={i}
                               onClick={() => handleValueSelect(val)}
                               className="ug-answer ug-answer--pill"
-                              style={{ fontSize: '22px', padding: '16px 28px' }}
+                              style={{ fontSize: '28px', padding: '16px 28px' }}
                             >
                               {val % 1 === 0 ? val : val.toFixed(1)}
                             </button>
