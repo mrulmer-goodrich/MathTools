@@ -92,8 +92,8 @@ const Calculator = ({ show, onClose }) => {
   );
 };
 
-// Stage Unlock with coin animations
-const StageUnlockOverlay = ({ show, nextStage }) => {
+// Stage Unlock with coin animations - NOW WITH BONUS AMOUNT
+const StageUnlockOverlay = ({ show, nextStage, coinsEarned }) => {
   if (!show) return null;
   return (
     <div style={{
@@ -110,6 +110,15 @@ const StageUnlockOverlay = ({ show, nextStage }) => {
         marginBottom: '20px'
       }}>
         🎉 STAGE {nextStage} UNLOCKED! 🎉
+      </div>
+      <div style={{ 
+        fontSize: '48px', 
+        color: '#f59e0b', 
+        fontWeight: '900',
+        textShadow: '0 4px 16px rgba(245, 158, 11, 0.5)',
+        marginBottom: '20px'
+      }}>
+        +{coinsEarned} COINS! 💰
       </div>
       <div style={{ fontSize: '40px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {Array.from({ length: 20 }).map((_, i) => (
@@ -283,6 +292,7 @@ const generateProblem = (stage) => {
   return { r, d, C, A, radiusAngle, diameterAngle, colors, stage };
 };
 
+// EXPANDED SHAPE BANK - MORE VARIETY AND WILDNESS!
 const SHAPE_BANK = [
   { type: 'circle', label: 'Circle', emoji: '⭕' },
   { type: 'square', label: 'Square', emoji: '⬜' },
@@ -294,6 +304,132 @@ const SHAPE_BANK = [
   { type: 'heart', label: 'Heart', emoji: '❤️' },
   { type: 'oval', label: 'Oval', emoji: '🥚' },
   { type: 'diamond', label: 'Diamond', emoji: '💎' },
+  { type: 'octagon', label: 'Octagon', emoji: '🛑' },
+  { type: 'crescent', label: 'Crescent', emoji: '🌙' },
+  { type: 'cloud', label: 'Cloud', emoji: '☁️' },
+  { type: 'flower', label: 'Flower', emoji: '🌸' },
+  { type: 'snowflake', label: 'Snowflake', emoji: '❄️' },
+  { type: 'sun', label: 'Sun', emoji: '☀️' },
+  { type: 'lightning', label: 'Lightning', emoji: '⚡' },
+  { type: 'leaf', label: 'Leaf', emoji: '🍃' },
+  { type: 'butterfly', label: 'Butterfly', emoji: '🦋' },
+  { type: 'balloon', label: 'Balloon', emoji: '🎈' },
+  { type: 'donut', label: 'Donut', emoji: '🍩' },
+  { type: 'pizza', label: 'Pizza', emoji: '🍕' },
+  { type: 'cookie', label: 'Cookie', emoji: '🍪' },
+  { type: 'watermelon', label: 'Watermelon', emoji: '🍉' },
+  { type: 'apple', label: 'Apple', emoji: '🍎' },
+  { type: 'strawberry', label: 'Strawberry', emoji: '🍓' },
+  { type: 'cherry', label: 'Cherry', emoji: '🍒' },
+  { type: 'avocado', label: 'Avocado', emoji: '🥑' },
+  { type: 'eggplant', label: 'Eggplant', emoji: '🍆' },
+  { type: 'carrot', label: 'Carrot', emoji: '🥕' },
+  { type: 'corn', label: 'Corn', emoji: '🌽' },
+  { type: 'broccoli', label: 'Broccoli', emoji: '🥦' },
+  { type: 'mushroom', label: 'Mushroom', emoji: '🍄' },
+  { type: 'peanut', label: 'Peanut', emoji: '🥜' },
+  { type: 'bread', label: 'Bread', emoji: '🍞' },
+  { type: 'pretzel', label: 'Pretzel', emoji: '🥨' },
+  { type: 'croissant', label: 'Croissant', emoji: '🥐' },
+  { type: 'hotdog', label: 'Hot Dog', emoji: '🌭' },
+  { type: 'taco', label: 'Taco', emoji: '🌮' },
+  { type: 'burrito', label: 'Burrito', emoji: '🌯' },
+  { type: 'sushi', label: 'Sushi', emoji: '🍣' },
+  { type: 'icecream', label: 'Ice Cream', emoji: '🍦' },
+  { type: 'cake', label: 'Cake', emoji: '🍰' },
+  { type: 'cupcake', label: 'Cupcake', emoji: '🧁' },
+  { type: 'lollipop', label: 'Lollipop', emoji: '🍭' },
+  { type: 'candy', label: 'Candy', emoji: '🍬' },
+  { type: 'soccer', label: 'Soccer Ball', emoji: '⚽' },
+  { type: 'basketball', label: 'Basketball', emoji: '🏀' },
+  { type: 'football', label: 'Football', emoji: '🏈' },
+  { type: 'baseball', label: 'Baseball', emoji: '⚾' },
+  { type: 'tennis', label: 'Tennis Ball', emoji: '🎾' },
+  { type: 'volleyball', label: 'Volleyball', emoji: '🏐' },
+  { type: 'bowling', label: 'Bowling Ball', emoji: '🎳' },
+  { type: 'guitar', label: 'Guitar', emoji: '🎸' },
+  { type: 'microphone', label: 'Microphone', emoji: '🎤' },
+  { type: 'headphones', label: 'Headphones', emoji: '🎧' },
+  { type: 'bell', label: 'Bell', emoji: '🔔' },
+  { type: 'drum', label: 'Drum', emoji: '🥁' },
+  { type: 'saxophone', label: 'Saxophone', emoji: '🎷' },
+  { type: 'trumpet', label: 'Trumpet', emoji: '🎺' },
+  { type: 'violin', label: 'Violin', emoji: '🎻' },
+  { type: 'rocket', label: 'Rocket', emoji: '🚀' },
+  { type: 'airplane', label: 'Airplane', emoji: '✈️' },
+  { type: 'helicopter', label: 'Helicopter', emoji: '🚁' },
+  { type: 'boat', label: 'Boat', emoji: '⛵' },
+  { type: 'car', label: 'Car', emoji: '🚗' },
+  { type: 'bus', label: 'Bus', emoji: '🚌' },
+  { type: 'train', label: 'Train', emoji: '🚂' },
+  { type: 'bicycle', label: 'Bicycle', emoji: '🚲' },
+  { type: 'scooter', label: 'Scooter', emoji: '🛴' },
+  { type: 'skateboard', label: 'Skateboard', emoji: '🛹' },
+  { type: 'house', label: 'House', emoji: '🏠' },
+  { type: 'castle', label: 'Castle', emoji: '🏰' },
+  { type: 'tent', label: 'Tent', emoji: '⛺' },
+  { type: 'umbrella', label: 'Umbrella', emoji: '☂️' },
+  { type: 'key', label: 'Key', emoji: '🔑' },
+  { type: 'lock', label: 'Lock', emoji: '🔒' },
+  { type: 'gift', label: 'Gift', emoji: '🎁' },
+  { type: 'trophy', label: 'Trophy', emoji: '🏆' },
+  { type: 'medal', label: 'Medal', emoji: '🏅' },
+  { type: 'crown', label: 'Crown', emoji: '👑' },
+  { type: 'glasses', label: 'Glasses', emoji: '👓' },
+  { type: 'watch', label: 'Watch', emoji: '⌚' },
+  { type: 'ring', label: 'Ring', emoji: '💍' },
+  { type: 'gem', label: 'Gem', emoji: '💎' },
+  { type: 'hourglass', label: 'Hourglass', emoji: '⏳' },
+  { type: 'clock', label: 'Clock', emoji: '🕐' },
+  { type: 'magnet', label: 'Magnet', emoji: '🧲' },
+  { type: 'flashlight', label: 'Flashlight', emoji: '🔦' },
+  { type: 'lightbulb', label: 'Light Bulb', emoji: '💡' },
+  { type: 'candle', label: 'Candle', emoji: '🕯️' },
+  { type: 'fire', label: 'Fire', emoji: '🔥' },
+  { type: 'bomb', label: 'Bomb', emoji: '💣' },
+  { type: 'pill', label: 'Pill', emoji: '💊' },
+  { type: 'syringe', label: 'Syringe', emoji: '💉' },
+  { type: 'thermometer', label: 'Thermometer', emoji: '🌡️' },
+  { type: 'microscope', label: 'Microscope', emoji: '🔬' },
+  { type: 'telescope', label: 'Telescope', emoji: '🔭' },
+  { type: 'satellite', label: 'Satellite', emoji: '🛰️' },
+  { type: 'anchor', label: 'Anchor', emoji: '⚓' },
+  { type: 'shield', label: 'Shield', emoji: '🛡️' },
+  { type: 'sword', label: 'Sword', emoji: '⚔️' },
+  { type: 'bow', label: 'Bow and Arrow', emoji: '🏹' },
+  { type: 'hammer', label: 'Hammer', emoji: '🔨' },
+  { type: 'wrench', label: 'Wrench', emoji: '🔧' },
+  { type: 'gear', label: 'Gear', emoji: '⚙️' },
+  { type: 'nut', label: 'Nut and Bolt', emoji: '🔩' },
+  { type: 'chain', label: 'Chain', emoji: '⛓️' },
+  { type: 'axe', label: 'Axe', emoji: '🪓' },
+  { type: 'pick', label: 'Pick', emoji: '⛏️' },
+  { type: 'shovel', label: 'Shovel', emoji: '🪑' },
+  { type: 'broom', label: 'Broom', emoji: '🧹' },
+  { type: 'basket', label: 'Basket', emoji: '🧺' },
+  { type: 'thread', label: 'Thread', emoji: '🧵' },
+  { type: 'yarn', label: 'Yarn', emoji: '🧶' },
+  { type: 'scissors', label: 'Scissors', emoji: '✂️' },
+  { type: 'paperclip', label: 'Paperclip', emoji: '📎' },
+  { type: 'pushpin', label: 'Pushpin', emoji: '📌' },
+  { type: 'bookmark', label: 'Bookmark', emoji: '🔖' },
+  { type: 'label', label: 'Label', emoji: '🏷️' },
+];
+
+// More circle variety - different fills and styles
+const CIRCLE_VARIANTS = [
+  { type: 'circle', label: 'Circle', emoji: '⭕' },      // Original hollow
+  { type: 'circle', label: 'Circle', emoji: '🔴' },      // Red solid
+  { type: 'circle', label: 'Circle', emoji: '🟠' },      // Orange solid
+  { type: 'circle', label: 'Circle', emoji: '🟡' },      // Yellow solid
+  { type: 'circle', label: 'Circle', emoji: '🟢' },      // Green solid
+  { type: 'circle', label: 'Circle', emoji: '🔵' },      // Blue solid
+  { type: 'circle', label: 'Circle', emoji: '🟣' },      // Purple solid
+  { type: 'circle', label: 'Circle', emoji: '🟤' },      // Brown solid
+  { type: 'circle', label: 'Circle', emoji: '⚫' },      // Black solid
+  { type: 'circle', label: 'Circle', emoji: '⚪' },      // White solid
+  { type: 'circle', label: 'Circle', emoji: '🔘' },      // Radio button
+  { type: 'circle', label: 'Circle', emoji: '🎯' },      // Target/bullseye
 ];
 
 // Circle visualization
@@ -512,6 +648,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   const [showCalculator, setShowCalculator] = useState(false);
   const [showStageUnlock, setShowStageUnlock] = useState(false);
   const [skippedToAdvanced, setSkippedToAdvanced] = useState(false);
+  const [problemCompletedInStage, setProblemCompletedInStage] = useState(false);
   
   const [shapes, setShapes] = useState([]);
   const [termToPlace, setTermToPlace] = useState(null);
@@ -600,10 +737,13 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setSelectedOperation(null);
     setShowMoveOnChoice(false);
     setProblemWasCorrect(true);
+    setProblemCompletedInStage(false);
     
     if (stage === 1) {
-      const otherShapes = shuffle(SHAPE_BANK.filter(s => s.type !== 'circle')).slice(0, 3);
-      const allShapes = shuffle([SHAPE_BANK[0], ...otherShapes]);
+      // Shuffle EVERYTHING including which circle variant to use
+      const circleVariant = CIRCLE_VARIANTS[Math.floor(Math.random() * CIRCLE_VARIANTS.length)];
+      const otherShapes = shuffle(SHAPE_BANK.filter(s => s.type !== 'circle')).slice(0, 5);
+      const allShapes = shuffle([circleVariant, ...otherShapes]);
       setShapes(allShapes);
     }
     
@@ -635,12 +775,17 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   }, [stage]);
 
   const handleCorrectAnswer = () => {
-    // Points logic
-    let pointsEarned;
-    if (stage === 10 && skippedToAdvanced) {
-      pointsEarned = 20;
-    } else {
-      pointsEarned = stage;
+    // Mark that a problem was completed in this stage
+    setProblemCompletedInStage(true);
+    
+    // Points logic - NO COINS FOR STAGE 1
+    let pointsEarned = 0;
+    if (stage !== 1) {
+      if (stage === 10 && skippedToAdvanced) {
+        pointsEarned = 20;
+      } else {
+        pointsEarned = stage;
+      }
     }
     
     setTotalPoints(prev => prev + pointsEarned);
@@ -662,7 +807,8 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
         const newStreak = correctStreak + 1;
         setCorrectStreak(newStreak);
         
-        if (newStreak >= 2 && stage < 10) {
+        // CHANGED: Now requires 3 correct in a row
+        if (newStreak >= 3 && stage < 10) {
           setShowMoveOnChoice(true);
         } else {
           resetAll();
@@ -675,6 +821,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
   };
 
   const handleShapeSelect = (shape) => {
+    // CRITICAL FIX: Only allow clicks if problem hasn't been completed yet
+    if (problemCompletedInStage) {
+      return;
+    }
+    
     if (shape.type === 'circle') {
       handleCorrectAnswer();
     } else {
@@ -805,6 +956,15 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     setShowMoveOnChoice(false);
     
     if (moveOn && stage < 10) {
+      // Calculate bonus coins based on stage
+      let bonusCoins = 50;
+      if (stage === 9) {
+        bonusCoins = 100; // SPECIAL BONUS FOR COMPLETING STAGE 9!
+      }
+      
+      // Add bonus coins
+      setTotalPoints(prev => prev + bonusCoins);
+      
       setShowStageUnlock(true);
       setTimeout(() => {
         setShowStageUnlock(false);
@@ -835,35 +995,84 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
 
   const currentQuestion = questionQueue.find(q => q.target === currentTarget);
 
-  // Entry screen
+  // Entry screen - REDESIGNED BUTTONS
   if (stage === null) {
     return (
       <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ background: 'white', borderRadius: '12px', padding: '48px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxWidth: '500px', textAlign: 'center' }}>
+        <div style={{ background: 'white', borderRadius: '12px', padding: '48px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxWidth: '600px', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>⭕</div>
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>
             Circles
           </h1>
-          <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '32px' }}>
+          <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '48px' }}>
             One Shape, Two Formulas, Three Words
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <BigButton 
-              onClick={() => setStage(1)}
-              className="ug-button"
-              style={{ fontSize: '18px', padding: '16px 32px' }}
-            >
-              Begin Practice
-            </BigButton>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* BEGIN PRACTICE BUTTON - LARGE, FRIENDLY, OBVIOUS */}
+            <div>
+              <BigButton 
+                onClick={() => setStage(1)}
+                className="ug-button"
+                style={{ 
+                  fontSize: '24px', 
+                  padding: '24px 48px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  borderColor: '#059669',
+                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)',
+                  fontWeight: 'bold',
+                  width: '100%'
+                }}
+              >
+                🎯 Start Here: Begin Practice
+              </BigButton>
+              <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px', fontStyle: 'italic' }}>
+                Recommended for all users
+              </p>
+            </div>
             
-            <BigButton 
-              onClick={() => { setStage(10); setSkippedToAdvanced(true); }}
-              className="ug-button"
-              style={{ fontSize: '18px', padding: '16px 32px', background: '#f59e0b', borderColor: '#f59e0b' }}
-            >
-              Advanced Mode
-            </BigButton>
+            {/* DIVIDER */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '16px',
+              margin: '8px 0'
+            }}>
+              <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+              <span style={{ color: '#9ca3af', fontSize: '14px', fontWeight: '500' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+            </div>
+            
+            {/* ADVANCED MODE BUTTON - SMALLER, WITH WARNING */}
+            <div>
+              <BigButton 
+                onClick={() => { setStage(10); setSkippedToAdvanced(true); }}
+                className="ug-button"
+                style={{ 
+                  fontSize: '18px', 
+                  padding: '16px 32px',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  borderColor: '#dc2626',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  fontWeight: 'bold',
+                  width: '100%'
+                }}
+              >
+                ⚠️ Advanced Mode Only
+              </BigButton>
+              <p style={{ 
+                fontSize: '13px', 
+                color: '#ef4444', 
+                marginTop: '8px', 
+                fontWeight: '600',
+                backgroundColor: '#fee2e2',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #fecaca'
+              }}>
+                ⚡ Expert users only! Skips all practice.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -874,7 +1083,11 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
     <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #dbeafe, #e0e7ff)', padding: '16px' }}>
       <ErrorOverlay show={showError} />
       <SuccessOverlay show={showSuccess} />
-      <StageUnlockOverlay show={showStageUnlock} nextStage={stage + 1} />
+      <StageUnlockOverlay 
+        show={showStageUnlock} 
+        nextStage={stage + 1} 
+        coinsEarned={stage === 9 ? 100 : 50}
+      />
       <Calculator show={showCalculator} onClose={() => setShowCalculator(false)} />
       {showConfetti && <FlyingCoins show={true} />}
       
@@ -942,25 +1155,27 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
           {/* LEFT: Visual */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
             {stage === 1 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', padding: '20px 40px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', padding: '20px' }}>
                 {shapes.map((shape, i) => (
                   <button
                     key={i}
                     onClick={() => handleShapeSelect(shape)}
+                    disabled={problemCompletedInStage}
                     style={{
                       fontSize: '60px', 
                       padding: '20px', 
                       border: '3px solid #e5e7eb',
                       borderRadius: '12px', 
-                      background: 'white', 
-                      cursor: 'pointer',
+                      background: problemCompletedInStage ? '#f3f4f6' : 'white',
+                      cursor: problemCompletedInStage ? 'not-allowed' : 'pointer',
                       transition: 'transform 0.2s',
                       aspectRatio: '1',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      opacity: problemCompletedInStage ? 0.5 : 1
                     }}
-                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseEnter={(e) => !problemCompletedInStage && (e.target.style.transform = 'scale(1.05)')}
                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   >
                     {shape.emoji}
@@ -987,7 +1202,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: '64px', marginBottom: '24px' }}>🎉</div>
                 <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '32px', color: '#1f2937' }}>
-                  Great job!
+                  Great job! 3 in a row!
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
@@ -1003,7 +1218,7 @@ export default function CirclesModule({ onProblemComplete, registerReset, update
                       className="ug-answer ug-answer--pill"
                       style={{ fontSize: '20px', padding: '14px 28px' }}
                     >
-                      Move on →
+                      Move on → {stage === 9 ? '(+100 coins!)' : '(+50 coins!)'}
                     </button>
                   )}
                 </div>
