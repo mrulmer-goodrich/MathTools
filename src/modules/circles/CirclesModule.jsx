@@ -21,6 +21,9 @@ const shuffle = (arr) => {
 const Calculator = ({ show, onClose }) => {
   if (!show) return null;
   const [display, setDisplay] = useState('');
+  const [position, setPosition] = useState({ x: window.innerWidth / 2 - 150, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   
   const calculate = () => {
     try {
@@ -34,15 +37,66 @@ const Calculator = ({ show, onClose }) => {
     }
   };
   
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+  
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y
+      });
+    }
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  React.useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+  
   return (
     <div style={{
-      position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-      background: 'white', borderRadius: '16px', padding: '20px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.2)', zIndex: 10001
+      position: 'fixed', 
+      left: `${position.x}px`, 
+      top: `${position.y}px`,
+      background: 'white', 
+      borderRadius: '16px', 
+      padding: '20px',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2)', 
+      zIndex: 10001,
+      userSelect: 'none'
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0 }}>Calculator</h3>
-        <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+      <div 
+        onMouseDown={handleMouseDown}
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          marginBottom: '16px',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          padding: '8px',
+          margin: '-8px -8px 8px -8px',
+          borderRadius: '12px 12px 0 0',
+          background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%)',
+          borderBottom: '2px solid #3b82f6'
+        }}
+      >
+        <h3 style={{ margin: 0, color: '#1e40af', fontSize: '18px', fontWeight: 'bold' }}>🔢 Calculator (drag me!)</h3>
+        <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: '#ef4444' }}>×</button>
       </div>
       <input 
         type="text" 
