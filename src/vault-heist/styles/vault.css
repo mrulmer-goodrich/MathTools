@@ -388,6 +388,17 @@ body.alarm-flash {
   flex-direction: column;
 }
 
+.question-prompt {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f39c12;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
 .problem-number {
   text-align: center;
   font-size: 16px;
@@ -407,8 +418,7 @@ body.alarm-flash {
 }
 
 .image-column {
-  flex: 1;
-  max-width: 400px;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,7 +435,7 @@ body.alarm-flash {
 }
 
 .problem-image {
-  max-width: 100%;
+  max-width: 90%;
   max-height: 250px;
   height: auto;
   width: auto;
