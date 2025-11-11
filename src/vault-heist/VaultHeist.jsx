@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { problemSets } from '.vault-heist/problems';
+import { problemSets } from './problems';
 import VaultGrid from '.vault-heist/components/VaultGrid';
 import CodeDisplay from '.vault-heist/components/CodeDisplay';
 import ProblemDisplay from '.vault-heist/components/ProblemDisplay';
