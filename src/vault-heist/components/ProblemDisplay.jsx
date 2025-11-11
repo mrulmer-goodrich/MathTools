@@ -103,7 +103,6 @@ const ProblemDisplay = ({
       
       <div className="image-comparison">
         <div className="image-column">
-          <div className="image-label">Original</div>
           <img 
             src={problem.originalImage} 
             alt="Original shape"
@@ -112,7 +111,6 @@ const ProblemDisplay = ({
         </div>
         
         <div className="image-column">
-          <div className="image-label">Copy</div>
           <img 
             src={problem.copyImage} 
             alt="Copy shape"
