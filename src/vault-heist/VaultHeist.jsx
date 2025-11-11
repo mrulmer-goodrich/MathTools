@@ -220,6 +220,7 @@ const VaultHeist = () => {
         <CodeDisplay 
           totalDigits={totalProblems}
           lockedDigits={lockedDigits}
+          codeSequence={currentSetData.codeSequence}
         />
 
         {/* Progress bar */}
