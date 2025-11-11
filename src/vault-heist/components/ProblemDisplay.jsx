@@ -19,11 +19,9 @@ const ProblemDisplay = ({
   if (setType === 'multiple-choice') {
     return (
       <div className="problem-container">
-        <div className="problem-number">Question {problemNumber}/10</div>
         
         <div className="image-comparison">
           <div className="image-column">
-            <div className="image-label">Original</div>
             <img 
               src={problem.originalImage} 
               alt="Original shape"
@@ -32,7 +30,6 @@ const ProblemDisplay = ({
           </div>
           
           <div className="image-column">
-            <div className="image-label">Copy</div>
             <img 
               src={problem.copyImage} 
               alt="Copy shape"
@@ -69,7 +66,6 @@ const ProblemDisplay = ({
   if (setType === 'conceptual') {
     return (
       <div className="problem-container">
-        <div className="problem-number">Question {problemNumber}/10</div>
         
         <div className="conceptual-question">
           <p className="question-text">{problem.question}</p>
@@ -104,7 +100,6 @@ const ProblemDisplay = ({
   // text-input type (sets 2-5)
   return (
     <div className="problem-container">
-      <div className="problem-number">Question {problemNumber}/10</div>
       
       <div className="image-comparison">
         <div className="image-column">
