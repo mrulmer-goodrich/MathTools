@@ -206,7 +206,8 @@ const VaultHeist = () => {
   }
 
   return (
-    <div className="vault-heist-container">
+    <div className="vault-heist-game">
+      <div className="vault-heist-container">
       {/* Sidebar with vault progress */}
       <VaultGrid 
         currentSet={currentSet}
@@ -274,6 +275,7 @@ const VaultHeist = () => {
       >
         {soundEnabled ? '🔊' : '🔇'}
       </button>
+    </div>
     </div>
   );
 };
