@@ -224,9 +224,6 @@ const VaultHeist = () => {
               style={{ width: `${(lockedDigits.length / totalProblems) * 100}%` }}
             />
           </div>
-          <div className="progress-text">
-            {lockedDigits.length}/{totalProblems} digits cracked
-          </div>
         </div>
 
         {/* Alarm indicators */}
