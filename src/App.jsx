@@ -9,7 +9,7 @@ import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
-import VaultHeistModule from './modules/vault-heist/VaultHeist.jsx'
+import VaultHeistModule from './vault-heist/VaultHeist.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
