@@ -3,7 +3,8 @@ import React from 'react';
 const ProblemDisplay = ({ 
   problem, 
   problemNumber, 
-  setType, 
+  setType,
+  questionPrompt,
   userAnswer, 
   onAnswerChange, 
   onSubmit 
@@ -19,6 +20,8 @@ const ProblemDisplay = ({
   if (setType === 'multiple-choice') {
     return (
       <div className="problem-container">
+        
+        {questionPrompt && <div className="question-prompt">{questionPrompt}</div>}
         
         <div className="image-comparison">
           <div className="image-column">
@@ -67,6 +70,8 @@ const ProblemDisplay = ({
     return (
       <div className="problem-container">
         
+        {questionPrompt && <div className="question-prompt">{questionPrompt}</div>}
+        
         <div className="conceptual-question">
           <p className="question-text">{problem.question}</p>
         </div>
@@ -100,6 +105,8 @@ const ProblemDisplay = ({
   // text-input type (sets 2-5)
   return (
     <div className="problem-container">
+      
+      {questionPrompt && <div className="question-prompt">{questionPrompt}</div>}
       
       <div className="image-comparison">
         <div className="image-column">
