@@ -9,6 +9,7 @@ import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
+import VaultHeistModule from './modules/vault-heist/VaultHeist.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
   const mixedResetRef = useRef(null)
   const multiplyResetRef = useRef(null)
   const circlesResetRef = useRef(null)
+  const vaultHeistResetRef = useRef(null)
 
   // Update stats when a problem is completed
   const updateStats = (problemErrors, wasCorrect) => {
@@ -119,6 +121,9 @@ export default function App() {
         case 'circles':
   circlesResetRef.current = resetFn
   break
+        case 'vault-heist':
+  vaultHeistResetRef.current = resetFn
+  break
     }
   }
 
@@ -160,6 +165,9 @@ export default function App() {
         break
         case 'circles':
   circlesResetRef.current?.()
+  break
+        case 'vault-heist':
+  vaultHeistResetRef.current?.()
   break
     }
   }
@@ -215,6 +223,9 @@ export default function App() {
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('circles')}>
   Circles
+</BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('vault-heist')}>
+  Vault Heist
 </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
               Multiplication
@@ -309,6 +320,13 @@ export default function App() {
           <CirclesModule 
     onProblemComplete={handleProblemComplete}
     registerReset={(fn) => registerReset('circles', fn)}
+    updateStats={updateStats}
+  />
+)}
+            {route === 'vault-heist' && (
+  <VaultHeistModule 
+    onProblemComplete={handleProblemComplete}
+    registerReset={(fn) => registerReset('vault-heist', fn)}
     updateStats={updateStats}
   />
 )}
