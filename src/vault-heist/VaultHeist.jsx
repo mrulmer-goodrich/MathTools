@@ -238,6 +238,7 @@ const VaultHeist = () => {
           problem={currentProblemData}
           problemNumber={currentProblem}
           setType={currentSetData.type}
+          questionPrompt={currentSetData.questionPrompt}
           userAnswer={userAnswer}
           onAnswerChange={setUserAnswer}
           onSubmit={checkAnswer}
