@@ -8,6 +8,7 @@ export const problemSets = {
     title: "Visual Scale Factor",
     description: "Circle the correct scale factor. Original is on the LEFT.",
     type: "multiple-choice",
+    codeSequence: ['1', 'h', '3', '@', 'r', 't', 'm', '@', 't', 'h'],
     problems: [
       {
         id: 1,
