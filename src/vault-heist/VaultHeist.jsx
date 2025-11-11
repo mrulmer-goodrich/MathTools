@@ -8,7 +8,7 @@ import StatsScreen from './components/StatsScreen';
 import './styles/vault.css';
 
 const VaultHeist = () => {
-  // Game state
+  const [gameState, setGameState] = useState('playing'); // 'playing', 'lockdown', 'complete'
   const [currentSet, setCurrentSet] = useState(1);
   const [currentProblem, setCurrentProblem] = useState(1);
   const [userAnswer, setUserAnswer] = useState('');
@@ -99,11 +99,12 @@ const VaultHeist = () => {
       setTimeout(() => document.body.classList.remove('alarm-flash'), 300);
       
       if (newAlarmCount >= 3) {
-        // Security lockdown - reset set
+        // Security lockdown - dramatic full screen takeover
+        setGameState('lockdown');
         setTimeout(() => {
-          alert('SECURITY LOCKDOWN - Vault sealed. Starting over...');
           resetSet();
-        }, 500);
+          setGameState('playing');
+        }, 4000);
       } else {
         // Just unlock last digit and retry
         const newLocked = lockedDigits.filter(d => d !== currentProblem);
@@ -191,6 +192,19 @@ const VaultHeist = () => {
     );
   }
 
+  if (gameState === 'lockdown') {
+    return (
+      <div className="lockdown-screen">
+        <div className="lockdown-content">
+          <div className="lockdown-icon">🚨</div>
+          <div className="lockdown-title">SECURITY LOCKDOWN</div>
+          <div className="lockdown-message">VAULT SEALED</div>
+          <div className="lockdown-subtitle">RESTARTING VAULT {currentSet}...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="vault-heist-container">
       {/* Sidebar with vault progress */}
@@ -218,25 +232,6 @@ const VaultHeist = () => {
           </div>
         </div>
 
-        {/* Alarm indicators */}
-        <div className="alarm-section">
-          {[1, 2, 3].map(i => (
-            <span 
-              key={i} 
-              className={`alarm-indicator ${i <= alarmCount ? 'triggered' : ''}`}
-            >
-              {i <= alarmCount ? '⚠️' : '○'}
-            </span>
-          ))}
-          <span className="alarm-text">Security Alarms</span>
-        </div>
-
-        {/* Timer */}
-        <div className="timer-section">
-          <span className="timer-icon">⏱️</span>
-          <span className="timer-text">{formatTime(currentTime)}</span>
-        </div>
-
         {/* Problem display */}
         <ProblemDisplay 
           problem={currentProblemData}
@@ -246,6 +241,26 @@ const VaultHeist = () => {
           onAnswerChange={setUserAnswer}
           onSubmit={checkAnswer}
         />
+
+        {/* Bottom info bar with timer and alarms */}
+        <div className="bottom-info-bar">
+          <div className="timer-section">
+            <span className="timer-icon">⏱️</span>
+            <span className="timer-text">{formatTime(currentTime)}</span>
+          </div>
+
+          <div className="alarm-section">
+            {[1, 2, 3].map(i => (
+              <span 
+                key={i} 
+                className={`alarm-indicator ${i <= alarmCount ? 'triggered' : ''}`}
+              >
+                {i <= alarmCount ? '🚨' : '○'}
+              </span>
+            ))}
+            <span className="alarm-text">Alarms</span>
+          </div>
+        </div>
       </div>
       </div>
 
