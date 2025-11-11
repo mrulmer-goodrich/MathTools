@@ -130,7 +130,7 @@ const VaultHeist = () => {
     setVaultsCompleted([...vaultsCompleted, currentSet]);
     setShowVaultAnimation(true);
     
-    // After animation, move to next set or show completion
+    // After animation (10 seconds), move to next set or show completion
     setTimeout(() => {
       setShowVaultAnimation(false);
       
@@ -144,7 +144,7 @@ const VaultHeist = () => {
       } else {
         setGameComplete(true);
       }
-    }, 3000);
+    }, 10000);
   };
 
   const resetSet = () => {
@@ -193,23 +193,15 @@ const VaultHeist = () => {
 
   return (
     <div className="vault-heist-container">
-      {/* Header with vault progress */}
-      <div className="game-header">
-        <h1 className="game-title">VAULT HEIST</h1>
-        <VaultGrid 
-          currentSet={currentSet}
-          vaultsCompleted={vaultsCompleted}
-        />
-      </div>
+      {/* Sidebar with vault progress */}
+      <VaultGrid 
+        currentSet={currentSet}
+        vaultsCompleted={vaultsCompleted}
+      />
 
       {/* Main game area */}
-      <div className="game-content">
-        {/* Set title and description */}
-        <div className="set-header">
-          <h2 className="set-title">VAULT {currentSet}: {currentSetData.title}</h2>
-          <p className="set-description">{currentSetData.description}</p>
-        </div>
-
+      <div className="main-game-area">
+        <div className="game-content">
         {/* Code display - 10 spinning/locked digits */}
         <CodeDisplay 
           totalDigits={totalProblems}
@@ -254,6 +246,7 @@ const VaultHeist = () => {
           onAnswerChange={setUserAnswer}
           onSubmit={checkAnswer}
         />
+      </div>
       </div>
 
       {/* Sound toggle */}
