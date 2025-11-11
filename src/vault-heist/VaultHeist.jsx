@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { problemSets } from './problems';
-import VaultGrid from '.vault-heist/components/VaultGrid';
-import CodeDisplay from '.vault-heist/components/CodeDisplay';
-import ProblemDisplay from '.vault-heist/components/ProblemDisplay';
-import VaultAnimation from '.vault-heist/components/VaultAnimation';
-import StatsScreen from '.vault-heist/components/StatsScreen';
-import '.vault-heist/styles/vault.css';
+import VaultGrid from './components/VaultGrid';
+import CodeDisplay from './components/CodeDisplay';
+import ProblemDisplay from './components/ProblemDisplay';
+import VaultAnimation from './components/VaultAnimation';
+import StatsScreen from './components/StatsScreen';
+import './styles/vault.css';
 
 const VaultHeist = () => {
   const [gameState, setGameState] = useState('playing'); // 'playing', 'lockdown', 'complete'
