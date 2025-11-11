@@ -8,6 +8,7 @@ export const problemSets = {
     title: "Visual Scale Factor",
     description: "Circle the correct scale factor. Original is on the LEFT.",
     type: "multiple-choice",
+    questionPrompt: "Scale Factor?",
     codeSequence: ['1', 'h', '3', '@', 'r', 't', 'm', '@', 't', 'h'],
     problems: [
       {
@@ -88,6 +89,7 @@ export const problemSets = {
     title: "Calculate Scale Factor",
     description: "Calculate the scale factor. SF = copy ÷ original",
     type: "text-input",
+    questionPrompt: "Scale Factor?",
     problems: [
       {
         id: 1,
@@ -167,6 +169,7 @@ export const problemSets = {
     title: "Find Missing Side Length",
     description: "Find the missing measurement on the copy.",
     type: "text-input",
+    questionPrompt: "Missing Side Length?",
     problems: [
       {
         id: 1,
@@ -256,6 +259,7 @@ export const problemSets = {
     title: "Find Missing Area (Regular)",
     description: "Find the area of the copy. Use the scale factor!",
     type: "text-input",
+    questionPrompt: "Area of Copy?",
     problems: [
       {
         id: 1,
@@ -345,6 +349,7 @@ export const problemSets = {
     title: "Find Missing Area (Irregular)",
     description: "Find the area of the copy. Use the scale factor!",
     type: "text-input",
+    questionPrompt: "Area of Copy?",
     problems: [
       {
         id: 1,
@@ -434,6 +439,7 @@ export const problemSets = {
     title: "Conceptual Understanding",
     description: "Answer questions about what happens when shapes are scaled.",
     type: "conceptual",
+    questionPrompt: "",
     problems: [
       {
         id: 1,
