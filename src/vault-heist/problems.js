@@ -1,6 +1,5 @@
 // problems.js
 // This file contains all 60 problems across 6 sets
-// SETS 1-3 COMPLETE | SET 4 CORRECTED | SET 6 UPDATED
 
 export const problemSets = {
   set1: {
@@ -327,13 +326,14 @@ export const problemSets = {
       }
     ]
   },
-    set5: {
+
+  set5: {
     id: 5,
     title: "Find Area of Irregular Shapes",
     description: "Find the missing side, then calculate the total area of the copy.",
     type: "multiple-choice",
     questionPrompt: "What is the area of the copy?",
-    codeSequence: ['B', '3', 'l', 'i', '3', 'v', '3', '-', 'N', 'U'],
+    codeSequence: ['Y', 'a', 'Y', '4', 'u'],
     problems: [
       {
         id: 1,
@@ -373,11 +373,11 @@ export const problemSets = {
     ]
   },
 
-    set6: {
+  set6: {
     id: 6,
     title: "Conceptual Understanding",
     description: "Answer questions about what happens when shapes are scaled.",
-    type: "multiple-choice",
+    type: "conceptual",
     questionPrompt: "",
     codeSequence: ['U', 'G', 'l', '0', 'v', '3', 's', 'y', '0', 'u'],
     problems: [
@@ -442,4 +442,5 @@ export const problemSets = {
         correctAnswer: "45°"
       }
     ]
-  }};
+  }
+};
