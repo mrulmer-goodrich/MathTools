@@ -1194,3 +1194,42 @@
     font-size: 20px;
   }
 }
+
+
+/* ==== Minimal, non-breaking image visibility helpers (vault-heist) ==== */
+
+/* 1) Ensure any <img> used for vault art actually paints and sits above gradients */
+.vault-heist-game img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: auto;
+}
+
+/* 2) If your vault UI uses <img> layers inside the icon, guarantee they’re not clipped/hidden */
+.vault-heist-game .vault-door-icon img,
+.vault-heist-game .vault-door img,
+.vault-heist-game .vault-frame img,
+.vault-heist-game .vault-door-front img {
+  position: relative;
+  z-index: 2;            /* above decorative backgrounds */
+  pointer-events: none;  /* keep clicks on the container logic, not the img */
+}
+
+/* 3) Make sure nothing above is unintentionally covering your images */
+.vault-heist-game .vault-door-icon,
+.vault-heist-game .vault-frame,
+.vault-heist-game .vault-door-front,
+.vault-heist-game .vault-open,
+.vault-heist-game .open-door-left,
+.vault-heist-game .open-door-right {
+  position: relative;
+  overflow: visible;     /* was previously safe; allow image edges to show if slightly bigger */
+}
+
+/* 4) Problem images: force them to show even if a parent flex/grid shrinks weirdly */
+.vault-heist-game .problem-images,
+.vault-heist-game .problem-image {
+  min-width: 0;          /* fix flex overflow clipping */
+  min-height: 0;         /* allow natural shrink to container */
+}
