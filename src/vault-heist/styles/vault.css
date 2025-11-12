@@ -2063,3 +2063,236 @@
   border: 3px solid #00d4ff !important;
   box-shadow: 0 0 40px rgba(0, 212, 255, 0.6) !important;
 }
+
+/* In-Game Stats Button and Modal - Add to vault.css */
+
+/* Stats toggle button (top left) */
+.stats-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border: 3px solid #2c3e50;
+  border-radius: 50%;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+  z-index: 1000;
+}
+
+.stats-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.6);
+}
+
+/* In-game stats modal overlay */
+.in-game-stats-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  backdrop-filter: blur(5px);
+}
+
+/* In-game stats modal */
+.in-game-stats-modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid #00d4ff;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 50px rgba(0, 212, 255, 0.4);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Stats header */
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #00d4ff;
+}
+
+.stats-header h2 {
+  color: #00d4ff;
+  margin: 0;
+  font-size: 28px;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+  letter-spacing: 2px;
+}
+
+.close-button {
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px 12px;
+  width: 40px;
+  height: 40px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background: #e74c3c;
+  color: white;
+  transform: rotate(90deg);
+}
+
+/* Stats list */
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Individual stat item */
+.stat-item {
+  background: rgba(30, 39, 53, 0.6);
+  padding: 15px 20px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.stat-item.completed {
+  border-color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.stat-item.active {
+  border-color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  animation: statItemPulse 2s ease-in-out infinite;
+}
+
+.stat-item.locked {
+  opacity: 0.5;
+  border-color: #34495e;
+}
+
+@keyframes statItemPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+  }
+}
+
+/* Stat vault label */
+.stat-vault {
+  color: #ecf0f1;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+/* Stat info section */
+.stat-info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+}
+
+.stat-time {
+  color: #27ae60;
+  font-weight: 700;
+  font-size: 16px;
+  text-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+}
+
+.stat-alarm {
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.stat-current {
+  color: #00d4ff;
+  font-weight: 700;
+  font-size: 16px;
+  animation: textPulse 1.5s ease-in-out infinite;
+}
+
+.stat-locked {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+@keyframes textPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .stats-toggle {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    top: 15px;
+    left: 15px;
+  }
+  
+  .in-game-stats-modal {
+    padding: 20px;
+    width: 95%;
+  }
+  
+  .stats-header h2 {
+    font-size: 22px;
+  }
+  
+  .stat-item {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .stat-info {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
