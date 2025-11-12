@@ -7,7 +7,6 @@ import VaultAnimation from './components/VaultAnimation';
 import StatsScreen from './components/StatsScreen';
 import MissionBriefing from './components/MissionBriefing';
 import './styles/vault.css';
-import './styles/mission-briefing.css';
 import VaultCodeStorage from './components/VaultCodeStorage';
 
 
