@@ -1,1196 +1,276 @@
-/* vault.css - Cinematic Vault Heist Styling */
-/* All styles scoped under .vault-heist-game to prevent conflicts */
 
-.vault-heist-game * {
-  box-sizing: border-box;
-}
+/* vault-fixed.css (v1.1) â€” aligns with VaultGrid.jsx & VaultAnimation.jsx markup
+   Scope: everything under .vault-heist-game
+*/
+
+.vault-heist-game * { box-sizing: border-box; }
 
 .vault-heist-game {
-  font-family: 'Arial', 'Helvetica', sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
   color: #e0e0e0;
   min-height: 100vh;
-  transition: background-color 0.3s ease;
 }
 
-.vault-heist-game.alarm-flash {
-  background-color: #8b0000 !important;
-}
-
-.vault-heist-game .vault-heist-container {
-  display: flex;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 10px;
-  min-height: 100vh;
-  gap: 15px;
-}
-
-.vault-heist-game .game-header {
-  /* Vaults now in sidebar, no header needed */
-}
-
-.vault-heist-game .main-game-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.game-title {
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: 8px;
-  color: #00d4ff;
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-  margin-bottom: 30px;
-}
+/* ---------- Sidebar vault icons ---------- */
 
 .vault-heist-game .vault-sidebar {
-  width: 90px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  padding: 10px 5px !important;
-  flex-shrink: 0 !important;
-}
-
-.vault-heist-game .vault-simple {
-  width: 80px !important;
-  height: 80px !important;
-  background: linear-gradient(145deg, #2c3e50, #1a252f) !important;
-  border: 3px solid #34495e !important;
-  border-radius: 8px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  position: relative !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
-}
-
-.vault-heist-game .vault-simple.vault-locked {
-  opacity: 0.6 !important;
-}
-
-.vault-heist-game .vault-simple.vault-active {
-  border-color: #00d4ff !important;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6) !important;
-  animation: vaultPulse 1.5s infinite !important;
-}
-
-.vault-heist-game .vault-simple.vault-completed {
-  background: linear-gradient(145deg, #27ae60, #1e8449) !important;
-  border-color: #27ae60 !important;
-}
-
-.vault-heist-game .vault-number-simple {
-  position: absolute !important;
-  top: 5px !important;
-  right: 5px !important;
-  background: rgba(0, 0, 0, 0.6) !important;
-  color: #00d4ff !important;
-  width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  border: 2px solid #34495e !important;
-}
-
-.vault-heist-game .vault-icon-simple {
-  font-size: 36px !important;
-  line-height: 1 !important;
-}
-
-@keyframes vaultPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 6px;
+  flex-shrink: 0;
 }
 
 .vault-heist-game .vault-door-icon {
+  position: relative;
   width: 80px;
   height: 80px;
-  position: relative;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #2c3e50, #1a252f);
+  border: 3px solid #34495e;
+  box-shadow: 0 4px 12px rgba(0,0,0,.45);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
+.vault-heist-game .vault-door-icon.vault-locked { opacity: .65; }
+.vault-heist-game .vault-door-icon.vault-active {
+  outline: 2px solid #00d4ff;
+  box-shadow: 0 0 18px rgba(0,212,255,.35);
+}
+.vault-heist-game .vault-door-icon.vault-completed {
+  border-color: #27ae60;
+  background: linear-gradient(145deg, #27ae60, #1e8449);
+}
+
+/* Frame & front plate */
 .vault-heist-game .vault-frame {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(145deg, #2c3e50, #1a252f);
-  border: 4px solid #34495e;
-  border-radius: 8px;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #243340, #111a21);
+  border: 2px solid #2f4150;
+  display: grid;
+  place-items: center;
 }
 
 .vault-heist-game .vault-door-front {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3b4c5a, #1d2a34 55%);
+  border: 3px solid #4b5f6f;
+  display: grid;
+  place-items: center;
 }
 
+/* Number badge */
 .vault-heist-game .vault-number-badge {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  background: rgba(0, 0, 0, 0.6);
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font: 900 12px/22px ui-sans-serif, system-ui, -apple-system;
   color: #00d4ff;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  border: 2px solid #34495e;
+  background: rgba(0,0,0,.55);
+  text-align: center;
+  box-shadow: 0 0 8px rgba(0,212,255,.35);
 }
 
-.vault-heist-game .vault-lock {
-  width: 60%;
-  height: 60%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vault-heist-game .vault-lock.pulsing {
-  animation: vaultPulse 1.5s infinite;
-}
-
-@keyframes vaultPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
+/* Lock spinner */
+.vault-heist-game .vault-lock { position: absolute; inset: 0; display: grid; place-items: center; }
 .vault-heist-game .lock-circle {
-  width: 30px;
-  height: 30px;
-  border: 3px solid #7f8c8d;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
+  border: 2px solid #7f8c8d;
   position: relative;
-  background: #34495e;
 }
-
-.vault-heist-game .lock-circle.active {
-  border-color: #00d4ff;
-  background: #1a252f;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
-}
+.vault-heist-game .lock-circle.active { border-color: #00d4ff; }
 
 .vault-heist-game .lock-line {
   position: absolute;
+  width: 2px;
+  height: 10px;
   background: #7f8c8d;
   top: 50%;
   left: 50%;
-  transform-origin: center;
+  transform-origin: center -2px;
 }
+.vault-heist-game .lock-circle.active .lock-line { background: #00d4ff; }
 
-.vault-heist-game .lock-circle.active .lock-line {
-  background: #00d4ff;
+.vault-heist-game .lock-line-1 { transform: translate(-50%, -50%) rotate(45deg); }
+.vault-heist-game .lock-line-2 { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* pulsing halo for active vault */
+@keyframes pulseHalo {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,212,255,.45); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(0,212,255,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,212,255,0); }
 }
+.vault-heist-game .pulsing .lock-circle { animation: pulseHalo 1.2s ease-out infinite; }
 
-.vault-heist-game .lock-line-1 {
-  width: 2px;
-  height: 16px;
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-
-.vault-heist-game .lock-line-2 {
-  width: 16px;
-  height: 2px;
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-
+/* Completed (open) state */
 .vault-heist-game .vault-open {
-  width: 100%;
-  height: 100%;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
 }
 
-.vault-heist-game .open-door-left, .open-door-right {
-  position: absolute;
-  width: 45%;
-  height: 100%;
-  background: linear-gradient(145deg, #27ae60, #1e8449);
-  border: 2px solid #27ae60;
-  top: 0;
-}
-
-.vault-heist-game .open-door-left {
-  left: 0;
-  border-radius: 8px 0 0 8px;
-  transform-origin: left center;
-  animation: doorOpenLeft 0.8s ease-out forwards;
-}
-
+.vault-heist-game .open-door-left,
 .vault-heist-game .open-door-right {
-  right: 0;
-  border-radius: 0 8px 8px 0;
-  transform-origin: right center;
-  animation: doorOpenRight 0.8s ease-out forwards;
+  position: absolute;
+  top: 8px;
+  width: 30px;
+  height: 54px;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #2c3e50, #1a252f);
+  border: 2px solid #2f4150;
 }
-
-@keyframes doorOpenLeft {
-  from { transform: perspective(400px) rotateY(0deg); }
-  to { transform: perspective(400px) rotateY(-80deg); }
-}
-
-@keyframes doorOpenRight {
-  from { transform: perspective(400px) rotateY(0deg); }
-  to { transform: perspective(400px) rotateY(80deg); }
-}
+.vault-heist-game .open-door-left { left: 5px; transform: rotateY(35deg); transform-origin: right center; }
+.vault-heist-game .open-door-right { right: 5px; transform: rotateY(-35deg); transform-origin: left center; }
 
 .vault-heist-game .vault-interior {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #2f8f57, #1a5e37 60%);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 12px rgba(0,0,0,.5);
+}
+.vault-heist-game .cash-icon { font-size: 18px; }
+
+/* ---------- Vault celebration animation ---------- */
+
+.vault-heist-game .vault-animation-container {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.65), rgba(0,0,0,.85));
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.vault-heist-game .vault-door {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #3b4c5a, #1d2a34 55%);
+  border: 6px solid #4b5f6f;
+  display: grid;
+  place-items: center;
+  color: #e0e0e0;
+}
+
+.vault-heist-game .vault-door-number {
   position: absolute;
-  width: 70%;
-  height: 70%;
-  background: radial-gradient(circle, #f39c12 0%, #e67e22 100%);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: -1;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.vault-heist-game .cash-icon {
-  font-size: 24px;
-  animation: cashBounce 1s infinite;
-}
-
-@keyframes cashBounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-.vault-heist-game .vault-door-icon.vault-locked {
-  opacity: 0.6;
-}
-
-.vault-heist-game .vault-door-icon.vault-active .vault-frame {
-  border-color: #00d4ff;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
-}
-
-.vault-heist-game .vault-door-icon.vault-completed .vault-frame {
-  border-color: #27ae60;
-}
-
-.vault-heist-game .game-content {
-  background: rgba(30, 39, 53, 0.8);
-  border: 2px solid #34495e;
-  border-radius: 12px;
-  padding: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-}
-
-.set-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.set-title {
-  font-size: 28px;
-  font-weight: 700;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font: 900 16px/36px ui-sans-serif, system-ui, -apple-system;
   color: #00d4ff;
-  margin-bottom: 10px;
-  letter-spacing: 2px;
-}
-
-.set-description {
-  font-size: 16px;
-  color: #95a5a6;
-  font-style: italic;
-}
-
-.vault-heist-game .code-display {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 10px 0;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-}
-
-.vault-heist-game .code-digit {
-  width: 45px;
-  height: 50px;
-  background: #1a252f;
-  border: 2px solid #34495e;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  transition: all 0.3s ease;
-}
-
-.vault-heist-game .code-digit.spinning {
-  color: #7f8c8d;
-  animation: spin 0.1s infinite;
-}
-
-.vault-heist-game .code-digit.locked {
-  background: linear-gradient(145deg, #27ae60, #1e8449);
-  border-color: #27ae60;
-  color: #ecf0f1;
-  box-shadow: 0 0 15px rgba(39, 174, 96, 0.6);
-}
-
-@keyframes spin {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-.vault-heist-game .progress-section {
-  margin: 8px 0;
-}
-
-.vault-heist-game .progress-bar {
-  width: 100%;
-  height: 15px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.vault-heist-game .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #00d4ff, #0099cc);
-  transition: width 0.5s ease;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
-}
-
-.vault-heist-game .progress-text {
+  background: rgba(0,0,0,.5);
   text-align: center;
-  font-size: 14px;
-  color: #95a5a6;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(0,212,255,.35);
 }
+
+.vault-heist-game .vault-status {
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #00d4ff;
+  text-shadow: 0 0 18px rgba(0,212,255,.45);
+}
+
+/* Cash explosion */
+.vault-heist-game .cash-explosion {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@keyframes cashFall {
+  0%   { transform: translateY(-20%) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(120%) rotate(360deg); opacity: 0; }
+}
+
+.vault-heist-game .cash-particle {
+  position: absolute;
+  top: -10%;
+  font-size: 26px;
+  animation: cashFall 1.6s ease-in forwards;
+}
+
+/* Complete message */
+.vault-heist-game .vault-complete-message {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.vault-heist-game .vault-complete-title {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #00ffa2;
+  text-shadow: 0 0 18px rgba(0,255,162,.45);
+}
+
+.vault-heist-game .vault-complete-time {
+  margin-top: 6px;
+  font-size: 16px;
+  color: #cfe9ff;
+  opacity: .9;
+}
+
+/* ---------- Minor helpers that the game uses elsewhere ---------- */
 
 .vault-heist-game .bottom-info-bar {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  margin-top: 10px;
-}
-
-.vault-heist-game .alarm-section {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.vault-heist-game .alarm-indicator {
-  font-size: 24px;
-  transition: all 0.3s ease;
-}
-
-.vault-heist-game .alarm-indicator.triggered {
-  animation: alarmBlink 0.5s ease-in-out;
-}
-
-@keyframes alarmBlink {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-}
-
-.alarm-text {
-  font-size: 12px;
-  color: #95a5a6;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.vault-heist-game .timer-section {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #00d4ff;
-  font-family: 'Courier New', monospace;
-}
-
-.vault-heist-game .problem-container {
-  margin-top: 10px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.vault-heist-game .question-prompt {
-  text-align: center !important;
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  color: #ffffff !important;
-  background: rgba(243, 156, 18, 0.3) !important;
-  padding: 8px 20px !important;
-  margin-bottom: 10px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 2px !important;
-  border: 2px solid #f39c12 !important;
-  border-radius: 8px !important;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8) !important;
-}
-
-.problem-number {
-  text-align: center;
-  font-size: 16px;
-  color: #95a5a6;
-  margin-bottom: 20px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.vault-heist-game .image-comparison {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin: 10px 0;
-  flex: 1;
-  align-items: center;
-}
-
-.vault-heist-game .image-column {
-  flex: 0 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-}
-
-.image-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: #00d4ff;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.vault-heist-game .problem-image {
-  max-width: 90%;
-  max-height: 250px;
-  height: auto;
-  width: auto;
-  border: 2px solid #34495e;
-  border-radius: 8px;
-  background: white;
-  padding: 12px;
-  object-fit: contain;
-}
-
-.conceptual-question {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 30px;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.question-text {
-  font-size: 18px;
-  line-height: 1.6;
-  color: #ecf0f1;
-  text-align: center;
-}
-
-.vault-heist-game .answer-section {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.multiple-choice {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-.vault-heist-game .choice-button {
-  padding: 12px 35px;
-  font-size: 18px;
-  font-weight: 700;
-  background: rgba(52, 73, 94, 0.8);
-  border: 2px solid #34495e;
-  border-radius: 8px;
-  color: #ecf0f1;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'Courier New', monospace;
-}
-
-.vault-heist-game .choice-button:hover {
-  background: rgba(52, 73, 94, 1);
-  border-color: #00d4ff;
-  transform: translateY(-2px);
-}
-
-.vault-heist-game .choice-button.selected {
-  background: linear-gradient(145deg, #00d4ff, #0099cc);
-  border-color: #00d4ff;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.answer-input {
-  padding: 15px 20px;
-  font-size: 20px;
-  font-weight: 700;
-  background: rgba(26, 37, 47, 0.9);
-  border: 2px solid #34495e;
-  border-radius: 8px;
-  color: #ecf0f1;
-  width: 300px;
-  text-align: center;
-  font-family: 'Courier New', monospace;
-  transition: all 0.3s ease;
-}
-
-.answer-input:focus {
-  outline: none;
-  border-color: #00d4ff;
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
-}
-
-.unit-label {
-  font-size: 18px;
-  color: #95a5a6;
-  font-weight: 700;
-}
-
-.vault-heist-game .submit-button {
-  padding: 12px 40px;
-  font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(145deg, #27ae60, #1e8449);
-  border: 2px solid #27ae60;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-}
-
-.vault-heist-game .submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.5);
-}
-
-.vault-heist-game .submit-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.vault-animation-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: radial-gradient(circle, #1a1a2e 0%, #0a0a14 100%);
-}
-
-.vault-door-large {
-  position: relative;
-  width: 600px;
-  height: 700px;
-  background: linear-gradient(145deg, #2c3e50, #1a252f);
-  border: 8px solid #34495e;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
-  overflow: hidden;
-}
-
-.vault-door-large.phase-cracking {
-  animation: vaultShake 0.5s infinite, vaultGlow 1s infinite;
-}
-
-@keyframes vaultShake {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(-5px) translateY(-5px); }
-  50% { transform: translateX(5px) translateY(0); }
-  75% { transform: translateX(-5px) translateY(5px); }
-}
-
-@keyframes vaultGlow {
-  0%, 100% { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9); }
-  50% { box-shadow: 0 0 80px rgba(0, 212, 255, 0.8), 0 20px 60px rgba(0, 0, 0, 0.9); }
-}
-
-.vault-door-number-large {
-  position: absolute;
-  top: 30px;
-  font-size: 80px;
-  font-weight: 700;
-  color: #34495e;
-  z-index: 10;
-}
-
-.vault-heist-game .vault-lock-mechanism {
-  width: 200px;
-  height: 200px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-}
-
-.lock-wheel {
-  width: 150px;
-  height: 150px;
-  border: 8px solid #7f8c8d;
-  border-radius: 50%;
-  position: relative;
-  background: radial-gradient(circle, #34495e 0%, #1a252f 100%);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-}
-
-.lock-wheel.spinning {
-  animation: wheelSpin 2s linear infinite;
-}
-
-.lock-wheel.shaking {
-  animation: wheelShake 0.2s infinite;
-}
-
-.lock-wheel.glowing {
-  border-color: #00d4ff;
-  box-shadow: 0 0 50px rgba(0, 212, 255, 0.8);
-}
-
-@keyframes wheelSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes wheelShake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
-}
-
-.wheel-spoke {
-  position: absolute;
-  width: 6px;
-  height: 70px;
-  background: #95a5a6;
-  top: 50%;
-  left: 50%;
-  transform-origin: center;
-}
-
-.wheel-spoke:nth-child(1) {
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-
-.wheel-spoke:nth-child(2) {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.wheel-spoke:nth-child(3) {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-
-.wheel-spoke:nth-child(4) {
-  transform: translate(-50%, -50%) rotate(135deg);
-}
-
-.unlock-text {
-  font-size: 28px;
-  font-weight: 700;
-  color: #00d4ff;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
-}
-
-.unlock-text.pulsing {
-  animation: textPulse 1.5s infinite;
-}
-
-.unlock-text.rapid-pulse {
-  animation: textPulse 0.3s infinite;
-}
-
-@keyframes textPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
-}
-
-.vault-door-left, .vault-door-right {
-  position: absolute;
-  width: 48%;
-  height: 100%;
-  background: linear-gradient(145deg, #2c3e50, #1a252f);
-  border: 6px solid #34495e;
-  top: 0;
-  z-index: 5;
-}
-
-.vault-door-left {
-  left: 0;
-  border-radius: 20px 0 0 20px;
-  transform-origin: left center;
-  animation: massiveDoorOpenLeft 2s ease-out forwards;
-}
-
-.vault-door-right {
-  right: 0;
-  border-radius: 0 20px 20px 0;
-  transform-origin: right center;
-  animation: massiveDoorOpenRight 2s ease-out forwards;
-}
-
-@keyframes massiveDoorOpenLeft {
-  0% { transform: perspective(1000px) rotateY(0deg); }
-  100% { transform: perspective(1000px) rotateY(-120deg); }
-}
-
-@keyframes massiveDoorOpenRight {
-  0% { transform: perspective(1000px) rotateY(0deg); }
-  100% { transform: perspective(1000px) rotateY(120deg); }
-}
-
-.cash-explosion-large {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: sticky;
+  bottom: 0;
   width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 15;
-}
-
-.cash-particle-large {
-  position: absolute;
-  font-size: 60px;
-  animation: epicCashExplosion 3s ease-out forwards;
-}
-
-@keyframes epicCashExplosion {
-  0% {
-    top: 50%;
-    opacity: 0;
-    transform: translateY(0) rotate(0deg) scale(0.5);
-  }
-  20% {
-    opacity: 1;
-    transform: translateY(-50px) rotate(var(--rotation)) scale(1.2);
-  }
-  100% {
-    top: 150%;
-    opacity: 0;
-    transform: translateY(400px) rotate(calc(var(--rotation) * 3)) scale(0.8);
-  }
-}
-
-.light-ray {
-  position: absolute;
-  width: 200px;
-  height: 600px;
-  background: linear-gradient(to bottom, 
-    rgba(255, 215, 0, 0.6) 0%,
-    rgba(255, 215, 0, 0.3) 50%,
-    rgba(255, 215, 0, 0) 100%
-  );
-  top: 50%;
-  left: 50%;
-  transform-origin: top center;
-  animation: rayRotate 3s linear infinite;
-  opacity: 0;
-  animation: rayPulse 2s ease-in-out infinite;
-}
-
-.ray-1 {
-  transform: translate(-50%, -50%) rotate(0deg);
-  animation-delay: 0s;
-}
-
-.ray-2 {
-  transform: translate(-50%, -50%) rotate(120deg);
-  animation-delay: 0.3s;
-}
-
-.ray-3 {
-  transform: translate(-50%, -50%) rotate(240deg);
-  animation-delay: 0.6s;
-}
-
-@keyframes rayPulse {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 0.7; }
-}
-
-.vault-complete-message-large {
-  position: absolute;
-  text-align: center;
-  z-index: 20;
-  animation: messageZoomIn 1s ease-out forwards;
-}
-
-@keyframes messageZoomIn {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.vault-complete-title-large {
-  font-size: 56px;
-  font-weight: 700;
-  color: #f39c12;
-  margin-bottom: 20px;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  text-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
-  animation: titleGlow 1s infinite;
-}
-
-@keyframes titleGlow {
-  0%, 100% { text-shadow: 0 0 30px rgba(243, 156, 18, 0.8); }
-  50% { text-shadow: 0 0 50px rgba(243, 156, 18, 1); }
-}
-
-.vault-complete-time-large {
-  font-size: 36px;
-  color: #00d4ff;
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-  margin-bottom: 15px;
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
-}
-
-.vault-complete-subtitle {
-  font-size: 24px;
-  color: #27ae60;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  animation: subtitleBlink 1.5s infinite;
-}
-
-@keyframes subtitleBlink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0.5; }
-}
-
-.stats-screen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.stats-container {
-  background: rgba(30, 39, 53, 0.95);
-  border: 3px solid #34495e;
-  border-radius: 16px;
-  padding: 50px;
-  max-width: 600px;
-  width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
-}
-
-.stats-title {
-  text-align: center;
-  font-size: 36px;
-  font-weight: 700;
-  color: #00d4ff;
-  margin-bottom: 40px;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-}
-
-.stats-grid {
-  margin-bottom: 30px;
-}
-
-.stat-row {
   display: flex;
   justify-content: space-between;
-  padding: 15px 0;
-  border-bottom: 1px solid rgba(52, 73, 94, 0.5);
-}
-
-.stat-label {
-  font-size: 18px;
-  color: #95a5a6;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ecf0f1;
-  font-family: 'Courier New', monospace;
-}
-
-.stat-alarms {
-  color: #e74c3c;
-  font-size: 16px;
-}
-
-.stats-totals {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 20px;
-  border-radius: 8px;
-  margin: 30px 0;
-}
-
-.total-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-}
-
-.total-label {
-  font-size: 20px;
-  font-weight: 700;
-  color: #00d4ff;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.total-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #ecf0f1;
-  font-family: 'Courier New', monospace;
-}
-
-.stats-grade {
-  text-align: center;
-  margin: 30px 0;
-}
-
-.grade-message {
-  font-size: 24px;
-  font-weight: 700;
-  padding: 15px;
-  border-radius: 8px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.grade-message.perfect {
-  color: #f39c12;
-  background: rgba(243, 156, 18, 0.1);
-  border: 2px solid #f39c12;
-}
-
-.grade-message.excellent {
-  color: #27ae60;
-  background: rgba(39, 174, 96, 0.1);
-  border: 2px solid #27ae60;
-}
-
-.grade-message.good {
-  color: #3498db;
-  background: rgba(52, 152, 219, 0.1);
-  border: 2px solid #3498db;
-}
-
-.grade-message.completed {
-  color: #95a5a6;
-  background: rgba(149, 165, 166, 0.1);
-  border: 2px solid #95a5a6;
-}
-
-.restart-button {
-  width: 100%;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: 700;
-  background: linear-gradient(145deg, #00d4ff, #0099cc);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
-}
-
-.restart-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
-}
-
-.vault-heist-game .lockdown-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #8b0000;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  animation: lockdownFlash 0.5s infinite;
+  padding: 10px 14px;
+  background: rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
 }
-
-@keyframes lockdownFlash {
-  0%, 100% { background: #8b0000; }
-  50% { background: #ff0000; }
+.vault-heist-game .timer-section,
+.vault-heist-game .alarm-section { display: flex; align-items: center; gap: 8px; }
+.vault-heist-game .timer-icon { font-size: 16px; }
+.vault-heist-game .alarm-light {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #2f4150; border: 1px solid #4b5f6f;
 }
-
-.vault-heist-game .lockdown-content {
-  text-align: center;
-  animation: lockdownShake 0.3s infinite;
-}
-
-@keyframes lockdownShake {
-  0%, 100% { transform: translateX(0) rotate(0deg); }
-  25% { transform: translateX(-10px) rotate(-2deg); }
-  75% { transform: translateX(10px) rotate(2deg); }
-}
-
-.vault-heist-game .lockdown-icon {
-  font-size: 120px;
-  margin-bottom: 20px;
-  animation: alarmSpin 1s linear infinite;
-}
-
-@keyframes alarmSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.vault-heist-game .lockdown-title {
-  font-size: 80px;
-  font-weight: 900;
-  color: white;
-  text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
-  margin-bottom: 20px;
-  letter-spacing: 10px;
-  text-transform: uppercase;
-}
-
-.lockdown-message {
-  font-size: 50px;
-  font-weight: 700;
-  color: #ffff00;
-  text-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
-  margin-bottom: 30px;
-  letter-spacing: 5px;
-}
-
-.lockdown-subtitle {
-  font-size: 30px;
-  color: white;
-  font-family: 'Courier New', monospace;
-  animation: lockdownBlink 1s infinite;
-}
-
-@keyframes lockdownBlink {
-  0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0.3; }
-}
+.vault-heist-game .alarm-light.on { background: #ff4d4d; box-shadow: 0 0 10px rgba(255,77,77,.6); }
+.vault-heist-game .alarm-alert { color: #ff6961; font-weight: 700; }
 
 .vault-heist-game .sound-toggle {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 50px;
-  height: 50px;
-  background: rgba(52, 73, 94, 0.9);
-  border: 2px solid #34495e;
-  border-radius: 50%;
-  font-size: 24px;
+  font-size: 18px;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 2px solid #4b5f6f;
+  background: rgba(0,0,0,.35);
+  color: #e0e0e0;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.vault-heist-game .sound-toggle:hover {
-  background: rgba(52, 73, 94, 1);
-  border-color: #00d4ff;
-  transform: scale(1.1);
-}
-
-@media (max-width: 768px) {
-  .game-title {
-    font-size: 36px;
-    letter-spacing: 4px;
-  }
-  
-  .image-comparison {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .problem-image {
-    max-width: 250px;
-  }
-  
-  .multiple-choice {
-    flex-direction: column;
-  }
-  
-  .choice-button {
-    width: 100%;
-  }
-  
-  .answer-input {
-    width: 100%;
-  }
-  
-  .code-display {
-    gap: 6px;
-  }
-  
-  .code-digit {
-    width: 35px;
-    height: 45px;
-    font-size: 20px;
-  }
 }
