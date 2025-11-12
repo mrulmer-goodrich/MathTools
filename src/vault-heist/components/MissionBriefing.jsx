@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const MissionBriefing = ({ onAccept, onSkip }) => {
   const [currentSection, setCurrentSection] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
+  const dossierRef = useRef(null);
 
   const briefingSections = [
     {
@@ -38,81 +39,95 @@ const MissionBriefing = ({ onAccept, onSkip }) => {
       delay: 4500
     },
     {
+      id: 'intel-formula',
+      content: '• Scale Factor = Copy ÷ Original',
+      className: 'briefing-intel-important',
+      delay: 5000,
+      typewriter: true
+    },
+    {
       id: 'intel-1',
       content: '• Scale Factor > 1 = Image is LARGER than original (enlargement)',
       className: 'briefing-intel',
-      delay: 5000,
+      delay: 6000,
       typewriter: true
     },
     {
       id: 'intel-2',
       content: '• Scale Factor < 1 = Image is SMALLER than original (reduction)',
       className: 'briefing-intel',
-      delay: 6000,
+      delay: 7000,
       typewriter: true
     },
     {
       id: 'intel-3',
       content: '• Scale Factor = 1 = Image is SAME SIZE as original (congruent)',
       className: 'briefing-intel',
-      delay: 7000,
+      delay: 8000,
       typewriter: true
     },
     {
       id: 'intel-4',
       content: '• ANGLES remain unchanged under scale transformations',
       className: 'briefing-intel',
-      delay: 8000,
+      delay: 9000,
       typewriter: true
     },
     {
       id: 'intel-5',
       content: '• AREA changes by Scale Factor SQUARED (SF²)',
       className: 'briefing-intel-important',
-      delay: 9000,
+      delay: 10000,
       typewriter: true
     },
     {
       id: 'intel-6',
       content: '• Copy dimensions = Original dimensions × Scale Factor',
       className: 'briefing-intel',
-      delay: 10000,
+      delay: 11000,
       typewriter: true
     },
     {
       id: 'equipment',
       content: 'MISSION PARAMETERS:',
       className: 'briefing-section-title',
-      delay: 11500
+      delay: 12500
     },
     {
       id: 'equipment-text',
       content: '• 6 Vaults to crack\n• 10 Problems per vault\n• 3-Strike alarm system per vault\n• Timer tracking all movements',
       className: 'briefing-text',
-      delay: 12000,
+      delay: 13000,
       typewriter: true
     },
     {
       id: 'warning',
       content: '⚠️ WARNING:',
       className: 'briefing-warning-title',
-      delay: 13500
+      delay: 14500
     },
     {
       id: 'warning-text',
       content: 'Three incorrect answers will trigger a SECURITY LOCKDOWN. The vault will seal and reset. Choose your answers carefully, agent.',
       className: 'briefing-warning-text',
-      delay: 14000,
+      delay: 15000,
       typewriter: true
     },
     {
       id: 'final',
       content: 'This message will self-destruct in 5... 4... 3...',
       className: 'briefing-destruct',
-      delay: 15500,
+      delay: 16500,
       typewriter: true
     }
   ];
+
+  // Auto-scroll effect when typing
+  useEffect(() => {
+    if (dossierRef.current) {
+      dossierRef.current.scrollTop = dossierRef.current.scrollHeight;
+    }
+  }, [displayedText, currentSection]);
 
   // Typewriter effect
   useEffect(() => {
@@ -167,8 +182,8 @@ const MissionBriefing = ({ onAccept, onSkip }) => {
         {/* Top classified banner */}
         <div className="classified-banner">CLASSIFIED</div>
         
-        {/* Briefing dossier */}
-        <div className="briefing-dossier">
+        {/* Briefing dossier with ref for auto-scroll */}
+        <div className="briefing-dossier" ref={dossierRef}>
           {briefingSections.map((section, index) => {
             if (index > currentSection) return null;
             
