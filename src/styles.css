@@ -22,8 +22,8 @@
   --t-yellow: #F59E0B;
   --t-red:    #EF4444;
 }
+*:not(.vault-heist-game *){ box-sizing: border-box; }
 
-*{ box-sizing: border-box; }
 
 html, body, #root{ height:100%; }
 body{
