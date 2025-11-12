@@ -23,54 +23,24 @@ const VaultHeist = () => {
   const [showVaultAnimation, setShowVaultAnimation] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [shuffledProblems, setShuffledProblems] = useState({});
-  const [shuffledChoices, setShuffledChoices] = useState({});
-
-  // Shuffle function
-  const shuffleArray = (array) => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
+  
+  // NEW: Track unlocked codes
+  const [unlockedCodes, setUnlockedCodes] = useState({
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false
+  });
+  
+  // NEW: State for showing in-game stats modal
+  const [showInGameStats, setShowInGameStats] = useState(false);
 
   // Get current set data
   const currentSetData = problemSets[`set${currentSet}`];
-  
-  // Get shuffled problems for current set (or shuffle if not yet done)
-  const getShuffledProblems = () => {
-    if (!shuffledProblems[currentSet]) {
-      const shuffled = shuffleArray(currentSetData.problems);
-      setShuffledProblems({
-        ...shuffledProblems,
-        [currentSet]: shuffled
-      });
-      return shuffled;
-    }
-    return shuffledProblems[currentSet];
-  };
-  
-  const currentSetProblems = getShuffledProblems();
-  const currentProblemData = currentSetProblems[currentProblem - 1];
-  const totalProblems = currentSetProblems.length;
-  
-  // Get shuffled choices for current problem (or shuffle if not yet done)
-  const getShuffledChoices = () => {
-    const key = `${currentSet}-${currentProblem}`;
-    if (!shuffledChoices[key] && currentProblemData.choices) {
-      const shuffled = shuffleArray(currentProblemData.choices);
-      setShuffledChoices({
-        ...shuffledChoices,
-        [key]: shuffled
-      });
-      return shuffled;
-    }
-    return shuffledChoices[key] || currentProblemData.choices;
-  };
-  
-  const currentChoices = currentProblemData.choices ? getShuffledChoices() : null;
+  const currentProblemData = currentSetData.problems[currentProblem - 1];
+  const totalProblems = currentSetData.problems.length;
 
   // Sound effects (simple beep approach - can be replaced with actual sound files)
   const playSound = (type) => {
@@ -164,16 +134,23 @@ const VaultHeist = () => {
     const timeElapsed = Math.floor((Date.now() - setStartTime) / 1000);
     
     setSetTimes({
-      ...setSetTimes,
+      ...setTimes,
       [currentSet]: timeElapsed
     });
     
     setSetAlarms({
-      ...setSetAlarms,
+      ...setAlarms,
       [currentSet]: alarmCount
     });
     
     setVaultsCompleted([...vaultsCompleted, currentSet]);
+    
+    // NEW: Unlock the code for this vault
+    setUnlockedCodes({
+      ...unlockedCodes,
+      [currentSet]: true
+    });
+    
     setShowVaultAnimation(true);
     
     // After animation (10 seconds), move to next set or show completion
@@ -187,8 +164,6 @@ const VaultHeist = () => {
         setAlarmCount(0);
         setSetStartTime(Date.now());
         setUserAnswer('');
-        // Don't clear shuffledProblems - let it shuffle on first access
-        // Don't clear shuffledChoices - let it shuffle on first access
       } else {
         setGameComplete(true);
       }
@@ -290,7 +265,6 @@ const VaultHeist = () => {
           userAnswer={userAnswer}
           onAnswerChange={setUserAnswer}
           onSubmit={checkAnswer}
-          shuffledChoices={currentChoices}
         />
 
         {/* Bottom info bar with timer and alarms */}
@@ -315,6 +289,15 @@ const VaultHeist = () => {
       </div>
       </div>
 
+      {/* NEW: Stats button - top left */}
+      <button 
+        className="stats-toggle"
+        onClick={() => setShowInGameStats(!showInGameStats)}
+        title="View Current Stats"
+      >
+        📊
+      </button>
+
       {/* Sound toggle */}
       <button 
         className="sound-toggle"
@@ -323,6 +306,43 @@ const VaultHeist = () => {
       >
         {soundEnabled ? '🔊' : '🔇'}
       </button>
+      
+      {/* NEW: Vault Code Storage - floating button */}
+      <VaultCodeStorage unlockedCodes={unlockedCodes} />
+      
+      {/* NEW: In-game stats modal */}
+      {showInGameStats && (
+        <div className="in-game-stats-overlay" onClick={() => setShowInGameStats(false)}>
+          <div className="in-game-stats-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="stats-header">
+              <h2>📊 Current Progress</h2>
+              <button className="close-button" onClick={() => setShowInGameStats(false)}>✕</button>
+            </div>
+            
+            <div className="stats-list">
+              {[1, 2, 3, 4, 5, 6].map(vaultNum => (
+                <div key={vaultNum} className={`stat-item ${vaultsCompleted.includes(vaultNum) ? 'completed' : currentSet === vaultNum ? 'active' : 'locked'}`}>
+                  <div className="stat-vault">Vault {vaultNum}</div>
+                  <div className="stat-info">
+                    {vaultsCompleted.includes(vaultNum) ? (
+                      <>
+                        <span className="stat-time">✅ {formatTime(setTimes[vaultNum])}</span>
+                        {setAlarms[vaultNum] > 0 && (
+                          <span className="stat-alarm">⚠️ {setAlarms[vaultNum]}</span>
+                        )}
+                      </>
+                    ) : currentSet === vaultNum ? (
+                      <span className="stat-current">🎯 In Progress... {formatTime(currentTime)}</span>
+                    ) : (
+                      <span className="stat-locked">🔒 Locked</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </div>
   );
