@@ -1,15 +1,8 @@
 // problems.js
 // This file contains all 60 problems across 6 sets
-// Replace sample data with your actual problem images and answers after review
+// SETS 1-3 COMPLETE | SET 4 CORRECTED | SET 6 UPDATED
 
 export const problemSets = {
-// ========================================
-// SETS 1, 2, 3 - COMPLETE FIXES
-// ========================================
-// Set 1: Decimals → Fractions, 3-strike rule (instant reset on ANY error)
-// Set 2: Remove letter labels from choices (just numbers)
-// Set 3: Problem 2 changed to Square, Problem 1 with bigger size difference
-
   set1: {
     id: 1,
     title: "Visual Scale Factor",
@@ -17,7 +10,7 @@ export const problemSets = {
     type: "multiple-choice",
     questionPrompt: "Scale Factor?",
     codeSequence: ['1', 'h', '3', '@', 'r', 't', 'm', '@', 't', 'h'],
-    strictMode: true, // NEW: Any wrong answer = instant 3 strikes
+    strictMode: true,
     problems: [
       {
         id: 1,
@@ -181,7 +174,6 @@ export const problemSets = {
     questionPrompt: "What is the missing side length?",
     codeSequence: ['P', '3', 'r', 's', '3', 'v', '3', 'r', '3', '!'],
     problems: [
-      // P1: SF=2, Triangle, Orig 5,8 → Copy 10,16 (FIXED: more size difference)
       {
         id: 1,
         originalImage: "/assets/set3_p1_orig.png",
@@ -189,7 +181,6 @@ export const problemSets = {
         choices: ["16", "8", "32", "4"],
         correctAnswer: "16"
       },
-      // P2: SF=1/8, Square (CHANGED FROM OCTAGON), Orig 16,24 → Copy 2,3
       {
         id: 2,
         originalImage: "/assets/set3_p2_orig.png",
@@ -197,7 +188,6 @@ export const problemSets = {
         choices: ["3", "24", "192", "12"],
         correctAnswer: "3"
       },
-      // P3: SF=8, Rectangle, Orig 3,5 → Copy 24,40
       {
         id: 3,
         originalImage: "/assets/set3_p3_orig.png",
@@ -205,7 +195,6 @@ export const problemSets = {
         choices: ["40", "5", "15", "80"],
         correctAnswer: "40"
       },
-      // P4: SF=1/7, Pentagon, Orig 14,21 → Copy 2,3
       {
         id: 4,
         originalImage: "/assets/set3_p4_orig.png",
@@ -213,7 +202,6 @@ export const problemSets = {
         choices: ["3", "21", "6", "147"],
         correctAnswer: "3"
       },
-      // P5: SF=1.5, Square, Orig 6,10 → Copy 9,15
       {
         id: 5,
         originalImage: "/assets/set3_p5_orig.png",
@@ -221,7 +209,6 @@ export const problemSets = {
         choices: ["15", "10", "4", "30"],
         correctAnswer: "15"
       },
-      // P6: SF=0.25, Trapezoid, Orig 12,20 → Copy 3,5
       {
         id: 6,
         originalImage: "/assets/set3_p6_orig.png",
@@ -229,7 +216,6 @@ export const problemSets = {
         choices: ["5", "20", "48", "15"],
         correctAnswer: "5"
       },
-      // P7: SF=6, Parallelogram, Orig 2,7 → Copy 12,42
       {
         id: 7,
         originalImage: "/assets/set3_p7_orig.png",
@@ -237,7 +223,6 @@ export const problemSets = {
         choices: ["42", "7", "14", "84"],
         correctAnswer: "42"
       },
-      // P8: SF=1/10, Octagon, Orig 30,50 → Copy 3,5
       {
         id: 8,
         originalImage: "/assets/set3_p8_orig.png",
@@ -245,7 +230,6 @@ export const problemSets = {
         choices: ["5", "50", "15", "500"],
         correctAnswer: "5"
       },
-      // P9: SF=10, Rhombus, Orig 3,4 → Copy 30,40
       {
         id: 9,
         originalImage: "/assets/set3_p9_orig.png",
@@ -253,7 +237,6 @@ export const problemSets = {
         choices: ["40", "4", "120", "400"],
         correctAnswer: "40"
       },
-      // P10: SF=0.4, Circle, Orig 5,10 → Copy 2,4
       {
         id: 10,
         originalImage: "/assets/set3_p10_orig.png",
@@ -263,8 +246,8 @@ export const problemSets = {
       }
     ]
   },
-  
-    set4: {
+
+  set4: {
     id: 4,
     title: "Find Area of Copy",
     description: "Find the missing side, then calculate the area of the copy.",
@@ -272,7 +255,6 @@ export const problemSets = {
     questionPrompt: "What is the area of the copy?",
     codeSequence: ['m', '@', 't', 'h', 'i', 's', 'c', '0', '0', 'l'],
     problems: [
-      // P1: Rectangle, SF=2, Orig 5×8 → Copy 10×16, Area=160
       {
         id: 1,
         originalImage: "/assets/set4_p1_orig.png",
@@ -280,7 +262,6 @@ export const problemSets = {
         choices: ["160", "80", "1/160", "320"],
         correctAnswer: "160"
       },
-      // P2: Triangle, SF=3, Orig b=6 h=4 → Copy b=18 h=12, Area=108
       {
         id: 2,
         originalImage: "/assets/set4_p2_orig.png",
@@ -288,7 +269,6 @@ export const problemSets = {
         choices: ["108", "54", "1/108", "216"],
         correctAnswer: "108"
       },
-      // P3: Square, SF=4, Orig s=3 → Copy s=12, Area=144
       {
         id: 3,
         originalImage: "/assets/set4_p3_orig.png",
@@ -296,7 +276,6 @@ export const problemSets = {
         choices: ["144", "36", "1/144", "576"],
         correctAnswer: "144"
       },
-      // P4: Circle, SF=5, Orig r=2 → Copy r=10, Area≈314
       {
         id: 4,
         originalImage: "/assets/set4_p4_orig.png",
@@ -304,7 +283,6 @@ export const problemSets = {
         choices: ["314", "157", "1/314", "628"],
         correctAnswer: "314"
       },
-      // P5: Rectangle, SF=1/2, Orig 8×12 → Copy 4×6, Area=24
       {
         id: 5,
         originalImage: "/assets/set4_p5_orig.png",
@@ -312,7 +290,6 @@ export const problemSets = {
         choices: ["24", "48", "1/24", "12"],
         correctAnswer: "24"
       },
-      // P6: Triangle, SF=1/3, Orig b=9 h=12 → Copy b=3 h=4, Area=6
       {
         id: 6,
         originalImage: "/assets/set4_p6_orig.png",
@@ -320,7 +297,6 @@ export const problemSets = {
         choices: ["6", "18", "1/6", "3"],
         correctAnswer: "6"
       },
-      // P7: Square, SF=1/4, Orig s=8 → Copy s=2, Area=4
       {
         id: 7,
         originalImage: "/assets/set4_p7_orig.png",
@@ -328,7 +304,6 @@ export const problemSets = {
         choices: ["4", "16", "1/4", "2"],
         correctAnswer: "4"
       },
-      // P8: Circle, SF=1/5, Orig r=5 → Copy r=1, Area≈3
       {
         id: 8,
         originalImage: "/assets/set4_p8_orig.png",
@@ -336,7 +311,6 @@ export const problemSets = {
         choices: ["3", "15", "1/3", "6"],
         correctAnswer: "3"
       },
-      // P9: Rectangle, SF=3/2, Orig 4×6 → Copy 6×9, Area=54
       {
         id: 9,
         originalImage: "/assets/set4_p9_orig.png",
@@ -344,7 +318,6 @@ export const problemSets = {
         choices: ["54", "36", "1/54", "108"],
         correctAnswer: "54"
       },
-      // P10: Triangle, SF=1/6, Orig b=12 h=18 → Copy b=2 h=3, Area=3
       {
         id: 10,
         originalImage: "/assets/set4_p10_orig.png",
@@ -353,7 +326,8 @@ export const problemSets = {
         correctAnswer: "3"
       }
     ]
-  },  
+  },
+  
   set5: {
     id: 5,
     title: "Find Missing Area (Irregular)",
@@ -443,7 +417,8 @@ export const problemSets = {
       }
     ]
   },
-    set6: {
+  
+  set6: {
     id: 6,
     title: "Conceptual Understanding",
     description: "Answer questions about what happens when shapes are scaled.",
@@ -522,4 +497,5 @@ export const problemSets = {
         unit: "°"
       }
     ]
-  };
+  }
+};
