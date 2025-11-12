@@ -327,97 +327,51 @@ export const problemSets = {
       }
     ]
   },
-  
-  set5: {
+    set5: {
     id: 5,
-    title: "Find Missing Area (Irregular)",
-    description: "Find the area of the copy. Use the scale factor!",
-    type: "text-input",
-    questionPrompt: "Area of Copy?",
+    title: "Find Area of Irregular Shapes",
+    description: "Find the missing side, then calculate the total area of the copy.",
+    type: "multiple-choice",
+    questionPrompt: "What is the area of the copy?",
+    codeSequence: ['B', '3', 'l', 'i', '3', 'v', '3', '-', 'N', 'U'],
     problems: [
       {
         id: 1,
         originalImage: "/assets/set5_p1_orig.png",
         copyImage: "/assets/set5_p1_copy.png",
-        correctAnswer: "64",
-        acceptableAnswers: ["64", "64 cm²", "64 cm^2"],
-        unit: "cm²"
+        choices: ["144", "72", "36", "288"],
+        correctAnswer: "144"
       },
       {
         id: 2,
         originalImage: "/assets/set5_p2_orig.png",
         copyImage: "/assets/set5_p2_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4 ft²", "4 ft^2"],
-        unit: "ft²"
+        choices: ["270", "90", "30", "540"],
+        correctAnswer: "270"
       },
       {
         id: 3,
         originalImage: "/assets/set5_p3_orig.png",
         copyImage: "/assets/set5_p3_copy.png",
-        correctAnswer: "8",
-        acceptableAnswers: ["8", "8 in²", "8 in^2"],
-        unit: "in²"
+        choices: ["11", "44", "22", "5.5"],
+        correctAnswer: "11"
       },
       {
         id: 4,
         originalImage: "/assets/set5_p4_orig.png",
         copyImage: "/assets/set5_p4_copy.png",
-        correctAnswer: "297",
-        acceptableAnswers: ["297", "297 m²", "297 m^2"],
-        unit: "m²"
+        choices: ["368", "92", "23", "736"],
+        correctAnswer: "368"
       },
       {
         id: 5,
         originalImage: "/assets/set5_p5_orig.png",
         copyImage: "/assets/set5_p5_copy.png",
-        correctAnswer: "55",
-        acceptableAnswers: ["55", "55 cm²", "55 cm^2"],
-        unit: "cm²"
-      },
-      {
-        id: 6,
-        originalImage: "/assets/set5_p6_orig.png",
-        copyImage: "/assets/set5_p6_copy.png",
-        correctAnswer: "100",
-        acceptableAnswers: ["100", "100 ft²", "100 ft^2"],
-        unit: "ft²"
-      },
-      {
-        id: 7,
-        originalImage: "/assets/set5_p7_orig.png",
-        copyImage: "/assets/set5_p7_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4 in²", "4 in^2"],
-        unit: "in²"
-      },
-      {
-        id: 8,
-        originalImage: "/assets/set5_p8_orig.png",
-        copyImage: "/assets/set5_p8_copy.png",
-        correctAnswer: "16",
-        acceptableAnswers: ["16", "16 mm²", "16 mm^2"],
-        unit: "mm²"
-      },
-      {
-        id: 9,
-        originalImage: "/assets/set5_p9_orig.png",
-        copyImage: "/assets/set5_p9_copy.png",
-        correctAnswer: "26.67",
-        acceptableAnswers: ["26.67", "26.66", "26.7", "26.67 cm²"],
-        unit: "cm²"
-      },
-      {
-        id: 10,
-        originalImage: "/assets/set5_p10_orig.png",
-        copyImage: "/assets/set5_p10_copy.png",
-        correctAnswer: "26.25",
-        acceptableAnswers: ["26.25", "26.25 ft²", "26.25 ft^2"],
-        unit: "ft²"
+        choices: ["7", "22", "66", "3.5"],
+        correctAnswer: "7"
       }
     ]
   },
-  
   set6: {
     id: 6,
     title: "Conceptual Understanding",
