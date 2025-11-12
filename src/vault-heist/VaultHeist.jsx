@@ -8,6 +8,7 @@ import StatsScreen from './components/StatsScreen';
 import './styles/vault.css';
 import VaultCodeStorage from './components/VaultCodeStorage';
 
+
 const VaultHeist = () => {
   const [gameState, setGameState] = useState('playing'); // 'playing', 'lockdown', 'complete'
   const [currentSet, setCurrentSet] = useState(1);
