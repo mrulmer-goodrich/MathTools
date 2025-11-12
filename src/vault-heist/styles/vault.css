@@ -1194,3 +1194,90 @@
     font-size: 20px;
   }
 }
+
+/* Add to your existing CSS file */
+
+/* ========================================
+   3-STRIKES SCREEN FIX - Better visibility
+   ======================================== */
+.three-strikes-overlay {
+  background: rgba(20, 20, 20, 0.98) !important; /* Dark background instead of white */
+}
+
+.three-strikes-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid #e63946;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(230, 57, 70, 0.4);
+}
+
+.three-strikes-content h2 {
+  color: #e63946 !important; /* Red instead of yellow */
+  text-shadow: 2px 2px 8px rgba(230, 57, 70, 0.5);
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.three-strikes-content p {
+  color: #f1f1f1 !important; /* White text instead of yellow on white */
+  font-size: 1.3rem;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.three-strikes-content button {
+  background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.three-strikes-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230, 57, 70, 0.6);
+}
+
+/* ========================================
+   SPINNING CODE EFFECT
+   ======================================== */
+@keyframes spin-code {
+  0% {
+    transform: rotateY(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: rotateY(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(360deg);
+    opacity: 0.7;
+  }
+}
+
+.code-letter.unlocked {
+  animation: spin-code 1.2s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* Alternative: Faster spinning */
+.code-letter.unlocked.fast-spin {
+  animation: spin-code 0.8s ease-in-out infinite;
+}
+
+/* Make sure code letters have perspective */
+.code-display {
+  perspective: 1000px;
+}
+
+.code-letter {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
