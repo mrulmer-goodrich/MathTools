@@ -442,4 +442,4 @@ export const problemSets = {
         correctAnswer: "45°"
       }
     ]
-  };
+  }};
