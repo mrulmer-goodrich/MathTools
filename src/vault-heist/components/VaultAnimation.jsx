@@ -23,13 +23,13 @@ const VaultAnimation = ({ vaultNumber, time }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
   
-  // Generate MORE cash particles for bigger explosion
-  const cashParticles = Array.from({ length: 50 }, (_, i) => ({
+  // Generate MORE cash particles for FULL SCREEN explosion
+  const cashParticles = Array.from({ length: 80 }, (_, i) => ({
     id: i,
-    left: 30 + Math.random() * 40,
-    delay: Math.random() * 0.8,
+    left: Math.random() * 100, // Full width 0-100%
+    delay: Math.random() * 1.2,
     rotation: Math.random() * 360,
-    emoji: ['💵', '💰', '💎', '🏆'][Math.floor(Math.random() * 4)]
+    emoji: ['💵', '💰', '💎', '🏆', '💸', '🪙'][Math.floor(Math.random() * 6)]
   }));
 
   return (
@@ -39,7 +39,7 @@ const VaultAnimation = ({ vaultNumber, time }) => {
         {/* Vault number at top */}
         <div className="vault-door-number-large">{vaultNumber}</div>
         
-        {/* Central lock mechanism */}
+        {/* Central lock mechanism - REMOVE dark circle overlay */}
         <div className="vault-lock-mechanism">
           {animationPhase === 'unlocking' && (
             <>
@@ -74,30 +74,6 @@ const VaultAnimation = ({ vaultNumber, time }) => {
           </>
         )}
         
-        {/* Cash explosion */}
-        {(animationPhase === 'explosion' || animationPhase === 'complete') && (
-          <div className="cash-explosion-large">
-            {cashParticles.map(particle => (
-              <div
-                key={particle.id}
-                className="cash-particle-large"
-                style={{
-                  left: `${particle.left}%`,
-                  animationDelay: `${particle.delay}s`,
-                  '--rotation': `${particle.rotation}deg`
-                }}
-              >
-                {particle.emoji}
-              </div>
-            ))}
-            
-            {/* Light rays */}
-            <div className="light-ray ray-1"></div>
-            <div className="light-ray ray-2"></div>
-            <div className="light-ray ray-3"></div>
-          </div>
-        )}
-        
         {/* Success message */}
         {animationPhase === 'complete' && (
           <div className="vault-complete-message-large">
@@ -107,6 +83,30 @@ const VaultAnimation = ({ vaultNumber, time }) => {
           </div>
         )}
       </div>
+      
+      {/* FULL SCREEN Cash explosion - outside the vault container! */}
+      {(animationPhase === 'explosion' || animationPhase === 'complete') && (
+        <div className="cash-explosion-fullscreen">
+          {cashParticles.map(particle => (
+            <div
+              key={particle.id}
+              className="cash-particle-fullscreen"
+              style={{
+                left: `${particle.left}%`,
+                animationDelay: `${particle.delay}s`,
+                '--rotation': `${particle.rotation}deg`
+              }}
+            >
+              {particle.emoji}
+            </div>
+          ))}
+          
+          {/* Full screen light rays */}
+          <div className="light-ray-fullscreen ray-1"></div>
+          <div className="light-ray-fullscreen ray-2"></div>
+          <div className="light-ray-fullscreen ray-3"></div>
+        </div>
+      )}
     </div>
   );
 };
