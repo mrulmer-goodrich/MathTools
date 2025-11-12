@@ -67,16 +67,28 @@ const ProblemDisplay = ({
   }
   
   if (setType === 'conceptual') {
-    return (
-      <div className="problem-container">
-        
-        {questionPrompt && <div className="question-prompt">{questionPrompt}</div>}
-        
-        <div className="conceptual-question">
-          <p className="question-text">{problem.question}</p>
-        </div>
-        
-        <div className="answer-section">
+  return (
+    <div className="problem-container">
+      {questionPrompt && <div className="question-prompt">{questionPrompt}</div>}
+
+      <div className="conceptual-question">
+        <p className="question-text">{problem.question}</p>
+      </div>
+
+      <div className="answer-section">
+        {Array.isArray(problem.choices) && problem.choices.length > 0 ? (
+          <div className="multiple-choice">
+            {problem.choices.map((choice, idx) => (
+              <button
+                key={idx}
+                className={`choice-button ${userAnswer === choice ? 'selected' : ''}`}
+                onClick={() => onAnswerChange(choice)}
+              >
+                {String.fromCharCode(65 + idx)}) {choice}
+              </button>
+            ))}
+          </div>
+        ) : (
           <div className="input-group">
             <input
               type="text"
@@ -84,24 +96,25 @@ const ProblemDisplay = ({
               value={userAnswer}
               onChange={(e) => onAnswerChange(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter your answer..."
+              placeholder="Enter your answer."
               autoFocus
             />
             {problem.unit && <span className="unit-label">{problem.unit}</span>}
           </div>
-          
-          <button 
-            className="submit-button"
-            onClick={onSubmit}
-            disabled={!userAnswer}
-          >
-            CRACK CODE
-          </button>
-        </div>
+        )}
+
+        <button
+          className="submit-button"
+          onClick={onSubmit}
+          disabled={!userAnswer}
+        >
+          CRACK CODE
+        </button>
       </div>
-    );
+    </div>
+  );
   }
-  
+
   // text-input type (sets 2-5)
   return (
     <div className="problem-container">
