@@ -1706,3 +1706,164 @@
   0%, 100% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(180deg) scale(1.2); }
 }
+
+/* Enhanced BIG Vault Door Animation - Add to vault.css or create separate file */
+
+/* Make vault doors more visible and detailed */
+.vault-door-left, .vault-door-right {
+  position: absolute;
+  width: 48%;
+  height: 100%;
+  background: linear-gradient(145deg, #34495e 0%, #2c3e50 50%, #1a252f 100%);
+  border: 8px solid #2c3e50;
+  top: 0;
+  z-index: 5;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+/* Add rivets/bolts to doors */
+.vault-door-left::before,
+.vault-door-right::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 10% 10%, #7f8c8d 0, #7f8c8d 8px, transparent 8px),
+    radial-gradient(circle at 10% 90%, #7f8c8d 0, #7f8c8d 8px, transparent 8px),
+    radial-gradient(circle at 90% 10%, #7f8c8d 0, #7f8c8d 8px, transparent 8px),
+    radial-gradient(circle at 90% 90%, #7f8c8d 0, #7f8c8d 8px, transparent 8px);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.vault-door-left {
+  left: 0;
+  border-radius: 20px 0 0 20px;
+  transform-origin: left center;
+  animation: massiveDoorOpenLeft 2s ease-out forwards;
+  border-right: none;
+}
+
+.vault-door-right {
+  right: 0;
+  border-radius: 0 20px 20px 0;
+  transform-origin: right center;
+  animation: massiveDoorOpenRight 2s ease-out forwards;
+  border-left: none;
+}
+
+/* Enhanced door opening animations with more dramatic swing */
+@keyframes massiveDoorOpenLeft {
+  0% { 
+    transform: perspective(1200px) rotateY(0deg); 
+    opacity: 1;
+  }
+  100% { 
+    transform: perspective(1200px) rotateY(-120deg); 
+    opacity: 0.95;
+  }
+}
+
+@keyframes massiveDoorOpenRight {
+  0% { 
+    transform: perspective(1200px) rotateY(0deg); 
+    opacity: 1;
+  }
+  100% { 
+    transform: perspective(1200px) rotateY(120deg); 
+    opacity: 0.95;
+  }
+}
+
+/* Add a central lock wheel on the vault before doors open */
+.vault-door-large::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border: 12px solid #556677;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3a4a5a 0%, #2c3642 100%);
+  z-index: 10;
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Hide the wheel after opening phase */
+.vault-door-large.phase-opening::after,
+.vault-door-large.phase-explosion::after,
+.vault-door-large.phase-complete::after {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+/* Make the golden interior visible behind doors */
+.vault-door-large::before {
+  content: '';
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle at center, #ffd700 0%, #f39c12 40%, #e67e22 100%);
+  border-radius: 20px;
+  z-index: 1;
+  box-shadow: 
+    inset 0 0 100px rgba(0, 0, 0, 0.5),
+    0 0 100px rgba(255, 215, 0, 0.8);
+  opacity: 0;
+}
+
+/* Show golden interior during opening phase */
+.vault-door-large.phase-opening::before,
+.vault-door-large.phase-explosion::before,
+.vault-door-large.phase-complete::before {
+  opacity: 1;
+  animation: goldGlow 2s ease-in-out infinite;
+}
+
+@keyframes goldGlow {
+  0%, 100% { 
+    box-shadow: 
+      inset 0 0 100px rgba(0, 0, 0, 0.5),
+      0 0 100px rgba(255, 215, 0, 0.6);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 0 100px rgba(0, 0, 0, 0.5),
+      0 0 150px rgba(255, 215, 0, 1);
+  }
+}
+
+/* Add door handles for more realism */
+.vault-door-left::after {
+  content: '';
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 80px;
+  background: linear-gradient(90deg, #2c3e50, #1a252f);
+  border-radius: 10px;
+  border: 3px solid #1a252f;
+  box-shadow: 
+    inset 2px 0 5px rgba(0, 0, 0, 0.5),
+    -2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.vault-door-right::after {
+  content: '';
+  position: absolute;
+  left: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 80px;
+  background: linear-gradient(90deg, #1a252f, #2c3e50);
+  border-radius: 10px;
+  border: 3px solid #1a252f;
+  box-shadow: 
+    inset -2px 0 5px rgba(0, 0, 0, 0.5),
+    2px 0 10px rgba(0, 0, 0, 0.5);
+}
