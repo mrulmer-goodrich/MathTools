@@ -8,7 +8,7 @@ import StatsScreen from './components/StatsScreen';
 import MissionBriefing from './components/MissionBriefing';
 import './styles/vault.css';
 import VaultCodeStorage from './components/VaultCodeStorage';
-
+ 
 
 const VaultHeist = () => {
   const [showBriefing, setShowBriefing] = useState(true);
