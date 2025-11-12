@@ -8,7 +8,7 @@ import StatsScreen from './components/StatsScreen';
 import MissionBriefing from './components/MissionBriefing';
 import './styles/vault.css';
 import VaultCodeStorage from './components/VaultCodeStorage';
- 
+
 
 const VaultHeist = () => {
   const [showBriefing, setShowBriefing] = useState(true);
@@ -25,10 +25,7 @@ const VaultHeist = () => {
   const [showVaultAnimation, setShowVaultAnimation] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  
-  // NEW: Store shuffled choices for each problem to maintain consistency
   const [shuffledChoicesMap, setShuffledChoicesMap] = useState({});
-  
   const [unlockedCodes, setUnlockedCodes] = useState({
     1: false,
     2: false,
@@ -37,36 +34,32 @@ const VaultHeist = () => {
     5: false,
     6: false
   });
-  
   const [showInGameStats, setShowInGameStats] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
 
   // Get current set data
   const currentSetData = problemSets[`set${currentSet}`];
   const currentProblemData = currentSetData?.problems[currentProblem - 1];
   const totalProblems = currentSetData?.problems.length || 0;
 
-  // NEW: Shuffle choices for a problem and store the mapping
+  // Shuffle choices for a problem and store the mapping
   const getShuffledChoices = (setNum, problemNum, choices, correctAnswer) => {
     const key = `${setNum}-${problemNum}`;
     
-    // If already shuffled for this problem, return cached version
     if (shuffledChoicesMap[key]) {
       return shuffledChoicesMap[key];
     }
     
-    // Only shuffle if there are choices (multiple choice problems)
     if (!choices || choices.length === 0) {
       return null;
     }
     
-    // Create shuffled array
     const shuffled = [...choices];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
-    // Store the shuffled choices
     const newMap = {
       ...shuffledChoicesMap,
       [key]: shuffled
@@ -76,7 +69,7 @@ const VaultHeist = () => {
     return shuffled;
   };
 
-  // NEW: Get shuffled choices for current problem
+  // Get shuffled choices for current problem
   const currentShuffledChoices = currentProblemData?.choices 
     ? getShuffledChoices(
         currentSet, 
@@ -85,6 +78,16 @@ const VaultHeist = () => {
         currentProblemData.correctAnswer
       )
     : null;
+
+  // Timer effect
+  useEffect(() => {
+    if (!showVaultAnimation && !gameComplete && !showBriefing) {
+      const interval = setInterval(() => {
+        setCurrentTime(Math.floor((Date.now() - setStartTime) / 1000));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [setStartTime, showVaultAnimation, gameComplete, showBriefing]);
 
   const handleAcceptMission = () => {
     setShowBriefing(false);
@@ -95,15 +98,6 @@ const VaultHeist = () => {
     setShowBriefing(false);
     setSetStartTime(Date.now());
   };
-
-  if (showBriefing) {
-    return (
-      <MissionBriefing 
-        onAccept={handleAcceptMission}
-        onSkip={handleSkipBriefing}
-      />
-    );
-  }
 
   const playSound = (type) => {
     if (!soundEnabled) return;
@@ -139,19 +133,15 @@ const VaultHeist = () => {
     }
   };
 
-  // FIXED: Check answer - now works correctly with shuffled choices
   const checkAnswer = () => {
     const problem = currentProblemData;
     let isCorrect = false;
 
-    // For multiple choice, compare the actual answer value (not position)
-    // This works because userAnswer stores the actual choice text, not the index
     if (problem.acceptableAnswers) {
       isCorrect = problem.acceptableAnswers.some(answer => 
         userAnswer.trim().toLowerCase() === answer.toLowerCase()
       );
     } else {
-      // Direct comparison - works for both shuffled and non-shuffled
       isCorrect = userAnswer.trim() === problem.correctAnswer;
     }
 
@@ -220,7 +210,6 @@ const VaultHeist = () => {
         setAlarmCount(0);
         setSetStartTime(Date.now());
         setUserAnswer('');
-        // Clear shuffled choices for the completed set
         const newMap = {};
         Object.keys(shuffledChoicesMap).forEach(key => {
           if (!key.startsWith(`${currentSet}-`)) {
@@ -240,7 +229,6 @@ const VaultHeist = () => {
     setAlarmCount(0);
     setSetStartTime(Date.now());
     setUserAnswer('');
-    // Clear shuffled choices for current set on reset
     const newMap = {};
     Object.keys(shuffledChoicesMap).forEach(key => {
       if (!key.startsWith(`${currentSet}-`)) {
@@ -250,21 +238,21 @@ const VaultHeist = () => {
     setShuffledChoicesMap(newMap);
   };
 
-  const [currentTime, setCurrentTime] = useState(0);
-  useEffect(() => {
-    if (!showVaultAnimation && !gameComplete) {
-      const interval = setInterval(() => {
-        setCurrentTime(Math.floor((Date.now() - setStartTime) / 1000));
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [setStartTime, showVaultAnimation, gameComplete]);
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Conditional renders AFTER all hooks
+  if (showBriefing) {
+    return (
+      <MissionBriefing 
+        onAccept={handleAcceptMission}
+        onSkip={handleSkipBriefing}
+      />
+    );
+  }
 
   if (gameComplete) {
     return (
