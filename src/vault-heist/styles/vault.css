@@ -1233,3 +1233,35 @@
   min-width: 0;          /* fix flex overflow clipping */
   min-height: 0;         /* allow natural shrink to container */
 }
+
+
+/* === Vault visuals: minimal paint + centering (non-breaking) === */
+
+/* Center the inner pieces (keeps your sizes/layout as-is) */
+.vault-heist-game .vault-door-icon,
+.vault-heist-game .vault-frame,
+.vault-heist-game .vault-door-front {
+  display: grid;
+  place-items: center;
+}
+
+/* Give the round front plate a visible face */
+.vault-heist-game .vault-door-front {
+  border-radius: 50%;
+  border: 3px solid #4b5f6f;           /* subtle edge so the circle reads */
+  background: radial-gradient(
+    circle at 35% 30%,
+    #3b4c5a,
+    #1d2a34 55%
+  );
+}
+
+/* Slight lift on ACTIVE to make the lock/lines pop (you already have pulse) */
+.vault-heist-game .vault-door-icon.vault-active .vault-frame {
+  box-shadow: 0 0 18px rgba(0, 212, 255, .35);
+}
+
+/* Make sure the “interior” shows when completed (was behind with z:-1) */
+.vault-heist-game .vault-interior {
+  z-index: 1; /* was -1; keep it visible between the open doors */
+}
