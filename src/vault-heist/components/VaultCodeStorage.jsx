@@ -8,7 +8,7 @@ const VaultCodeStorage = ({ unlockedCodes }) => {
     2: 'R.U.hAppY?',
     3: 'P3rs3v3r3!',
     4: 'm@thisc00l',
-    5: 'B3li3v3-NU',
+    5: 'YaY4u',
     6: 'UGl0v3sy0u'
   };
 
