@@ -46,12 +46,68 @@
 }
 
 .vault-heist-game .vault-sidebar {
-  width: 90px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px 5px;
-  flex-shrink: 0;
+  width: 90px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  padding: 10px 5px !important;
+  flex-shrink: 0 !important;
+}
+
+.vault-heist-game .vault-simple {
+  width: 80px !important;
+  height: 80px !important;
+  background: linear-gradient(145deg, #2c3e50, #1a252f) !important;
+  border: 3px solid #34495e !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.vault-heist-game .vault-simple.vault-locked {
+  opacity: 0.6 !important;
+}
+
+.vault-heist-game .vault-simple.vault-active {
+  border-color: #00d4ff !important;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.6) !important;
+  animation: vaultPulse 1.5s infinite !important;
+}
+
+.vault-heist-game .vault-simple.vault-completed {
+  background: linear-gradient(145deg, #27ae60, #1e8449) !important;
+  border-color: #27ae60 !important;
+}
+
+.vault-heist-game .vault-number-simple {
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: #00d4ff !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  border: 2px solid #34495e !important;
+}
+
+.vault-heist-game .vault-icon-simple {
+  font-size: 36px !important;
+  line-height: 1 !important;
+}
+
+@keyframes vaultPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .vault-heist-game .vault-door-icon {
