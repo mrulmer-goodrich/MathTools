@@ -86,175 +86,223 @@ export const problemSets = {
 
 
 // === Vault Heist — problems.js patch (Set 2 & Set 3) ===
-// Drop-in replacement for the set2 and set3 objects inside your existing export.
-// Notes:
-// - No SF = 1. All scale factors are unique within each set.
-// - Image paths assume you'll place new images under /public/assets/ with these filenames.
-// - Acceptable answers include common fraction equivalents where helpful.
-// === Vault Heist — Set 2 (Multiple Choice, mixed SFs) ===
-// Replace ONLY your existing set2 object in problems.js with the object below.
-// Image files expected under /public/assets/ as set2_p#_{orig|copy}.png
-// Each image should show exactly ONE measurement near the corresponding side (not overlapping the shape).
-// Choices order is mixed; correctAnswer is the scale factor (copy ÷ original).
+// ========================================
+// REPLACE SET 2 AND SET 3 IN problems.js
+// ========================================
+// Updated: Set 3 now MULTIPLE CHOICE (not text input)
+// Code sequences updated to: R.U.hAppY? and P3rs3v3r3!
 
-set2: {
-  id: 2,
-  title: "Calculate Scale Factor",
-  description: "One measurement on the original and one on the copy. Choose the correct scale factor (copy ÷ original).",
-  type: "multiple-choice",
-  questionPrompt: "What is the scale factor?",
-  problems: [
-    // SF = 4  ( > 1 )
-    { id: 1, originalImage: "/assets/set2_p1_orig.png",  copyImage: "/assets/set2_p1_copy.png",
-      originalSide: 7, copySide: 28,
-      choices: ["7", "28", "4", "1/4"], correctAnswer: "4" },
+  set2: {
+    id: 2,
+    title: "Calculate Scale Factor",
+    description: "One measurement on the original and one on the copy. Choose the correct scale factor (copy ÷ original).",
+    type: "multiple-choice",
+    questionPrompt: "What is the scale factor?",
+    codeSequence: ['R', '.', 'U', '.', 'h', 'A', 'p', 'p', 'Y', '?'],
+    problems: [
+      // Problem 1: Rectangle, SF = 4 (enlargement)
+      {
+        id: 1,
+        originalImage: "/assets/set2_p1_orig.png",
+        copyImage: "/assets/set2_p1_copy.png",
+        originalSide: 7,
+        copySide: 28,
+        choices: ["7", "28", "4", "1/4"],
+        correctAnswer: "4"
+      },
+      // Problem 2: Triangle, SF = 1/5 (reduction)
+      {
+        id: 2,
+        originalImage: "/assets/set2_p2_orig.png",
+        copyImage: "/assets/set2_p2_copy.png",
+        originalSide: 15,
+        copySide: 3,
+        choices: ["1/5", "5", "15", "3"],
+        correctAnswer: "1/5"
+      },
+      // Problem 3: Pentagon, SF = 9 (enlargement)
+      {
+        id: 3,
+        originalImage: "/assets/set2_p3_orig.png",
+        copyImage: "/assets/set2_p3_copy.png",
+        originalSide: 2,
+        copySide: 18,
+        choices: ["18", "2", "9", "1/9"],
+        correctAnswer: "9"
+      },
+      // Problem 4: Trapezoid, SF = 1/2 (reduction)
+      {
+        id: 4,
+        originalImage: "/assets/set2_p4_orig.png",
+        copyImage: "/assets/set2_p4_copy.png",
+        originalSide: 12,
+        copySide: 6,
+        choices: ["12", "6", "1/2", "2"],
+        correctAnswer: "1/2"
+      },
+      // Problem 5: Circle, SF = 3 (enlargement)
+      {
+        id: 5,
+        originalImage: "/assets/set2_p5_orig.png",
+        copyImage: "/assets/set2_p5_copy.png",
+        originalSide: 8,
+        copySide: 24,
+        choices: ["3", "1/3", "8", "24"],
+        correctAnswer: "3"
+      },
+      // Problem 6: Hexagon, SF = 1/3 (reduction)
+      {
+        id: 6,
+        originalImage: "/assets/set2_p6_orig.png",
+        copyImage: "/assets/set2_p6_copy.png",
+        originalSide: 15,
+        copySide: 5,
+        choices: ["5", "15", "1/3", "3"],
+        correctAnswer: "1/3"
+      },
+      // Problem 7: Parallelogram, SF = 7 (enlargement)
+      {
+        id: 7,
+        originalImage: "/assets/set2_p7_orig.png",
+        copyImage: "/assets/set2_p7_copy.png",
+        originalSide: 3,
+        copySide: 21,
+        choices: ["7", "1/7", "3", "21"],
+        correctAnswer: "7"
+      },
+      // Problem 8: Octagon, SF = 1/6 (reduction)
+      {
+        id: 8,
+        originalImage: "/assets/set2_p8_orig.png",
+        copyImage: "/assets/set2_p8_copy.png",
+        originalSide: 18,
+        copySide: 3,
+        choices: ["1/6", "6", "18", "3"],
+        correctAnswer: "1/6"
+      },
+      // Problem 9: Rhombus, SF = 5 (enlargement)
+      {
+        id: 9,
+        originalImage: "/assets/set2_p9_orig.png",
+        copyImage: "/assets/set2_p9_copy.png",
+        originalSide: 4,
+        copySide: 20,
+        choices: ["4", "20", "5", "1/5"],
+        correctAnswer: "5"
+      },
+      // Problem 10: Square, SF = 1/4 (reduction)
+      {
+        id: 10,
+        originalImage: "/assets/set2_p10_orig.png",
+        copyImage: "/assets/set2_p10_copy.png",
+        originalSide: 16,
+        copySide: 4,
+        choices: ["1/4", "4", "16", "4/1"],
+        correctAnswer: "1/4"
+      }
+    ]
+  },
 
-    // SF = 1/5  ( < 1 )
-    { id: 2, originalImage: "/assets/set2_p2_orig.png",  copyImage: "/assets/set2_p2_copy.png",
-      originalSide: 15, copySide: 3,
-      choices: ["1/5", "5", "15", "3"], correctAnswer: "1/5" },
-
-    // SF = 9  ( > 1 )
-    { id: 3, originalImage: "/assets/set2_p3_orig.png",  copyImage: "/assets/set2_p3_copy.png",
-      originalSide: 2, copySide: 18,
-      choices: ["18", "2", "9", "1/9"], correctAnswer: "9" },
-
-    // SF = 1/2  ( < 1 )
-    { id: 4, originalImage: "/assets/set2_p4_orig.png",  copyImage: "/assets/set2_p4_copy.png",
-      originalSide: 12, copySide: 6,
-      choices: ["12", "6", "1/2", "2"], correctAnswer: "1/2" },
-
-    // SF = 3  ( > 1 )
-    { id: 5, originalImage: "/assets/set2_p5_orig.png",  copyImage: "/assets/set2_p5_copy.png",
-      originalSide: 8, copySide: 24,
-      choices: ["3", "1/3", "8", "24"], correctAnswer: "3" },
-
-    // SF = 1/3  ( < 1 )
-    { id: 6, originalImage: "/assets/set2_p6_orig.png",  copyImage: "/assets/set2_p6_copy.png",
-      originalSide: 15, copySide: 5,
-      choices: ["5", "15", "1/3", "3"], correctAnswer: "1/3" },
-
-    // SF = 7  ( > 1 )
-    { id: 7, originalImage: "/assets/set2_p7_orig.png",  copyImage: "/assets/set2_p7_copy.png",
-      originalSide: 3, copySide: 21,
-      choices: ["7", "1/7", "3", "21"], correctAnswer: "7" },
-
-    // SF = 1/6  ( < 1 )
-    { id: 8, originalImage: "/assets/set2_p8_orig.png",  copyImage: "/assets/set2_p8_copy.png",
-      originalSide: 18, copySide: 3,
-      choices: ["1/6", "6", "18", "3"], correctAnswer: "1/6" },
-
-    // SF = 5  ( > 1 )
-    { id: 9, originalImage: "/assets/set2_p9_orig.png",  copyImage: "/assets/set2_p9_copy.png",
-      originalSide: 4, copySide: 20,
-      choices: ["4", "20", "5", "1/5"], correctAnswer: "5" },
-
-    // SF = 1/4  ( < 1 )
-    { id: 10, originalImage: "/assets/set2_p10_orig.png", copyImage: "/assets/set2_p10_copy.png",
-      originalSide: 16, copySide: 4,
-      choices: ["1/4", "4", "16", "4/1"], correctAnswer: "1/4" }
-  ]
-},
-
-set3: {
-  id: 3,
-  title: "Find Missing Side Length",
-  description: "Find the missing measurement on the copy.",
-  type: "text-input",
-  questionPrompt: "Missing Side Length?",
-  problems: [
-    // SF 1.5; 6 cm -> 9 cm
-    {
-      id: 1,
-      originalImage: "/assets/vh_set3_p1_orig.png",
-      copyImage: "/assets/vh_set3_p1_copy.png",
-      correctAnswer: "9",
-      acceptableAnswers: ["9", "9 cm"],
-      unit: "cm"
-    },
-    // SF 0.75; 8 in -> 6 in
-    {
-      id: 2,
-      originalImage: "/assets/vh_set3_p2_orig.png",
-      copyImage: "/assets/vh_set3_p2_copy.png",
-      correctAnswer: "6",
-      acceptableAnswers: ["6", "6 in"],
-      unit: "in"
-    },
-    // SF 1.25; 12 ft -> 15 ft
-    {
-      id: 3,
-      originalImage: "/assets/vh_set3_p3_orig.png",
-      copyImage: "/assets/vh_set3_p3_copy.png",
-      correctAnswer: "15",
-      acceptableAnswers: ["15", "15 ft"],
-      unit: "ft"
-    },
-    // SF 0.4; 10 m -> 4 m
-    {
-      id: 4,
-      originalImage: "/assets/vh_set3_p4_orig.png",
-      copyImage: "/assets/vh_set3_p4_copy.png",
-      correctAnswer: "4",
-      acceptableAnswers: ["4", "4 m"],
-      unit: "m"
-    },
-    // SF 1.8; 5 cm -> 9 cm
-    {
-      id: 5,
-      originalImage: "/assets/vh_set3_p5_orig.png",
-      copyImage: "/assets/vh_set3_p5_copy.png",
-      correctAnswer: "9",
-      acceptableAnswers: ["9", "9 cm"],
-      unit: "cm"
-    },
-    // SF 0.6; 25 mm -> 15 mm
-    {
-      id: 6,
-      originalImage: "/assets/vh_set3_p6_orig.png",
-      copyImage: "/assets/vh_set3_p6_copy.png",
-      correctAnswer: "15",
-      acceptableAnswers: ["15", "15 mm"],
-      unit: "mm"
-    },
-    // SF 2.2; 5 ft -> 11 ft
-    {
-      id: 7,
-      originalImage: "/assets/vh_set3_p7_orig.png",
-      copyImage: "/assets/vh_set3_p7_copy.png",
-      correctAnswer: "11",
-      acceptableAnswers: ["11", "11 ft"],
-      unit: "ft"
-    },
-    // SF 4/3 (~1.33); 6 m -> 8 m
-    {
-      id: 8,
-      originalImage: "/assets/vh_set3_p8_orig.png",
-      copyImage: "/assets/vh_set3_p8_copy.png",
-      correctAnswer: "8",
-      acceptableAnswers: ["8", "8 m"],
-      unit: "m"
-    },
-    // SF 7/4 (1.75); 8 cm -> 14 cm
-    {
-      id: 9,
-      originalImage: "/assets/vh_set3_p9_orig.png",
-      copyImage: "/assets/vh_set3_p9_copy.png",
-      correctAnswer: "14",
-      acceptableAnswers: ["14", "14 cm"],
-      unit: "cm"
-    },
-    // SF 0.5; 10 in -> 5 in
-    {
-      id: 10,
-      originalImage: "/assets/vh_set3_p10_orig.png",
-      copyImage: "/assets/vh_set3_p10_copy.png",
-      correctAnswer: "5",
-      acceptableAnswers: ["5", "5 in"],
-      unit: "in"
-    }
-  ]
-},
+  set3: {
+    id: 3,
+    title: "Find Missing Side Length",
+    description: "Find the missing measurement on the copy. Use the scale factor!",
+    type: "multiple-choice",
+    questionPrompt: "What is the missing side length?",
+    codeSequence: ['P', '3', 'r', 's', '3', 'v', '3', 'r', '3', '!'],
+    problems: [
+      // Problem 1: Trapezoid, SF = 3, Answer: 30
+      // Given: Orig 5,10 → Copy 15,?
+      {
+        id: 1,
+        originalImage: "/assets/set3_p1_orig.png",
+        copyImage: "/assets/set3_p1_copy.png",
+        choices: ["30", "10", "5", "90"],
+        correctAnswer: "30"
+      },
+      // Problem 2: Octagon, SF = 1/6, Answer: 3
+      // Given: Orig 12,18 → Copy 2,?
+      {
+        id: 2,
+        originalImage: "/assets/set3_p2_orig.png",
+        copyImage: "/assets/set3_p2_copy.png",
+        choices: ["3", "18", "6", "36"],
+        correctAnswer: "3"
+      },
+      // Problem 3: Rectangle, SF = 1/2, Answer: 4
+      // Given: Orig 4,8 → Copy 2,?
+      {
+        id: 3,
+        originalImage: "/assets/set3_p3_orig.png",
+        copyImage: "/assets/set3_p3_copy.png",
+        choices: ["4", "8", "2", "16"],
+        correctAnswer: "4"
+      },
+      // Problem 4: Circle, SF = 4, Answer: 24
+      // Given: Orig 4,6 → Copy 16,?
+      {
+        id: 4,
+        originalImage: "/assets/set3_p4_orig.png",
+        copyImage: "/assets/set3_p4_copy.png",
+        choices: ["24", "6", "1.5", "96"],
+        correctAnswer: "24"
+      },
+      // Problem 5: Square, SF = 1/5, Answer: 3
+      // Given: Orig 10,15 → Copy 2,?
+      {
+        id: 5,
+        originalImage: "/assets/set3_p5_orig.png",
+        copyImage: "/assets/set3_p5_copy.png",
+        choices: ["3", "15", "75", "5"],
+        correctAnswer: "3"
+      },
+      // Problem 6: Triangle, SF = 2, Answer: 12
+      // Given: Orig 3,6 → Copy 6,?
+      {
+        id: 6,
+        originalImage: "/assets/set3_p6_orig.png",
+        copyImage: "/assets/set3_p6_copy.png",
+        choices: ["12", "6", "3", "18"],
+        correctAnswer: "12"
+      },
+      // Problem 7: Hexagon, SF = 1/4, Answer: 3
+      // Given: Orig 8,12 → Copy 2,?
+      {
+        id: 7,
+        originalImage: "/assets/set3_p7_orig.png",
+        copyImage: "/assets/set3_p7_copy.png",
+        choices: ["3", "12", "48", "4"],
+        correctAnswer: "3"
+      },
+      // Problem 8: Pentagon, SF = 1/3, Answer: 3
+      // Given: Orig 6,9 → Copy 2,?
+      {
+        id: 8,
+        originalImage: "/assets/set3_p8_orig.png",
+        copyImage: "/assets/set3_p8_copy.png",
+        choices: ["3", "9", "27", "6"],
+        correctAnswer: "3"
+      },
+      // Problem 9: Parallelogram, SF = 6, Answer: 54
+      // Given: Orig 3,9 → Copy 18,?
+      {
+        id: 9,
+        originalImage: "/assets/set3_p9_orig.png",
+        copyImage: "/assets/set3_p9_copy.png",
+        choices: ["54", "9", "1.5", "324"],
+        correctAnswer: "54"
+      },
+      // Problem 10: Rhombus, SF = 5, Answer: 40
+      // Given: Orig 4,8 → Copy 20,?
+      {
+        id: 10,
+        originalImage: "/assets/set3_p10_orig.png",
+        copyImage: "/assets/set3_p10_copy.png",
+        choices: ["40", "8", "4", "160"],
+        correctAnswer: "40"
+      }
+    ]
+  },
 
 
 
