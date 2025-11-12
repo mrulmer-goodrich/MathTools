@@ -372,84 +372,74 @@ export const problemSets = {
       }
     ]
   },
-  set6: {
+
+    set6: {
     id: 6,
     title: "Conceptual Understanding",
     description: "Answer questions about what happens when shapes are scaled.",
-    type: "conceptual",
+    type: "multiple-choice",
     questionPrompt: "",
     codeSequence: ['U', 'G', 'l', '0', 'v', '3', 's', 'y', '0', 'u'],
     problems: [
       {
         id: 1,
         question: "In the original shape, angle A = 65°. The scale factor is 3. What is angle A in the copy?",
-        correctAnswer: "65",
-        acceptableAnswers: ["65", "65°", "65 degrees"],
-        unit: "°"
+        choices: ["65°", "195°", "22°", "68°"],
+        correctAnswer: "65°"
       },
       {
         id: 2,
         question: "In the original shape, a side length is 8 cm. The scale factor is 0.5. What is that side length in the copy?",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4 cm"],
-        unit: "cm"
+        choices: ["4 cm", "16 cm", "8 cm", "2 cm"],
+        correctAnswer: "4 cm"
       },
       {
         id: 3,
         question: "In the original shape, the area is 20 ft². The scale factor is 2. What is the area of the copy?",
-        correctAnswer: "80",
-        acceptableAnswers: ["80", "80 ft²", "80 ft^2"],
-        unit: "ft²"
+        choices: ["80 ft²", "40 ft²", "20 ft²", "160 ft²"],
+        correctAnswer: "80 ft²"
       },
       {
         id: 4,
         question: "In the original shape, angle B = 90°. The scale factor is 0.25. What is angle B in the copy?",
-        correctAnswer: "90",
-        acceptableAnswers: ["90", "90°", "90 degrees"],
-        unit: "°"
+        choices: ["90°", "23°", "360°", "22.5°"],
+        correctAnswer: "90°"
       },
       {
         id: 5,
         question: "In the original shape, a side length is 12 in. The scale factor is 4. What is that side length in the copy?",
-        correctAnswer: "48",
-        acceptableAnswers: ["48", "48 in"],
-        unit: "in"
+        choices: ["48 in", "3 in", "16 in", "192 in"],
+        correctAnswer: "48 in"
       },
       {
         id: 6,
         question: "In the original shape, the area is 36 m². The scale factor is 0.5. What is the area of the copy?",
-        correctAnswer: "9",
-        acceptableAnswers: ["9", "9 m²", "9 m^2"],
-        unit: "m²"
+        choices: ["9 m²", "18 m²", "72 m²", "36 m²"],
+        correctAnswer: "9 m²"
       },
       {
         id: 7,
         question: "In the original shape, angle C = 120°. The scale factor is 1. What is angle C in the copy?",
-        correctAnswer: "120",
-        acceptableAnswers: ["120", "120°", "120 degrees"],
-        unit: "°"
+        choices: ["120°", "240°", "60°", "121°"],
+        correctAnswer: "120°"
       },
       {
         id: 8,
         question: "In the original shape, a side length is 15 mm. The scale factor is 3. What is that side length in the copy?",
-        correctAnswer: "45",
-        acceptableAnswers: ["45", "45 mm"],
-        unit: "mm"
+        choices: ["45 mm", "5 mm", "18 mm", "135 mm"],
+        correctAnswer: "45 mm"
       },
       {
         id: 9,
         question: "In the original shape, the area is 9 cm². The scale factor is 5. What is the area of the copy?",
-        correctAnswer: "225",
-        acceptableAnswers: ["225", "225 cm²", "225 cm^2"],
-        unit: "cm²"
+        choices: ["225 cm²", "45 cm²", "81 cm²", "14 cm²"],
+        correctAnswer: "225 cm²"
       },
       {
         id: 10,
         question: "In the original shape, angle D = 45°. The scale factor is 2. What is angle D in the copy?",
-        correctAnswer: "45",
-        acceptableAnswers: ["45", "45°", "45 degrees"],
-        unit: "°"
+        choices: ["45°", "90°", "23°", "47°"],
+        correctAnswer: "45°"
       }
     ]
   }
-};
