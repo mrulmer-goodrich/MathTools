@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { problemSets } from './problems'; 
 import VaultGrid from './components/VaultGrid';
@@ -412,4 +411,3 @@ const VaultHeist = () => {
 };
 
 export default VaultHeist;
-
