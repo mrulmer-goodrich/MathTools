@@ -1392,3 +1392,317 @@
 .three-strikes-overlay .strikes-message {
   color: #ffffff !important;
 }
+
+/* Enhanced Vault Graphics - Add to existing vault.css */
+
+/* Make sure vault sidebar is visible */
+.vault-heist-game .vault-sidebar {
+  width: 100px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 15px 10px !important;
+  flex-shrink: 0 !important;
+  background: rgba(26, 37, 47, 0.5) !important;
+  border-right: 2px solid #34495e !important;
+}
+
+/* Enhanced vault door icon */
+.vault-heist-game .vault-door-icon {
+  width: 80px !important;
+  height: 80px !important;
+  position: relative !important;
+  cursor: default !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Metallic vault frame with 3D effect */
+.vault-heist-game .vault-frame {
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(145deg, #34495e, #1a252f) !important;
+  border: 4px solid #2c3e50 !important;
+  border-radius: 10px !important;
+  position: relative !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.6) !important;
+  overflow: hidden !important;
+}
+
+/* Add rivets/bolts to vault frame */
+.vault-heist-game .vault-frame::before,
+.vault-heist-game .vault-frame::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 8px !important;
+  height: 8px !important;
+  background: radial-gradient(circle, #7f8c8d 0%, #2c3e50 100%) !important;
+  border-radius: 50% !important;
+  border: 1px solid #1a252f !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+}
+
+.vault-heist-game .vault-frame::before {
+  top: 8px !important;
+  left: 8px !important;
+}
+
+.vault-heist-game .vault-frame::after {
+  top: 8px !important;
+  right: 8px !important;
+}
+
+/* Vault door front */
+.vault-heist-game .vault-door-front {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  background: radial-gradient(circle at 30% 30%, rgba(52, 73, 94, 0.3), transparent) !important;
+}
+
+/* Vault number badge - enhanced */
+.vault-heist-game .vault-number-badge {
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 150, 200, 0.3)) !important;
+  color: #00d4ff !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: 2px solid #00d4ff !important;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.4) !important;
+  text-shadow: 0 0 4px rgba(0, 212, 255, 0.8) !important;
+}
+
+/* Enhanced lock mechanism - bigger and cooler */
+.vault-heist-game .vault-lock {
+  width: 50px !important;
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+}
+
+.vault-heist-game .vault-lock.pulsing {
+  animation: vaultPulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes vaultPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.15) rotate(5deg); }
+}
+
+/* Lock circle - enhanced 3D lock dial */
+.vault-heist-game .lock-circle {
+  width: 40px !important;
+  height: 40px !important;
+  border: 4px solid #556677 !important;
+  border-radius: 50% !important;
+  position: relative !important;
+  background: radial-gradient(circle, #3a4a5a 0%, #2c3642 100%) !important;
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Add tick marks around lock dial */
+.vault-heist-game .lock-circle::before {
+  content: '' !important;
+  position: absolute !important;
+  width: 48px !important;
+  height: 48px !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background-image: 
+    linear-gradient(0deg, transparent 48%, #556677 48%, #556677 52%, transparent 52%),
+    linear-gradient(90deg, transparent 48%, #556677 48%, #556677 52%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, #556677 48%, #556677 52%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, #556677 48%, #556677 52%, transparent 52%) !important;
+  opacity: 0.3 !important;
+}
+
+/* Active lock - glowing cyan */
+.vault-heist-game .lock-circle.active {
+  border-color: #00d4ff !important;
+  background: radial-gradient(circle, #1a4d5a 0%, #0d2530 100%) !important;
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 212, 255, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.8),
+    0 0 40px rgba(0, 212, 255, 0.4) !important;
+}
+
+.vault-heist-game .lock-circle.active::before {
+  background-image: 
+    linear-gradient(0deg, transparent 48%, #00d4ff 48%, #00d4ff 52%, transparent 52%),
+    linear-gradient(90deg, transparent 48%, #00d4ff 48%, #00d4ff 52%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, #00d4ff 48%, #00d4ff 52%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, #00d4ff 48%, #00d4ff 52%, transparent 52%) !important;
+  opacity: 0.5 !important;
+}
+
+/* Lock crosshair lines */
+.vault-heist-game .lock-line {
+  position: absolute !important;
+  background: #7f8c8d !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform-origin: center !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.vault-heist-game .lock-circle.active .lock-line {
+  background: #00d4ff !important;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.8) !important;
+}
+
+.vault-heist-game .lock-line-1 {
+  width: 3px !important;
+  height: 20px !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.vault-heist-game .lock-line-2 {
+  width: 20px !important;
+  height: 3px !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Locked vault state - dimmed */
+.vault-heist-game .vault-door-icon.vault-locked {
+  opacity: 0.5 !important;
+  filter: grayscale(0.3) !important;
+}
+
+.vault-heist-game .vault-door-icon.vault-locked:hover {
+  opacity: 0.6 !important;
+}
+
+/* Active vault - glowing border and pulse */
+.vault-heist-game .vault-door-icon.vault-active .vault-frame {
+  border-color: #00d4ff !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(0, 212, 255, 0.8),
+    0 0 40px rgba(0, 212, 255, 0.4) !important;
+}
+
+.vault-heist-game .vault-door-icon.vault-active {
+  animation: vaultFramePulse 2s ease-in-out infinite !important;
+}
+
+@keyframes vaultFramePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Completed vault - green with open doors */
+.vault-heist-game .vault-door-icon.vault-completed .vault-frame {
+  border-color: #27ae60 !important;
+  background: linear-gradient(145deg, #2d6a4f, #1b4332) !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(39, 174, 96, 0.6) !important;
+}
+
+/* Open vault doors */
+.vault-heist-game .vault-open {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.vault-heist-game .open-door-left,
+.vault-heist-game .open-door-right {
+  position: absolute !important;
+  width: 42% !important;
+  height: 90% !important;
+  background: linear-gradient(145deg, #2ecc71, #27ae60) !important;
+  border: 3px solid #229954 !important;
+  top: 5% !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.vault-heist-game .open-door-left {
+  left: 2% !important;
+  border-radius: 8px 0 0 8px !important;
+  transform-origin: left center !important;
+  animation: doorOpenLeft 0.8s ease-out forwards !important;
+}
+
+.vault-heist-game .open-door-right {
+  right: 2% !important;
+  border-radius: 0 8px 8px 0 !important;
+  transform-origin: right center !important;
+  animation: doorOpenRight 0.8s ease-out forwards !important;
+}
+
+@keyframes doorOpenLeft {
+  from { transform: perspective(400px) rotateY(0deg); }
+  to { transform: perspective(400px) rotateY(-75deg); }
+}
+
+@keyframes doorOpenRight {
+  from { transform: perspective(400px) rotateY(0deg); }
+  to { transform: perspective(400px) rotateY(75deg); }
+}
+
+/* Vault interior with treasure */
+.vault-heist-game .vault-interior {
+  position: absolute !important;
+  width: 65% !important;
+  height: 65% !important;
+  background: radial-gradient(circle at center, #ffd700 0%, #f39c12 50%, #e67e22 100%) !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1 !important;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 215, 0, 0.6) !important;
+  animation: treasureGlow 2s ease-in-out infinite !important;
+}
+
+@keyframes treasureGlow {
+  0%, 100% { 
+    box-shadow: 
+      inset 0 0 20px rgba(0, 0, 0, 0.5),
+      0 0 30px rgba(255, 215, 0, 0.6);
+  }
+  50% { 
+    box-shadow: 
+      inset 0 0 20px rgba(0, 0, 0, 0.5),
+      0 0 40px rgba(255, 215, 0, 0.9);
+  }
+}
+
+/* Treasure icon animation */
+.vault-heist-game .cash-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.8)) !important;
+  animation: treasureSpin 3s ease-in-out infinite !important;
+}
+
+@keyframes treasureSpin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+}
