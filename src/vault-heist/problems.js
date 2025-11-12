@@ -87,10 +87,12 @@ export const problemSets = {
 
 // === Vault Heist — problems.js patch (Set 2 & Set 3) ===
 // ========================================
-// REPLACE SET 2 AND SET 3 IN problems.js
+// SETS 2 & 3 - FINAL UPDATE
 // ========================================
-// Updated: Set 3 now MULTIPLE CHOICE (not text input)
-// Code sequences updated to: R.U.hAppY? and P3rs3v3r3!
+// Changes:
+// - Set 2: Removed a,b,c,d labels, images scaled visually
+// - Set 3: All unique SFs, no repetitive answers, octagon on straight edges
+// - Code sequences included
 
   set2: {
     id: 2,
@@ -100,103 +102,73 @@ export const problemSets = {
     questionPrompt: "What is the scale factor?",
     codeSequence: ['R', '.', 'U', '.', 'h', 'A', 'p', 'p', 'Y', '?'],
     problems: [
-      // Problem 1: Rectangle, SF = 4 (enlargement)
       {
         id: 1,
         originalImage: "/assets/set2_p1_orig.png",
         copyImage: "/assets/set2_p1_copy.png",
-        originalSide: 7,
-        copySide: 28,
         choices: ["7", "28", "4", "1/4"],
         correctAnswer: "4"
       },
-      // Problem 2: Triangle, SF = 1/5 (reduction)
       {
         id: 2,
         originalImage: "/assets/set2_p2_orig.png",
         copyImage: "/assets/set2_p2_copy.png",
-        originalSide: 15,
-        copySide: 3,
         choices: ["1/5", "5", "15", "3"],
         correctAnswer: "1/5"
       },
-      // Problem 3: Pentagon, SF = 9 (enlargement)
       {
         id: 3,
         originalImage: "/assets/set2_p3_orig.png",
         copyImage: "/assets/set2_p3_copy.png",
-        originalSide: 2,
-        copySide: 18,
         choices: ["18", "2", "9", "1/9"],
         correctAnswer: "9"
       },
-      // Problem 4: Trapezoid, SF = 1/2 (reduction)
       {
         id: 4,
         originalImage: "/assets/set2_p4_orig.png",
         copyImage: "/assets/set2_p4_copy.png",
-        originalSide: 12,
-        copySide: 6,
         choices: ["12", "6", "1/2", "2"],
         correctAnswer: "1/2"
       },
-      // Problem 5: Circle, SF = 3 (enlargement)
       {
         id: 5,
         originalImage: "/assets/set2_p5_orig.png",
         copyImage: "/assets/set2_p5_copy.png",
-        originalSide: 8,
-        copySide: 24,
         choices: ["3", "1/3", "8", "24"],
         correctAnswer: "3"
       },
-      // Problem 6: Hexagon, SF = 1/3 (reduction)
       {
         id: 6,
         originalImage: "/assets/set2_p6_orig.png",
         copyImage: "/assets/set2_p6_copy.png",
-        originalSide: 15,
-        copySide: 5,
         choices: ["5", "15", "1/3", "3"],
         correctAnswer: "1/3"
       },
-      // Problem 7: Parallelogram, SF = 7 (enlargement)
       {
         id: 7,
         originalImage: "/assets/set2_p7_orig.png",
         copyImage: "/assets/set2_p7_copy.png",
-        originalSide: 3,
-        copySide: 21,
         choices: ["7", "1/7", "3", "21"],
         correctAnswer: "7"
       },
-      // Problem 8: Octagon, SF = 1/6 (reduction)
       {
         id: 8,
         originalImage: "/assets/set2_p8_orig.png",
         copyImage: "/assets/set2_p8_copy.png",
-        originalSide: 18,
-        copySide: 3,
         choices: ["1/6", "6", "18", "3"],
         correctAnswer: "1/6"
       },
-      // Problem 9: Rhombus, SF = 5 (enlargement)
       {
         id: 9,
         originalImage: "/assets/set2_p9_orig.png",
         copyImage: "/assets/set2_p9_copy.png",
-        originalSide: 4,
-        copySide: 20,
         choices: ["4", "20", "5", "1/5"],
         correctAnswer: "5"
       },
-      // Problem 10: Square, SF = 1/4 (reduction)
       {
         id: 10,
         originalImage: "/assets/set2_p10_orig.png",
         copyImage: "/assets/set2_p10_copy.png",
-        originalSide: 16,
-        copySide: 4,
         choices: ["1/4", "4", "16", "4/1"],
         correctAnswer: "1/4"
       }
@@ -211,102 +183,88 @@ export const problemSets = {
     questionPrompt: "What is the missing side length?",
     codeSequence: ['P', '3', 'r', 's', '3', 'v', '3', 'r', '3', '!'],
     problems: [
-      // Problem 1: Trapezoid, SF = 3, Answer: 30
-      // Given: Orig 5,10 → Copy 15,?
+      // P1: SF=2, Triangle, Orig 5,8 → Copy 10,16
       {
         id: 1,
         originalImage: "/assets/set3_p1_orig.png",
         copyImage: "/assets/set3_p1_copy.png",
-        choices: ["30", "10", "5", "90"],
-        correctAnswer: "30"
+        choices: ["16", "8", "32", "4"],
+        correctAnswer: "16"
       },
-      // Problem 2: Octagon, SF = 1/6, Answer: 3
-      // Given: Orig 12,18 → Copy 2,?
+      // P2: SF=1/8, Hexagon, Orig 16,24 → Copy 2,3
       {
         id: 2,
         originalImage: "/assets/set3_p2_orig.png",
         copyImage: "/assets/set3_p2_copy.png",
-        choices: ["3", "18", "6", "36"],
+        choices: ["3", "24", "192", "12"],
         correctAnswer: "3"
       },
-      // Problem 3: Rectangle, SF = 1/2, Answer: 4
-      // Given: Orig 4,8 → Copy 2,?
+      // P3: SF=8, Rectangle, Orig 3,5 → Copy 24,40
       {
         id: 3,
         originalImage: "/assets/set3_p3_orig.png",
         copyImage: "/assets/set3_p3_copy.png",
-        choices: ["4", "8", "2", "16"],
-        correctAnswer: "4"
+        choices: ["40", "5", "15", "80"],
+        correctAnswer: "40"
       },
-      // Problem 4: Circle, SF = 4, Answer: 24
-      // Given: Orig 4,6 → Copy 16,?
+      // P4: SF=1/7, Pentagon, Orig 14,21 → Copy 2,3
       {
         id: 4,
         originalImage: "/assets/set3_p4_orig.png",
         copyImage: "/assets/set3_p4_copy.png",
-        choices: ["24", "6", "1.5", "96"],
-        correctAnswer: "24"
+        choices: ["3", "21", "6", "147"],
+        correctAnswer: "3"
       },
-      // Problem 5: Square, SF = 1/5, Answer: 3
-      // Given: Orig 10,15 → Copy 2,?
+      // P5: SF=1.5, Square, Orig 6,10 → Copy 9,15
       {
         id: 5,
         originalImage: "/assets/set3_p5_orig.png",
         copyImage: "/assets/set3_p5_copy.png",
-        choices: ["3", "15", "75", "5"],
-        correctAnswer: "3"
+        choices: ["15", "10", "4", "30"],
+        correctAnswer: "15"
       },
-      // Problem 6: Triangle, SF = 2, Answer: 12
-      // Given: Orig 3,6 → Copy 6,?
+      // P6: SF=0.25, Trapezoid, Orig 12,20 → Copy 3,5
       {
         id: 6,
         originalImage: "/assets/set3_p6_orig.png",
         copyImage: "/assets/set3_p6_copy.png",
-        choices: ["12", "6", "3", "18"],
-        correctAnswer: "12"
+        choices: ["5", "20", "48", "15"],
+        correctAnswer: "5"
       },
-      // Problem 7: Hexagon, SF = 1/4, Answer: 3
-      // Given: Orig 8,12 → Copy 2,?
+      // P7: SF=6, Parallelogram, Orig 2,7 → Copy 12,42
       {
         id: 7,
         originalImage: "/assets/set3_p7_orig.png",
         copyImage: "/assets/set3_p7_copy.png",
-        choices: ["3", "12", "48", "4"],
-        correctAnswer: "3"
+        choices: ["42", "7", "14", "84"],
+        correctAnswer: "42"
       },
-      // Problem 8: Pentagon, SF = 1/3, Answer: 3
-      // Given: Orig 6,9 → Copy 2,?
+      // P8: SF=1/10, Octagon, Orig 30,50 → Copy 3,5
       {
         id: 8,
         originalImage: "/assets/set3_p8_orig.png",
         copyImage: "/assets/set3_p8_copy.png",
-        choices: ["3", "9", "27", "6"],
-        correctAnswer: "3"
+        choices: ["5", "50", "15", "500"],
+        correctAnswer: "5"
       },
-      // Problem 9: Parallelogram, SF = 6, Answer: 54
-      // Given: Orig 3,9 → Copy 18,?
+      // P9: SF=10, Rhombus, Orig 3,4 → Copy 30,40
       {
         id: 9,
         originalImage: "/assets/set3_p9_orig.png",
         copyImage: "/assets/set3_p9_copy.png",
-        choices: ["54", "9", "1.5", "324"],
-        correctAnswer: "54"
+        choices: ["40", "4", "120", "400"],
+        correctAnswer: "40"
       },
-      // Problem 10: Rhombus, SF = 5, Answer: 40
-      // Given: Orig 4,8 → Copy 20,?
+      // P10: SF=0.4, Circle, Orig 5,10 → Copy 2,4
       {
         id: 10,
         originalImage: "/assets/set3_p10_orig.png",
         copyImage: "/assets/set3_p10_copy.png",
-        choices: ["40", "8", "4", "160"],
-        correctAnswer: "40"
+        choices: ["4", "10", "25", "8"],
+        correctAnswer: "4"
       }
     ]
   },
-
-
-
-
 
   set4: {
     id: 4,
