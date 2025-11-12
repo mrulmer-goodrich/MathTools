@@ -21,8 +21,10 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
             {/* Vault door design */}
             <div className="vault-frame">
               <div className="vault-door-front">
+                {/* Vault number badge */}
                 <div className="vault-number-badge">{num}</div>
                 
+                {/* LOCKED STATE - Show lock mechanism */}
                 {status === 'locked' && (
                   <div className="vault-lock">
                     <div className="lock-circle">
@@ -32,6 +34,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
                   </div>
                 )}
                 
+                {/* ACTIVE STATE - Pulsing lock with glow */}
                 {status === 'active' && (
                   <div className="vault-lock pulsing">
                     <div className="lock-circle active">
@@ -41,12 +44,26 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
                   </div>
                 )}
                 
+                {/* COMPLETED STATE - Open doors with treasure */}
                 {status === 'completed' && (
                   <div className="vault-open">
                     <div className="open-door-left"></div>
                     <div className="open-door-right"></div>
                     <div className="vault-interior">
-                      <span className="cash-icon">💰</span>
+                      {/* SVG diamond/treasure icon instead of emoji */}
+                      <svg 
+                        viewBox="0 0 24 24" 
+                        width="24" 
+                        height="24"
+                        className="cash-icon"
+                      >
+                        <path 
+                          fill="#f1c40f" 
+                          d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                          stroke="#f39c12"
+                          strokeWidth="1"
+                        />
+                      </svg>
                     </div>
                   </div>
                 )}
