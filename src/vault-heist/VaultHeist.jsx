@@ -5,11 +5,14 @@ import CodeDisplay from './components/CodeDisplay';
 import ProblemDisplay from './components/ProblemDisplay';
 import VaultAnimation from './components/VaultAnimation';
 import StatsScreen from './components/StatsScreen';
+import MissionBriefing from './components/MissionBriefing';
 import './styles/vault.css';
+import './styles/mission-briefing.css';
 import VaultCodeStorage from './components/VaultCodeStorage';
 
 
 const VaultHeist = () => {
+  const [showBriefing, setShowBriefing] = useState(true); // NEW: Start with briefing
   const [gameState, setGameState] = useState('playing'); // 'playing', 'lockdown', 'complete'
   const [currentSet, setCurrentSet] = useState(1);
   const [currentProblem, setCurrentProblem] = useState(1);
@@ -24,7 +27,7 @@ const VaultHeist = () => {
   const [gameComplete, setGameComplete] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   
-  // NEW: Track unlocked codes
+  // Track unlocked codes
   const [unlockedCodes, setUnlockedCodes] = useState({
     1: false,
     2: false,
@@ -34,15 +37,37 @@ const VaultHeist = () => {
     6: false
   });
   
-  // NEW: State for showing in-game stats modal
+  // State for showing in-game stats modal
   const [showInGameStats, setShowInGameStats] = useState(false);
 
   // Get current set data
   const currentSetData = problemSets[`set${currentSet}`];
-  const currentProblemData = currentSetData.problems[currentProblem - 1];
-  const totalProblems = currentSetData.problems.length;
+  const currentProblemData = currentSetData?.problems[currentProblem - 1];
+  const totalProblems = currentSetData?.problems.length || 0;
 
-  // Sound effects (simple beep approach - can be replaced with actual sound files)
+  // NEW: Handle mission acceptance
+  const handleAcceptMission = () => {
+    setShowBriefing(false);
+    setSetStartTime(Date.now()); // Start timer when mission begins
+  };
+
+  // NEW: Handle skip briefing
+  const handleSkipBriefing = () => {
+    setShowBriefing(false);
+    setSetStartTime(Date.now());
+  };
+
+  // Show briefing screen first
+  if (showBriefing) {
+    return (
+      <MissionBriefing 
+        onAccept={handleAcceptMission}
+        onSkip={handleSkipBriefing}
+      />
+    );
+  }
+
+  // Sound effects
   const playSound = (type) => {
     if (!soundEnabled) return;
     
@@ -91,37 +116,30 @@ const VaultHeist = () => {
     }
 
     if (isCorrect) {
-      // Correct answer - lock the digit
       playSound('lock');
       setLockedDigits([...lockedDigits, currentProblem]);
       
-      // Move to next problem or complete set
       if (currentProblem < totalProblems) {
         setCurrentProblem(currentProblem + 1);
         setUserAnswer('');
       } else {
-        // Set complete!
         completeSet();
       }
     } else {
-      // Wrong answer - trigger alarm
       playSound('alarm');
       const newAlarmCount = alarmCount + 1;
       setAlarmCount(newAlarmCount);
       
-      // Flash red animation
       document.body.classList.add('alarm-flash');
       setTimeout(() => document.body.classList.remove('alarm-flash'), 300);
       
       if (newAlarmCount >= 3) {
-        // Security lockdown - dramatic full screen takeover
         setGameState('lockdown');
         setTimeout(() => {
           resetSet();
           setGameState('playing');
         }, 4000);
       } else {
-        // Just unlock last digit and retry
         const newLocked = lockedDigits.filter(d => d !== currentProblem);
         setLockedDigits(newLocked);
         setUserAnswer('');
@@ -145,7 +163,7 @@ const VaultHeist = () => {
     
     setVaultsCompleted([...vaultsCompleted, currentSet]);
     
-    // NEW: Unlock the code for this vault
+    // Unlock the code for this vault
     setUnlockedCodes({
       ...unlockedCodes,
       [currentSet]: true
@@ -153,7 +171,6 @@ const VaultHeist = () => {
     
     setShowVaultAnimation(true);
     
-    // After animation (10 seconds), move to next set or show completion
     setTimeout(() => {
       setShowVaultAnimation(false);
       
@@ -230,23 +247,19 @@ const VaultHeist = () => {
   return (
     <div className="vault-heist-game">
       <div className="vault-heist-container">
-      {/* Sidebar with vault progress */}
       <VaultGrid 
         currentSet={currentSet}
         vaultsCompleted={vaultsCompleted}
       />
 
-      {/* Main game area */}
       <div className="main-game-area">
         <div className="game-content">
-        {/* Code display - 10 spinning/locked digits */}
         <CodeDisplay 
           totalDigits={totalProblems}
           lockedDigits={lockedDigits}
           codeSequence={currentSetData.codeSequence}
         />
 
-        {/* Progress bar */}
         <div className="progress-section">
           <div className="progress-bar">
             <div 
@@ -256,7 +269,6 @@ const VaultHeist = () => {
           </div>
         </div>
 
-        {/* Problem display */}
         <ProblemDisplay 
           problem={currentProblemData}
           problemNumber={currentProblem}
@@ -267,7 +279,6 @@ const VaultHeist = () => {
           onSubmit={checkAnswer}
         />
 
-        {/* Bottom info bar with timer and alarms */}
         <div className="bottom-info-bar">
           <div className="timer-section">
             <span className="timer-icon">⏱️</span>
@@ -289,7 +300,6 @@ const VaultHeist = () => {
       </div>
       </div>
 
-      {/* NEW: Stats button - top left */}
       <button 
         className="stats-toggle"
         onClick={() => setShowInGameStats(!showInGameStats)}
@@ -298,7 +308,6 @@ const VaultHeist = () => {
         📊
       </button>
 
-      {/* Sound toggle */}
       <button 
         className="sound-toggle"
         onClick={() => setSoundEnabled(!soundEnabled)}
@@ -307,10 +316,8 @@ const VaultHeist = () => {
         {soundEnabled ? '🔊' : '🔇'}
       </button>
       
-      {/* NEW: Vault Code Storage - floating button */}
       <VaultCodeStorage unlockedCodes={unlockedCodes} />
       
-      {/* NEW: In-game stats modal */}
       {showInGameStats && (
         <div className="in-game-stats-overlay" onClick={() => setShowInGameStats(false)}>
           <div className="in-game-stats-modal" onClick={(e) => e.stopPropagation()}>
