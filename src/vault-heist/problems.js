@@ -3,48 +3,56 @@
 // Replace sample data with your actual problem images and answers after review
 
 export const problemSets = {
+  // ========================================
+// SETS 1, 2, 3 - COMPLETE FIXES
+// ========================================
+// Set 1: Decimals → Fractions, 3-strike rule (instant reset on ANY error)
+// Set 2: Remove letter labels from choices (just numbers)
+// Set 3: Problem 2 changed to Square, Problem 1 with bigger size difference
+
   set1: {
     id: 1,
     title: "Visual Scale Factor",
-    description: "Circle the correct scale factor. Original is on the LEFT.",
+    description: "Circle the correct scale factor. Original is on the LEFT. ⚠️ NO MISTAKES ALLOWED!",
     type: "multiple-choice",
     questionPrompt: "Scale Factor?",
     codeSequence: ['1', 'h', '3', '@', 'r', 't', 'm', '@', 't', 'h'],
+    strictMode: true, // NEW: Any wrong answer = instant 3 strikes
     problems: [
       {
         id: 1,
         originalImage: "/assets/set1_p1_orig.png",
         copyImage: "/assets/set1_p1_copy.png",
-        choices: ["0.5", "2"],
+        choices: ["1/2", "2"],
         correctAnswer: "2"
       },
       {
         id: 2,
         originalImage: "/assets/set1_p2_orig.png",
         copyImage: "/assets/set1_p2_copy.png",
-        choices: ["0.75", "1.33"],
-        correctAnswer: "0.75"
+        choices: ["3/4", "4/3"],
+        correctAnswer: "3/4"
       },
       {
         id: 3,
         originalImage: "/assets/set1_p3_orig.png",
         copyImage: "/assets/set1_p3_copy.png",
-        choices: ["0.25", "4"],
-        correctAnswer: "0.25"
+        choices: ["1/4", "4"],
+        correctAnswer: "1/4"
       },
       {
         id: 4,
         originalImage: "/assets/set1_p4_orig.png",
         copyImage: "/assets/set1_p4_copy.png",
-        choices: ["0.33", "3"],
+        choices: ["1/3", "3"],
         correctAnswer: "3"
       },
       {
         id: 5,
         originalImage: "/assets/set1_p5_orig.png",
         copyImage: "/assets/set1_p5_copy.png",
-        choices: ["0.8", "1.25"],
-        correctAnswer: "0.8"
+        choices: ["4/5", "5/4"],
+        correctAnswer: "4/5"
       },
       {
         id: 6,
@@ -57,42 +65,32 @@ export const problemSets = {
         id: 7,
         originalImage: "/assets/set1_p7_orig.png",
         copyImage: "/assets/set1_p7_copy.png",
-        choices: ["0.67", "1.5"],
-        correctAnswer: "1.5"
+        choices: ["2/3", "3/2"],
+        correctAnswer: "3/2"
       },
       {
         id: 8,
         originalImage: "/assets/set1_p8_orig.png",
         copyImage: "/assets/set1_p8_copy.png",
-        choices: ["0.5", "2"],
-        correctAnswer: "0.5"
+        choices: ["1/2", "2"],
+        correctAnswer: "1/2"
       },
       {
         id: 9,
         originalImage: "/assets/set1_p9_orig.png",
         copyImage: "/assets/set1_p9_copy.png",
-        choices: ["0.3", "3.33"],
-        correctAnswer: "0.3"
+        choices: ["3/10", "10/3"],
+        correctAnswer: "3/10"
       },
       {
         id: 10,
         originalImage: "/assets/set1_p10_orig.png",
         copyImage: "/assets/set1_p10_copy.png",
-        choices: ["0.5", "2"],
+        choices: ["1/2", "2"],
         correctAnswer: "2"
       }
     ]
   },
-
-
-// === Vault Heist — problems.js patch (Set 2 & Set 3) ===
-// ========================================
-// SETS 2 & 3 - FINAL UPDATE
-// ========================================
-// Changes:
-// - Set 2: Removed a,b,c,d labels, images scaled visually
-// - Set 3: All unique SFs, no repetitive answers, octagon on straight edges
-// - Code sequences included
 
   set2: {
     id: 2,
@@ -183,7 +181,7 @@ export const problemSets = {
     questionPrompt: "What is the missing side length?",
     codeSequence: ['P', '3', 'r', 's', '3', 'v', '3', 'r', '3', '!'],
     problems: [
-      // P1: SF=2, Triangle, Orig 5,8 → Copy 10,16
+      // P1: SF=2, Triangle, Orig 5,8 → Copy 10,16 (FIXED: more size difference)
       {
         id: 1,
         originalImage: "/assets/set3_p1_orig.png",
@@ -191,7 +189,7 @@ export const problemSets = {
         choices: ["16", "8", "32", "4"],
         correctAnswer: "16"
       },
-      // P2: SF=1/8, Hexagon, Orig 16,24 → Copy 2,3
+      // P2: SF=1/8, Square (CHANGED FROM OCTAGON), Orig 16,24 → Copy 2,3
       {
         id: 2,
         originalImage: "/assets/set3_p2_orig.png",
@@ -265,7 +263,6 @@ export const problemSets = {
       }
     ]
   },
-
   set4: {
     id: 4,
     title: "Find Missing Area (Regular)",
