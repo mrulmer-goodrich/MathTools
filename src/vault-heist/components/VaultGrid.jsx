@@ -12,7 +12,6 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
   // SVG Lock Icon Component
   const LockIcon = ({ isActive }) => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-      {/* Lock body */}
       <rect 
         x="6" y="11" width="12" height="10" 
         rx="2" 
@@ -20,14 +19,12 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         stroke={isActive ? "#00d4ff" : "#556677"}
         strokeWidth="2"
       />
-      {/* Lock shackle */}
       <path 
         d="M8 11V8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8V11" 
         stroke={isActive ? "#00d4ff" : "#556677"}
         strokeWidth="2"
         strokeLinecap="round"
       />
-      {/* Keyhole */}
       <circle 
         cx="12" cy="15" r="1.5" 
         fill={isActive ? "#00d4ff" : "#7f8c8d"}
@@ -64,14 +61,12 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
   // SVG Dial/Wheel Icon Component
   const DialIcon = () => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-      {/* Outer dial circle */}
       <circle 
         cx="12" cy="12" r="9" 
         fill="#1a4d5a"
         stroke="#00d4ff"
         strokeWidth="2"
       />
-      {/* Tick marks */}
       {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
         <line
           key={i}
@@ -85,7 +80,6 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
           transform={`rotate(${angle} 12 12)`}
         />
       ))}
-      {/* Center indicator */}
       <line 
         x1="12" y1="12" x2="12" y2="6" 
         stroke="#00d4ff"
@@ -101,9 +95,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
           repeatCount="indefinite"
         />
       </line>
-      {/* Center hub */}
       <circle cx="12" cy="12" r="2" fill="#00d4ff" />
-      {/* Glow effect */}
       <circle 
         cx="12" cy="12" r="9" 
         fill="none"
@@ -127,49 +119,128 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
     </svg>
   );
 
-  // SVG Open Vault Icon Component
-  const OpenVaultIcon = () => (
-    <svg width="60" height="60" viewBox="0 0 24 24" fill="none">
-      {/* Open doors - left */}
-      <path 
-        d="M4 6 L4 18 L9 18 L9 6 Z" 
-        fill="#27ae60"
-        stroke="#229954"
-        strokeWidth="1.5"
-        opacity="0.9"
-      />
-      {/* Open doors - right */}
-      <path 
-        d="M15 6 L15 18 L20 18 L20 6 Z" 
-        fill="#27ae60"
-        stroke="#229954"
-        strokeWidth="1.5"
-        opacity="0.9"
-      />
-      {/* Interior glow */}
-      <rect 
-        x="9" y="7" width="6" height="10" 
-        fill="url(#goldGradient)"
-      />
-      {/* Treasure stacks */}
-      <rect x="10" y="13" width="1.5" height="3" fill="#f1c40f" opacity="0.9" />
-      <rect x="12" y="12" width="1.5" height="4" fill="#f39c12" opacity="0.9" />
-      <rect x="14" y="13.5" width="1.5" height="2.5" fill="#f1c40f" opacity="0.9" />
-      {/* Sparkle effect */}
-      <circle cx="11" cy="10" r="0.5" fill="#fff">
-        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="13.5" cy="9" r="0.5" fill="#fff">
-        <animate attributeName="opacity" values="0;1;0" dur="2.5s" begin="0.5s" repeatCount="indefinite" />
-      </circle>
-      <defs>
-        <radialGradient id="goldGradient">
-          <stop offset="0%" stopColor="#ffd700" stopOpacity="0.8" />
-          <stop offset="50%" stopColor="#f39c12" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#e67e22" stopOpacity="0.4" />
-        </radialGradient>
-      </defs>
-    </svg>
+  // Completed Vault with ANIMATED DOORS!
+  const CompletedVault = () => (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      {/* LEFT DOOR - Swings open to the left */}
+      <div style={{
+        position: 'absolute',
+        width: '42%',
+        height: '90%',
+        left: '2%',
+        top: '5%',
+        background: 'linear-gradient(145deg, #2ecc71, #27ae60)',
+        border: '3px solid #229954',
+        borderRadius: '8px 0 0 8px',
+        transformOrigin: 'left center',
+        transformStyle: 'preserve-3d',
+        animation: 'doorOpenLeft 0.8s ease-out forwards',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.6)'
+      }}>
+        {/* Door handle on left door */}
+        <div style={{
+          position: 'absolute',
+          right: '8px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '6px',
+          height: '20px',
+          background: '#1e8449',
+          borderRadius: '3px'
+        }} />
+      </div>
+
+      {/* RIGHT DOOR - Swings open to the right */}
+      <div style={{
+        position: 'absolute',
+        width: '42%',
+        height: '90%',
+        right: '2%',
+        top: '5%',
+        background: 'linear-gradient(145deg, #2ecc71, #27ae60)',
+        border: '3px solid #229954',
+        borderRadius: '0 8px 8px 0',
+        transformOrigin: 'right center',
+        transformStyle: 'preserve-3d',
+        animation: 'doorOpenRight 0.8s ease-out forwards',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.6)'
+      }}>
+        {/* Door handle on right door */}
+        <div style={{
+          position: 'absolute',
+          left: '8px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '6px',
+          height: '20px',
+          background: '#1e8449',
+          borderRadius: '3px'
+        }} />
+      </div>
+
+      {/* TREASURE INTERIOR - visible behind the doors */}
+      <div style={{
+        position: 'absolute',
+        width: '65%',
+        height: '65%',
+        background: 'radial-gradient(circle at center, #ffd700 0%, #f39c12 50%, #e67e22 100%)',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1,
+        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.6)',
+        animation: 'treasureGlow 2s ease-in-out infinite'
+      }}>
+        {/* Treasure SVG */}
+        <svg width="35" height="35" viewBox="0 0 24 24" fill="none">
+          {/* Gold bars stacked */}
+          <rect x="6" y="13" width="4" height="6" fill="#f1c40f" stroke="#e67e22" strokeWidth="0.5" />
+          <rect x="10" y="11" width="4" height="8" fill="#f39c12" stroke="#e67e22" strokeWidth="0.5" />
+          <rect x="14" y="13" width="4" height="6" fill="#f1c40f" stroke="#e67e22" strokeWidth="0.5" />
+          
+          {/* Sparkles */}
+          <circle cx="8" cy="9" r="1" fill="#fff" opacity="0.8">
+            <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="16" cy="8" r="1" fill="#fff" opacity="0.8">
+            <animate attributeName="opacity" values="0;1;0" dur="2.5s" begin="0.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="12" cy="7" r="0.8" fill="#fff" opacity="0.8">
+            <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.3s" repeatCount="indefinite" />
+          </circle>
+        </svg>
+      </div>
+
+      {/* CSS Animation keyframes injected as style tag */}
+      <style>{`
+        @keyframes doorOpenLeft {
+          from { transform: perspective(400px) rotateY(0deg); }
+          to { transform: perspective(400px) rotateY(-75deg); }
+        }
+        
+        @keyframes doorOpenRight {
+          from { transform: perspective(400px) rotateY(0deg); }
+          to { transform: perspective(400px) rotateY(75deg); }
+        }
+        
+        @keyframes treasureGlow {
+          0%, 100% { 
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.6);
+          }
+          50% { 
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.9);
+          }
+        }
+      `}</style>
+    </div>
   );
 
   return (
@@ -203,9 +274,10 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
                 : '0 4px 12px rgba(0, 0, 0, 0.5)',
               opacity: status === 'locked' ? 0.6 : 1,
               transition: 'all 0.3s ease',
+              overflow: 'hidden', // Important for door animation!
             }}
           >
-            {/* Vault number badge in top-right */}
+            {/* Vault number badge */}
             <div 
               style={{
                 position: 'absolute',
@@ -225,17 +297,26 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
                 fontWeight: 700,
                 border: `2px solid ${status === 'active' ? '#00d4ff' : '#34495e'}`,
                 boxShadow: status === 'active' ? '0 0 8px rgba(0, 212, 255, 0.6)' : 'none',
+                zIndex: 10,
               }}
             >
               {num}
             </div>
             
-            {/* Center icon based on status - NO EMOJIS, pure SVG */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {status === 'locked' && <LockIcon isActive={false} />}
-              {status === 'active' && <DialIcon />}
-              {status === 'completed' && <OpenVaultIcon />}
-            </div>
+            {/* Vault content based on status */}
+            {status === 'locked' && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LockIcon isActive={false} />
+              </div>
+            )}
+            
+            {status === 'active' && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DialIcon />
+              </div>
+            )}
+            
+            {status === 'completed' && <CompletedVault />}
           </div>
         );
       })}
