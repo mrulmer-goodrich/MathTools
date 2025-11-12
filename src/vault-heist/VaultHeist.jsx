@@ -23,11 +23,54 @@ const VaultHeist = () => {
   const [showVaultAnimation, setShowVaultAnimation] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [shuffledProblems, setShuffledProblems] = useState({});
+  const [shuffledChoices, setShuffledChoices] = useState({});
+
+  // Shuffle function
+  const shuffleArray = (array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
 
   // Get current set data
   const currentSetData = problemSets[`set${currentSet}`];
-  const currentProblemData = currentSetData.problems[currentProblem - 1];
-  const totalProblems = currentSetData.problems.length;
+  
+  // Get shuffled problems for current set (or shuffle if not yet done)
+  const getShuffledProblems = () => {
+    if (!shuffledProblems[currentSet]) {
+      const shuffled = shuffleArray(currentSetData.problems);
+      setShuffledProblems({
+        ...shuffledProblems,
+        [currentSet]: shuffled
+      });
+      return shuffled;
+    }
+    return shuffledProblems[currentSet];
+  };
+  
+  const currentSetProblems = getShuffledProblems();
+  const currentProblemData = currentSetProblems[currentProblem - 1];
+  const totalProblems = currentSetProblems.length;
+  
+  // Get shuffled choices for current problem (or shuffle if not yet done)
+  const getShuffledChoices = () => {
+    const key = `${currentSet}-${currentProblem}`;
+    if (!shuffledChoices[key] && currentProblemData.choices) {
+      const shuffled = shuffleArray(currentProblemData.choices);
+      setShuffledChoices({
+        ...shuffledChoices,
+        [key]: shuffled
+      });
+      return shuffled;
+    }
+    return shuffledChoices[key] || currentProblemData.choices;
+  };
+  
+  const currentChoices = currentProblemData.choices ? getShuffledChoices() : null;
 
   // Sound effects (simple beep approach - can be replaced with actual sound files)
   const playSound = (type) => {
@@ -144,6 +187,8 @@ const VaultHeist = () => {
         setAlarmCount(0);
         setSetStartTime(Date.now());
         setUserAnswer('');
+        // Don't clear shuffledProblems - let it shuffle on first access
+        // Don't clear shuffledChoices - let it shuffle on first access
       } else {
         setGameComplete(true);
       }
@@ -245,6 +290,7 @@ const VaultHeist = () => {
           userAnswer={userAnswer}
           onAnswerChange={setUserAnswer}
           onSubmit={checkAnswer}
+          shuffledChoices={currentChoices}
         />
 
         {/* Bottom info bar with timer and alarms */}
