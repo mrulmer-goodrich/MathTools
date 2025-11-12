@@ -6,6 +6,7 @@ import ProblemDisplay from './components/ProblemDisplay';
 import VaultAnimation from './components/VaultAnimation';
 import StatsScreen from './components/StatsScreen';
 import './styles/vault.css';
+import VaultCodeStorage from './components/VaultCodeStorage';
 
 const VaultHeist = () => {
   const [gameState, setGameState] = useState('playing'); // 'playing', 'lockdown', 'complete'
