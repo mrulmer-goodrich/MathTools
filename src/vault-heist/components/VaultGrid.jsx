@@ -119,7 +119,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
     </svg>
   );
 
-  // Completed Vault with ANIMATED DOORS!
+  // Completed Vault - STATIC (no looping animations!)
   const CompletedVault = () => (
     <div style={{
       width: '100%',
@@ -129,7 +129,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
       alignItems: 'center',
       justifyContent: 'center'
     }}>
-      {/* LEFT DOOR - Swings open to the left */}
+      {/* LEFT DOOR - Already open (no animation, just final state) */}
       <div style={{
         position: 'absolute',
         width: '42%',
@@ -141,10 +141,10 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         borderRadius: '8px 0 0 8px',
         transformOrigin: 'left center',
         transformStyle: 'preserve-3d',
-        animation: 'doorOpenLeft 0.8s ease-out forwards',
+        transform: 'perspective(400px) rotateY(-75deg)', // Final static position
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.6)'
       }}>
-        {/* Door handle on left door */}
+        {/* Door handle */}
         <div style={{
           position: 'absolute',
           right: '8px',
@@ -157,7 +157,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         }} />
       </div>
 
-      {/* RIGHT DOOR - Swings open to the right */}
+      {/* RIGHT DOOR - Already open (no animation, just final state) */}
       <div style={{
         position: 'absolute',
         width: '42%',
@@ -169,10 +169,10 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         borderRadius: '0 8px 8px 0',
         transformOrigin: 'right center',
         transformStyle: 'preserve-3d',
-        animation: 'doorOpenRight 0.8s ease-out forwards',
+        transform: 'perspective(400px) rotateY(75deg)', // Final static position
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.6)'
       }}>
-        {/* Door handle on right door */}
+        {/* Door handle */}
         <div style={{
           position: 'absolute',
           left: '8px',
@@ -185,7 +185,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         }} />
       </div>
 
-      {/* TREASURE INTERIOR - visible behind the doors */}
+      {/* TREASURE INTERIOR - Static glow */}
       <div style={{
         position: 'absolute',
         width: '65%',
@@ -196,50 +196,21 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1,
-        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.6)',
-        animation: 'treasureGlow 2s ease-in-out infinite'
+        boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.6)'
       }}>
-        {/* Treasure SVG */}
+        {/* Treasure SVG - static (no animations) */}
         <svg width="35" height="35" viewBox="0 0 24 24" fill="none">
           {/* Gold bars stacked */}
           <rect x="6" y="13" width="4" height="6" fill="#f1c40f" stroke="#e67e22" strokeWidth="0.5" />
           <rect x="10" y="11" width="4" height="8" fill="#f39c12" stroke="#e67e22" strokeWidth="0.5" />
           <rect x="14" y="13" width="4" height="6" fill="#f1c40f" stroke="#e67e22" strokeWidth="0.5" />
           
-          {/* Sparkles */}
-          <circle cx="8" cy="9" r="1" fill="#fff" opacity="0.8">
-            <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="16" cy="8" r="1" fill="#fff" opacity="0.8">
-            <animate attributeName="opacity" values="0;1;0" dur="2.5s" begin="0.5s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="12" cy="7" r="0.8" fill="#fff" opacity="0.8">
-            <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin="0.3s" repeatCount="indefinite" />
-          </circle>
+          {/* Static sparkles (no animation on completed vaults) */}
+          <circle cx="8" cy="9" r="1" fill="#fff" opacity="0.8" />
+          <circle cx="16" cy="8" r="1" fill="#fff" opacity="0.6" />
+          <circle cx="12" cy="7" r="0.8" fill="#fff" opacity="0.7" />
         </svg>
       </div>
-
-      {/* CSS Animation keyframes injected as style tag */}
-      <style>{`
-        @keyframes doorOpenLeft {
-          from { transform: perspective(400px) rotateY(0deg); }
-          to { transform: perspective(400px) rotateY(-75deg); }
-        }
-        
-        @keyframes doorOpenRight {
-          from { transform: perspective(400px) rotateY(0deg); }
-          to { transform: perspective(400px) rotateY(75deg); }
-        }
-        
-        @keyframes treasureGlow {
-          0%, 100% { 
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.6);
-          }
-          50% { 
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.9);
-          }
-        }
-      `}</style>
     </div>
   );
 
@@ -274,7 +245,7 @@ const VaultGrid = ({ currentSet, vaultsCompleted }) => {
                 : '0 4px 12px rgba(0, 0, 0, 0.5)',
               opacity: status === 'locked' ? 0.6 : 1,
               transition: 'all 0.3s ease',
-              overflow: 'hidden', // Important for door animation!
+              overflow: 'hidden',
             }}
           >
             {/* Vault number badge */}
