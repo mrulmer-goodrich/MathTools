@@ -444,14 +444,18 @@
 }
 
 .vault-heist-game .question-prompt {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: #f39c12;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+  text-align: center !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  background: rgba(243, 156, 18, 0.3) !important;
+  padding: 8px 20px !important;
+  margin-bottom: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  border: 2px solid #f39c12 !important;
+  border-radius: 8px !important;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8) !important;
 }
 
 .problem-number {
