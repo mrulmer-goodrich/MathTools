@@ -7,7 +7,8 @@ const ProblemDisplay = ({
   questionPrompt,
   userAnswer, 
   onAnswerChange, 
-  onSubmit 
+  onSubmit,
+  shuffledChoices 
 }) => {
   
   const handleKeyPress = (e) => {
@@ -43,7 +44,7 @@ const ProblemDisplay = ({
         
         <div className="answer-section">
           <div className="multiple-choice">
-            {problem.choices.map((choice, idx) => (
+            {(shuffledChoices || problem.choices).map((choice, idx) => (
               <button
                 key={idx}
                 className={`choice-button ${userAnswer === choice ? 'selected' : ''}`}
@@ -78,7 +79,7 @@ const ProblemDisplay = ({
       <div className="answer-section">
         {Array.isArray(problem.choices) && problem.choices.length > 0 ? (
           <div className="multiple-choice">
-            {problem.choices.map((choice, idx) => (
+            {(shuffledChoices || problem.choices).map((choice, idx) => (
               <button
                 key={idx}
                 className={`choice-button ${userAnswer === choice ? 'selected' : ''}`}
