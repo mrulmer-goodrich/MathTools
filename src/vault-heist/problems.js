@@ -97,7 +97,7 @@ export const problemSets = {
 // Each image should show exactly ONE measurement near the corresponding side (not overlapping the shape).
 // Choices order is mixed; correctAnswer is the scale factor (copy ÷ original).
 
-export const set2 = {
+set2 = {
   id: 2,
   title: "Calculate Scale Factor",
   description: "One measurement on the original and one on the copy. Choose the correct scale factor (copy ÷ original).",
