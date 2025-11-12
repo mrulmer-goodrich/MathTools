@@ -26,6 +26,7 @@ const VaultHeist = () => {
   const [gameComplete, setGameComplete] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shuffledChoicesMap, setShuffledChoicesMap] = useState({});
+  const [shuffledProblemsMap, setShuffledProblemsMap] = useState({});
   const [unlockedCodes, setUnlockedCodes] = useState({
     1: false,
     2: false,
@@ -39,8 +40,35 @@ const VaultHeist = () => {
 
   // Get current set data
   const currentSetData = problemSets[`set${currentSet}`];
-  const currentProblemData = currentSetData?.problems[currentProblem - 1];
-  const totalProblems = currentSetData?.problems.length || 0;
+  
+  // Get shuffled problems for current set
+  const getShuffledProblems = (setNum) => {
+    if (shuffledProblemsMap[setNum]) {
+      return shuffledProblemsMap[setNum];
+    }
+    
+    const setData = problemSets[`set${setNum}`];
+    if (!setData?.problems) return [];
+    
+    // Shuffle problems using Fisher-Yates
+    const shuffled = [...setData.problems];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Store shuffled problems
+    setShuffledProblemsMap(prev => ({
+      ...prev,
+      [setNum]: shuffled
+    }));
+    
+    return shuffled;
+  };
+  
+  const currentSetProblems = getShuffledProblems(currentSet);
+  const currentProblemData = currentSetProblems[currentProblem - 1];
+  const totalProblems = currentSetProblems.length || 0;
 
   // Shuffle choices for a problem and store the mapping
   const getShuffledChoices = (setNum, problemNum, choices, correctAnswer) => {
@@ -210,13 +238,14 @@ const VaultHeist = () => {
         setAlarmCount(0);
         setSetStartTime(Date.now());
         setUserAnswer('');
-        const newMap = {};
+        // Clear shuffled choices for the completed set
+        const newChoicesMap = {};
         Object.keys(shuffledChoicesMap).forEach(key => {
           if (!key.startsWith(`${currentSet}-`)) {
-            newMap[key] = shuffledChoicesMap[key];
+            newChoicesMap[key] = shuffledChoicesMap[key];
           }
         });
-        setShuffledChoicesMap(newMap);
+        setShuffledChoicesMap(newChoicesMap);
       } else {
         setGameComplete(true);
       }
@@ -229,13 +258,19 @@ const VaultHeist = () => {
     setAlarmCount(0);
     setSetStartTime(Date.now());
     setUserAnswer('');
-    const newMap = {};
+    // Clear shuffles and re-shuffle problems for this set
+    const newChoicesMap = {};
     Object.keys(shuffledChoicesMap).forEach(key => {
       if (!key.startsWith(`${currentSet}-`)) {
-        newMap[key] = shuffledChoicesMap[key];
+        newChoicesMap[key] = shuffledChoicesMap[key];
       }
     });
-    setShuffledChoicesMap(newMap);
+    setShuffledChoicesMap(newChoicesMap);
+    
+    // Remove shuffled problems for current set to force re-shuffle
+    const newProblemsMap = { ...shuffledProblemsMap };
+    delete newProblemsMap[currentSet];
+    setShuffledProblemsMap(newProblemsMap);
   };
 
   const formatTime = (seconds) => {
