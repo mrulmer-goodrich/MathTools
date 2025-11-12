@@ -3,7 +3,7 @@
 // Replace sample data with your actual problem images and answers after review
 
 export const problemSets = {
-  // ========================================
+// ========================================
 // SETS 1, 2, 3 - COMPLETE FIXES
 // ========================================
 // Set 1: Decimals → Fractions, 3-strike rule (instant reset on ANY error)
@@ -263,96 +263,97 @@ export const problemSets = {
       }
     ]
   },
-  set4: {
+  
+    set4: {
     id: 4,
-    title: "Find Missing Area (Regular)",
-    description: "Find the area of the copy. Use the scale factor!",
-    type: "text-input",
-    questionPrompt: "Area of Copy?",
+    title: "Find Area of Copy",
+    description: "Find the missing side, then calculate the area of the copy.",
+    type: "multiple-choice",
+    questionPrompt: "What is the area of the copy?",
+    codeSequence: ['m', '@', 't', 'h', 'i', 's', 'c', '0', '0', 'l'],
     problems: [
+      // P1: Rectangle, SF=2, Orig 5×8 → Copy 10×16, Area=160
       {
         id: 1,
         originalImage: "/assets/set4_p1_orig.png",
         copyImage: "/assets/set4_p1_copy.png",
-        correctAnswer: "48",
-        acceptableAnswers: ["48", "48 cm²", "48 cm^2"],
-        unit: "cm²"
+        choices: ["160", "80", "1/160", "320"],
+        correctAnswer: "160"
       },
+      // P2: Triangle, SF=3, Orig b=6 h=4 → Copy b=18 h=12, Area=108
       {
         id: 2,
         originalImage: "/assets/set4_p2_orig.png",
         copyImage: "/assets/set4_p2_copy.png",
-        correctAnswer: "3",
-        acceptableAnswers: ["3", "3 in²", "3 in^2"],
-        unit: "in²"
+        choices: ["108", "54", "1/108", "216"],
+        correctAnswer: "108"
       },
+      // P3: Square, SF=4, Orig s=3 → Copy s=12, Area=144
       {
         id: 3,
         originalImage: "/assets/set4_p3_orig.png",
         copyImage: "/assets/set4_p3_copy.png",
-        correctAnswer: "50.24",
-        acceptableAnswers: ["50.24", "50.24 ft²", "50.24 ft^2"],
-        unit: "ft²"
+        choices: ["144", "36", "1/144", "576"],
+        correctAnswer: "144"
       },
+      // P4: Circle, SF=5, Orig r=2 → Copy r=10, Area≈314
       {
         id: 4,
         originalImage: "/assets/set4_p4_orig.png",
         copyImage: "/assets/set4_p4_copy.png",
-        correctAnswer: "40",
-        acceptableAnswers: ["40", "40 m²", "40 m^2"],
-        unit: "m²"
+        choices: ["314", "157", "1/314", "628"],
+        correctAnswer: "314"
       },
+      // P5: Rectangle, SF=1/2, Orig 8×12 → Copy 4×6, Area=24
       {
         id: 5,
         originalImage: "/assets/set4_p5_orig.png",
         copyImage: "/assets/set4_p5_copy.png",
-        correctAnswer: "3",
-        acceptableAnswers: ["3", "3 cm²", "3 cm^2"],
-        unit: "cm²"
+        choices: ["24", "48", "1/24", "12"],
+        correctAnswer: "24"
       },
+      // P6: Triangle, SF=1/3, Orig b=9 h=12 → Copy b=3 h=4, Area=6
       {
         id: 6,
         originalImage: "/assets/set4_p6_orig.png",
         copyImage: "/assets/set4_p6_copy.png",
-        correctAnswer: "28.26",
-        acceptableAnswers: ["28.26", "28.26 in²", "28.26 in^2"],
-        unit: "in²"
+        choices: ["6", "18", "1/6", "3"],
+        correctAnswer: "6"
       },
+      // P7: Square, SF=1/4, Orig s=8 → Copy s=2, Area=4
       {
         id: 7,
         originalImage: "/assets/set4_p7_orig.png",
         copyImage: "/assets/set4_p7_copy.png",
-        correctAnswer: "216",
-        acceptableAnswers: ["216", "216 ft²", "216 ft^2"],
-        unit: "ft²"
+        choices: ["4", "16", "1/4", "2"],
+        correctAnswer: "4"
       },
+      // P8: Circle, SF=1/5, Orig r=5 → Copy r=1, Area≈3
       {
         id: 8,
         originalImage: "/assets/set4_p8_orig.png",
         copyImage: "/assets/set4_p8_copy.png",
-        correctAnswer: "5",
-        acceptableAnswers: ["5", "5 mm²", "5 mm^2"],
-        unit: "mm²"
+        choices: ["3", "15", "1/3", "6"],
+        correctAnswer: "3"
       },
+      // P9: Rectangle, SF=3/2, Orig 4×6 → Copy 6×9, Area=54
       {
         id: 9,
         originalImage: "/assets/set4_p9_orig.png",
         copyImage: "/assets/set4_p9_copy.png",
-        correctAnswer: "12.56",
-        acceptableAnswers: ["12.56", "12.56 cm²", "12.56 cm^2"],
-        unit: "cm²"
+        choices: ["54", "36", "1/54", "108"],
+        correctAnswer: "54"
       },
+      // P10: Triangle, SF=1/6, Orig b=12 h=18 → Copy b=2 h=3, Area=3
       {
         id: 10,
         originalImage: "/assets/set4_p10_orig.png",
         copyImage: "/assets/set4_p10_copy.png",
-        correctAnswer: "36",
-        acceptableAnswers: ["36", "36 in²", "36 in^2"],
-        unit: "in²"
+        choices: ["3", "36", "1/3", "6"],
+        correctAnswer: "3"
       }
     ]
-  },
-  
+  },  
   set5: {
     id: 5,
     title: "Find Missing Area (Irregular)",
@@ -442,13 +443,13 @@ export const problemSets = {
       }
     ]
   },
-  
-  set6: {
+    set6: {
     id: 6,
     title: "Conceptual Understanding",
     description: "Answer questions about what happens when shapes are scaled.",
     type: "conceptual",
     questionPrompt: "",
+    codeSequence: ['U', 'G', 'l', '0', 'v', '3', 's', 'y', '0', 'u'],
     problems: [
       {
         id: 1,
@@ -521,5 +522,4 @@ export const problemSets = {
         unit: "°"
       }
     ]
-  }
-};
+  };
