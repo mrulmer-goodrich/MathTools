@@ -83,177 +83,199 @@ export const problemSets = {
       }
     ]
   },
-  
-  set2: {
-    id: 2,
-    title: "Calculate Scale Factor",
-    description: "Calculate the scale factor. SF = copy ÷ original",
-    type: "text-input",
-    questionPrompt: "Scale Factor?",
-    problems: [
-      {
-        id: 1,
-        originalImage: "/assets/set2_p1_orig.png",
-        copyImage: "/assets/set2_p1_copy.png",
-        correctAnswer: "2",
-        acceptableAnswers: ["2", "2.0"]
-      },
-      {
-        id: 2,
-        originalImage: "/assets/set2_p2_orig.png",
-        copyImage: "/assets/set2_p2_copy.png",
-        correctAnswer: "0.5",
-        acceptableAnswers: ["0.5", "0.50", "1/2"]
-      },
-      {
-        id: 3,
-        originalImage: "/assets/set2_p3_orig.png",
-        copyImage: "/assets/set2_p3_copy.png",
-        correctAnswer: "1",
-        acceptableAnswers: ["1", "1.0"]
-      },
-      {
-        id: 4,
-        originalImage: "/assets/set2_p4_orig.png",
-        copyImage: "/assets/set2_p4_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4.0"]
-      },
-      {
-        id: 5,
-        originalImage: "/assets/set2_p5_orig.png",
-        copyImage: "/assets/set2_p5_copy.png",
-        correctAnswer: "0.25",
-        acceptableAnswers: ["0.25", "1/4"]
-      },
-      {
-        id: 6,
-        originalImage: "/assets/set2_p6_orig.png",
-        copyImage: "/assets/set2_p6_copy.png",
-        correctAnswer: "1.5",
-        acceptableAnswers: ["1.5", "1.50", "3/2"]
-      },
-      {
-        id: 7,
-        originalImage: "/assets/set2_p7_orig.png",
-        copyImage: "/assets/set2_p7_copy.png",
-        correctAnswer: "0.25",
-        acceptableAnswers: ["0.25", "1/4"]
-      },
-      {
-        id: 8,
-        originalImage: "/assets/set2_p8_orig.png",
-        copyImage: "/assets/set2_p8_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4.0"]
-      },
-      {
-        id: 9,
-        originalImage: "/assets/set2_p9_orig.png",
-        copyImage: "/assets/set2_p9_copy.png",
-        correctAnswer: "0.67",
-        acceptableAnswers: ["0.67", "0.66", "0.667", "2/3"]
-      },
-      {
-        id: 10,
-        originalImage: "/assets/set2_p10_orig.png",
-        copyImage: "/assets/set2_p10_copy.png",
-        correctAnswer: "2",
-        acceptableAnswers: ["2", "2.0"]
-      }
-    ]
-  },
-  
-  set3: {
-    id: 3,
-    title: "Find Missing Side Length",
-    description: "Find the missing measurement on the copy.",
-    type: "text-input",
-    questionPrompt: "Missing Side Length?",
-    problems: [
-      {
-        id: 1,
-        originalImage: "/assets/set3_p1_orig.png",
-        copyImage: "/assets/set3_p1_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4 cm"],
-        unit: "cm"
-      },
-      {
-        id: 2,
-        originalImage: "/assets/set3_p2_orig.png",
-        copyImage: "/assets/set3_p2_copy.png",
-        correctAnswer: "1.5",
-        acceptableAnswers: ["1.5", "1.5 in"],
-        unit: "in"
-      },
-      {
-        id: 3,
-        originalImage: "/assets/set3_p3_orig.png",
-        copyImage: "/assets/set3_p3_copy.png",
-        correctAnswer: "20",
-        acceptableAnswers: ["20", "20 ft"],
-        unit: "ft"
-      },
-      {
-        id: 4,
-        originalImage: "/assets/set3_p4_orig.png",
-        copyImage: "/assets/set3_p4_copy.png",
-        correctAnswer: "4",
-        acceptableAnswers: ["4", "4 m"],
-        unit: "m"
-      },
-      {
-        id: 5,
-        originalImage: "/assets/set3_p5_orig.png",
-        copyImage: "/assets/set3_p5_copy.png",
-        correctAnswer: "3",
-        acceptableAnswers: ["3", "3 cm"],
-        unit: "cm"
-      },
-      {
-        id: 6,
-        originalImage: "/assets/set3_p6_orig.png",
-        copyImage: "/assets/set3_p6_copy.png",
-        correctAnswer: "21",
-        acceptableAnswers: ["21", "21 in"],
-        unit: "in"
-      },
-      {
-        id: 7,
-        originalImage: "/assets/set3_p7_orig.png",
-        copyImage: "/assets/set3_p7_copy.png",
-        correctAnswer: "1",
-        acceptableAnswers: ["1", "1 ft"],
-        unit: "ft"
-      },
-      {
-        id: 8,
-        originalImage: "/assets/set3_p8_orig.png",
-        copyImage: "/assets/set3_p8_copy.png",
-        correctAnswer: "18",
-        acceptableAnswers: ["18", "18 mm"],
-        unit: "mm"
-      },
-      {
-        id: 9,
-        originalImage: "/assets/set3_p9_orig.png",
-        copyImage: "/assets/set3_p9_copy.png",
-        correctAnswer: "3",
-        acceptableAnswers: ["3", "3 cm"],
-        unit: "cm"
-      },
-      {
-        id: 10,
-        originalImage: "/assets/set3_p10_orig.png",
-        copyImage: "/assets/set3_p10_copy.png",
-        correctAnswer: "5",
-        acceptableAnswers: ["5", "5 in"],
-        unit: "in"
-      }
-    ]
-  },
-  
+
+
+// === Vault Heist — problems.js patch (Set 2 & Set 3) ===
+// Drop-in replacement for the set2 and set3 objects inside your existing export.
+// Notes:
+// - No SF = 1. All scale factors are unique within each set.
+// - Image paths assume you'll place new images under /public/assets/ with these filenames.
+// - Acceptable answers include common fraction equivalents where helpful.
+
+set2: {
+  id: 2,
+  title: "Calculate Scale Factor",
+  description: "Calculate the scale factor. SF = copy ÷ original",
+  type: "text-input",
+  questionPrompt: "Scale Factor?",
+  problems: [
+    {
+      id: 1,
+      originalImage: "/assets/vh_set2_p1_orig.png",
+      copyImage: "/assets/vh_set2_p1_copy.png",
+      correctAnswer: "2.5",
+      acceptableAnswers: ["2.5", "5/2"]
+    },
+    {
+      id: 2,
+      originalImage: "/assets/vh_set2_p2_orig.png",
+      copyImage: "/assets/vh_set2_p2_copy.png",
+      correctAnswer: "0.4",
+      acceptableAnswers: ["0.4", "2/5"]
+    },
+    {
+      id: 3,
+      originalImage: "/assets/vh_set2_p3_orig.png",
+      copyImage: "/assets/vh_set2_p3_copy.png",
+      correctAnswer: "3",
+      acceptableAnswers: ["3", "3.0"]
+    },
+    {
+      id: 4,
+      originalImage: "/assets/vh_set2_p4_orig.png",
+      copyImage: "/assets/vh_set2_p4_copy.png",
+      correctAnswer: "0.6",
+      acceptableAnswers: ["0.6", "3/5"]
+    },
+    {
+      id: 5,
+      originalImage: "/assets/vh_set2_p5_orig.png",
+      copyImage: "/assets/vh_set2_p5_copy.png",
+      correctAnswer: "1.75",
+      acceptableAnswers: ["1.75", "7/4"]
+    },
+    {
+      id: 6,
+      originalImage: "/assets/vh_set2_p6_orig.png",
+      copyImage: "/assets/vh_set2_p6_copy.png",
+      correctAnswer: "0.8",
+      acceptableAnswers: ["0.8", "4/5"]
+    },
+    {
+      id: 7,
+      originalImage: "/assets/vh_set2_p7_orig.png",
+      copyImage: "/assets/vh_set2_p7_copy.png",
+      correctAnswer: "2.25",
+      acceptableAnswers: ["2.25", "9/4"]
+    },
+    {
+      id: 8,
+      originalImage: "/assets/vh_set2_p8_orig.png",
+      copyImage: "/assets/vh_set2_p8_copy.png",
+      correctAnswer: "0.67",
+      acceptableAnswers: ["0.67", "0.667", "2/3"]
+    },
+    {
+      id: 9,
+      originalImage: "/assets/vh_set2_p9_orig.png",
+      copyImage: "/assets/vh_set2_p9_copy.png",
+      correctAnswer: "1.25",
+      acceptableAnswers: ["1.25", "5/4"]
+    },
+    {
+      id: 10,
+      originalImage: "/assets/vh_set2_p10_orig.png",
+      copyImage: "/assets/vh_set2_p10_copy.png",
+      correctAnswer: "0.5",
+      acceptableAnswers: ["0.5", "1/2"]
+    }
+  ]
+},
+
+set3: {
+  id: 3,
+  title: "Find Missing Side Length",
+  description: "Find the missing measurement on the copy.",
+  type: "text-input",
+  questionPrompt: "Missing Side Length?",
+  problems: [
+    // SF 1.5; 6 cm -> 9 cm
+    {
+      id: 1,
+      originalImage: "/assets/vh_set3_p1_orig.png",
+      copyImage: "/assets/vh_set3_p1_copy.png",
+      correctAnswer: "9",
+      acceptableAnswers: ["9", "9 cm"],
+      unit: "cm"
+    },
+    // SF 0.75; 8 in -> 6 in
+    {
+      id: 2,
+      originalImage: "/assets/vh_set3_p2_orig.png",
+      copyImage: "/assets/vh_set3_p2_copy.png",
+      correctAnswer: "6",
+      acceptableAnswers: ["6", "6 in"],
+      unit: "in"
+    },
+    // SF 1.25; 12 ft -> 15 ft
+    {
+      id: 3,
+      originalImage: "/assets/vh_set3_p3_orig.png",
+      copyImage: "/assets/vh_set3_p3_copy.png",
+      correctAnswer: "15",
+      acceptableAnswers: ["15", "15 ft"],
+      unit: "ft"
+    },
+    // SF 0.4; 10 m -> 4 m
+    {
+      id: 4,
+      originalImage: "/assets/vh_set3_p4_orig.png",
+      copyImage: "/assets/vh_set3_p4_copy.png",
+      correctAnswer: "4",
+      acceptableAnswers: ["4", "4 m"],
+      unit: "m"
+    },
+    // SF 1.8; 5 cm -> 9 cm
+    {
+      id: 5,
+      originalImage: "/assets/vh_set3_p5_orig.png",
+      copyImage: "/assets/vh_set3_p5_copy.png",
+      correctAnswer: "9",
+      acceptableAnswers: ["9", "9 cm"],
+      unit: "cm"
+    },
+    // SF 0.6; 25 mm -> 15 mm
+    {
+      id: 6,
+      originalImage: "/assets/vh_set3_p6_orig.png",
+      copyImage: "/assets/vh_set3_p6_copy.png",
+      correctAnswer: "15",
+      acceptableAnswers: ["15", "15 mm"],
+      unit: "mm"
+    },
+    // SF 2.2; 5 ft -> 11 ft
+    {
+      id: 7,
+      originalImage: "/assets/vh_set3_p7_orig.png",
+      copyImage: "/assets/vh_set3_p7_copy.png",
+      correctAnswer: "11",
+      acceptableAnswers: ["11", "11 ft"],
+      unit: "ft"
+    },
+    // SF 4/3 (~1.33); 6 m -> 8 m
+    {
+      id: 8,
+      originalImage: "/assets/vh_set3_p8_orig.png",
+      copyImage: "/assets/vh_set3_p8_copy.png",
+      correctAnswer: "8",
+      acceptableAnswers: ["8", "8 m"],
+      unit: "m"
+    },
+    // SF 7/4 (1.75); 8 cm -> 14 cm
+    {
+      id: 9,
+      originalImage: "/assets/vh_set3_p9_orig.png",
+      copyImage: "/assets/vh_set3_p9_copy.png",
+      correctAnswer: "14",
+      acceptableAnswers: ["14", "14 cm"],
+      unit: "cm"
+    },
+    // SF 0.5; 10 in -> 5 in
+    {
+      id: 10,
+      originalImage: "/assets/vh_set3_p10_orig.png",
+      copyImage: "/assets/vh_set3_p10_copy.png",
+      correctAnswer: "5",
+      acceptableAnswers: ["5", "5 in"],
+      unit: "in"
+    }
+  ]
+},
+
+
+
+
+
   set4: {
     id: 4,
     title: "Find Missing Area (Regular)",
