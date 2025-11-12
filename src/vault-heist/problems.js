@@ -91,84 +91,68 @@ export const problemSets = {
 // - No SF = 1. All scale factors are unique within each set.
 // - Image paths assume you'll place new images under /public/assets/ with these filenames.
 // - Acceptable answers include common fraction equivalents where helpful.
+// === Vault Heist — Set 2 (Multiple Choice, mixed SFs) ===
+// Replace ONLY your existing set2 object in problems.js with the object below.
+// Image files expected under /public/assets/ as set2_p#_{orig|copy}.png
+// Each image should show exactly ONE measurement near the corresponding side (not overlapping the shape).
+// Choices order is mixed; correctAnswer is the scale factor (copy ÷ original).
 
-set2: {
+export const set2 = {
   id: 2,
   title: "Calculate Scale Factor",
-  description: "Calculate the scale factor. SF = copy ÷ original",
-  type: "text-input",
-  questionPrompt: "Scale Factor?",
+  description: "One measurement on the original and one on the copy. Choose the correct scale factor (copy ÷ original).",
+  type: "multiple-choice",
+  questionPrompt: "What is the scale factor?",
   problems: [
-    {
-      id: 1,
-      originalImage: "/assets/vh_set2_p1_orig.png",
-      copyImage: "/assets/vh_set2_p1_copy.png",
-      correctAnswer: "2.5",
-      acceptableAnswers: ["2.5", "5/2"]
-    },
-    {
-      id: 2,
-      originalImage: "/assets/vh_set2_p2_orig.png",
-      copyImage: "/assets/vh_set2_p2_copy.png",
-      correctAnswer: "0.4",
-      acceptableAnswers: ["0.4", "2/5"]
-    },
-    {
-      id: 3,
-      originalImage: "/assets/vh_set2_p3_orig.png",
-      copyImage: "/assets/vh_set2_p3_copy.png",
-      correctAnswer: "3",
-      acceptableAnswers: ["3", "3.0"]
-    },
-    {
-      id: 4,
-      originalImage: "/assets/vh_set2_p4_orig.png",
-      copyImage: "/assets/vh_set2_p4_copy.png",
-      correctAnswer: "0.6",
-      acceptableAnswers: ["0.6", "3/5"]
-    },
-    {
-      id: 5,
-      originalImage: "/assets/vh_set2_p5_orig.png",
-      copyImage: "/assets/vh_set2_p5_copy.png",
-      correctAnswer: "1.75",
-      acceptableAnswers: ["1.75", "7/4"]
-    },
-    {
-      id: 6,
-      originalImage: "/assets/vh_set2_p6_orig.png",
-      copyImage: "/assets/vh_set2_p6_copy.png",
-      correctAnswer: "0.8",
-      acceptableAnswers: ["0.8", "4/5"]
-    },
-    {
-      id: 7,
-      originalImage: "/assets/vh_set2_p7_orig.png",
-      copyImage: "/assets/vh_set2_p7_copy.png",
-      correctAnswer: "2.25",
-      acceptableAnswers: ["2.25", "9/4"]
-    },
-    {
-      id: 8,
-      originalImage: "/assets/vh_set2_p8_orig.png",
-      copyImage: "/assets/vh_set2_p8_copy.png",
-      correctAnswer: "0.67",
-      acceptableAnswers: ["0.67", "0.667", "2/3"]
-    },
-    {
-      id: 9,
-      originalImage: "/assets/vh_set2_p9_orig.png",
-      copyImage: "/assets/vh_set2_p9_copy.png",
-      correctAnswer: "1.25",
-      acceptableAnswers: ["1.25", "5/4"]
-    },
-    {
-      id: 10,
-      originalImage: "/assets/vh_set2_p10_orig.png",
-      copyImage: "/assets/vh_set2_p10_copy.png",
-      correctAnswer: "0.5",
-      acceptableAnswers: ["0.5", "1/2"]
-    }
+    // SF = 4  ( > 1 )
+    { id: 1, originalImage: "/assets/set2_p1_orig.png",  copyImage: "/assets/set2_p1_copy.png",
+      originalSide: 7, copySide: 28,
+      choices: ["7", "28", "4", "1/4"], correctAnswer: "4" },
+
+    // SF = 1/5  ( < 1 )
+    { id: 2, originalImage: "/assets/set2_p2_orig.png",  copyImage: "/assets/set2_p2_copy.png",
+      originalSide: 15, copySide: 3,
+      choices: ["1/5", "5", "15", "3"], correctAnswer: "1/5" },
+
+    // SF = 9  ( > 1 )
+    { id: 3, originalImage: "/assets/set2_p3_orig.png",  copyImage: "/assets/set2_p3_copy.png",
+      originalSide: 2, copySide: 18,
+      choices: ["18", "2", "9", "1/9"], correctAnswer: "9" },
+
+    // SF = 1/2  ( < 1 )
+    { id: 4, originalImage: "/assets/set2_p4_orig.png",  copyImage: "/assets/set2_p4_copy.png",
+      originalSide: 12, copySide: 6,
+      choices: ["12", "6", "1/2", "2"], correctAnswer: "1/2" },
+
+    // SF = 3  ( > 1 )
+    { id: 5, originalImage: "/assets/set2_p5_orig.png",  copyImage: "/assets/set2_p5_copy.png",
+      originalSide: 8, copySide: 24,
+      choices: ["3", "1/3", "8", "24"], correctAnswer: "3" },
+
+    // SF = 1/3  ( < 1 )
+    { id: 6, originalImage: "/assets/set2_p6_orig.png",  copyImage: "/assets/set2_p6_copy.png",
+      originalSide: 15, copySide: 5,
+      choices: ["5", "15", "1/3", "3"], correctAnswer: "1/3" },
+
+    // SF = 7  ( > 1 )
+    { id: 7, originalImage: "/assets/set2_p7_orig.png",  copyImage: "/assets/set2_p7_copy.png",
+      originalSide: 3, copySide: 21,
+      choices: ["7", "1/7", "3", "21"], correctAnswer: "7" },
+
+    // SF = 1/6  ( < 1 )
+    { id: 8, originalImage: "/assets/set2_p8_orig.png",  copyImage: "/assets/set2_p8_copy.png",
+      originalSide: 18, copySide: 3,
+      choices: ["1/6", "6", "18", "3"], correctAnswer: "1/6" },
+
+    // SF = 5  ( > 1 )
+    { id: 9, originalImage: "/assets/set2_p9_orig.png",  copyImage: "/assets/set2_p9_copy.png",
+      originalSide: 4, copySide: 20,
+      choices: ["4", "20", "5", "1/5"], correctAnswer: "5" },
+
+    // SF = 1/4  ( < 1 )
+    { id: 10, originalImage: "/assets/set2_p10_orig.png", copyImage: "/assets/set2_p10_copy.png",
+      originalSide: 16, copySide: 4,
+      choices: ["1/4", "4", "16", "4/1"], correctAnswer: "1/4" }
   ]
 },
 
