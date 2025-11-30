@@ -1,8 +1,8 @@
 import React from 'react';
 
-const FactionTracker = ({ currentLevel, favoriteColor }) => {
+const FactionTracker = ({ currentLevel }) => {
   const factions = [
-    { name: `The ${favoriteColor} Squad`, icon: '◆', status: 'player', eliminatedLevel: null },
+    { name: 'The Eastway Jaguars', icon: '🐆', status: 'player', eliminatedLevel: null },
     { name: 'The Runners', icon: '⚡', status: 'normal', eliminatedLevel: 2 },
     { name: 'The Traders', icon: '💰', status: 'normal', eliminatedLevel: 3 },
     { name: 'The Scavengers', icon: '🔍', status: 'normal', eliminatedLevel: 4 },
@@ -12,7 +12,8 @@ const FactionTracker = ({ currentLevel, favoriteColor }) => {
   ];
 
   return (
-    <div className="za-faction-tracker">
+    <div className="za-faction-tracker-vertical">
+      <div className="za-faction-tracker-title">FACTIONS</div>
       {factions.map((faction, index) => {
         const isEliminated = faction.eliminatedLevel && currentLevel >= faction.eliminatedLevel;
         const isPlayer = faction.status === 'player';
@@ -21,11 +22,11 @@ const FactionTracker = ({ currentLevel, favoriteColor }) => {
         return (
           <div 
             key={index}
-            className={`za-faction-item ${isEliminated ? 'eliminated' : 'alive'} ${isPlayer ? 'player' : ''} ${isEnemy ? 'enemy' : ''}`}
+            className={`za-faction-item-vertical ${isEliminated ? 'eliminated' : 'alive'} ${isPlayer ? 'player' : ''} ${isEnemy ? 'enemy' : ''}`}
           >
-            <span className="za-faction-icon-small">{faction.icon}</span>
-            <span className="za-faction-name-small">{faction.name}</span>
-            {isEliminated && <span className="za-eliminated-marker">✕</span>}
+            <span className="za-faction-icon-vert">{faction.icon}</span>
+            <span className="za-faction-name-vert">{faction.name}</span>
+            {isEliminated && <span className="za-eliminated-marker-vert">✕</span>}
           </div>
         );
       })}

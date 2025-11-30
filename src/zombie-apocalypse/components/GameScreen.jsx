@@ -229,7 +229,6 @@ const GameScreen = ({
       {/* Faction Tracker */}
       <FactionTracker 
         currentLevel={currentLevel}
-        favoriteColor={playerData.favoriteColor || 'Red'}
       />
 
       {/* Main Game Area */}

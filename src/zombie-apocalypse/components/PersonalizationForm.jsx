@@ -5,8 +5,8 @@ const PersonalizationForm = ({ onComplete }) => {
     playerName: '',
     friendName: '',
     cityName: 'Charlotte, NC',
-    favoriteColor: '',
     favoriteSubject: '',
+    favoriteSubjectOther: '',
     dreamJob: '',
     biggestFear: '',
     favoriteFood: ''
@@ -24,11 +24,19 @@ const PersonalizationForm = ({ onComplete }) => {
     
     // Validate required fields
     if (!formData.playerName.trim() || !formData.friendName.trim()) {
-      alert('Please enter your name and your best friend\'s name!');
+      alert('Please enter your first name and your best friend\'s name!');
       return;
     }
     
-    onComplete(formData);
+    // Use "Other" field if selected
+    const finalData = {
+      ...formData,
+      favoriteSubject: formData.favoriteSubject === 'Other' 
+        ? formData.favoriteSubjectOther 
+        : formData.favoriteSubject
+    };
+    
+    onComplete(finalData);
   };
 
   return (
@@ -37,19 +45,19 @@ const PersonalizationForm = ({ onComplete }) => {
         <div className="za-form-header">
           <h1 className="za-form-title">ZOMBIE APOCALYPSE</h1>
           <h2 className="za-form-subtitle">Percent Survival</h2>
-          <p className="za-form-intro">Before the apocalypse, tell us about yourself...</p>
+          <p className="za-form-intro">Before the apocalypse begins, tell us about yourself...</p>
         </div>
 
         <form onSubmit={handleSubmit} className="za-form">
           <div className="za-form-group">
-            <label htmlFor="playerName">Your Name: *</label>
+            <label htmlFor="playerName">Your First Name: *</label>
             <input
               type="text"
               id="playerName"
               name="playerName"
               value={formData.playerName}
               onChange={handleChange}
-              placeholder="Enter your name"
+              placeholder="Enter your first name"
               required
             />
           </div>
@@ -80,18 +88,6 @@ const PersonalizationForm = ({ onComplete }) => {
           </div>
 
           <div className="za-form-group">
-            <label htmlFor="favoriteColor">Favorite Color:</label>
-            <input
-              type="text"
-              id="favoriteColor"
-              name="favoriteColor"
-              value={formData.favoriteColor}
-              onChange={handleChange}
-              placeholder="e.g., Blue, Green, Red"
-            />
-          </div>
-
-          <div className="za-form-group">
             <label htmlFor="favoriteSubject">Favorite School Subject:</label>
             <select
               id="favoriteSubject"
@@ -102,13 +98,29 @@ const PersonalizationForm = ({ onComplete }) => {
               <option value="">-- Select --</option>
               <option value="Math">Math</option>
               <option value="Science">Science</option>
-              <option value="English">English</option>
-              <option value="History">History</option>
+              <option value="ELA">ELA</option>
+              <option value="Social Studies">Social Studies</option>
               <option value="Art">Art</option>
               <option value="PE">PE</option>
-              <option value="Music">Music</option>
+              <option value="Chorus">Chorus</option>
+              <option value="Horticulture">Horticulture</option>
+              <option value="Other">Other</option>
             </select>
           </div>
+
+          {formData.favoriteSubject === 'Other' && (
+            <div className="za-form-group">
+              <label htmlFor="favoriteSubjectOther">Specify Subject:</label>
+              <input
+                type="text"
+                id="favoriteSubjectOther"
+                name="favoriteSubjectOther"
+                value={formData.favoriteSubjectOther}
+                onChange={handleChange}
+                placeholder="Type your favorite subject"
+              />
+            </div>
+          )}
 
           <div className="za-form-group">
             <label htmlFor="dreamJob">Dream Job:</label>
@@ -147,7 +159,7 @@ const PersonalizationForm = ({ onComplete }) => {
           </div>
 
           <button type="submit" className="za-btn-primary">
-            BEGIN APOCALYPSE
+            ENTER THE APOCALYPSE
           </button>
         </form>
       </div>
