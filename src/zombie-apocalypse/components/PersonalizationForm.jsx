@@ -9,8 +9,7 @@ const PersonalizationForm = ({ onComplete }) => {
   const [formData, setFormData] = useState({
     playerName: '',
     friendName: '',
-    cityName: 'Charlotte, NC',
-    favoriteColor: '',
+    cityName: 'Charlotte',
     favoriteSubject: '',
     dreamJob: ''
   });
@@ -81,18 +80,6 @@ const PersonalizationForm = ({ onComplete }) => {
               value={formData.cityName}
               onChange={handleChange}
               placeholder="Charlotte, NC"
-            />
-          </div>
-
-          <div className="za-form-group">
-            <label htmlFor="favoriteColor">Favorite Color (for your squad)</label>
-            <input
-              type="text"
-              id="favoriteColor"
-              name="favoriteColor"
-              value={formData.favoriteColor}
-              onChange={handleChange}
-              placeholder="Blue, Red, Green, etc."
             />
           </div>
 
