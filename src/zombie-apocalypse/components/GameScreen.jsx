@@ -1,6 +1,6 @@
 // GameScreen.jsx
 // VERSION: 1.2.0
-// Last Updated: November 29, 2024
+// Last Updated: November 29, 2024 10:38pm
 // Changes: Countdown timer, tick sound, wrong answer visual feedback, Level 2 bug investigation
 
 import React, { useState, useEffect } from 'react';
@@ -144,10 +144,15 @@ const GameScreen = ({
 
   const currentProblem = problemBank[currentProblemIndex];
 
-  const checkAnswer = () => {
+  const checkAnswer = (overrideAnswer) => {
     if (!currentProblem) return;
     
-    const userAns = userAnswer.trim().toLowerCase();
+    const rawUser =
+      overrideAnswer !== undefined && overrideAnswer !== null
+        ? overrideAnswer
+        : userAnswer;
+
+    const userAns = rawUser.trim().toLowerCase();
     const correctAns = currentProblem.correctAnswer.toLowerCase();
     
     // DEBUG LOGGING
