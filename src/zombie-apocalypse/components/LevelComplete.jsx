@@ -1,3 +1,8 @@
+// LevelComplete.jsx
+// VERSION: 3.0.0
+// Last Updated: November 30, 2024
+// Changes: Fixed all references to "Eastway Jaguars" (no more "Red Team")
+
 import React from 'react';
 
 const LevelComplete = ({ level, playerData, time, formatTime }) => {

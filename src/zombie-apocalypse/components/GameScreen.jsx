@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 2.3.0
-// Last Updated: November 30, 2024 1:00am
-// Changes: Simpler level titles, input freeze fix, auto-focus, scroll reset
+// VERSION: 3.0.0
+// Last Updated: November 30, 2024
+// Changes: Dev shortcut (Ctrl+Shift+7), Level 7 population validation
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -28,7 +28,8 @@ const GameScreen = ({
   onWrongAnswer,
   onLevelComplete,
   levelStartTime,
-  formatTime
+  formatTime,
+  onDevJumpToLevel // NEW: For dev shortcut
 }) => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [problemBank, setProblemBank] = useState([]);
@@ -51,6 +52,21 @@ const GameScreen = ({
   };
 
   const config = levelConfig[currentLevel];
+
+  // DEV SHORTCUT: Ctrl+Shift+7 to jump to Level 7
+  useEffect(() => {
+    const handleKeyCombo = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === '7') {
+        console.log('🎮 DEV SHORTCUT: Jumping to Level 7!');
+        if (onDevJumpToLevel) {
+          onDevJumpToLevel(7);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyCombo);
+    return () => window.removeEventListener('keydown', handleKeyCombo);
+  }, [onDevJumpToLevel]);
 
   // Tick sound for Level 1
   const playTickSound = () => {
@@ -163,13 +179,38 @@ const GameScreen = ({
     const correctAns = String(currentProblem.correctAnswer).toLowerCase();
     
     // DEBUG LOGGING
-    console.log('═══ ANSWER CHECK ═══');
+    console.log('╔══ ANSWER CHECK ══╗');
     console.log('Level:', currentLevel);
     console.log('Problem Index:', currentProblemIndex);
     console.log('Problem:', currentProblem.question);
     console.log('User answer:', `"${userAns}"`);
     console.log('Correct answer:', `"${correctAns}"`);
     console.log('Type:', currentProblem.type);
+    
+    // LEVEL 7 SPECIAL VALIDATION: Check for partial people
+    if (currentLevel === 7 && currentProblem.showWork) {
+      const userNum = parseFloat(userAns);
+      const afterDecrease = currentProblem.showWork.initialPop * (1 - currentProblem.showWork.decrease / 100);
+      const afterIncrease = afterDecrease * (1 + currentProblem.showWork.increase / 100);
+      
+      // Check if they used non-floored population
+      if (!isNaN(userNum)) {
+        const wrongPerPerson = (currentProblem.showWork.totalMoney / afterIncrease);
+        if (Math.abs(userNum - wrongPerPerson) < 0.02) {
+          // They forgot to round down the people!
+          setWrongAnswerFeedback({
+            userAnswer: answerToCheck,
+            correctAnswer: currentProblem.correctAnswer,
+            question: currentProblem.question,
+            specialMessage: "⚠️ WAIT! You can't have a partial person! If there's only part of someone left, the zombies got them and they're turning. You CAN'T count them as a survivor! Always round DOWN when calculating people."
+          });
+          onWrongAnswer();
+          console.log('❌ WRONG - Forgot to round down population!');
+          console.log('╚═════════════════╝');
+          return;
+        }
+      }
+    }
     
     // Check if answer is correct
     let isCorrect = false;
@@ -193,7 +234,7 @@ const GameScreen = ({
     }
     
     console.log('Final result:', isCorrect ? 'CORRECT ✓' : 'WRONG ✗');
-    console.log('═══════════════════');
+    console.log('╚═════════════════╝');
     
     if (isCorrect) {
       onCorrectAnswer();
@@ -211,7 +252,7 @@ const GameScreen = ({
       
     } else {
       // Show feedback for Level 1
-      if (currentLevel === 1) {
+      if (currentLevel === 1 && !wrongAnswerFeedback) {
         setWrongAnswerFeedback({
           userAnswer: answerToCheck,
           correctAnswer: currentProblem.correctAnswer,
@@ -333,28 +374,39 @@ const GameScreen = ({
         />
       </div>
 
-      {/* Wrong Answer Feedback (Level 1 only) */}
-      {wrongAnswerFeedback && currentLevel === 1 && (
+      {/* Wrong Answer Feedback (Level 1 only OR Level 7 population warning) */}
+      {wrongAnswerFeedback && (
         <div className="za-wrong-feedback">
-          <div className="za-wrong-title">Not quite!</div>
-          <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
-          <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
-          
-          <div className="za-decimal-helper">
-            <div className="za-helper-title">💡 Converting Percents to Decimals:</div>
-            <div className="za-helper-visual">
-              <span className="za-percent-num">25%</span>
-              <span className="za-arrow">→</span>
-              <span className="za-decimal-movement">
-                <span className="za-move-left">0.</span>
-                <span className="za-moved">25</span>
-              </span>
-            </div>
-            <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
-            <div className="za-helper-examples">
-              Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
-            </div>
-          </div>
+          {wrongAnswerFeedback.specialMessage ? (
+            <>
+              <div className="za-wrong-title za-level7-warning">⚠️ POPULATION ERROR!</div>
+              <div className="za-wrong-special">{wrongAnswerFeedback.specialMessage}</div>
+              <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
+              <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
+            </>
+          ) : currentLevel === 1 && (
+            <>
+              <div className="za-wrong-title">Not quite!</div>
+              <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
+              <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
+              
+              <div className="za-decimal-helper">
+                <div className="za-helper-title">💡 Converting Percents to Decimals:</div>
+                <div className="za-helper-visual">
+                  <span className="za-percent-num">25%</span>
+                  <span className="za-arrow">→</span>
+                  <span className="za-decimal-movement">
+                    <span className="za-move-left">0.</span>
+                    <span className="za-moved">25</span>
+                  </span>
+                </div>
+                <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
+                <div className="za-helper-examples">
+                  Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
+                </div>
+              </div>
+            </>
+          )}
           
           <button 
             className="za-btn-primary za-got-it-btn"
