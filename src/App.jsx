@@ -10,6 +10,7 @@ import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
 import VaultHeistModule from './vault-heist/VaultHeist.jsx'
+import ZombieApocalypseModule from './modules/zombie/ZombieApocalypse.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
   console.log('📧 About to define updateStats function')
   
   // Refs to hold each module's reset function
+  const zombieResetRef = useRef(null)
   const scaleResetRef = useRef(null)
   const htableResetRef = useRef(null)
   const battleRoyaleResetRef = useRef(null)
@@ -97,6 +99,9 @@ export default function App() {
   // Called by modules to register their reset function
   const registerReset = (moduleName, resetFn) => {
     switch(moduleName) {
+      case 'zombie':
+        zombieResetRef.current = resetFn
+        break
       case 'scale':
         scaleResetRef.current = resetFn
         break
@@ -142,6 +147,9 @@ export default function App() {
     setShowConfirmNew(false)
     
     switch(route) {
+      case 'zombie':
+        zombieResetRef.current?.()
+        break
       case 'scale':
         scaleResetRef.current?.()
         break
@@ -182,6 +190,7 @@ export default function App() {
   // Get module name for stats display
   const getModuleName = () => {
     switch(route) {
+      case 'zombie': return 'Zombie Apocalypse'
       case 'scale': return 'Scale Factor'
       case 'htable': return 'H-Table'
       case 'battle-royale': return 'H-Table Battle Royale'
@@ -203,6 +212,9 @@ export default function App() {
           </div>
 
           <div className="row home-buttons">
+            <BigButton className="tile-btn" onClick={() => setRoute('zombie')}>
+              Zombie Apocalypse
+            </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
               Scale Factor
             </BigButton>
@@ -276,6 +288,14 @@ export default function App() {
 
           {/* Module content */}
           <div className="module-content">
+            {route === 'zombie' && (
+              <ZombieApocalypseModule 
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('zombie', fn)}
+                updateStats={updateStats}
+              />
+            )}
+
             {route === 'scale' && (
               <ScaleFactorModule 
                 onProblemComplete={handleProblemComplete}
