@@ -1,5 +1,5 @@
 // GameScreen.jsx
-// Version: 3.3.0
+// Version: 3.3.1
 // Last Updated: November 30, 2024 - 11:45 PM
 // Changes: Story subtitles, better sounds, guided notes, movable faction tracker
 
@@ -219,15 +219,21 @@ const GameScreen = ({
         const percent = percentMatch ? percentMatch[1] : '25';
         const decimalAnswer = (parseFloat(percent) / 100).toString();
         
-        // Add decimal point to percent if not present
-        const percentWithDecimal = percent.includes('.') ? percent : `${percent}.`;
+        // Split percent into parts (e.g., "110" -> ["110", ""])
+        const percentParts = percent.split('.');
+        const percentWhole = percentParts[0];
+        const percentDecimal = percentParts[1] || '';
         
         return {
           title: "💡 Converting Percents to Decimals:",
           visual: (
             <>
               <div className="za-decimal-conversion">
-                <span className="za-percent-visual">{percentWithDecimal}%</span>
+                <span className="za-percent-visual">
+                  {percentWhole}
+                  <span className="za-decimal-point-blink">.</span>
+                  {percentDecimal}%
+                </span>
                 <span className="za-arrow-visual">→</span>
                 <span className="za-arrow-visual">→</span>
                 <span className="za-decimal-result">
