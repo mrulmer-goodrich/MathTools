@@ -89,26 +89,28 @@ const GameScreen = ({
     
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
-    // Create crowd cheer with multiple oscillators
+    // Create uplifting victory fanfare with ascending tones
     const oscillators = [];
     const gainNode = audioContext.createGain();
     gainNode.connect(audioContext.destination);
     
-    // Create 5 oscillators for crowd effect
-    for (let i = 0; i < 5; i++) {
+    // Victory melody: C E G C (ascending major chord)
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    
+    notes.forEach((freq, i) => {
       const osc = audioContext.createOscillator();
       osc.connect(gainNode);
-      osc.frequency.value = 400 + (i * 200) + (Math.random() * 100);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      
+      const startTime = audioContext.currentTime + (i * 0.15);
+      osc.start(startTime);
+      osc.stop(startTime + 0.4);
       oscillators.push(osc);
-    }
-    
-    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
-    
-    oscillators.forEach(osc => {
-      osc.start();
-      osc.stop(audioContext.currentTime + 1.2);
     });
+    
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.0);
   };
 
   const playTickSound = () => {
