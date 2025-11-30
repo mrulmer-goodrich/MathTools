@@ -1,7 +1,7 @@
 // Zombie Apocalypse - Problem Generators with Randomization
-// VERSION: 1.2.0
-// Last Updated: November 29, 2024
-// Changes: Fixed Level 2 answer logic, added version tracking
+// VERSION: 1.3.0
+// Last Updated: November 29, 2025
+// Changes: Standardized answer fields, expanded Level 1 percent bank, fixed Level 2 evaluation bug
 
 // Utility functions for random value generation
 const random = {
@@ -29,18 +29,29 @@ const round = (num) => Math.round(num * 100) / 100;
 // LEVEL 1: Percent ↔ Decimal Conversion (20 problems)
 export const generateLevel1Bank = () => {
   const problems = [];
-  
-  // 10 percent to decimal
-  const percents = [4, 8, 12, 15, 25, 30, 50, 75, 125, 0.5, 2.5, 7.5, 99, 100, 3, 6, 18, 45, 60, 150];
-  percents.forEach(p => {
+
+  // Percent to decimal conversion bank (expanded & randomized)
+  const percentPool = [
+    0.5, 1, 2.5, 3, 4, 5, 6, 7.5, 8, 10,
+    12, 15, 18, 20, 25, 30, 33, 40, 45, 50,
+    60, 66, 75, 80, 90, 99, 100, 110, 125, 150
+  ];
+
+  // Shuffle and select 20 distinct values each playthrough
+  const shuffled = [...percentPool].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 20);
+
+  selected.forEach((p) => {
+    const decimal = (p / 100).toString();
     problems.push({
       question: `Convert ${p}% to a decimal`,
-      correctAnswer: (p / 100).toString(),
+      correctAnswer: decimal,
+      answer: decimal,
       type: 'percent-to-decimal'
     });
   });
-  
-  return problems.slice(0, 20); // Take first 20
+
+  return problems;
 };
 
 // LEVEL 2: Increase/Decrease/No Change (12 scenarios, randomized values)
@@ -108,12 +119,17 @@ export const generateLevel2Problem = (playerData) => {
     }
   ];
   
-  return scenarios.map(s => ({
-    question: s.template(s.getValue()),
-    correctAnswer: s.answer,
-    choices: ['increase', 'decrease'],
-    type: 'multiple-choice'
-  }));
+  return scenarios.map(s => {
+    const value = s.getValue();
+    const correct = s.answer;
+    return {
+      question: s.template(value),
+      correctAnswer: correct,
+      answer: correct,
+      choices: ['increase', 'decrease'],
+      type: 'multiple-choice'
+    };
+  });
 };
 
 // LEVEL 3: Calculate the Amount (12 scenarios, randomized values)
@@ -187,6 +203,7 @@ export const generateLevel3Problem = (playerData) => {
     return {
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
+      answer: s.getAnswer(...valuesArray),
       type: 'free-response'
     };
   });
@@ -263,6 +280,7 @@ export const generateLevel4Problem = (playerData) => {
     return {
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
+      answer: s.getAnswer(...valuesArray),
       type: 'free-response'
     };
   });
@@ -374,6 +392,7 @@ export const generateLevel5Problem = (playerData) => {
     return {
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
+      answer: s.getAnswer(...valuesArray),
       type: 'free-response'
     };
   });
@@ -551,6 +570,7 @@ export const generateLevel6Problem = (playerData) => {
     return {
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
+      answer: s.getAnswer(...valuesArray),
       type: 'free-response'
     };
   });
@@ -587,6 +607,7 @@ How much will EACH PERSON receive? (Round to the nearest cent)`;
   return {
     question,
     correctAnswer: round(perPerson).toFixed(2),
+    answer: round(perPerson).toFixed(2),
     type: 'free-response',
     showWork: {
       initialPop,
