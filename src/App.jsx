@@ -10,7 +10,7 @@ import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
 import VaultHeistModule from './vault-heist/VaultHeist.jsx'
-import ZombieApocalypseModule from './modules/zombie/ZombieApocalypse.jsx'
+import ZombieApocalypseModule from './zombie-apocalypse/ZombieApocalypse.jsx'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
 export default function App() {
