@@ -1,0 +1,1140 @@
+/* ============================================
+   ZOMBIE APOCALYPSE - PERCENT SURVIVAL
+   All classes prefixed with 'za-' to avoid conflicts
+   ============================================ */
+
+/* Global zombie apocalypse styles */
+.za-wrong-flash {
+  animation: za-red-flash 0.3s ease-out;
+}
+
+@keyframes za-red-flash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: rgba(139, 0, 0, 0.3); }
+}
+
+/* ============================================
+   PERSONALIZATION FORM
+   ============================================ */
+.za-personalization {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.za-form-container {
+  background: rgba(30, 30, 30, 0.95);
+  border: 3px solid #8B0000;
+  border-radius: 10px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+}
+
+.za-form-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.za-form-title {
+  font-size: 48px;
+  font-weight: bold;
+  color: #8B0000;
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.za-form-subtitle {
+  font-size: 24px;
+  color: #666;
+  margin: 10px 0;
+}
+
+.za-form-intro {
+  font-size: 16px;
+  color: #999;
+  font-style: italic;
+}
+
+.za-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.za-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.za-form-group label {
+  color: #ccc;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.za-form-group input,
+.za-form-group select {
+  padding: 12px;
+  font-size: 16px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 2px solid #444;
+  border-radius: 5px;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.za-form-group input:focus,
+.za-form-group select:focus {
+  outline: none;
+  border-color: #8B0000;
+  box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+}
+
+.za-btn-primary {
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
+  margin-top: 20px;
+}
+
+.za-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 0, 0, 0.6);
+}
+
+.za-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   INTRO SEQUENCE
+   ============================================ */
+.za-intro-sequence {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0a 50%, #0a0a0a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.za-skip-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.za-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.za-intro-container {
+  max-width: 800px;
+  width: 100%;
+  padding: 40px;
+}
+
+.za-intro-screen {
+  background: rgba(20, 20, 20, 0.9);
+  border: 2px solid #8B0000;
+  border-radius: 10px;
+  padding: 60px 40px;
+  box-shadow: 0 0 40px rgba(139, 0, 0, 0.5);
+  animation: za-fade-in 0.8s ease-out;
+}
+
+@keyframes za-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.za-intro-title {
+  font-size: 42px;
+  font-weight: bold;
+  color: #8B0000;
+  text-align: center;
+  margin-bottom: 40px;
+  text-shadow: 0 0 15px rgba(139, 0, 0, 0.8);
+  letter-spacing: 3px;
+}
+
+.za-intro-content {
+  color: #ddd;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.za-intro-text {
+  margin: 20px 0;
+  animation: za-text-appear 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.za-intro-text:nth-child(1) { animation-delay: 0.2s; }
+.za-intro-text:nth-child(2) { animation-delay: 0.5s; }
+.za-intro-text:nth-child(3) { animation-delay: 0.8s; }
+.za-intro-text:nth-child(4) { animation-delay: 1.1s; }
+
+@keyframes za-text-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+.za-intro-emphasis {
+  font-size: 24px;
+  font-weight: bold;
+  color: #DC143C;
+  text-align: center;
+  margin-top: 30px;
+}
+
+.za-faction-list {
+  margin: 30px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.za-faction {
+  padding: 12px 20px;
+  background: rgba(40, 40, 40, 0.6);
+  border-left: 4px solid #666;
+  border-radius: 5px;
+  font-size: 16px;
+  animation: za-faction-slide 0.5s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-50px);
+}
+
+.za-faction:nth-child(1) { animation-delay: 0.3s; }
+.za-faction:nth-child(2) { animation-delay: 0.4s; }
+.za-faction:nth-child(3) { animation-delay: 0.5s; }
+.za-faction:nth-child(4) { animation-delay: 0.6s; }
+.za-faction:nth-child(5) { animation-delay: 0.7s; }
+.za-faction:nth-child(6) { animation-delay: 0.8s; }
+.za-faction:nth-child(7) { animation-delay: 0.9s; }
+
+@keyframes za-faction-slide {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.za-faction-player {
+  border-left-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.za-faction-enemy {
+  border-left-color: #8B0000;
+  background: rgba(139, 0, 0, 0.1);
+}
+
+.za-faction-icon {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.za-faction-note {
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.za-intro-continue {
+  margin-top: 40px;
+  animation: za-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes za-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.za-intro-progress {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.za-progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.za-progress-dot.active {
+  background: #8B0000;
+  box-shadow: 0 0 10px #8B0000;
+}
+
+.za-progress-dot.complete {
+  background: #4CAF50;
+}
+
+/* ============================================
+   GAME SCREEN
+   ============================================ */
+.za-game-screen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
+  padding: 20px;
+  position: relative;
+}
+
+.za-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: rgba(20, 20, 20, 0.9);
+  border: 2px solid #8B0000;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.za-level-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #8B0000;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
+}
+
+.za-faction-count {
+  font-size: 16px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.za-game-stats {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.za-timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  color: #fff;
+}
+
+.za-timer-icon {
+  font-size: 28px;
+}
+
+.za-time-warning {
+  color: #DC143C;
+  font-weight: bold;
+  animation: za-warning-blink 0.5s ease-in-out infinite;
+}
+
+@keyframes za-warning-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.za-hearts {
+  display: flex;
+  gap: 10px;
+}
+
+.za-heart {
+  font-size: 32px;
+  transition: all 0.3s ease;
+}
+
+.za-heart.lost {
+  opacity: 0.3;
+  filter: grayscale(100%);
+}
+
+.za-sound-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.za-sound-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   FACTION TRACKER
+   ============================================ */
+.za-faction-tracker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+  background: rgba(20, 20, 20, 0.8);
+  border: 2px solid #444;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.za-faction-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 2px solid #666;
+  border-radius: 5px;
+  color: #ccc;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.za-faction-item.alive {
+  border-color: #4CAF50;
+}
+
+.za-faction-item.eliminated {
+  border-color: #333;
+  background: rgba(20, 20, 20, 0.8);
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.za-faction-item.player {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.za-faction-item.enemy {
+  border-color: #8B0000;
+  background: rgba(139, 0, 0, 0.2);
+}
+
+.za-eliminated-marker {
+  color: #DC143C;
+  font-weight: bold;
+}
+
+/* Continued in next part... */
+
+/* ============================================
+   MAIN GAME AREA
+   ============================================ */
+.za-main-game {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px;
+  background: rgba(20, 20, 20, 0.9);
+  border: 2px solid #8B0000;
+  border-radius: 10px;
+}
+
+.za-progress-section {
+  margin-bottom: 30px;
+}
+
+.za-progress-text {
+  color: #ccc;
+  font-size: 18px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.za-progress-bar {
+  width: 100%;
+  height: 30px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 2px solid #666;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.za-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+  transition: width 0.5s ease;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+}
+
+/* ============================================
+   PROBLEM DISPLAY
+   ============================================ */
+.za-problem-display {
+  padding: 40px;
+  background: rgba(30, 30, 30, 0.8);
+  border: 2px solid #666;
+  border-radius: 10px;
+}
+
+.za-problem-number {
+  font-size: 16px;
+  color: #999;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.za-problem-text {
+  font-size: 22px;
+  color: #fff;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+.za-choice-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.za-choice-btn {
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  background: rgba(60, 60, 60, 0.8);
+  color: #fff;
+  border: 2px solid #666;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.za-choice-btn:hover {
+  background: rgba(80, 80, 80, 0.9);
+  border-color: #8B0000;
+  transform: translateX(10px);
+}
+
+.za-choice-btn.selected {
+  background: #8B0000;
+  border-color: #DC143C;
+}
+
+.za-answer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.za-answer-input {
+  padding: 15px;
+  font-size: 20px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 2px solid #666;
+  border-radius: 5px;
+  color: #fff;
+  text-align: center;
+}
+
+.za-answer-input:focus {
+  outline: none;
+  border-color: #8B0000;
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+}
+
+.za-submit-btn {
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.za-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 0, 0, 0.6);
+}
+
+.za-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   CALCULATOR
+   ============================================ */
+.za-calculator {
+  position: fixed;
+  width: 220px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 3px solid #666;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  user-select: none;
+}
+
+.za-calc-header {
+  background: linear-gradient(135deg, #444 0%, #222 100%);
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 7px 7px 0 0;
+  cursor: grab;
+}
+
+.za-calc-display {
+  background: #1a1a1a;
+  padding: 15px;
+  min-height: 60px;
+  border-bottom: 2px solid #666;
+}
+
+.za-calc-equation {
+  font-size: 12px;
+  color: #999;
+  min-height: 15px;
+  text-align: right;
+}
+
+.za-calc-value {
+  font-size: 24px;
+  color: #0f0;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  min-height: 30px;
+}
+
+.za-calc-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #666;
+  padding: 1px;
+}
+
+.za-calc-btn {
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #3a3a3a;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.za-calc-btn:hover {
+  background: #4a4a4a;
+}
+
+.za-calc-btn:active {
+  background: #2a2a2a;
+}
+
+.za-calc-op {
+  background: #555;
+  color: #f90;
+}
+
+.za-calc-op:hover {
+  background: #666;
+}
+
+.za-calc-clear {
+  background: #8B0000;
+  color: #fff;
+}
+
+.za-calc-clear:hover {
+  background: #a00;
+}
+
+.za-calc-back {
+  background: #666;
+}
+
+.za-calc-eq {
+  background: #4CAF50;
+  grid-row: span 2;
+}
+
+.za-calc-eq:hover {
+  background: #5cb85c;
+}
+
+.za-calc-zero {
+  grid-column: span 2;
+}
+
+/* ============================================
+   NOTEPAD
+   ============================================ */
+.za-notepad {
+  position: fixed;
+  width: 220px;
+  height: 200px;
+  background: rgba(40, 35, 20, 0.95);
+  border: 3px solid #8B4513;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.za-notepad-header {
+  background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 7px 7px 0 0;
+  cursor: grab;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.za-notepad-clear {
+  background: rgba(139, 0, 0, 0.7);
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.za-notepad-clear:hover {
+  background: rgba(139, 0, 0, 0.9);
+}
+
+.za-notepad-textarea {
+  flex: 1;
+  background: #2a2520;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  resize: none;
+  border-radius: 0 0 7px 7px;
+}
+
+.za-notepad-textarea:focus {
+  outline: none;
+}
+
+/* ============================================
+   LEVEL COMPLETE SCREEN
+   ============================================ */
+.za-level-complete {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a0f0a 50%, #0a0a0a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.za-level-complete-content {
+  text-align: center;
+  padding: 60px;
+  background: rgba(20, 20, 20, 0.9);
+  border: 3px solid #4CAF50;
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(76, 175, 80, 0.5);
+  animation: za-level-complete-pulse 2s ease-in-out;
+}
+
+@keyframes za-level-complete-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.za-level-complete-icon {
+  font-size: 80px;
+  color: #4CAF50;
+  margin-bottom: 20px;
+  animation: za-checkmark-pop 0.6s ease-out;
+}
+
+@keyframes za-checkmark-pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.za-level-complete-title {
+  font-size: 48px;
+  color: #4CAF50;
+  margin: 20px 0;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+}
+
+.za-level-complete-time {
+  font-size: 24px;
+  color: #ccc;
+  margin: 15px 0;
+}
+
+.za-level-complete-message {
+  font-size: 18px;
+  color: #ddd;
+  margin: 30px 0;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.za-level-complete-continue {
+  font-size: 16px;
+  color: #999;
+  font-style: italic;
+  margin-top: 20px;
+  animation: za-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   DEATH SCREEN
+   ============================================ */
+.za-death-screen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0000 0%, #1a0505 50%, #0a0000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: za-death-shake 0.5s ease-in-out;
+}
+
+@keyframes za-death-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.za-death-content {
+  text-align: center;
+  padding: 60px;
+  background: rgba(20, 0, 0, 0.9);
+  border: 3px solid #8B0000;
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(139, 0, 0, 0.8);
+}
+
+.za-death-icon {
+  font-size: 100px;
+  margin-bottom: 20px;
+  animation: za-death-icon-shake 0.3s ease-in-out infinite;
+}
+
+@keyframes za-death-icon-shake {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.za-death-title {
+  font-size: 56px;
+  color: #DC143C;
+  font-weight: bold;
+  margin: 20px 0;
+  text-shadow: 0 0 20px rgba(220, 20, 60, 0.8);
+}
+
+.za-death-message {
+  font-size: 20px;
+  color: #ddd;
+  margin: 30px 0;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.za-death-subtitle {
+  font-size: 18px;
+  color: #999;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* ============================================
+   VICTORY SCREEN
+   ============================================ */
+.za-victory-screen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a0a 25%, #0a1a0a 50%, #0a0a1a 75%, #0a0a0a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  animation: za-victory-bg 5s ease-in-out infinite;
+}
+
+@keyframes za-victory-bg {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.za-victory-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.za-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, #4CAF50 0%, transparent 70%);
+  border-radius: 50%;
+  animation: za-particle-float 4s ease-in-out infinite;
+}
+
+@keyframes za-particle-float {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1);
+    opacity: 0;
+  }
+}
+
+.za-victory-content {
+  text-align: center;
+  padding: 80px 40px;
+  max-width: 900px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 4px solid #4CAF50;
+  border-radius: 15px;
+  box-shadow: 0 0 50px rgba(76, 175, 80, 0.8);
+  position: relative;
+  z-index: 1;
+}
+
+.za-victory-phase-1 {
+  animation: za-victory-phase1 2s ease-out;
+}
+
+@keyframes za-victory-phase1 {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.za-victory-icon-big {
+  font-size: 120px;
+  animation: za-victory-icon-spin 1s ease-out;
+}
+
+@keyframes za-victory-icon-spin {
+  0% { transform: rotate(0deg) scale(0); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.za-victory-title-big {
+  font-size: 72px;
+  color: #4CAF50;
+  font-weight: bold;
+  margin: 30px 0;
+  text-shadow: 0 0 30px rgba(76, 175, 80, 1);
+  animation: za-victory-title-glow 2s ease-in-out infinite;
+}
+
+@keyframes za-victory-title-glow {
+  0%, 100% { text-shadow: 0 0 30px rgba(76, 175, 80, 1); }
+  50% { text-shadow: 0 0 50px rgba(76, 175, 80, 1), 0 0 80px rgba(76, 175, 80, 0.8); }
+}
+
+.za-victory-subtitle {
+  font-size: 28px;
+  color: #ddd;
+}
+
+.za-victory-title {
+  font-size: 48px;
+  color: #4CAF50;
+  font-weight: bold;
+  margin-bottom: 40px;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+}
+
+.za-victory-stats {
+  background: rgba(30, 30, 30, 0.8);
+  border: 2px solid #4CAF50;
+  border-radius: 10px;
+  padding: 30px;
+  margin: 30px 0;
+  animation: za-stats-slide 1s ease-out;
+}
+
+@keyframes za-stats-slide {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.za-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+  font-size: 20px;
+}
+
+.za-stat-row:last-child {
+  border-bottom: none;
+}
+
+.za-stat-label {
+  color: #999;
+  font-weight: bold;
+}
+
+.za-stat-value {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.za-victory-final-message {
+  margin: 40px 0;
+  animation: za-final-message 2s ease-out;
+}
+
+@keyframes za-final-message {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.za-victory-text {
+  font-size: 24px;
+  color: #ddd;
+  margin: 20px 0;
+  line-height: 1.6;
+}
+
+.za-victory-highlight {
+  color: #4CAF50;
+  font-size: 32px;
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(76, 175, 80, 0.8);
+  display: inline-block;
+  animation: za-highlight-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes za-highlight-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.za-victory-text-small {
+  font-size: 18px;
+  color: #999;
+  font-style: italic;
+  margin-top: 30px;
+}
+
+.za-victory-buttons {
+  margin-top: 50px;
+}
+
+.za-victory-btn {
+  padding: 20px 40px;
+  font-size: 24px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 20px rgba(76, 175, 80, 0.5);
+}
+
+.za-victory-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(76, 175, 80, 0.7);
+}
+
+.za-victory-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
+.za-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 24px;
+}
