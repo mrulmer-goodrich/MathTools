@@ -1,3 +1,8 @@
+// GameScreen.jsx
+// VERSION: 1.2.0
+// Last Updated: November 29, 2024
+// Changes: Countdown timer, tick sound, wrong answer visual feedback, Level 2 bug investigation
+
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
 import Calculator from './Calculator';
@@ -32,6 +37,7 @@ const GameScreen = ({
   const [problemsCorrect, setProblemsCorrect] = useState(0);
   const [showCalculator, setShowCalculator] = useState(currentLevel >= 3);
   const [showNotepad, setShowNotepad] = useState(currentLevel >= 4);
+  const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState(null);
 
   // Level configurations
   const levelConfig = {
@@ -46,13 +52,36 @@ const GameScreen = ({
 
   const config = levelConfig[currentLevel];
 
-  // Timer effect
+  // Tick sound for Level 1
+  const playTickSound = () => {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 880;
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.05);
+  };
+
+  // Timer effect with tick sound
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(Math.floor((Date.now() - levelStartTime) / 1000));
+      const elapsed = Math.floor((Date.now() - levelStartTime) / 1000);
+      setCurrentTime(elapsed);
+      
+      // Play tick sound every second on Level 1 (if time remaining)
+      if (currentLevel === 1 && elapsed < 120) {
+        playTickSound();
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [levelStartTime]);
+  }, [levelStartTime, currentLevel, soundEnabled]);
 
   // Generate problems when level changes
   useEffect(() => {
@@ -62,9 +91,10 @@ const GameScreen = ({
     setUserAnswer('');
     setShowCalculator(currentLevel >= 3);
     setShowNotepad(currentLevel >= 4);
+    setWrongAnswerFeedback(null);
   }, [currentLevel]);
 
-  // Level 1 time limit check
+  // Level 1 time limit check - COUNTDOWN MODE
   useEffect(() => {
     if (currentLevel === 1 && currentTime >= 120 && problemsCorrect < 6) {
       // Time's up!
@@ -79,7 +109,6 @@ const GameScreen = ({
     switch(currentLevel) {
       case 1:
         const allLevel1 = generateLevel1Bank();
-        // Shuffle and take 7
         const shuffled = [...allLevel1].sort(() => Math.random() - 0.5);
         problems = shuffled.slice(0, 7);
         break;
@@ -121,11 +150,20 @@ const GameScreen = ({
     const userAns = userAnswer.trim().toLowerCase();
     const correctAns = currentProblem.correctAnswer.toLowerCase();
     
-    // Check if answer is correct (allow for minor rounding differences on decimals)
+    // DEBUG LOGGING
+    console.log('═══ ANSWER CHECK ═══');
+    console.log('Level:', currentLevel);
+    console.log('Problem:', currentProblem.question);
+    console.log('User answer:', `"${userAns}"`);
+    console.log('Correct answer:', `"${correctAns}"`);
+    console.log('Type:', currentProblem.type);
+    
+    // Check if answer is correct
     let isCorrect = false;
     
     if (currentProblem.type === 'multiple-choice') {
       isCorrect = userAns === correctAns;
+      console.log('Multiple choice match:', isCorrect);
     } else {
       // For free response, check exact match or numerical equivalence
       if (userAns === correctAns) {
@@ -138,13 +176,18 @@ const GameScreen = ({
           isCorrect = Math.abs(userNum - correctNum) < 0.02;
         }
       }
+      console.log('Free response match:', isCorrect);
     }
+    
+    console.log('Final result:', isCorrect ? 'CORRECT ✓' : 'WRONG ✗');
+    console.log('═══════════════════');
     
     if (isCorrect) {
       onCorrectAnswer();
       const newCorrect = problemsCorrect + 1;
       setProblemsCorrect(newCorrect);
       setUserAnswer('');
+      setWrongAnswerFeedback(null);
       
       // Check if level is complete
       if (newCorrect >= config.required) {
@@ -153,6 +196,18 @@ const GameScreen = ({
         setCurrentProblemIndex(currentProblemIndex + 1);
       }
     } else {
+      // Show feedback for Level 1
+      if (currentLevel === 1) {
+        setWrongAnswerFeedback({
+          userAnswer: userAnswer,
+          correctAnswer: currentProblem.correctAnswer,
+          question: currentProblem.question
+        });
+        
+        // Clear feedback after 4 seconds
+        setTimeout(() => setWrongAnswerFeedback(null), 4000);
+      }
+      
       onWrongAnswer();
       setUserAnswer('');
     }
@@ -179,6 +234,16 @@ const GameScreen = ({
 
   const getFactionsRemaining = () => 8 - currentLevel;
 
+  // Calculate time remaining for Level 1 countdown
+  const getDisplayTime = () => {
+    if (currentLevel === 1) {
+      const timeRemaining = Math.max(0, 120 - currentTime);
+      return formatTime(timeRemaining);
+    } else {
+      return formatTime(currentTime);
+    }
+  };
+
   if (!currentProblem) {
     return <div className="za-loading">Loading problems...</div>;
   }
@@ -197,10 +262,12 @@ const GameScreen = ({
         <div className="za-game-stats">
           <div className="za-timer">
             <span className="za-timer-icon">⏱️</span>
-            <span className="za-timer-text">{formatTime(currentTime)}</span>
-            {currentLevel === 1 && (
+            <span className={`za-timer-text ${currentLevel === 1 && currentTime >= 90 ? 'za-timer-warning' : ''}`}>
+              {getDisplayTime()}
+            </span>
+            {currentLevel === 1 && currentTime >= 90 && (
               <span className="za-time-warning">
-                {currentTime >= 90 ? ' TIME RUNNING OUT!' : ''}
+                {' '}TIME RUNNING OUT!
               </span>
             )}
           </div>
@@ -255,6 +322,31 @@ const GameScreen = ({
           onKeyPress={handleKeyPress}
         />
       </div>
+
+      {/* Wrong Answer Feedback (Level 1 only) */}
+      {wrongAnswerFeedback && currentLevel === 1 && (
+        <div className="za-wrong-feedback">
+          <div className="za-wrong-title">Not quite!</div>
+          <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
+          <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
+          
+          <div className="za-decimal-helper">
+            <div className="za-helper-title">💡 Converting Percents to Decimals:</div>
+            <div className="za-helper-visual">
+              <span className="za-percent-num">25%</span>
+              <span className="za-arrow">→</span>
+              <span className="za-decimal-movement">
+                <span className="za-move-left">0.</span>
+                <span className="za-moved">25</span>
+              </span>
+            </div>
+            <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
+            <div className="za-helper-examples">
+              Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Calculator (Level 3+) */}
       {showCalculator && <Calculator />}
