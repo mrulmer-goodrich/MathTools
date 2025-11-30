@@ -49,11 +49,16 @@ const Calculator = () => {
     };
   }, [isDragging, dragOffset]);
 
-  // KEYBOARD SUPPORT
+  // KEYBOARD SUPPORT - Fixed to not interfere with notepad
   useEffect(() => {
     const handleKeyboard = (e) => {
-      // Only handle if calculator is visible and not typing in answer field
-      if (e.target.closest('.za-answer-input')) return;
+      // Don't handle if typing in answer field OR notepad
+      if (e.target.closest('.za-answer-input') || 
+          e.target.closest('.za-notepad-textarea') ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.tagName === 'INPUT') {
+        return;
+      }
       
       const key = e.key;
       
@@ -186,7 +191,10 @@ const Calculator = () => {
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="za-calc-header">Calculator (Keyboard Enabled)</div>
+      <div className="za-calc-header">
+        Calculator
+        <div className="za-calc-subheader">Keyboard Enabled</div>
+      </div>
       <div className="za-calc-display-fixed">
         {equation && <div className="za-calc-equation">{equation}</div>}
         <div className="za-calc-value">{display}</div>
