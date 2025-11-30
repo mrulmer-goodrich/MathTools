@@ -3,6 +3,6 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "git": {
-    "deploymentEnabled": true
+    "deploymentEnabled": false
   }
 }
