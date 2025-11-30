@@ -1368,3 +1368,54 @@
   font-weight: bold;
   animation: za-warning-blink 0.5s ease-in-out infinite;
 }
+
+/* ============================================
+   VERSION 2.0.0 ADDITIONS
+   ============================================ */
+
+/* Intro screen transitions */
+.za-intro-screen.za-transitioning {
+  animation: za-screen-fade-out 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes za-screen-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+/* Make intro title more prominent */
+.za-intro-title {
+  animation: za-title-pulse 3s ease-in-out infinite;
+}
+
+@keyframes za-title-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    text-shadow: 0 0 15px rgba(139, 0, 0, 0.8);
+  }
+  50% { 
+    transform: scale(1.03);
+    text-shadow: 0 0 25px rgba(139, 0, 0, 1);
+  }
+}
+
+/* "I get it now!" button styling */
+.za-got-it-btn {
+  margin-top: 25px;
+  width: 100%;
+  font-size: 18px;
+  padding: 15px 20px;
+  font-weight: bold;
+}
+
+.za-got-it-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
+}
