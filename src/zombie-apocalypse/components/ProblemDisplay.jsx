@@ -14,27 +14,48 @@ const ProblemDisplay = ({
   const isMultipleChoice = problem.type === 'multiple-choice';
 
   return (
-    <div className="za-problem-display">
-      <div className="za-problem-number">
-        Problem {problemNumber} of {totalProblems}
+    <div className="za-problem-container">
+      <div className="za-problem-header">
+        <span className="za-problem-number">
+          Problem {problemNumber} of {totalProblems}
+        </span>
+        {problem.subtitle && (
+          <span className="za-problem-subtitle">
+            {problem.subtitle}
+          </span>
+        )}
       </div>
 
-      <div className="za-problem-text">
+      <div className="za-question-text">
         {problem.question}
       </div>
 
+      {problem.context && (
+        <div className="za-problem-context">
+          {problem.context}
+        </div>
+      )}
+
       {isMultipleChoice ? (
-        <div className="za-choice-buttons">
-          {problem.choices.map((choice, index) => (
+        <div className="za-choices-grid">
+          {Array.isArray(problem.choices) && problem.choices.map((choice, index) => (
             <button
               key={index}
-              className={`za-choice-btn ${userAnswer === choice ? 'selected' : ''}`}
+              className={
+                'za-choice-btn' + (userAnswer === choice ? ' za-choice-btn--selected' : '')
+              }
+              type="button"
               onClick={() => {
+                // For multiple-choice, set the answer to the literal choice string,
+                // then immediately submit using the shared onSubmit handler.
                 onAnswerChange(choice);
-                setTimeout(() => onSubmit(), 100);
+                // Small timeout to ensure state updates before checkAnswer runs.
+                setTimeout(() => {
+                  onSubmit();
+                }, 0);
               }}
             >
-              {choice.toUpperCase()}
+              {String(choice).toUpperCase()}
             </button>
           ))}
         </div>
@@ -51,6 +72,7 @@ const ProblemDisplay = ({
           />
           <button 
             className="za-submit-btn"
+            type="button"
             onClick={onSubmit}
             disabled={!userAnswer.trim()}
           >
