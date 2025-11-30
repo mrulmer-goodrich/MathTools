@@ -1,7 +1,7 @@
 // IntroSequence.jsx
-// VERSION: 2.3.0
-// Last Updated: November 30, 2024 1:00am
-// Changes: Double scroll reset, Garvin quote, Charlotte (no NC)
+// VERSION: 3.1.0
+// Last Updated: November 30, 2024
+// Changes: Shortened text, centered button, removed fear reference, tighter story
 
 import React, { useState, useEffect } from 'react';
 
@@ -18,12 +18,10 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
     if (currentScreen === 3) {
       onComplete();
     } else {
-      // Add transition effect
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentScreen(currentScreen + 1);
         setIsTransitioning(false);
-        // Force scroll after screen change
         window.scrollTo({ top: 0, behavior: 'instant' });
       }, 400);
     }
@@ -45,16 +43,13 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       content: (
         <>
           <p className="za-intro-text">
-            It started at Eastway Middle School on a Tuesday afternoon at 2:47 PM. Principal Garvin's voice crackled over the intercom, urgent and terrified: "All students and staff, shelter in place immediately. Lock your doors. Do NOT go outside. This is NOT a drill."
+            Tuesday, 2:47 PM. Principal Garvin's voice crackled over the intercom: <strong>"Shelter in place. Lock your doors. This is NOT a drill."</strong>
           </p>
           <p className="za-intro-text">
-            {playerData.playerName}, you were in {isMathStudent ? "Mr. UG's" : "your"} {playerData.favoriteSubject || 'class'} when the alarms began. Through the windows, you saw Principal Garvin running across the courtyard, zombies shambling behind her. She didn't make it.
+            Through the windows of {isMathStudent ? "Mr. UG's class" : `${playerData.favoriteSubject || 'class'}`}, you saw her running across the courtyard. Zombies shambling behind her. She didn't make it.
           </p>
           <p className="za-intro-text">
-            The infection spread like wildfire through {cityName}. Whatever caused it—a virus, a chemical spill, something worse—didn't matter anymore. Within the first hour, 80% of the city had turned. The screams... you'll never forget the screams.
-          </p>
-          <p className="za-intro-text">
-            You grabbed {playerData.friendName}, smashed through the back door of Eastway Middle, and ran for your lives. Behind you, the place where you once felt safe became a nightmare. You never looked back.
+            Within the first hour, 80% of {cityName} had turned. You grabbed {playerData.friendName} and ran. Eastway Middle became a nightmare. You never looked back.
           </p>
         </>
       )
@@ -64,33 +59,33 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       content: (
         <>
           <p className="za-intro-text">
-            In the chaos of the first week, survivors clustered together. Seven distinct factions emerged, each with their own strategy for survival. You and {playerData.friendName} joined the Eastway Jaguars—former students and teachers who refused to give up on what Principal Garvin taught: "To empower everyone to be better than they were the day before."
+            Seven factions emerged from the chaos. You and {playerData.friendName} joined the <strong>Eastway Jaguars</strong>—carrying on Principal Garvin's legacy.
           </p>
           <div className="za-faction-list">
             <div className="za-faction za-faction-player">
-              <span className="za-faction-icon">🐆</span> The Eastway Jaguars <span className="za-faction-note">(You and {playerData.friendName} - Principal Garvin's legacy lives on)</span>
+              <span className="za-faction-icon">🏆</span> <strong>The Eastway Jaguars</strong> <span className="za-faction-note">(You & {playerData.friendName})</span>
             </div>
             <div className="za-faction">
-              <span className="za-faction-icon">⚡</span> The Runners <span className="za-faction-note">- Fast and fearless, but reckless in their speed</span>
+              <span className="za-faction-icon">⚡</span> The Runners <span className="za-faction-note">- Fast but reckless</span>
             </div>
             <div className="za-faction">
-              <span className="za-faction-icon">💰</span> The Traders <span className="za-faction-note">- Wealthy and cunning, but consumed by greed</span>
+              <span className="za-faction-icon">💰</span> The Traders <span className="za-faction-note">- Wealthy but greedy</span>
             </div>
             <div className="za-faction">
-              <span className="za-faction-icon">🔍</span> The Scavengers <span className="za-faction-note">- Resourceful scavengers, but growing desperate</span>
+              <span className="za-faction-icon">🔍</span> The Scavengers <span className="za-faction-note">- Resourceful but desperate</span>
             </div>
             <div className="za-faction">
-              <span className="za-faction-icon">🏰</span> The Fortress <span className="za-faction-note">- Heavily fortified, but rigid and inflexible</span>
+              <span className="za-faction-icon">🏰</span> The Fortress <span className="za-faction-note">- Strong but inflexible</span>
             </div>
             <div className="za-faction">
-              <span className="za-faction-icon">🔧</span> The Engineers <span className="za-faction-note">- Brilliant minds, but dangerously overconfident</span>
+              <span className="za-faction-icon">🔧</span> The Engineers <span className="za-faction-note">- Brilliant but overconfident</span>
             </div>
             <div className="za-faction za-faction-enemy">
-              <span className="za-faction-icon">👑</span> The Elites <span className="za-faction-note">- Ruthless, organized, and your final threat</span>
+              <span className="za-faction-icon">👑</span> The Elites <span className="za-faction-note">- Ruthless & organized</span>
             </div>
           </div>
           <p className="za-intro-text za-intro-emphasis">
-            Resources are scarce. Territory is everything. Only ONE faction will control the future of {cityName}. For Principal Garvin. For Eastway. It has to be you.
+            Only ONE faction will control {cityName}. For Principal Garvin. For Eastway. <strong>It has to be you.</strong>
           </p>
         </>
       )
@@ -100,16 +95,19 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       content: (
         <>
           <p className="za-intro-text">
-            {playerData.friendName} pulls you aside after the first faction meeting. "Listen," they whisper urgently, "survival isn't about strength anymore. It's about being smarter than everyone else. {isMathStudent ? "Remember what Mr. UG always said—math is survival." : "We need to calculate every move."} Every trade, every risk, every decision. One wrong percentage and we're dead."
+            {playerData.friendName} pulls you aside. "Survival isn't about strength anymore. It's about being <strong>smarter than everyone else</strong>. {isMathStudent ? "Remember what Mr. UG always said—math is survival." : "We need to calculate every move."}"
           </p>
           <p className="za-intro-text">
-            You think back to Eastway Middle. You wanted to be {playerData.dreamJob || 'something great'}—back when the world made sense, when your biggest worry was {playerData.biggestFear || 'tests and homework'}. Now your only goal is to see another sunrise.
+            Every trade. Every risk. Every decision. <strong>One wrong percentage and you're dead.</strong>
           </p>
           <p className="za-intro-text">
-            The other factions are watching. The Elites are already making their move. The dead are closing in. {isMathStudent ? "Mr. UG prepared you for this... sort of." : "You have to be ready."}
+            You wanted to be {playerData.dreamJob || 'something great'}—back when the world made sense. Now your only goal is to see another sunrise.
           </p>
           <p className="za-intro-text za-intro-emphasis">
-            This is it, {playerData.playerName}. For Principal Garvin. For Eastway. For survival. Are you ready to fight?
+            The other factions are watching. The Elites are making their move. The zombies are closing in.
+          </p>
+          <p className="za-intro-text za-intro-final">
+            This is it, {playerData.playerName}. For Principal Garvin. For Eastway. <strong>Are you ready to fight?</strong>
           </p>
         </>
       )
@@ -131,13 +129,15 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             {currentScreenData.content}
           </div>
 
-          <button 
-            className="za-btn-primary za-intro-continue"
-            onClick={handleNext}
-            disabled={isTransitioning}
-          >
-            {currentScreen === 3 ? "I'M READY TO SURVIVE" : 'Continue →'}
-          </button>
+          <div className="za-intro-buttons">
+            <button 
+              className="za-btn-primary za-intro-continue"
+              onClick={handleNext}
+              disabled={isTransitioning}
+            >
+              {currentScreen === 3 ? "I'M READY TO SURVIVE" : 'Continue →'}
+            </button>
+          </div>
         </div>
 
         <div className="za-intro-progress">
