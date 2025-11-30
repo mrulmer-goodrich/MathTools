@@ -282,11 +282,15 @@ const GameScreen = ({
     }
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = (overrideAnswer) => {
     if (!currentProblem) return;
     
-    const userAns = userAnswer.trim().toLowerCase();
+    // Use override if provided (from multiple choice click), otherwise use userAnswer state
+    const answerToCheck = overrideAnswer !== undefined ? overrideAnswer : userAnswer;
+    const userAns = answerToCheck.trim().toLowerCase();
     const correctAns = String(currentProblem.correctAnswer).toLowerCase();
+    
+    console.log('Checking answer:', userAns, 'vs', correctAns);
     
     let isCorrect = false;
     
@@ -320,7 +324,7 @@ const GameScreen = ({
       const guidedNotes = getGuidedNotes(currentProblem, userAns, correctAns);
       
       setWrongAnswerFeedback({
-        userAnswer: userAnswer,
+        userAnswer: answerToCheck,
         correctAnswer: currentProblem.correctAnswer,
         guidedNotes: guidedNotes
       });
