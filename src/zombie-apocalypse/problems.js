@@ -35,7 +35,7 @@ const npcs = [
   'Sarah the supply runner',
   'Jackson the mechanic',
   'Officer Rodriguez',
-  'Chef Wang (keeps morale up)',
+  'Chef Wang',
   'Trader Jake',
   'Nurse Patterson'
 ];
@@ -43,16 +43,16 @@ const npcs = [
 const discountReasons = [
   'damaged in a zombie attack',
   'desperate to move inventory before relocating',
-  'alliance discount for Eastway Jaguars',
+  'faction alliance discount for Eastway Jaguars',
   'loyalty reward for repeat customers',
   'clearance sale (apocalypse special!)',
-  'slightly used but still functional',
+  'slightly bloody but still functional',
   'faction friendship discount'
 ];
 
 const taxReasons = [
   'safe zone protection fee',
-  'faction leadership tax for defense',
+  'faction leadership tax',
   'entry tax to the secure area',
   'resource pooling for survival',
   'fortification maintenance fee'
@@ -125,7 +125,7 @@ export const generateLevel1Bank = () => {
 export const generateLevel2Problem = (playerData) => {
   const scenarios = [
     {
-      template: (item, discount, reason) => `${item} is ${discount}% off (${reason}). Does the price increase or decrease?`,
+      template: (item, discount, reason) => `${capitalize(item)} is ${discount}% off (${reason}). Does the price increase or decrease?`,
       answer: 'decrease',
       getValues: () => ({
         item: random.fromArray([...zombieItems.weapons, ...zombieItems.supplies]),
@@ -134,7 +134,7 @@ export const generateLevel2Problem = (playerData) => {
       })
     },
     {
-      template: (item, tax, reason) => `${item} costs extra due to ${tax}% ${reason}. Does your total increase or decrease?`,
+      template: (item, tax, reason) => `${capitalize(item)} costs extra due to ${tax}% ${reason}. Does your total increase or decrease?`,
       answer: 'increase',
       getValues: () => ({
         item: random.fromArray([...zombieItems.protection, ...zombieItems.medicine]),
@@ -167,7 +167,7 @@ export const generateLevel2Problem = (playerData) => {
       })
     },
     {
-      template: (item, discount, location) => `${item} on sale at ${location} for ${discount}% off. Does the price increase or decrease?`,
+      template: (item, discount, location) => `${capitalize(item)} is on sale at ${location} for ${discount}% off. Does the price increase or decrease?`,
       answer: 'decrease',
       getValues: () => ({
         item: random.fromArray(zombieItems.supplies),
@@ -176,7 +176,7 @@ export const generateLevel2Problem = (playerData) => {
       })
     },
     {
-      template: (rate, reason) => `You borrowed supplies and must pay ${rate}% interest (${reason}). Does what you owe increase or decrease?`,
+      template: (rate, reason) => `You ${reason}. Must pay ${rate}% interest. Does what you owe increase or decrease?`,
       answer: 'increase',
       getValues: () => ({
         rate: random.interest(),
@@ -192,7 +192,7 @@ export const generateLevel2Problem = (playerData) => {
       })
     },
     {
-      template: (item, discount) => `${item} marked down ${discount}% (end-of-world clearance!). Does the price increase or decrease?`,
+      template: (item, discount) => `${capitalize(item)} marked down ${discount}% (end-of-world clearance!). Does the price increase or decrease?`,
       answer: 'decrease',
       getValues: () => ({
         item: random.fromArray(zombieItems.tools),
@@ -264,7 +264,7 @@ export const generateLevel3Problem = (playerData) => {
       })
     },
     {
-      template: (npc, price, tip, reason) => `${npc} ${reason}. Service costs $${price}. You tip ${tip}%. How much is the TIP? (Round to nearest cent)`,
+      template: (npc, price, tip, reason) => `${npc} ${reason}. The meal costs $${price}. You tip ${tip}%. How much is the TIP? (Round to nearest cent)`,
       getAnswer: (npc, price, tip, reason) => round(price * tip / 100).toFixed(2),
       getValues: () => ({
         npc: random.fromArray(npcs),
@@ -274,7 +274,7 @@ export const generateLevel3Problem = (playerData) => {
       })
     },
     {
-      template: (item, price, markup, location) => `At ${location}, ${item} marked up ${markup}% from $${price}. How much was the MARKUP? (Round to nearest cent)`,
+      template: (item, price, markup, location) => `At ${location}, ${item} is marked up ${markup}% from $${price}. How much was the MARKUP? (Round to nearest cent)`,
       getAnswer: (item, price, markup, location) => round(price * markup / 100).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -284,7 +284,7 @@ export const generateLevel3Problem = (playerData) => {
       })
     },
     {
-      template: (principal, rate, years, reason) => `You ${reason}. Borrowed $${principal} at ${rate}% simple interest for ${years} years. How much INTEREST? (Round to nearest cent)`,
+      template: (principal, rate, years, reason) => `You ${reason}. The loan was $${principal} at ${rate}% simple interest for ${years} years. How much INTEREST do you owe? (Round to nearest cent)`,
       getAnswer: (principal, rate, years, reason) => round(principal * rate / 100 * years).toFixed(2),
       getValues: () => ({
         principal: random.loan(),
@@ -294,7 +294,7 @@ export const generateLevel3Problem = (playerData) => {
       })
     },
     {
-      template: (sales, comm, npc) => `${npc} pays ${comm}% commission on your $${sales} in supply trades. How much COMMISSION? (Round to nearest cent)`,
+      template: (sales, comm, npc) => `${npc} pays ${comm}% commission on your supply trades. You made $${sales} in sales. How much COMMISSION did you earn? (Round to nearest cent)`,
       getAnswer: (sales, comm, npc) => round(sales * comm / 100).toFixed(2),
       getValues: () => ({
         sales: random.sales(),
@@ -346,7 +346,7 @@ export const generateLevel4Problem = (playerData) => {
       })
     },
     {
-      template: (npc, price, tip, reason) => `${npc} ${reason}. Service costs $${price}, you tip ${tip}%. What's the FINAL amount you pay? (Round to nearest cent)`,
+      template: (npc, price, tip, reason) => `${npc} ${reason}. The service costs $${price}. You tip ${tip}%. What's the FINAL amount you pay? (Round to nearest cent)`,
       getAnswer: (npc, price, tip, reason) => round(price + (price * tip / 100)).toFixed(2),
       getValues: () => ({
         npc: random.fromArray(npcs),
@@ -356,7 +356,7 @@ export const generateLevel4Problem = (playerData) => {
       })
     },
     {
-      template: (item, price, markup, location) => `At ${location}, ${item} originally $${price}, marked up ${markup}%. What's the FINAL PRICE? (Round to nearest cent)`,
+      template: (item, price, markup, location) => `At ${location}, ${item} was originally $${price}, marked up ${markup}%. What's the FINAL PRICE? (Round to nearest cent)`,
       getAnswer: (item, price, markup, location) => round(price + (price * markup / 100)).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -482,7 +482,7 @@ export const generateLevel5Problem = (playerData) => {
       })
     },
     {
-      template: (item, price, markup, discount, location) => `At ${location}, ${item} marked up ${markup}% from $${price}, then ${discount}% clearance discount. FINAL PRICE? (Round to nearest cent)`,
+      template: (item, price, markup, discount, location) => `At ${location}, ${item} was marked up ${markup}% from $${price}, then given a ${discount}% clearance discount. FINAL PRICE? (Round to nearest cent)`,
       getAnswer: (item, price, markup, discount, location) => {
         const afterMarkup = price + (price * markup / 100);
         const final = afterMarkup - (afterMarkup * discount / 100);
@@ -512,7 +512,7 @@ export const generateLevel5Problem = (playerData) => {
       })
     },
     {
-      template: (npc, price, tax, tip, reason) => `${npc} ${reason}. Meal $${price}, ${tax}% tax, then you tip ${tip}% on the total. How much do you PAY? (Round to nearest cent)`,
+      template: (npc, price, tax, tip, reason) => `${npc} ${reason}. The meal costs $${price}, plus ${tax}% tax. Then you tip ${tip}% on the total. How much do you PAY? (Round to nearest cent)`,
       getAnswer: (npc, price, tax, tip, reason) => {
         const afterTax = price + (price * tax / 100);
         const final = afterTax + (afterTax * tip / 100);
