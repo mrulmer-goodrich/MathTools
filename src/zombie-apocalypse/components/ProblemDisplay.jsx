@@ -31,13 +31,10 @@ const ProblemDisplay = ({
               type="button"
               className={`za-choice-btn ${userAnswer === choice ? 'selected' : ''}`}
               onClick={() => {
-                // For multiple-choice, set the answer to the literal choice string,
-                // then immediately submit using the shared onSubmit handler.
+                // Update state for visual selection
                 onAnswerChange(choice);
-                // Small timeout to ensure state updates before checkAnswer runs.
-                setTimeout(() => {
-                  onSubmit();
-                }, 0);
+                // Pass the choice directly into the submit handler (avoids stale state issues)
+                onSubmit(choice);
               }}
             >
               {String(choice).toUpperCase()}
