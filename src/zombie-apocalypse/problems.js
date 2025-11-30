@@ -69,7 +69,7 @@ export const generateLevel2Problem = (playerData) => {
       getValue: () => random.discount()
     },
     {
-      template: (v) => `You tip ${v}% on ${playerData.favoriteFood}. Does the amount you pay increase or decrease?`,
+      template: (v) => `You tip ${v}% on ${playerData.favoriteFood || 'food'}. Does the amount you pay increase or decrease?`,
       answer: 'increase',
       getValue: () => random.percent(15, 25)
     },
