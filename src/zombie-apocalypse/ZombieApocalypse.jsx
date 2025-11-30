@@ -195,6 +195,37 @@ const ZombieApocalypse = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Global dev shortcut listener
+  useEffect(() => {
+    const handleDevShortcut = (e) => {
+      // Ctrl+Shift+7 to jump to Level 7
+      if (e.ctrlKey && e.shiftKey && e.key === '7') {
+        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Level 7');
+        handleDevJumpToLevel(7);
+      }
+      // Ctrl+Shift+V to jump to Victory
+      if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Victory');
+        if (!playerData.playerName) {
+          setPlayerData({
+            playerName: 'Test Player',
+            friendName: 'Test Friend',
+            cityName: 'Charlotte, NC',
+            favoriteColor: 'Blue',
+            favoriteSubject: 'Math',
+            dreamJob: 'Developer',
+            biggestFear: 'Bugs'
+          });
+        }
+        setGamePhase('victory');
+      }
+    };
+
+    window.addEventListener('keydown', handleDevShortcut);
+    return () => window.removeEventListener('keydown', handleDevShortcut);
+  }, [playerData]);
+
+
   // Render based on game phase
   return (
     <>
