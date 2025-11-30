@@ -1,0 +1,311 @@
+ZOMBIE APOCALYPSE v2.1.0 - COMPREHENSIVE FIXES
+═══════════════════════════════════════════════════════════════
+
+🐛 ROOT CAUSE ANALYSIS - INPUT FREEZE BUG
+
+PROBLEM: Input works on problem 1, 2, freezes on 3, 4, 5...
+
+ROOT CAUSE: The `checkAnswer` function advances the problem index
+AND clears userAnswer in the SAME render cycle. When problem index
+changes, React re-renders, but the input's `value={userAnswer}` is
+already empty from the previous state update.
+
+The useEffect to clear userAnswer on problem change is FIGHTING with
+the checkAnswer clear, creating a race condition.
+
+SOLUTION: Remove userAnswer clear from checkAnswer entirely. Let the
+useEffect handle ALL clearing. Add a small delay before advancing.
+
+═══════════════════════════════════════════════════════════════
+
+🔧 FIXES FOR v2.1.0
+
+1. LANDING PAGE - Charlotte, NC default
+   PersonalizationForm.jsx line 7:
+   Change: cityName: 'Charlotte, NC'
+   To: cityName: 'Charlotte'
+
+2. SCROLL POSITION RESET
+   Add to multiple components:
+   - IntroSequence: scroll to top when screen changes
+   - GameScreen: scroll to top when level changes
+   - LevelComplete: scroll to top when shown
+
+3. LEVEL TITLES MISMATCH
+   Current (WRONG):
+   Level 1: The Outbreak
+   Level 2: Faction Wars Begin (Runners eliminated)
+   Level 3: The Traders Fall ← WRONG! Traders died at end of L2
+   Level 4: Scavengers Eliminated
+   Level 5: The Fortress Falls
+   Level 6: The Engineers Fail
+   Level 7: THE FINAL CALCULATION
+   
+   Should be (CORRECT):
+   Level 1: The Outbreak
+   Level 2: The Runners Fall (eliminate Runners)
+   Level 3: The Traders Fall (eliminate Traders)
+   Level 4: The Scavengers Fall (eliminate Scavengers)
+   Level 5: The Fortress Falls (eliminate Fortress)
+   Level 6: The Engineers Fail (eliminate Engineers)
+   Level 7: THE FINAL SHOWDOWN (vs Elites)
+
+4. INPUT FREEZE - COMPLETE FIX
+   GameScreen checkAnswer needs restructure:
+   
+   REMOVE userAnswer clearing from inside checkAnswer
+   ADD timeout before advancing problem
+   KEEP useEffect for clearing (it's correct)
+
+═══════════════════════════════════════════════════════════════
+
+📋 COMPLETE APP AUDIT - ADDITIONAL ISSUES FOUND
+
+ISSUE #1: LevelComplete messages don't match titles
+- Currently reference wrong factions
+- Need to align with corrected level titles
+
+ISSUE #2: FactionTracker elimination levels are off
+- Runners should eliminate at level 2 (currently shows 2 ✓)
+- Traders should eliminate at level 3 (currently shows 3 ✓)
+- Actually, these are CORRECT! The level titles were wrong.
+
+ISSUE #3: Death screen doesn't scroll to top
+- User might not see death message if scrolled down
+
+ISSUE #4: Victory screen calculation uses wrong city
+- Still shows "Charlotte, NC" in victory stats
+- Needs to strip ", NC"
+
+ISSUE #5: Calculator/Notepad persist between deaths
+- If user dies and drops back a level, calculator/notepad
+  visibility doesn't reset properly
+- GameScreen useEffect sets them correctly, so this is OK
+
+ISSUE #6: Sound toggle doesn't persist tick sound state
+- Tick sound checks soundEnabled in useEffect dependencies
+- but playTickSound is called inside interval without closure
+- This is actually fine - it checks soundEnabled each call
+
+ISSUE #7: No visual feedback for correct answers
+- Wrong answers get overlay (Level 1)
+- Correct answers just... advance
+- Should add green flash or checkmark animation
+
+ISSUE #8: Progress bar jumps on level change
+- Resets to 0 abruptly
+- Should animate or at least fade
+
+ISSUE #9: Hearts don't animate when lost
+- Just disappear instantly
+- Should have shake/fade animation
+
+ISSUE #10: Timer warning at 30 seconds only (90+ seconds)
+- Should have multiple warning thresholds:
+  - Yellow at 60 seconds (1:00)
+  - Orange at 30 seconds (0:30)
+  - Red blinking at 10 seconds (0:10)
+
+═══════════════════════════════════════════════════════════════
+
+🎯 PRIORITY FIXES (Do These First)
+
+CRITICAL (Breaking gameplay):
+1. Input freeze (Problem 3+)
+2. Scroll position reset
+3. Level titles wrong
+
+HIGH (User confusion):
+4. Landing page Charlotte, NC
+5. LevelComplete messages wrong
+6. Victory screen city name
+
+MEDIUM (Polish):
+7. Correct answer feedback
+8. Timer warning thresholds
+9. Heart loss animation
+
+LOW (Nice to have):
+10. Progress bar animation
+
+═══════════════════════════════════════════════════════════════
+
+📝 DETAILED FIX CODE
+
+FIX #1: PersonalizationForm.jsx
+Line 7, change:
+```javascript
+cityName: 'Charlotte',
+```
+
+FIX #2: IntroSequence.jsx
+Add to handleNext function (line ~15):
+```javascript
+const handleNext = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  if (currentScreen === 3) {
+    onComplete();
+  } else {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentScreen(currentScreen + 1);
+      setIsTransitioning(false);
+    }, 400);
+  }
+};
+```
+
+FIX #3: GameScreen.jsx Level Titles
+Line 230-240, change to:
+```javascript
+const getLevelTitle = () => {
+  const titles = {
+    1: "LEVEL 1: The Outbreak",
+    2: "LEVEL 2: The Runners Fall",
+    3: "LEVEL 3: The Traders Fall",
+    4: "LEVEL 4: The Scavengers Fall",
+    5: "LEVEL 5: The Fortress Falls",
+    6: "LEVEL 6: The Engineers Fail",
+    7: "LEVEL 7: THE FINAL SHOWDOWN"
+  };
+  return titles[currentLevel];
+};
+```
+
+FIX #4: GameScreen.jsx - INPUT FREEZE PERMANENT FIX
+Complete rewrite of checkAnswer (line ~160):
+```javascript
+const checkAnswer = (overrideAnswer) => {
+  if (!currentProblem) return;
+  
+  const rawUser =
+    overrideAnswer !== undefined && overrideAnswer !== null
+      ? overrideAnswer
+      : userAnswer;
+
+  const userAns = rawUser.trim().toLowerCase();
+  const correctAns = currentProblem.correctAnswer.toLowerCase();
+  
+  console.log('═══ ANSWER CHECK ═══');
+  console.log('Problem Index:', currentProblemIndex);
+  console.log('User answer:', `"${userAns}"`);
+  console.log('Correct answer:', `"${correctAns}"`);
+  
+  let isCorrect = false;
+  
+  if (currentProblem.type === 'multiple-choice') {
+    isCorrect = userAns === correctAns;
+  } else {
+    if (userAns === correctAns) {
+      isCorrect = true;
+    } else {
+      const userNum = parseFloat(userAns);
+      const correctNum = parseFloat(correctAns);
+      if (!isNaN(userNum) && !isNaN(correctNum)) {
+        isCorrect = Math.abs(userNum - correctNum) < 0.02;
+      }
+    }
+  }
+  
+  console.log('Result:', isCorrect ? 'CORRECT ✓' : 'WRONG ✗');
+  console.log('═══════════════════');
+  
+  if (isCorrect) {
+    onCorrectAnswer();
+    const newCorrect = problemsCorrect + 1;
+    setProblemsCorrect(newCorrect);
+    setWrongAnswerFeedback(null);
+    
+    // DON'T clear userAnswer here - let useEffect handle it
+    // Add delay before advancing to let state settle
+    setTimeout(() => {
+      if (newCorrect >= config.required) {
+        onLevelComplete();
+      } else if (currentProblemIndex < config.total - 1) {
+        setCurrentProblemIndex(currentProblemIndex + 1);
+      }
+    }, 150);
+    
+  } else {
+    // Show feedback for Level 1
+    if (currentLevel === 1) {
+      setWrongAnswerFeedback({
+        userAnswer: userAnswer,
+        correctAnswer: currentProblem.correctAnswer,
+        question: currentProblem.question
+      });
+    }
+    
+    onWrongAnswer();
+    // DON'T clear here either - let useEffect handle it
+  }
+};
+```
+
+FIX #5: GameScreen.jsx - Add scroll reset on level change
+Add to useEffect at line ~87:
+```javascript
+useEffect(() => {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  generateProblems();
+  setCurrentProblemIndex(0);
+  setProblemsCorrect(0);
+  setUserAnswer('');
+  setShowCalculator(currentLevel >= 3);
+  setShowNotepad(currentLevel >= 4);
+  setWrongAnswerFeedback(null);
+}, [currentLevel]);
+```
+
+FIX #6: LevelComplete.jsx - Update messages and scroll
+Line ~10, add scroll to top:
+```javascript
+const LevelComplete = ({ level, playerData, time, formatTime }) => {
+  // Scroll to top when shown
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+  
+  const messages = {
+    1: `The Eastway Jaguars prove their worth. You and ${playerData.friendName} can convert percents faster than lightning strikes. The Runners, overconfident in their speed, couldn't keep up with the mental math. They sprinted straight into a zombie horde. Six factions remain, and the others are watching you nervously.`,
+    
+    2: `Your understanding of increase and decrease saves lives. The Traders, blinded by greed, couldn't tell if their deals were helping or hurting them. They argued over a "discount" that was actually a markup—and while they bickered, the zombies surrounded them. Five factions left. The Elites are taking notes.`,
+    
+    3: `Precision is survival. The Scavengers miscalculated how much food they needed for winter. They thought they had enough... they were wrong. Starvation weakened them, and the horde finished the job. Four factions remain. ${playerData.friendName} grips your shoulder: "We're halfway there."`,
+    
+    4: `${playerData.friendName} nods approvingly as you nail another calculation. The Fortress had walls, weapons, and supplies—but they couldn't handle multi-step thinking. When they miscalculated the cost of reinforcements PLUS tax, their defenses fell apart. Three factions left. You, The Engineers, and The Elites. This is getting real.`,
+    
+    5: `Two-step problems? Child's play for the Eastway Jaguars. The Engineers were brilliant—probably the smartest people left in ${playerData.cityName || 'Charlotte'}. But brilliance isn't the same as wisdom. They worked backwards on a forward problem, convinced they were right even as their calculations spelled doom. Two factions remain. Just you... and The Elites.`,
+    
+    6: `Working backwards comes naturally to you now. Every other faction has fallen. The streets of ${playerData.cityName || 'Charlotte'} are littered with the mistakes of those who weren't good enough, smart enough, or lucky enough to survive. The Elites stand between you and total control of the city. One final challenge awaits...`
+  };
+  
+  return (
+    ...
+  );
+};
+```
+
+FIX #7: VictoryScreen.jsx - Strip ", NC" from city
+Find cityName references and change:
+```javascript
+const cityName = (playerData.cityName || 'Charlotte').replace(', NC', '').replace(',NC', '');
+```
+
+═══════════════════════════════════════════════════════════════
+
+🚀 IMPLEMENTATION PLAN
+
+I will now create:
+1. PersonalizationForm-v2.1.jsx (Charlotte fix)
+2. IntroSequence-v2.1.jsx (scroll reset)
+3. GameScreen-v2.1.jsx (ALL fixes: input, titles, scroll)
+4. LevelComplete-v2.1.jsx (messages, scroll)
+5. Updated CSS for animations
+
+This will be a COMPLETE fix for all critical issues.
+
+═══════════════════════════════════════════════════════════════
+
+Ready to proceed?
