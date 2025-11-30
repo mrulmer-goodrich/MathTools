@@ -1,4 +1,4 @@
-// src/App.jsx — v12.1.0 (Fixed turkey rewards - now shows every 3, golden at 9!)
+// src/App.jsx — v12.1.0 
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
