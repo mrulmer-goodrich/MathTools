@@ -1138,3 +1138,96 @@
   color: #fff;
   font-size: 24px;
 }
+
+/* ============================================
+   VERTICAL FACTION TRACKER (RIGHT SIDEBAR)
+   ============================================ */
+.za-faction-tracker-vertical {
+  position: fixed;
+  right: 20px;
+  top: 120px;
+  width: 200px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 3px solid #8B0000;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 5px 25px rgba(139, 0, 0, 0.5);
+  z-index: 500;
+}
+
+.za-faction-tracker-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #8B0000;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #8B0000;
+}
+
+.za-faction-item-vertical {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 2px solid #666;
+  border-radius: 5px;
+  color: #ccc;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.za-faction-item-vertical.alive {
+  border-color: #4CAF50;
+}
+
+.za-faction-item-vertical.eliminated {
+  border-color: #333;
+  background: rgba(20, 20, 20, 0.8);
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.za-faction-item-vertical.player {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+  font-weight: bold;
+}
+
+.za-faction-item-vertical.enemy {
+  border-color: #8B0000;
+  background: rgba(139, 0, 0, 0.2);
+}
+
+.za-faction-icon-vert {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.za-faction-name-vert {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.za-eliminated-marker-vert {
+  color: #DC143C;
+  font-weight: bold;
+  font-size: 16px;
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Update level complete note styling */
+.za-level-complete-note {
+  font-size: 14px;
+  color: #999;
+  font-style: italic;
+  margin-top: 20px;
+  animation: za-pulse 1.5s ease-in-out infinite;
+}
