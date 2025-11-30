@@ -29,7 +29,7 @@ const ProblemDisplay = ({
             <button
               key={index}
               type="button"
-              className={\`za-choice-btn \${userAnswer === choice ? 'selected' : ''}\`}
+              className={`za-choice-btn ${userAnswer === choice ? 'selected' : ''}`}
               onClick={() => {
                 // For multiple-choice, set the answer to the literal choice string,
                 // then immediately submit using the shared onSubmit handler.
