@@ -195,35 +195,64 @@ const ZombieApocalypse = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Global dev shortcut listener
+  // Global dev shortcut listener - FIXED
   useEffect(() => {
     const handleDevShortcut = (e) => {
-      // Ctrl+Shift+7 to jump to Level 7
-      if (e.ctrlKey && e.shiftKey && e.key === '7') {
+      // Debug logging
+      console.log('Key pressed:', e.key, 'Ctrl:', e.ctrlKey, 'Shift:', e.shiftKey);
+      
+      // Ctrl+Shift+7 to jump to Level 7 (try both '7' and '&' for different keyboards)
+      if (e.ctrlKey && e.shiftKey && (e.key === '7' || e.key === '&')) {
+        e.preventDefault();
         console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Level 7');
-        handleDevJumpToLevel(7);
-      }
-      // Ctrl+Shift+V to jump to Victory
-      if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Victory');
+        
+        // Set player data if not set
         if (!playerData.playerName) {
           setPlayerData({
             playerName: 'Test Player',
             friendName: 'Test Friend',
-            cityName: 'Charlotte, NC',
+            cityName: 'Charlotte',
             favoriteColor: 'Blue',
             favoriteSubject: 'Math',
-            dreamJob: 'Developer',
-            biggestFear: 'Bugs'
+            dreamJob: 'Developer'
           });
         }
+        
+        // Set game start time if not set
+        if (!gameStartTime) {
+          setGameStartTime(Date.now());
+        }
+        
+        handleDevJumpToLevel(7);
+      }
+      
+      // Ctrl+Shift+V to jump to Victory
+      if (e.ctrlKey && e.shiftKey && (e.key === 'V' || e.key === 'v')) {
+        e.preventDefault();
+        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Victory');
+        
+        if (!playerData.playerName) {
+          setPlayerData({
+            playerName: 'Test Player',
+            friendName: 'Test Friend',
+            cityName: 'Charlotte',
+            favoriteColor: 'Blue',
+            favoriteSubject: 'Math',
+            dreamJob: 'Developer'
+          });
+        }
+        
+        if (!gameStartTime) {
+          setGameStartTime(Date.now());
+        }
+        
         setGamePhase('victory');
       }
     };
 
-    window.addEventListener('keydown', handleDevShortcut);
-    return () => window.removeEventListener('keydown', handleDevShortcut);
-  }, [playerData]);
+    document.addEventListener('keydown', handleDevShortcut, true); // Use capture phase
+    return () => document.removeEventListener('keydown', handleDevShortcut, true);
+  }, [playerData, gameStartTime]);
 
 
   // Render based on game phase
