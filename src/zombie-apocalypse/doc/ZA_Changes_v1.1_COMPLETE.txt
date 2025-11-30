@@ -1,0 +1,82 @@
+ZOMBIE APOCALYPSE - CHANGE REQUEST LOG
+Version 1.1 - Updates Applied
+
+═══════════════════════════════════════════════════════════════
+
+✅ COMPLETED CHANGES:
+
+GLOBAL CHANGES:
+✅ Faction tracker moved to right sidebar (vertical layout)
+✅ Click-to-advance added for level transitions (no auto-advance)
+✅ Story embellished with more detail and drama
+
+LANDING PAGE (PersonalizationForm.jsx):
+✅ "Your Name" → "Your First Name"
+✅ School subjects updated:
+   - History → Social Studies
+   - English → ELA
+   - Music → Chorus
+   - Added: Horticulture
+   - Added: "Other" with free-form text field
+✅ Removed "Favorite Color" field
+✅ Squad name changed to "The Eastway Jaguars" (hardcoded)
+✅ Button: "BEGIN APOCALYPSE" → "ENTER THE APOCALYPSE"
+
+INTRO SEQUENCE (IntroSequence.jsx):
+✅ Removed auto-advance timer (now click to continue)
+✅ Embellished all 3 intro screens with more story detail
+✅ Changed squad name to "The Eastway Jaguars"
+✅ Button: "BEGIN GAME" → "I'M READY TO SURVIVE"
+
+LEVEL COMPLETE (LevelComplete.jsx):
+✅ Embellished all level completion messages
+✅ Changed squad name to "The Eastway Jaguars"
+✅ Added "Click anywhere to continue..." text
+✅ Removed auto-advance timer
+
+CRITICAL BUG FIX (problems.js):
+✅ FIXED Level 2 increase/decrease logic
+   - Problem: "Charlotte raises prices by 37%" 
+   - Was expecting: "decrease" ❌
+   - Now expects: "increase" ✅
+   - All Level 2 problems verified for correct logic
+
+CSS UPDATES (zombie.css):
+✅ Added vertical faction tracker styles
+✅ Positioned on right side of screen
+✅ Responsive sizing and animations
+
+COMPONENT UPDATES:
+✅ FactionTracker.jsx - Converted to vertical layout
+✅ GameScreen.jsx - Removed favoriteColor prop
+✅ ZombieApocalypse.jsx - Added click handler for level advancement
+
+═══════════════════════════════════════════════════════════════
+
+📝 NOTES:
+
+- Favorite color completely removed from flow
+- Squad is now always "The Eastway Jaguars" 🐆
+- All transitions now require user click (better pacing)
+- Story is much more dramatic and engaging
+- Level 2 bug was preventing game progression - NOW FIXED
+
+═══════════════════════════════════════════════════════════════
+
+🎮 READY FOR TESTING!
+
+All requested changes have been applied.
+The game should now be fully playable.
+
+Next steps:
+1. Test personalization form
+2. Test intro sequence (verify story embellishments)
+3. Test Level 2 (verify increase/decrease works)
+4. Test level advancement (verify click-to-continue)
+5. Test vertical faction tracker (right sidebar)
+
+═══════════════════════════════════════════════════════════════
+
+Updated: November 29, 2024
+Version: 1.1
+Status: ✅ ALL CHANGES APPLIED
