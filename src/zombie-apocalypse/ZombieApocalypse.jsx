@@ -170,70 +170,77 @@ const ZombieApocalypse = () => {
   };
 
   // Render based on game phase
-  switch(gamePhase) {
-    case 'personalization':
-      return <PersonalizationForm onComplete={handlePersonalizationComplete} />;
-    
-    case 'intro':
-      return (
-        <IntroSequence 
-          playerData={playerData}
-          onComplete={handleIntroComplete}
-          onSkip={handleSkipIntro}
-        />
-      );
-    
-    case 'playing':
-      return (
-        <GameScreen
-          playerData={playerData}
-          currentLevel={currentLevel}
-          hearts={hearts}
-          soundEnabled={soundEnabled}
-          onToggleSound={() => setSoundEnabled(!soundEnabled)}
-          onCorrectAnswer={handleCorrectAnswer}
-          onWrongAnswer={handleWrongAnswer}
-          onLevelComplete={handleLevelComplete}
-          levelStartTime={levelStartTime}
-          formatTime={formatTime}
-        />
-      );
-    
-    case 'level-complete':
-      return (
-        <div onClick={handleContinueFromLevel}>
-          <LevelComplete
-            level={currentLevel}
-            playerData={playerData}
-            time={levelStats[currentLevel]?.time || 0}
-            formatTime={formatTime}
-          />
-        </div>
-      );
-    
-    case 'death':
-      return (
-        <DeathScreen
-          currentLevel={currentLevel}
-          playerData={playerData}
-        />
-      );
-    
-    case 'victory':
-      return (
-        <VictoryScreen
-          playerData={playerData}
-          levelStats={levelStats}
-          totalDeaths={totalDeaths}
-          totalTime={Math.floor((Date.now() - gameStartTime) / 1000)}
-          formatTime={formatTime}
-          onRestart={() => window.location.reload()}
-        />
-      );
-    
-    default:
-      return null;
-  }
+  return (
+    <>
+      <VersionChecker />
+      {(() => {
+        switch(gamePhase) {
+          case 'personalization':
+            return <PersonalizationForm onComplete={handlePersonalizationComplete} />;
+          
+          case 'intro':
+            return (
+              <IntroSequence 
+                playerData={playerData}
+                onComplete={handleIntroComplete}
+                onSkip={handleSkipIntro}
+              />
+            );
+          
+          case 'playing':
+            return (
+              <GameScreen
+                playerData={playerData}
+                currentLevel={currentLevel}
+                hearts={hearts}
+                soundEnabled={soundEnabled}
+                onToggleSound={() => setSoundEnabled(!soundEnabled)}
+                onCorrectAnswer={handleCorrectAnswer}
+                onWrongAnswer={handleWrongAnswer}
+                onLevelComplete={handleLevelComplete}
+                levelStartTime={levelStartTime}
+                formatTime={formatTime}
+              />
+            );
+          
+          case 'level-complete':
+            return (
+              <div onClick={handleContinueFromLevel}>
+                <LevelComplete
+                  level={currentLevel}
+                  playerData={playerData}
+                  time={levelStats[currentLevel]?.time || 0}
+                  formatTime={formatTime}
+                />
+              </div>
+            );
+          
+          case 'death':
+            return (
+              <DeathScreen
+                currentLevel={currentLevel}
+                playerData={playerData}
+              />
+            );
+          
+          case 'victory':
+            return (
+              <VictoryScreen
+                playerData={playerData}
+                levelStats={levelStats}
+                totalDeaths={totalDeaths}
+                totalTime={Math.floor((Date.now() - gameStartTime) / 1000)}
+                formatTime={formatTime}
+                onRestart={() => window.location.reload()}
+              />
+            );
+          
+          default:
+            return null;
+        }
+      })()}
+    </>
+  );
 };
 
 export default ZombieApocalypse;
