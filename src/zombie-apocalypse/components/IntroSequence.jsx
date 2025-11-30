@@ -85,7 +85,16 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             </div>
           </div>
           <p className="za-intro-text za-intro-emphasis">
-            Only ONE faction will control {cityName}. For Principal Garvin. For Eastway. <strong>It has to be you.</strong>
+            Only ONE faction will control {cityName}.
+          </p>
+          <p className="za-intro-text za-intro-emphasis">
+            For Principal Garvin.
+          </p>
+          <p className="za-intro-text za-intro-emphasis">
+            For Eastway.
+          </p>
+          <p className="za-intro-text za-intro-emphasis">
+            <strong>It has to be you.</strong>
           </p>
         </>
       )
@@ -101,13 +110,22 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             Every trade. Every risk. Every decision. <strong>One wrong percentage and you're dead.</strong>
           </p>
           <p className="za-intro-text">
-            You wanted to be {playerData.dreamJob || 'something great'}—back when the world made sense. Now your only goal is to see another sunrise.
+            You wanted to be {playerData.dreamJob ? `a ${playerData.dreamJob}` : 'something great'}—back when the world made sense. Now your only goal is to see another sunrise.
           </p>
           <p className="za-intro-text za-intro-emphasis">
             The other factions are watching. The Elites are making their move. The zombies are closing in.
           </p>
           <p className="za-intro-text za-intro-final">
-            This is it, {playerData.playerName}. For Principal Garvin. For Eastway. <strong>Are you ready to fight?</strong>
+            This is it, {playerData.playerName}.
+          </p>
+          <p className="za-intro-text za-intro-final">
+            For Principal Garvin.
+          </p>
+          <p className="za-intro-text za-intro-final">
+            For Eastway.
+          </p>
+          <p className="za-intro-text za-intro-final">
+            <strong>Are you ready to fight?</strong>
           </p>
         </>
       )
