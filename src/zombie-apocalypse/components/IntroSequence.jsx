@@ -10,6 +10,8 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleNext = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     if (currentScreen === 3) {
       onComplete();
     } else {
