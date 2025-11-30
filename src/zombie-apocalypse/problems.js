@@ -1,11 +1,14 @@
 // problems.js
-// Version: 3.4.0
-// Last Updated: November 30, 2024 - 11:55 PM
-// Changes: Restructured levels 4-6, added zombie MadLib system, full story context
+// Version: 3.4.1
+// Last Updated: December 1, 2024 - 12:05 AM
+// Changes: Fixed capitalization, added scaffolding data to problems
 
 // ============================================
 // MADLIB COMPONENTS - Zombie Apocalypse Theme
 // ============================================
+
+// Helper to capitalize first letter
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const zombieItems = {
   weapons: ['crossbow', 'machete', 'baseball bat', 'flamethrower', 'chainsaw', 'katana', 'riot shield', 'spear'],
@@ -241,7 +244,7 @@ export const generateLevel3Problem = (playerData) => {
   
   const scenarios = [
     {
-      template: (item, price, discount, reason) => `${item} costs $${price}. It's ${discount}% off (${reason}). How much do you SAVE? (Round to nearest cent)`,
+      template: (item, price, discount, reason) => `${capitalize(item)} costs $${price}. It's ${discount}% off (${reason}). How much do you SAVE? (Round to nearest cent)`,
       getAnswer: (item, price, discount, reason) => round(price * discount / 100).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -251,7 +254,7 @@ export const generateLevel3Problem = (playerData) => {
       })
     },
     {
-      template: (item, price, tax, reason) => `${item} costs $${price}, plus ${tax}% ${reason}. How much is the TAX? (Round to nearest cent)`,
+      template: (item, price, tax, reason) => `${capitalize(item)} costs $${price}, plus ${tax}% ${reason}. How much is the TAX? (Round to nearest cent)`,
       getAnswer: (item, price, tax, reason) => round(price * tax / 100).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -323,7 +326,7 @@ export const generateLevel4Problem = (playerData) => {
   
   const scenarios = [
     {
-      template: (item, price, discount, reason) => `${item} costs $${price}, ${discount}% off (${reason}). What's the FINAL PRICE? (Round to nearest cent)`,
+      template: (item, price, discount, reason) => `${capitalize(item)} costs $${price}, ${discount}% off (${reason}). What's the FINAL PRICE? (Round to nearest cent)`,
       getAnswer: (item, price, discount, reason) => round(price - (price * discount / 100)).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -333,7 +336,7 @@ export const generateLevel4Problem = (playerData) => {
       })
     },
     {
-      template: (item, price, tax, reason) => `${item} costs $${price} plus ${tax}% ${reason}. What's the FINAL TOTAL? (Round to nearest cent)`,
+      template: (item, price, tax, reason) => `${capitalize(item)} costs $${price} plus ${tax}% ${reason}. What's the FINAL TOTAL? (Round to nearest cent)`,
       getAnswer: (item, price, tax, reason) => round(price + (price * tax / 100)).toFixed(2),
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -369,11 +372,54 @@ export const generateLevel4Problem = (playerData) => {
     const s = scenarios[i % scenarios.length];
     const values = s.getValues();
     const valuesArray = Object.values(values);
+    
+    // Build scaffolding for Level 4
+    const item = values.item;
+    const price = values.price;
+    let scaffoldSteps = null;
+    
+    if (s.template.toString().includes('off')) {
+      // Discount scenario
+      const discount = values.discount;
+      const discountAmount = round(price * discount / 100);
+      const final = round(price - discountAmount);
+      
+      scaffoldSteps = {
+        step1: { question: "How much do you SAVE?", answer: discountAmount.toFixed(2) },
+        step2: { question: "Do you add or subtract the discount?", answer: "subtract", choices: ["add", "subtract", "neither"] },
+        step3: { question: "What is the FINAL PRICE?", answer: final.toFixed(2) }
+      };
+    } else if (s.template.toString().includes('marked up')) {
+      // Markup scenario
+      const markup = values.markup;
+      const markupAmount = round(price * markup / 100);
+      const final = round(price + markupAmount);
+      
+      scaffoldSteps = {
+        step1: { question: "How much is the MARKUP?", answer: markupAmount.toFixed(2) },
+        step2: { question: "Do you add or subtract the markup?", answer: "add", choices: ["add", "subtract", "neither"] },
+        step3: { question: "What is the FINAL PRICE?", answer: final.toFixed(2) }
+      };
+    } else if (s.template.toString().includes('tax') || s.template.toString().includes('tip')) {
+      // Tax or tip scenario
+      const percent = values.tax || values.tip;
+      const amount = round(price * percent / 100);
+      const final = round(price + amount);
+      const label = values.tax ? 'TAX' : 'TIP';
+      
+      scaffoldSteps = {
+        step1: { question: `How much is the ${label}?`, answer: amount.toFixed(2) },
+        step2: { question: `Do you add or subtract the ${label.toLowerCase()}?`, answer: "add", choices: ["add", "subtract", "neither"] },
+        step3: { question: "What is the FINAL TOTAL?", answer: final.toFixed(2) }
+      };
+    }
+    
     problems.push({
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
-      type: 'free-response'
+      type: 'free-response',
+      scaffoldSteps: scaffoldSteps
     });
   }
   return problems;
@@ -385,11 +431,47 @@ export const generateLevel5Problem = (playerData) => {
   
   const scenarios = [
     {
-      template: (item, price, discount, tax, reason) => `${item} costs $${price}, ${discount}% off, then ${tax}% ${reason} added. What's the FINAL TOTAL? (Round to nearest cent)`,
+      template: (item, price, discount, tax, reason) => `${capitalize(item)} costs $${price}, ${discount}% off, then ${tax}% ${reason} added. What's the FINAL TOTAL? (Round to nearest cent)`,
       getAnswer: (item, price, discount, tax, reason) => {
         const afterDiscount = price - (price * discount / 100);
         const final = afterDiscount + (afterDiscount * tax / 100);
         return round(final).toFixed(2);
+      },
+      getScaffold: (item, price, discount, tax, reason) => {
+        const discountAmount = round(price * discount / 100);
+        const afterDiscount = round(price - discountAmount);
+        const taxAmount = round(afterDiscount * tax / 100);
+        const final = round(afterDiscount + taxAmount);
+        
+        return {
+          step1: { 
+            question: "What is the discount amount (amount SAVED)?", 
+            answer: discountAmount.toFixed(2) 
+          },
+          step2: { 
+            question: "Do we add or subtract the discount from the Original?", 
+            answer: "subtract", 
+            choices: ["add", "subtract", "neither"] 
+          },
+          step3: { 
+            question: "What is the new discounted price?", 
+            answer: afterDiscount.toFixed(2) 
+          },
+          step4: { 
+            question: "Which amount are we putting tax on?", 
+            answer: afterDiscount.toFixed(2), 
+            choices: [price.toFixed(2), afterDiscount.toFixed(2), discountAmount.toFixed(2)] 
+          },
+          step5: { 
+            question: "Do we add or subtract tax?", 
+            answer: "add", 
+            choices: ["add", "subtract", "neither"] 
+          },
+          step6: { 
+            question: "What is the final amount?", 
+            answer: final.toFixed(2) 
+          }
+        };
       },
       getValues: () => ({
         item: random.fromArray(allItems),
@@ -406,6 +488,21 @@ export const generateLevel5Problem = (playerData) => {
         const final = afterMarkup - (afterMarkup * discount / 100);
         return round(final).toFixed(2);
       },
+      getScaffold: (item, price, markup, discount, location) => {
+        const markupAmount = round(price * markup / 100);
+        const afterMarkup = round(price + markupAmount);
+        const discountAmount = round(afterMarkup * discount / 100);
+        const final = round(afterMarkup - discountAmount);
+        
+        return {
+          step1: { question: "What is the markup amount?", answer: markupAmount.toFixed(2) },
+          step2: { question: "Add or subtract from original?", answer: "add", choices: ["add", "subtract", "neither"] },
+          step3: { question: "Price after markup?", answer: afterMarkup.toFixed(2) },
+          step4: { question: "Which price gets the discount?", answer: afterMarkup.toFixed(2), choices: [price.toFixed(2), afterMarkup.toFixed(2), markupAmount.toFixed(2)] },
+          step5: { question: "Add or subtract discount?", answer: "subtract", choices: ["add", "subtract", "neither"] },
+          step6: { question: "FINAL PRICE?", answer: final.toFixed(2) }
+        };
+      },
       getValues: () => ({
         item: random.fromArray(allItems),
         price: random.smallItem(),
@@ -420,6 +517,21 @@ export const generateLevel5Problem = (playerData) => {
         const afterTax = price + (price * tax / 100);
         const final = afterTax + (afterTax * tip / 100);
         return round(final).toFixed(2);
+      },
+      getScaffold: (npc, price, tax, tip, reason) => {
+        const taxAmount = round(price * tax / 100);
+        const afterTax = round(price + taxAmount);
+        const tipAmount = round(afterTax * tip / 100);
+        const final = round(afterTax + tipAmount);
+        
+        return {
+          step1: { question: "Tax amount?", answer: taxAmount.toFixed(2) },
+          step2: { question: "Add or subtract tax?", answer: "add", choices: ["add", "subtract", "neither"] },
+          step3: { question: "Price after tax?", answer: afterTax.toFixed(2) },
+          step4: { question: "Which amount do you tip on?", answer: afterTax.toFixed(2), choices: [price.toFixed(2), afterTax.toFixed(2), taxAmount.toFixed(2)] },
+          step5: { question: "Add or subtract tip?", answer: "add", choices: ["add", "subtract", "neither"] },
+          step6: { question: "FINAL total you pay?", answer: final.toFixed(2) }
+        };
       },
       getValues: () => ({
         npc: random.fromArray(npcs),
@@ -440,7 +552,8 @@ export const generateLevel5Problem = (playerData) => {
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
-      type: 'free-response'
+      type: 'free-response',
+      scaffoldSteps: s.getScaffold(...valuesArray)
     });
   }
   return problems;
@@ -452,7 +565,7 @@ export const generateLevel6Problem = (playerData) => {
   
   const scenarios = [
     {
-      template: (item, finalPrice, discount, reason) => `${item} costs $${finalPrice} AFTER a ${discount}% discount was applied (${reason}). What was the ORIGINAL price BEFORE the discount? (Round to nearest cent)`,
+      template: (item, finalPrice, discount, reason) => `${capitalize(item)} costs $${finalPrice} AFTER a ${discount}% discount was applied (${reason}). What was the ORIGINAL price BEFORE the discount? (Round to nearest cent)`,
       getAnswer: (item, finalPrice, discount, reason) => round(finalPrice / (1 - discount / 100)).toFixed(2),
       getValues: () => {
         const original = random.mediumItem();
@@ -559,6 +672,28 @@ How much will EACH PERSON receive? (Round to the nearest cent)`;
     correctAnswer: round(perPerson).toFixed(2),
     answer: round(perPerson).toFixed(2),
     type: 'free-response',
+    scaffoldSteps: {
+      step1: { 
+        question: "After the first wave, how many survivors remained? (Round DOWN - no partial people!)", 
+        answer: afterDecrease.toString() 
+      },
+      step2: { 
+        question: "After the cure, how many total survivors? (Round DOWN)", 
+        answer: finalPopulation.toString() 
+      },
+      step3: { 
+        question: "How much interest was earned on the money?", 
+        answer: round(interest).toFixed(2) 
+      },
+      step4: { 
+        question: "What is the total money (original + interest)?", 
+        answer: round(totalMoney).toFixed(2) 
+      },
+      step5: { 
+        question: "How much does EACH PERSON receive?", 
+        answer: round(perPerson).toFixed(2) 
+      }
+    },
     showWork: {
       initialPop,
       decrease,
