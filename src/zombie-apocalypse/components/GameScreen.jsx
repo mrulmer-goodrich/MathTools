@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 2.1.0
-// Last Updated: November 29, 2024 11:55pm
-// Changes: PERMANENT input freeze fix, level titles corrected, scroll reset, removed state conflicts
+// VERSION: 2.2.0
+// Last Updated: November 30, 2024 12:20am
+// Changes: ACTUAL FIX for input freeze - removed autoFocus conflict, simplified state management
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -95,8 +95,9 @@ const GameScreen = ({
     setWrongAnswerFeedback(null);
   }, [currentLevel]);
 
-  // Clear input when problem index changes - FIXES INPUT FREEZE BUG
+  // Clear input when problem index changes
   useEffect(() => {
+    console.log('Problem index changed to:', currentProblemIndex);
     setUserAnswer('');
   }, [currentProblemIndex]);
 
@@ -153,13 +154,13 @@ const GameScreen = ({
   const checkAnswer = (overrideAnswer) => {
     if (!currentProblem) return;
     
-    const rawUser =
-      overrideAnswer !== undefined && overrideAnswer !== null
-        ? overrideAnswer
-        : userAnswer;
+    // Use override if provided (for multiple choice), otherwise use state
+    const answerToCheck = overrideAnswer !== undefined && overrideAnswer !== null 
+      ? String(overrideAnswer) 
+      : userAnswer;
 
-    const userAns = rawUser.trim().toLowerCase();
-    const correctAns = currentProblem.correctAnswer.toLowerCase();
+    const userAns = answerToCheck.trim().toLowerCase();
+    const correctAns = String(currentProblem.correctAnswer).toLowerCase();
     
     // DEBUG LOGGING
     console.log('═══ ANSWER CHECK ═══');
@@ -200,36 +201,30 @@ const GameScreen = ({
       setProblemsCorrect(newCorrect);
       setWrongAnswerFeedback(null);
       
-      // CRITICAL FIX: DON'T clear userAnswer here
-      // The useEffect will handle it when problemIndex changes
-      // Add delay to let state settle before advancing
-      setTimeout(() => {
-        if (newCorrect >= config.required) {
-          onLevelComplete();
-        } else if (currentProblemIndex < config.total - 1) {
-          setCurrentProblemIndex(currentProblemIndex + 1);
-        }
-      }, 150);
+      // Check if level is complete
+      if (newCorrect >= config.required) {
+        onLevelComplete();
+      } else if (currentProblemIndex < config.total - 1) {
+        // Advance to next problem
+        setCurrentProblemIndex(prev => prev + 1);
+      }
       
     } else {
       // Show feedback for Level 1
       if (currentLevel === 1) {
         setWrongAnswerFeedback({
-          userAnswer: userAnswer,
+          userAnswer: answerToCheck,
           correctAnswer: currentProblem.correctAnswer,
           question: currentProblem.question
         });
-        // No auto-dismiss - user must click "I get it now!" button
       }
       
       onWrongAnswer();
-      // CRITICAL FIX: DON'T clear userAnswer here either
-      // Hearts lost, but problem stays the same, so no clear needed
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && userAnswer.trim()) {
       checkAnswer();
     }
   };
