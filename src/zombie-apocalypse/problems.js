@@ -522,7 +522,7 @@ export const generateLevel6Problem = (playerData) => {
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
       type: 'free-response'
-    };
+    });
   }
   return problems;
 };
