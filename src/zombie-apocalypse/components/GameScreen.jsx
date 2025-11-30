@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 3.0.0
+// VERSION: 3.1.0
 // Last Updated: November 30, 2024
-// Changes: Dev shortcut (Ctrl+Shift+7), Level 7 population validation
+// Changes: Story subtitles, better sound effects, guided notes for all levels
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -29,7 +29,7 @@ const GameScreen = ({
   onLevelComplete,
   levelStartTime,
   formatTime,
-  onDevJumpToLevel // NEW: For dev shortcut
+  onDevJumpToLevel
 }) => {
   const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
   const [problemBank, setProblemBank] = useState([]);
@@ -53,22 +53,64 @@ const GameScreen = ({
 
   const config = levelConfig[currentLevel];
 
-  // DEV SHORTCUT: Ctrl+Shift+7 to jump to Level 7
-  useEffect(() => {
-    const handleKeyCombo = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === '7') {
-        console.log('🎮 DEV SHORTCUT: Jumping to Level 7!');
-        if (onDevJumpToLevel) {
-          onDevJumpToLevel(7);
-        }
-      }
-    };
+  // BETTER SOUND EFFECTS
+  const playDeathScream = () => {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Create a descending scream effect
+    const oscillator1 = audioContext.createOscillator();
+    const oscillator2 = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Descending frequencies for scream effect
+    oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
+    oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
+    
+    oscillator2.frequency.setValueAtTime(600, audioContext.currentTime);
+    oscillator2.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.8);
+    
+    gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+    
+    oscillator1.start();
+    oscillator2.start();
+    oscillator1.stop(audioContext.currentTime + 0.8);
+    oscillator2.stop(audioContext.currentTime + 0.8);
+  };
 
-    window.addEventListener('keydown', handleKeyCombo);
-    return () => window.removeEventListener('keydown', handleKeyCombo);
-  }, [onDevJumpToLevel]);
+  const playCrowdCheer = () => {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Create crowd cheer with multiple oscillators
+    const oscillators = [];
+    const gainNode = audioContext.createGain();
+    gainNode.connect(audioContext.destination);
+    
+    // Create 5 oscillators for crowd effect
+    for (let i = 0; i < 5; i++) {
+      const osc = audioContext.createOscillator();
+      osc.connect(gainNode);
+      osc.frequency.value = 400 + (i * 200) + (Math.random() * 100);
+      oscillators.push(osc);
+    }
+    
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
+    
+    oscillators.forEach(osc => {
+      osc.start();
+      osc.stop(audioContext.currentTime + 1.2);
+    });
+  };
 
-  // Tick sound for Level 1
   const playTickSound = () => {
     if (!soundEnabled) return;
     
@@ -91,7 +133,6 @@ const GameScreen = ({
       const elapsed = Math.floor((Date.now() - levelStartTime) / 1000);
       setCurrentTime(elapsed);
       
-      // Play tick sound every second on Level 1 (if time remaining)
       if (currentLevel === 1 && elapsed < 120) {
         playTickSound();
       }
@@ -111,18 +152,16 @@ const GameScreen = ({
     setWrongAnswerFeedback(null);
   }, [currentLevel]);
 
-  // Clear input when problem index changes
   useEffect(() => {
     console.log('Problem index changed to:', currentProblemIndex);
     setUserAnswer('');
   }, [currentProblemIndex]);
 
-  // Level 1 time limit check - COUNTDOWN MODE
+  // Level 1 time limit check
   useEffect(() => {
     if (currentLevel === 1 && currentTime >= 120 && problemsCorrect < 6) {
-      // Time's up!
       onWrongAnswer();
-      onWrongAnswer(); // Kill them (2 hearts lost)
+      onWrongAnswer();
     }
   }, [currentTime, currentLevel, problemsCorrect]);
 
@@ -167,10 +206,96 @@ const GameScreen = ({
 
   const currentProblem = problemBank[currentProblemIndex];
 
+  // Generate dynamic guided notes based on level and problem
+  const getGuidedNotes = (problem, userAns, correctAns) => {
+    if (!problem) return null;
+
+    switch(currentLevel) {
+      case 1:
+        // Extract percent from question
+        const percentMatch = problem.question.match(/Convert (\d+\.?\d*)%/);
+        const percent = percentMatch ? percentMatch[1] : '25';
+        return {
+          title: "💡 Converting Percents to Decimals:",
+          visual: (
+            <>
+              <span className="za-percent-num">{percent}%</span>
+              <span className="za-arrow">→</span>
+              <span className="za-decimal-movement">
+                <span className="za-move-left">0.</span>
+                <span className="za-moved">{percent.replace('.', '')}</span>
+              </span>
+            </>
+          ),
+          note: "Move the decimal point 2 places to the LEFT",
+          examples: "8% = 0.08  |  50% = 0.50  |  125% = 1.25"
+        };
+
+      case 2:
+        // Detect keyword
+        const questionLower = problem.question.toLowerCase();
+        let keyword = '';
+        let explanation = '';
+        
+        if (questionLower.includes('discount') || questionLower.includes('off') || questionLower.includes('sale')) {
+          keyword = 'DISCOUNT/SALE';
+          explanation = 'Discounts and sales DECREASE the price. You pay LESS.';
+        } else if (questionLower.includes('tax')) {
+          keyword = 'TAX';
+          explanation = 'Tax INCREASES what you pay. You pay MORE.';
+        } else if (questionLower.includes('markup') || questionLower.includes('marked up')) {
+          keyword = 'MARKUP';
+          explanation = 'Markup INCREASES the price. You pay MORE.';
+        } else if (questionLower.includes('commission')) {
+          keyword = 'COMMISSION';
+          explanation = 'Commission INCREASES your earnings. You make MORE.';
+        } else if (questionLower.includes('tip')) {
+          keyword = 'TIP';
+          explanation = 'Tips INCREASE what you pay. You pay MORE.';
+        } else if (questionLower.includes('interest')) {
+          keyword = 'INTEREST';
+          explanation = 'Interest INCREASES what you owe. You pay MORE.';
+        } else if (questionLower.includes('decrease')) {
+          keyword = 'DECREASE';
+          explanation = 'Decrease means going DOWN. The amount gets SMALLER.';
+        } else if (questionLower.includes('increase') || questionLower.includes('grow')) {
+          keyword = 'INCREASE';
+          explanation = 'Increase means going UP. The amount gets LARGER.';
+        }
+
+        return {
+          title: `💡 Understanding: ${keyword}`,
+          explanation: explanation,
+          note: "Ask yourself: Does this make the number go UP or DOWN?"
+        };
+
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+        return {
+          title: "💡 Working Through the Problem:",
+          steps: [
+            "1. Identify what you're looking for (the UNKNOWN)",
+            "2. List what you know (the GIVEN information)",
+            "3. Determine the operation needed",
+            "4. Calculate carefully",
+            "5. Check if your answer makes sense"
+          ],
+          note: "Use your calculator and notepad to organize your work!"
+        };
+
+      case 7:
+        return null; // Special handling for Level 7
+
+      default:
+        return null;
+    }
+  };
+
   const checkAnswer = (overrideAnswer) => {
     if (!currentProblem) return;
     
-    // Use override if provided (for multiple choice), otherwise use state
     const answerToCheck = overrideAnswer !== undefined && overrideAnswer !== null 
       ? String(overrideAnswer) 
       : userAnswer;
@@ -178,59 +303,48 @@ const GameScreen = ({
     const userAns = answerToCheck.trim().toLowerCase();
     const correctAns = String(currentProblem.correctAnswer).toLowerCase();
     
-    // DEBUG LOGGING
     console.log('╔══ ANSWER CHECK ══╗');
     console.log('Level:', currentLevel);
-    console.log('Problem Index:', currentProblemIndex);
-    console.log('Problem:', currentProblem.question);
     console.log('User answer:', `"${userAns}"`);
     console.log('Correct answer:', `"${correctAns}"`);
-    console.log('Type:', currentProblem.type);
     
-    // LEVEL 7 SPECIAL VALIDATION: Check for partial people
+    // LEVEL 7 SPECIAL VALIDATION
     if (currentLevel === 7 && currentProblem.showWork) {
       const userNum = parseFloat(userAns);
       const afterDecrease = currentProblem.showWork.initialPop * (1 - currentProblem.showWork.decrease / 100);
       const afterIncrease = afterDecrease * (1 + currentProblem.showWork.increase / 100);
       
-      // Check if they used non-floored population
       if (!isNaN(userNum)) {
-        const wrongPerPerson = (currentProblem.showWork.totalMoney / afterIncrease);
+        const wrongPerPerson = (parseFloat(currentProblem.showWork.totalMoney.replace(/,/g, '')) / afterIncrease);
         if (Math.abs(userNum - wrongPerPerson) < 0.02) {
-          // They forgot to round down the people!
           setWrongAnswerFeedback({
             userAnswer: answerToCheck,
             correctAnswer: currentProblem.correctAnswer,
             question: currentProblem.question,
             specialMessage: "⚠️ WAIT! You can't have a partial person! If there's only part of someone left, the zombies got them and they're turning. You CAN'T count them as a survivor! Always round DOWN when calculating people."
           });
+          playDeathScream();
           onWrongAnswer();
-          console.log('❌ WRONG - Forgot to round down population!');
           console.log('╚═════════════════╝');
           return;
         }
       }
     }
     
-    // Check if answer is correct
     let isCorrect = false;
     
     if (currentProblem.type === 'multiple-choice') {
       isCorrect = userAns === correctAns;
-      console.log('Multiple choice match:', isCorrect);
     } else {
-      // For free response, check exact match or numerical equivalence
       if (userAns === correctAns) {
         isCorrect = true;
       } else {
-        // Try parsing as numbers and check within tolerance
         const userNum = parseFloat(userAns);
         const correctNum = parseFloat(correctAns);
         if (!isNaN(userNum) && !isNaN(correctNum)) {
           isCorrect = Math.abs(userNum - correctNum) < 0.02;
         }
       }
-      console.log('Free response match:', isCorrect);
     }
     
     console.log('Final result:', isCorrect ? 'CORRECT ✓' : 'WRONG ✗');
@@ -242,24 +356,25 @@ const GameScreen = ({
       setProblemsCorrect(newCorrect);
       setWrongAnswerFeedback(null);
       
-      // Check if level is complete
       if (newCorrect >= config.required) {
+        playCrowdCheer();
         onLevelComplete();
       } else if (currentProblemIndex < config.total - 1) {
-        // Advance to next problem
         setCurrentProblemIndex(prev => prev + 1);
       }
       
     } else {
-      // Show feedback for Level 1
-      if (currentLevel === 1 && !wrongAnswerFeedback) {
-        setWrongAnswerFeedback({
-          userAnswer: answerToCheck,
-          correctAnswer: currentProblem.correctAnswer,
-          question: currentProblem.question
-        });
-      }
+      // Generate guided notes for wrong answer
+      const guidedNotes = getGuidedNotes(currentProblem, userAns, correctAns);
       
+      setWrongAnswerFeedback({
+        userAnswer: answerToCheck,
+        correctAnswer: currentProblem.correctAnswer,
+        question: currentProblem.question,
+        guidedNotes: guidedNotes
+      });
+      
+      playDeathScream();
       onWrongAnswer();
     }
   };
@@ -283,9 +398,19 @@ const GameScreen = ({
     return titles[currentLevel];
   };
 
-  const getFactionsRemaining = () => 8 - currentLevel;
+  const getLevelStory = () => {
+    const stories = {
+      1: "Show the other factions you can convert percents to decimals. If you can't, you won't survive!",
+      2: "Prove to the Traders that you understand how discounts, taxes, and markups affect prices. Your life depends on it.",
+      3: "The Scavengers are watching. Calculate precise amounts or join the fallen factions.",
+      4: "Multi-step thinking separates survivors from casualties. The Fortress fell because they couldn't handle complexity.",
+      5: "The Engineers thought they were the smartest. Prove them wrong by mastering advanced calculations.",
+      6: "Only The Elites stand between you and victory. Work backwards to survive forwards.",
+      7: "Final challenge. One mistake and you're both dead. Calculate perfectly or become zombies."
+    };
+    return stories[currentLevel];
+  };
 
-  // Calculate time remaining for Level 1 countdown
   const getDisplayTime = () => {
     if (currentLevel === 1) {
       const timeRemaining = Math.max(0, 120 - currentTime);
@@ -305,9 +430,7 @@ const GameScreen = ({
       <div className="za-top-bar">
         <div className="za-level-info">
           <h2 className="za-level-title">{getLevelTitle()}</h2>
-          <div className="za-faction-count">
-            {getFactionsRemaining()} Factions Remaining
-          </div>
+          <div className="za-level-story">{getLevelStory()}</div>
         </div>
 
         <div className="za-game-stats">
@@ -374,7 +497,7 @@ const GameScreen = ({
         />
       </div>
 
-      {/* Wrong Answer Feedback (Level 1 only OR Level 7 population warning) */}
+      {/* Wrong Answer Feedback with Guided Notes */}
       {wrongAnswerFeedback && (
         <div className="za-wrong-feedback">
           {wrongAnswerFeedback.specialMessage ? (
@@ -384,27 +507,45 @@ const GameScreen = ({
               <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
               <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
             </>
-          ) : currentLevel === 1 && (
+          ) : (
             <>
               <div className="za-wrong-title">Not quite!</div>
               <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
               <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
               
-              <div className="za-decimal-helper">
-                <div className="za-helper-title">💡 Converting Percents to Decimals:</div>
-                <div className="za-helper-visual">
-                  <span className="za-percent-num">25%</span>
-                  <span className="za-arrow">→</span>
-                  <span className="za-decimal-movement">
-                    <span className="za-move-left">0.</span>
-                    <span className="za-moved">25</span>
-                  </span>
+              {wrongAnswerFeedback.guidedNotes && (
+                <div className="za-decimal-helper">
+                  <div className="za-helper-title">{wrongAnswerFeedback.guidedNotes.title}</div>
+                  
+                  {wrongAnswerFeedback.guidedNotes.visual && (
+                    <div className="za-helper-visual">
+                      {wrongAnswerFeedback.guidedNotes.visual}
+                    </div>
+                  )}
+                  
+                  {wrongAnswerFeedback.guidedNotes.explanation && (
+                    <div className="za-helper-explanation">
+                      {wrongAnswerFeedback.guidedNotes.explanation}
+                    </div>
+                  )}
+                  
+                  {wrongAnswerFeedback.guidedNotes.steps && (
+                    <div className="za-helper-steps">
+                      {wrongAnswerFeedback.guidedNotes.steps.map((step, idx) => (
+                        <div key={idx} className="za-helper-step">{step}</div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {wrongAnswerFeedback.guidedNotes.note && (
+                    <div className="za-helper-note">{wrongAnswerFeedback.guidedNotes.note}</div>
+                  )}
+                  
+                  {wrongAnswerFeedback.guidedNotes.examples && (
+                    <div className="za-helper-examples">{wrongAnswerFeedback.guidedNotes.examples}</div>
+                  )}
                 </div>
-                <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
-                <div className="za-helper-examples">
-                  Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
-                </div>
-              </div>
+              )}
             </>
           )}
           
