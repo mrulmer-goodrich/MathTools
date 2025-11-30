@@ -1,4 +1,4 @@
-//Update 1
+//Update 2.3
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -7,6 +7,7 @@ import GameScreen from './components/GameScreen';
 import VictoryScreen from './components/VictoryScreen';
 import DeathScreen from './components/DeathScreen';
 import LevelComplete from './components/LevelComplete';
+import VersionChecker from './components/VersionChecker';
 import './styles/zombie.css';
 
 const ZombieApocalypse = () => {
