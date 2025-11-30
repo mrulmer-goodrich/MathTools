@@ -1,7 +1,7 @@
 // IntroSequence.jsx
-// VERSION: 2.2.0
-// Last Updated: November 30, 2024 12:30am
-// Changes: Fixed scroll reset, Garvin quote, Charlotte (no NC)
+// VERSION: 2.3.0
+// Last Updated: November 30, 2024 1:00am
+// Changes: Double scroll reset, Garvin quote, Charlotte (no NC)
 
 import React, { useState, useEffect } from 'react';
 
@@ -23,6 +23,8 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       setTimeout(() => {
         setCurrentScreen(currentScreen + 1);
         setIsTransitioning(false);
+        // Force scroll after screen change
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }, 400);
     }
   };

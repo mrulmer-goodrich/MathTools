@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 2.2.0
-// Last Updated: November 30, 2024 12:20am
-// Changes: ACTUAL FIX for input freeze - removed autoFocus conflict, simplified state management
+// VERSION: 2.3.0
+// Last Updated: November 30, 2024 1:00am
+// Changes: Simpler level titles, input freeze fix, auto-focus, scroll reset
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -232,12 +232,12 @@ const GameScreen = ({
   const getLevelTitle = () => {
     const titles = {
       1: "LEVEL 1: The Outbreak",
-      2: "LEVEL 2: The Runners Fall",
-      3: "LEVEL 3: The Traders Fall",
-      4: "LEVEL 4: The Scavengers Fall",
-      5: "LEVEL 5: The Fortress Falls",
-      6: "LEVEL 6: The Engineers Fail",
-      7: "LEVEL 7: THE FINAL SHOWDOWN"
+      2: "LEVEL 2: Survival of the Fittest",
+      3: "LEVEL 3: The Reckoning",
+      4: "LEVEL 4: Breaking Point",
+      5: "LEVEL 5: The Fall",
+      6: "LEVEL 6: Endgame",
+      7: "LEVEL 7: Victory or Death"
     };
     return titles[currentLevel];
   };

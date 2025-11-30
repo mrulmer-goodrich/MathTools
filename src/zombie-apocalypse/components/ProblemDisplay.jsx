@@ -1,3 +1,8 @@
+// ProblemDisplay.jsx
+// VERSION: 2.3.0
+// Last Updated: November 30, 2024 1:00am
+// Changes: Auto-focus with useRef, key prop for input reset
+
 import React, { useEffect, useRef } from 'react';
 
 const ProblemDisplay = ({ 
