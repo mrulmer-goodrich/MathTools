@@ -1,13 +1,13 @@
-// GameScreen.jsx
-// Version: 3.3.1
-// Last Updated: November 30, 2024 - 11:45 PM
-// Changes: Story subtitles, better sounds, guided notes, movable faction tracker
+// GameScreen.jsx  
+// Version: 3.4.0
+// Last Updated: November 30, 2024 - 11:59 PM
+// Changes: Added scaffolding for Levels 4-7
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
 import Calculator from './Calculator';
-import Notepad from './Notepad';
 import ProblemDisplay from './ProblemDisplay';
+import ScaffoldedProblem from './ScaffoldedProblem';
 import {
   generateLevel1Bank,
   generateLevel2Problem,
@@ -37,29 +37,23 @@ const GameScreen = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [problemsCorrect, setProblemsCorrect] = useState(0);
   const [showCalculator, setShowCalculator] = useState(currentLevel >= 3);
-  const [showNotepad, setShowNotepad] = useState(currentLevel >= 4);
   const [wrongAnswerFeedback, setWrongAnswerFeedback] = useState(null);
 
-  // Level configurations
   const levelConfig = {
-    1: { total: 7, required: 6, timeLimit: 120 },
-    2: { total: 7, required: 6 },
-    3: { total: 6, required: 5 },
-    4: { total: 5, required: 4 },
-    5: { total: 4, required: 3 },
-    6: { total: 3, required: 2 },
-    7: { total: 1, required: 1 }
+    1: { total: 7, required: 6, timeLimit: 120, useScaffolding: false },
+    2: { total: 7, required: 6, useScaffolding: false },
+    3: { total: 6, required: 5, useScaffolding: false },
+    4: { total: 5, required: 4, useScaffolding: true },
+    5: { total: 4, required: 3, useScaffolding: true },
+    6: { total: 3, required: 2, useScaffolding: false },
+    7: { total: 1, required: 1, useScaffolding: true }
   };
 
   const config = levelConfig[currentLevel];
 
-  // BETTER SOUND EFFECTS
   const playDeathScream = () => {
     if (!soundEnabled) return;
-    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Create a descending scream effect
     const oscillator1 = audioContext.createOscillator();
     const oscillator2 = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -68,10 +62,8 @@ const GameScreen = ({
     oscillator2.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    // Descending frequencies for scream effect
     oscillator1.frequency.setValueAtTime(800, audioContext.currentTime);
     oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.8);
-    
     oscillator2.frequency.setValueAtTime(600, audioContext.currentTime);
     oscillator2.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.8);
     
@@ -86,23 +78,17 @@ const GameScreen = ({
 
   const playCrowdCheer = () => {
     if (!soundEnabled) return;
-    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Create uplifting victory fanfare with ascending tones
     const oscillators = [];
     const gainNode = audioContext.createGain();
     gainNode.connect(audioContext.destination);
     
-    // Victory melody: C E G C (ascending major chord)
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    
+    const notes = [523.25, 659.25, 783.99, 1046.50];
     notes.forEach((freq, i) => {
       const osc = audioContext.createOscillator();
       osc.connect(gainNode);
       osc.frequency.value = freq;
       osc.type = 'sine';
-      
       const startTime = audioContext.currentTime + (i * 0.15);
       osc.start(startTime);
       osc.stop(startTime + 0.4);
@@ -115,26 +101,21 @@ const GameScreen = ({
 
   const playTickSound = () => {
     if (!soundEnabled) return;
-    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
     oscillator.frequency.value = 880;
     gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
     oscillator.start();
     oscillator.stop(audioContext.currentTime + 0.05);
   };
 
-  // Timer effect with tick sound
   useEffect(() => {
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - levelStartTime) / 1000);
       setCurrentTime(elapsed);
-      
       if (currentLevel === 1 && elapsed < 120) {
         playTickSound();
       }
@@ -142,7 +123,6 @@ const GameScreen = ({
     return () => clearInterval(interval);
   }, [levelStartTime, currentLevel, soundEnabled]);
 
-  // Generate problems when level changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     generateProblems();
@@ -150,16 +130,13 @@ const GameScreen = ({
     setProblemsCorrect(0);
     setUserAnswer('');
     setShowCalculator(currentLevel >= 3);
-    setShowNotepad(currentLevel >= 4);
     setWrongAnswerFeedback(null);
   }, [currentLevel]);
 
   useEffect(() => {
-    console.log('Problem index changed to:', currentProblemIndex);
     setUserAnswer('');
   }, [currentProblemIndex]);
 
-  // Level 1 time limit check
   useEffect(() => {
     if (currentLevel === 1 && currentTime >= 120 && problemsCorrect < 6) {
       onWrongAnswer();
@@ -173,8 +150,7 @@ const GameScreen = ({
     switch(currentLevel) {
       case 1:
         const allLevel1 = generateLevel1Bank();
-        const shuffled = [...allLevel1].sort(() => Math.random() - 0.5);
-        problems = shuffled.slice(0, 7);
+        problems = [...allLevel1].sort(() => Math.random() - 0.5).slice(0, 7);
         break;
       case 2:
         const allLevel2 = generateLevel2Problem(playerData);
@@ -208,18 +184,14 @@ const GameScreen = ({
 
   const currentProblem = problemBank[currentProblemIndex];
 
-  // Generate dynamic guided notes based on level and problem
   const getGuidedNotes = (problem, userAns, correctAns) => {
     if (!problem) return null;
 
     switch(currentLevel) {
       case 1:
-        // Extract percent from question
         const percentMatch = problem.question.match(/Convert (\d+\.?\d*)%/);
         const percent = percentMatch ? percentMatch[1] : '25';
         const decimalAnswer = (parseFloat(percent) / 100).toString();
-        
-        // Split percent into parts (e.g., "110" -> ["110", ""])
         const percentParts = percent.split('.');
         const percentWhole = percentParts[0];
         const percentDecimal = percentParts[1] || '';
@@ -249,41 +221,31 @@ const GameScreen = ({
         };
 
       case 2:
-        // Detect keyword
         const questionLower = problem.question.toLowerCase();
         let keyword = '';
         let explanation = '';
         
-        if (questionLower.includes('discount') || questionLower.includes('off') || questionLower.includes('sale')) {
-          keyword = 'DISCOUNT/SALE';
-          explanation = 'Discounts and sales DECREASE the price. You pay LESS.';
+        if (questionLower.includes('discount') || questionLower.includes('off')) {
+          keyword = 'DISCOUNT';
+          explanation = 'Discounts DECREASE the price. You pay LESS.';
         } else if (questionLower.includes('tax')) {
           keyword = 'TAX';
           explanation = 'Tax INCREASES what you pay. You pay MORE.';
-        } else if (questionLower.includes('markup') || questionLower.includes('marked up')) {
+        } else if (questionLower.includes('markup')) {
           keyword = 'MARKUP';
           explanation = 'Markup INCREASES the price. You pay MORE.';
-        } else if (questionLower.includes('commission')) {
-          keyword = 'COMMISSION';
-          explanation = 'Commission INCREASES your earnings. You make MORE.';
         } else if (questionLower.includes('tip')) {
           keyword = 'TIP';
           explanation = 'Tips INCREASE what you pay. You pay MORE.';
         } else if (questionLower.includes('interest')) {
           keyword = 'INTEREST';
           explanation = 'Interest INCREASES what you owe. You pay MORE.';
-        } else if (questionLower.includes('decrease')) {
-          keyword = 'DECREASE';
-          explanation = 'Decrease means going DOWN. The amount gets SMALLER.';
-        } else if (questionLower.includes('increase') || questionLower.includes('grow')) {
-          keyword = 'INCREASE';
-          explanation = 'Increase means going UP. The amount gets LARGER.';
         }
 
         return {
           title: `💡 Understanding: ${keyword}`,
           explanation: explanation,
-          note: "Ask yourself: Does this make the number go UP or DOWN?"
+          note: "Does this make the number go UP or DOWN?"
         };
 
       case 3:
@@ -291,62 +253,40 @@ const GameScreen = ({
       case 5:
       case 6:
         return {
-          title: "💡 Working Through the Problem:",
+          title: "💡 Problem-Solving Steps:",
           steps: [
-            "1. Identify what you're looking for (the UNKNOWN)",
-            "2. List what you know (the GIVEN information)",
-            "3. Determine the operation needed",
+            "1. Identify what you're looking for",
+            "2. List what you know",
+            "3. Determine the operation",
             "4. Calculate carefully",
-            "5. Check if your answer makes sense"
-          ],
-          note: "Use your calculator and notepad to organize your work!"
+            "5. Check if answer makes sense"
+          ]
         };
-
-      case 7:
-        return null; // Special handling for Level 7
 
       default:
         return null;
     }
   };
 
-  const checkAnswer = (overrideAnswer) => {
+  const handleScaffoldComplete = () => {
+    onCorrectAnswer();
+    const newCorrect = problemsCorrect + 1;
+    setProblemsCorrect(newCorrect);
+    setWrongAnswerFeedback(null);
+    
+    if (newCorrect >= config.required) {
+      playCrowdCheer();
+      onLevelComplete();
+    } else if (currentProblemIndex < config.total - 1) {
+      setCurrentProblemIndex(prev => prev + 1);
+    }
+  };
+
+  const checkAnswer = () => {
     if (!currentProblem) return;
     
-    const answerToCheck = overrideAnswer !== undefined && overrideAnswer !== null 
-      ? String(overrideAnswer) 
-      : userAnswer;
-
-    const userAns = answerToCheck.trim().toLowerCase();
+    const userAns = userAnswer.trim().toLowerCase();
     const correctAns = String(currentProblem.correctAnswer).toLowerCase();
-    
-    console.log('╔══ ANSWER CHECK ══╗');
-    console.log('Level:', currentLevel);
-    console.log('User answer:', `"${userAns}"`);
-    console.log('Correct answer:', `"${correctAns}"`);
-    
-    // LEVEL 7 SPECIAL VALIDATION
-    if (currentLevel === 7 && currentProblem.showWork) {
-      const userNum = parseFloat(userAns);
-      const afterDecrease = currentProblem.showWork.initialPop * (1 - currentProblem.showWork.decrease / 100);
-      const afterIncrease = afterDecrease * (1 + currentProblem.showWork.increase / 100);
-      
-      if (!isNaN(userNum)) {
-        const wrongPerPerson = (parseFloat(currentProblem.showWork.totalMoney.replace(/,/g, '')) / afterIncrease);
-        if (Math.abs(userNum - wrongPerPerson) < 0.02) {
-          setWrongAnswerFeedback({
-            userAnswer: answerToCheck,
-            correctAnswer: currentProblem.correctAnswer,
-            question: currentProblem.question,
-            specialMessage: "⚠️ WAIT! You can't have a partial person! If there's only part of someone left, the zombies got them and they're turning. You CAN'T count them as a survivor! Always round DOWN when calculating people."
-          });
-          playDeathScream();
-          onWrongAnswer();
-          console.log('╚═════════════════╝');
-          return;
-        }
-      }
-    }
     
     let isCorrect = false;
     
@@ -364,9 +304,6 @@ const GameScreen = ({
       }
     }
     
-    console.log('Final result:', isCorrect ? 'CORRECT ✓' : 'WRONG ✗');
-    console.log('╚═════════════════╝');
-    
     if (isCorrect) {
       onCorrectAnswer();
       const newCorrect = problemsCorrect + 1;
@@ -379,15 +316,12 @@ const GameScreen = ({
       } else if (currentProblemIndex < config.total - 1) {
         setCurrentProblemIndex(prev => prev + 1);
       }
-      
     } else {
-      // Generate guided notes for wrong answer
       const guidedNotes = getGuidedNotes(currentProblem, userAns, correctAns);
       
       setWrongAnswerFeedback({
-        userAnswer: answerToCheck,
+        userAnswer: userAnswer,
         correctAnswer: currentProblem.correctAnswer,
-        question: currentProblem.question,
         guidedNotes: guidedNotes
       });
       
@@ -417,13 +351,13 @@ const GameScreen = ({
 
   const getLevelStory = () => {
     const stories = {
-      1: "Show the other factions you can convert percents to decimals. If you can't, you won't survive!",
-      2: "Prove to the Traders that you understand how discounts, taxes, and markups affect prices. Your life depends on it.",
-      3: "The Scavengers are watching. Calculate precise amounts or join the fallen factions.",
-      4: "Multi-step thinking separates survivors from casualties. The Fortress fell because they couldn't handle complexity.",
-      5: "The Engineers thought they were the smartest. Prove them wrong by mastering advanced calculations.",
-      6: "Only The Elites stand between you and victory. Work backwards to survive forwards.",
-      7: "Final challenge. One mistake and you're both dead. Calculate perfectly or become zombies."
+      1: "Convert percents to decimals. Your survival depends on it!",
+      2: "Prove you understand how prices change. Calculate or die.",
+      3: "Calculate precise amounts. The Scavengers are watching.",
+      4: "Calculate final prices. Multi-step thinking separates survivors from casualties.",
+      5: "Master two-step calculations. Complexity killed The Engineers.",
+      6: "Work backwards to survive forwards. Only The Elites remain.",
+      7: "Final challenge. One mistake and you're both dead."
     };
     return stories[currentLevel];
   };
@@ -441,9 +375,10 @@ const GameScreen = ({
     return <div className="za-loading">Loading problems...</div>;
   }
 
+  const useScaffolding = config.useScaffolding && currentProblem.scaffoldSteps;
+
   return (
     <div className="za-game-screen">
-      {/* Top Bar */}
       <div className="za-top-bar">
         <div className="za-level-info">
           <h2 className="za-level-title">{getLevelTitle()}</h2>
@@ -456,130 +391,100 @@ const GameScreen = ({
             <span className={`za-timer-text ${currentLevel === 1 && currentTime >= 90 ? 'za-timer-warning' : ''}`}>
               {getDisplayTime()}
             </span>
-            {currentLevel === 1 && currentTime >= 90 && (
-              <span className="za-time-warning">
-                {' '}TIME RUNNING OUT!
-              </span>
-            )}
           </div>
 
           <div className="za-hearts">
             {[1, 2].map(i => (
-              <span 
-                key={i} 
-                className={`za-heart ${i <= hearts ? 'active' : 'lost'}`}
-              >
+              <span key={i} className={`za-heart ${i <= hearts ? 'active' : 'lost'}`}>
                 {i <= hearts ? '❤️' : '🖤'}
               </span>
             ))}
           </div>
 
-          <button 
-            className="za-sound-toggle"
-            onClick={onToggleSound}
-            title={soundEnabled ? "Mute sounds" : "Enable sounds"}
-          >
+          <button className="za-sound-toggle" onClick={onToggleSound}>
             {soundEnabled ? '🔊' : '🔇'}
           </button>
         </div>
       </div>
 
-      {/* Faction Tracker */}
-      <FactionTracker 
-        currentLevel={currentLevel}
-      />
+      <FactionTracker currentLevel={currentLevel} />
 
-      {/* Main Game Area */}
       <div className="za-main-game">
         <div className="za-progress-section">
           <div className="za-progress-text">
             Progress: {problemsCorrect} / {config.required} correct
           </div>
           <div className="za-progress-bar">
-            <div 
-              className="za-progress-fill"
-              style={{ width: `${(problemsCorrect / config.required) * 100}%` }}
-            />
+            <div className="za-progress-fill" style={{ width: `${(problemsCorrect / config.required) * 100}%` }} />
           </div>
         </div>
 
-        <ProblemDisplay
-          problem={currentProblem}
-          problemNumber={currentProblemIndex + 1}
-          totalProblems={config.total}
-          userAnswer={userAnswer}
-          onAnswerChange={setUserAnswer}
-          onSubmit={checkAnswer}
-          onKeyPress={handleKeyPress}
-        />
+        {useScaffolding ? (
+          <ScaffoldedProblem
+            problem={currentProblem}
+            currentLevel={currentLevel}
+            onComplete={handleScaffoldComplete}
+            onWrongAnswer={() => {
+              playDeathScream();
+              onWrongAnswer();
+            }}
+          />
+        ) : (
+          <ProblemDisplay
+            problem={currentProblem}
+            problemNumber={currentProblemIndex + 1}
+            totalProblems={config.total}
+            userAnswer={userAnswer}
+            onAnswerChange={setUserAnswer}
+            onSubmit={checkAnswer}
+            onKeyPress={handleKeyPress}
+          />
+        )}
       </div>
 
-      {/* Wrong Answer Feedback with Guided Notes */}
-      {wrongAnswerFeedback && (
+      {wrongAnswerFeedback && !useScaffolding && (
         <div className="za-wrong-feedback">
-          {wrongAnswerFeedback.specialMessage ? (
-            <>
-              <div className="za-wrong-title za-level7-warning">⚠️ POPULATION ERROR!</div>
-              <div className="za-wrong-special">{wrongAnswerFeedback.specialMessage}</div>
-              <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
-              <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
-            </>
-          ) : (
-            <>
-              <div className="za-wrong-title">Not quite!</div>
-              <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
-              <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
+          <div className="za-wrong-title">Not quite!</div>
+          <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
+          <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
+          
+          {wrongAnswerFeedback.guidedNotes && (
+            <div className="za-decimal-helper">
+              <div className="za-helper-title">{wrongAnswerFeedback.guidedNotes.title}</div>
               
-              {wrongAnswerFeedback.guidedNotes && (
-                <div className="za-decimal-helper">
-                  <div className="za-helper-title">{wrongAnswerFeedback.guidedNotes.title}</div>
-                  
-                  {wrongAnswerFeedback.guidedNotes.visual && (
-                    <div className="za-helper-visual">
-                      {wrongAnswerFeedback.guidedNotes.visual}
-                    </div>
-                  )}
-                  
-                  {wrongAnswerFeedback.guidedNotes.explanation && (
-                    <div className="za-helper-explanation">
-                      {wrongAnswerFeedback.guidedNotes.explanation}
-                    </div>
-                  )}
-                  
-                  {wrongAnswerFeedback.guidedNotes.steps && (
-                    <div className="za-helper-steps">
-                      {wrongAnswerFeedback.guidedNotes.steps.map((step, idx) => (
-                        <div key={idx} className="za-helper-step">{step}</div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {wrongAnswerFeedback.guidedNotes.note && (
-                    <div className="za-helper-note">{wrongAnswerFeedback.guidedNotes.note}</div>
-                  )}
-                  
-                  {wrongAnswerFeedback.guidedNotes.examples && (
-                    <div className="za-helper-examples">{wrongAnswerFeedback.guidedNotes.examples}</div>
-                  )}
+              {wrongAnswerFeedback.guidedNotes.visual && (
+                <div className="za-helper-visual">{wrongAnswerFeedback.guidedNotes.visual}</div>
+              )}
+              
+              {wrongAnswerFeedback.guidedNotes.explanation && (
+                <div className="za-helper-explanation">{wrongAnswerFeedback.guidedNotes.explanation}</div>
+              )}
+              
+              {wrongAnswerFeedback.guidedNotes.steps && (
+                <div className="za-helper-steps">
+                  {wrongAnswerFeedback.guidedNotes.steps.map((step, idx) => (
+                    <div key={idx} className="za-helper-step">{step}</div>
+                  ))}
                 </div>
               )}
-            </>
+              
+              {wrongAnswerFeedback.guidedNotes.note && (
+                <div className="za-helper-note">{wrongAnswerFeedback.guidedNotes.note}</div>
+              )}
+              
+              {wrongAnswerFeedback.guidedNotes.examples && (
+                <div className="za-helper-examples">{wrongAnswerFeedback.guidedNotes.examples}</div>
+              )}
+            </div>
           )}
           
-          <button 
-            className="za-btn-primary za-got-it-btn"
-            onClick={() => setWrongAnswerFeedback(null)}
-          >
+          <button className="za-btn-primary za-got-it-btn" onClick={() => setWrongAnswerFeedback(null)}>
             I get it now!
           </button>
         </div>
       )}
 
-      {/* Calculator (Level 3+) */}
       {showCalculator && <Calculator />}
-
-      {/* Notepad (Level 4+) */}
-      {showNotepad && <Notepad />}
     </div>
   );
 };
