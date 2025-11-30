@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 2.0.0
-// Last Updated: November 29, 2024 11:30pm
-// Changes: Fixed input freeze bug, timer stops after Level 1, "I get it now!" button, overall time tracking
+// VERSION: 2.1.0
+// Last Updated: November 29, 2024 11:55pm
+// Changes: PERMANENT input freeze fix, level titles corrected, scroll reset, removed state conflicts
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -85,6 +85,7 @@ const GameScreen = ({
 
   // Generate problems when level changes
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     generateProblems();
     setCurrentProblemIndex(0);
     setProblemsCorrect(0);
@@ -163,6 +164,7 @@ const GameScreen = ({
     // DEBUG LOGGING
     console.log('═══ ANSWER CHECK ═══');
     console.log('Level:', currentLevel);
+    console.log('Problem Index:', currentProblemIndex);
     console.log('Problem:', currentProblem.question);
     console.log('User answer:', `"${userAns}"`);
     console.log('Correct answer:', `"${correctAns}"`);
@@ -196,15 +198,19 @@ const GameScreen = ({
       onCorrectAnswer();
       const newCorrect = problemsCorrect + 1;
       setProblemsCorrect(newCorrect);
-      setUserAnswer('');
       setWrongAnswerFeedback(null);
       
-      // Check if level is complete
-      if (newCorrect >= config.required) {
-        onLevelComplete();
-      } else if (currentProblemIndex < config.total - 1) {
-        setCurrentProblemIndex(currentProblemIndex + 1);
-      }
+      // CRITICAL FIX: DON'T clear userAnswer here
+      // The useEffect will handle it when problemIndex changes
+      // Add delay to let state settle before advancing
+      setTimeout(() => {
+        if (newCorrect >= config.required) {
+          onLevelComplete();
+        } else if (currentProblemIndex < config.total - 1) {
+          setCurrentProblemIndex(currentProblemIndex + 1);
+        }
+      }, 150);
+      
     } else {
       // Show feedback for Level 1
       if (currentLevel === 1) {
@@ -217,7 +223,8 @@ const GameScreen = ({
       }
       
       onWrongAnswer();
-      setUserAnswer('');
+      // CRITICAL FIX: DON'T clear userAnswer here either
+      // Hearts lost, but problem stays the same, so no clear needed
     }
   };
 
@@ -230,12 +237,12 @@ const GameScreen = ({
   const getLevelTitle = () => {
     const titles = {
       1: "LEVEL 1: The Outbreak",
-      2: "LEVEL 2: Faction Wars Begin",
+      2: "LEVEL 2: The Runners Fall",
       3: "LEVEL 3: The Traders Fall",
-      4: "LEVEL 4: Scavengers Eliminated",
+      4: "LEVEL 4: The Scavengers Fall",
       5: "LEVEL 5: The Fortress Falls",
       6: "LEVEL 6: The Engineers Fail",
-      7: "LEVEL 7: THE FINAL CALCULATION"
+      7: "LEVEL 7: THE FINAL SHOWDOWN"
     };
     return titles[currentLevel];
   };
