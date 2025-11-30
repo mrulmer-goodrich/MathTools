@@ -1,3 +1,5 @@
+//Update 1
+
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
 import IntroSequence from './components/IntroSequence';
@@ -147,14 +149,16 @@ const ZombieApocalypse = () => {
       setGamePhase('victory');
     } else {
       setGamePhase('level-complete');
-      
-      setTimeout(() => {
-        setCurrentLevel(currentLevel + 1);
-        setHearts(2);
-        setLevelStartTime(Date.now());
-        setGamePhase('playing');
-      }, 5000);
+      // NO auto-advance - wait for click
     }
+  };
+
+  // Handle click to continue from level-complete screen
+  const handleContinueFromLevel = () => {
+    setCurrentLevel(currentLevel + 1);
+    setHearts(2);
+    setLevelStartTime(Date.now());
+    setGamePhase('playing');
   };
 
   // Format time
@@ -196,12 +200,14 @@ const ZombieApocalypse = () => {
     
     case 'level-complete':
       return (
-        <LevelComplete
-          level={currentLevel}
-          playerData={playerData}
-          time={levelStats[currentLevel]?.time || 0}
-          formatTime={formatTime}
-        />
+        <div onClick={handleContinueFromLevel}>
+          <LevelComplete
+            level={currentLevel}
+            playerData={playerData}
+            time={levelStats[currentLevel]?.time || 0}
+            formatTime={formatTime}
+          />
+        </div>
       );
     
     case 'death':
