@@ -1,7 +1,7 @@
 // Calculator.jsx
-// VERSION: 3.0.0
+// VERSION: 3.1.0
 // Last Updated: November 30, 2024
-// Changes: Cap decimals at 4 places, enable chaining calculations from result
+// Changes: Keyboard support, fixed height, multi-chain calculations
 
 import React, { useState, useRef, useEffect } from 'react';
 
@@ -49,6 +49,51 @@ const Calculator = () => {
     };
   }, [isDragging, dragOffset]);
 
+  // KEYBOARD SUPPORT
+  useEffect(() => {
+    const handleKeyboard = (e) => {
+      // Only handle if calculator is visible and not typing in answer field
+      if (e.target.closest('.za-answer-input')) return;
+      
+      const key = e.key;
+      
+      // Numbers
+      if (key >= '0' && key <= '9') {
+        e.preventDefault();
+        handleNumber(key);
+      }
+      // Operations
+      else if (key === '+' || key === '-' || key === '*' || key === '/') {
+        e.preventDefault();
+        const op = key === '*' ? '×' : key === '/' ? '÷' : key;
+        handleOperator(op);
+      }
+      // Enter or Equals
+      else if (key === 'Enter' || key === '=') {
+        e.preventDefault();
+        handleEquals();
+      }
+      // Decimal
+      else if (key === '.') {
+        e.preventDefault();
+        handleDecimal();
+      }
+      // Clear
+      else if (key === 'Escape' || key.toLowerCase() === 'c') {
+        e.preventDefault();
+        handleClear();
+      }
+      // Backspace
+      else if (key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [display, equation, justCalculated, lastResult]);
+
   const formatNumber = (num) => {
     // Cap at 4 decimal places
     const numValue = parseFloat(num);
@@ -67,6 +112,7 @@ const Calculator = () => {
       // If we just calculated, start fresh
       setDisplay(num);
       setJustCalculated(false);
+      setLastResult(null); // Clear last result when starting new
     } else if (display === '0' || display === 'Error') {
       setDisplay(num);
     } else {
@@ -83,6 +129,7 @@ const Calculator = () => {
     } else {
       setEquation(display + ' ' + op + ' ');
       setDisplay('0');
+      setJustCalculated(false);
     }
   };
 
@@ -94,7 +141,7 @@ const Calculator = () => {
       setDisplay(formattedResult);
       setLastResult(formattedResult);
       setJustCalculated(true);
-      setEquation('');
+      setEquation(''); // Clear equation display but keep lastResult
     } catch (error) {
       setDisplay('Error');
       setEquation('');
@@ -114,6 +161,7 @@ const Calculator = () => {
     if (justCalculated) {
       setDisplay('0.');
       setJustCalculated(false);
+      setLastResult(null);
     } else if (!display.includes('.')) {
       setDisplay(display + '.');
     }
@@ -138,8 +186,8 @@ const Calculator = () => {
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="za-calc-header">Calculator</div>
-      <div className="za-calc-display">
+      <div className="za-calc-header">Calculator (Keyboard Enabled)</div>
+      <div className="za-calc-display-fixed">
         {equation && <div className="za-calc-equation">{equation}</div>}
         <div className="za-calc-value">{display}</div>
       </div>
