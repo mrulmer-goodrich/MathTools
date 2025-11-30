@@ -1,0 +1,145 @@
+ZOMBIE APOCALYPSE - VERSION 1.2.0
+All Changes Complete & Ready for Testing
+═══════════════════════════════════════════════════════════════
+
+✅ COMPLETED CHANGES:
+
+1. PRINCIPAL GARVIN STORY ✅
+   - IntroSequence.jsx updated
+   - Story now starts at Eastway Middle School
+   - Principal Garvin (female) introduced in outbreak
+   - Eastway Jaguars narrative woven throughout
+
+2. MR. UG REFERENCE ✅
+   - IntroSequence.jsx detects if Math is selected
+   - References "Mr. UG's class" and "Mr. UG prepared you for this"
+   - Uses correct pronouns throughout
+
+3. COUNTDOWN TIMER (Level 1) ✅
+   - GameScreen-v1.2.jsx created
+   - Timer now counts DOWN from 2:00 to 0:00
+   - At 0:00, zombies attack (instant death)
+   - Warning at 30 seconds remaining
+
+4. TICKING CLOCK SOUND (Level 1) ✅
+   - playTickSound() function added
+   - Plays every second during Level 1
+   - High-pitched subtle tick (880 Hz, 0.05s duration)
+   - Respects mute toggle
+
+5. VISUAL FEEDBACK FOR WRONG ANSWERS (Level 1) ✅
+   - Shows "Not quite!" overlay
+   - Displays user's answer vs. correct answer
+   - Visual aid showing decimal movement
+   - Examples: 8% = 0.08, 50% = 0.50, 125% = 1.25
+   - Auto-dismisses after 4 seconds
+
+6. LEVEL 2 DEBUG LOGGING ✅
+   - Added console.log statements to checkAnswer()
+   - Logs: user answer, correct answer, problem type, match result
+   - Will help diagnose the bug
+
+7. VERSION NUMBERS ✅
+   - Added to: problems.js, IntroSequence.jsx, GameScreen-v1.2.jsx
+   - Format: // VERSION: 1.2.0
+
+═══════════════════════════════════════════════════════════════
+
+📦 UPDATED FILES:
+
+1. IntroSequence.jsx (v1.2.0)
+   - Principal Garvin story
+   - Mr. UG references
+   - Eastway Middle School narrative
+
+2. GameScreen-v1.2.jsx (NEW FILE - v1.2.0)
+   - Countdown timer
+   - Tick sound
+   - Visual feedback overlay
+   - Debug logging for Level 2
+
+3. zombie.css (updated)
+   - Visual feedback styles
+   - Timer warning animation
+
+4. problems.js (v1.2.0)
+   - Version number added
+   - Verified Level 2 answer logic
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TO IMPLEMENT:
+
+Replace your current GameScreen.jsx with GameScreen-v1.2.jsx:
+
+1. Download: GameScreen-v1.2.jsx
+2. Rename to: GameScreen.jsx
+3. Replace the old file in: zombie-apocalypse/components/
+4. Test!
+
+═══════════════════════════════════════════════════════════════
+
+🐛 LEVEL 2 BUG INVESTIGATION:
+
+The new GameScreen-v1.2.jsx has extensive debug logging.
+
+When you test Level 2:
+1. Open browser console (F12)
+2. Try answering a question
+3. Look for the "═══ ANSWER CHECK ═══" logs
+4. Send me a screenshot or copy/paste of the logs
+
+This will show exactly what's happening with the answer matching.
+
+═══════════════════════════════════════════════════════════════
+
+📥 DOWNLOAD LINKS:
+
+[IntroSequence.jsx v1.2.0](computer:///mnt/user-data/outputs/zombie-apocalypse/components/IntroSequence.jsx)
+
+[GameScreen-v1.2.jsx](computer:///mnt/user-data/outputs/zombie-apocalypse/components/GameScreen-v1.2.jsx)
+
+[zombie.css (updated)](computer:///mnt/user-data/outputs/zombie-apocalypse/styles/zombie.css)
+
+[problems.js v1.2.0](computer:///mnt/user-data/outputs/zombie-apocalypse/problems.js)
+
+═══════════════════════════════════════════════════════════════
+
+🎮 TESTING CHECKLIST:
+
+Level 1:
+□ Timer counts DOWN from 2:00
+□ Tick sound plays every second
+□ Wrong answer shows visual feedback
+□ Feedback shows correct answer
+□ Visual aid demonstrates decimal movement
+□ At 0:00, instant death
+
+Level 2:
+□ Open browser console (F12)
+□ Answer first question
+□ Check console logs
+□ Verify answer matching logic
+
+Story:
+□ Principal Garvin mentioned in intro
+□ If Math selected, Mr. UG referenced
+□ Eastway Middle School narrative present
+
+═══════════════════════════════════════════════════════════════
+
+💬 YOUR FEEDBACK NEEDED:
+
+After testing, please let me know:
+1. Does countdown timer work?
+2. Does tick sound play?
+3. Does visual feedback appear?
+4. What do the console logs show for Level 2?
+
+Then I can fix any remaining issues!
+
+═══════════════════════════════════════════════════════════════
+
+Version: 1.2.0
+Status: ✅ READY FOR TESTING
+Date: November 29, 2024
