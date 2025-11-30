@@ -1,17 +1,20 @@
 // IntroSequence.jsx
-// VERSION: 2.0.0
-// Last Updated: November 29, 2024 11:15pm
-// Changes: Screen transitions, Garvin quote updated, Charlotte (no NC), visual feedback
+// VERSION: 2.2.0
+// Last Updated: November 30, 2024 12:30am
+// Changes: Fixed scroll reset, Garvin quote, Charlotte (no NC)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const IntroSequence = ({ playerData, onComplete, onSkip }) => {
   const [currentScreen, setCurrentScreen] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Scroll to top whenever screen changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentScreen]);
+
   const handleNext = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     if (currentScreen === 3) {
       onComplete();
     } else {
