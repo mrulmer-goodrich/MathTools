@@ -4,7 +4,7 @@ const PersonalizationForm = ({ onComplete }) => {
   const [formData, setFormData] = useState({
     playerName: '',
     friendName: '',
-    cityName: 'Charlotte, NC',
+    cityName: 'Charlotte',
     favoriteSubject: '',
     favoriteSubjectOther: '',
     dreamJob: '',
