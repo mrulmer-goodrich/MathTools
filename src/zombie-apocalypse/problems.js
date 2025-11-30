@@ -1,43 +1,107 @@
-// Zombie Apocalypse - Problem Generators with Randomization
-// VERSION: 3.0.0
-// Last Updated: November 30, 2024
-// Changes: Level 7 rounds DOWN people, Level 6 clearer wording, more zombie-themed problems
+// problems.js
+// Version: 3.4.0
+// Last Updated: November 30, 2024 - 11:55 PM
+// Changes: Restructured levels 4-6, added zombie MadLib system, full story context
 
-// Utility functions for random value generation
+// ============================================
+// MADLIB COMPONENTS - Zombie Apocalypse Theme
+// ============================================
+
+const zombieItems = {
+  weapons: ['crossbow', 'machete', 'baseball bat', 'flamethrower', 'chainsaw', 'katana', 'riot shield', 'spear'],
+  supplies: ['canned food', 'water bottles', 'first aid kit', 'flashlight', 'rope', 'duct tape', 'gasoline', 'batteries'],
+  protection: ['body armor', 'helmet', 'gas mask', 'hazmat suit', 'reinforced boots', 'tactical vest'],
+  medicine: ['antibiotics', 'pain meds', 'antidote serum', 'bandages', 'insulin', 'antiseptic'],
+  tools: ['generator', 'radio', 'walkie-talkie', 'binoculars', 'tent', 'sleeping bag']
+};
+
+const locations = [
+  'the abandoned Walmart',
+  'the fortified pharmacy',
+  'the survivor\'s market',
+  'the underground bunker',
+  'the rooftop trading post',
+  'the barricaded warehouse',
+  'the safe zone checkpoint',
+  'the convoy supply depot'
+];
+
+const npcs = [
+  'Marcus the weapons dealer',
+  'Dr. Chen the medic',
+  'Sarah the supply runner',
+  'Jackson the mechanic',
+  'Officer Rodriguez',
+  'Chef Wang (keeps morale up)',
+  'Trader Jake',
+  'Nurse Patterson'
+];
+
+const discountReasons = [
+  'damaged in a zombie attack',
+  'desperate to move inventory before relocating',
+  'alliance discount for Eastway Jaguars',
+  'loyalty reward for repeat customers',
+  'clearance sale (apocalypse special!)',
+  'slightly used but still functional',
+  'faction friendship discount'
+];
+
+const taxReasons = [
+  'safe zone protection fee',
+  'faction leadership tax for defense',
+  'entry tax to the secure area',
+  'resource pooling for survival',
+  'fortification maintenance fee'
+];
+
+const tipReasons = [
+  'saved your life last week',
+  'keeps finding rare supplies',
+  'makes the best post-apocalypse meals',
+  'risked their life scouting for you',
+  'always shares intel about zombie movements'
+];
+
+const loanReasons = [
+  'borrowed before the outbreak hit',
+  'emergency loan for supplies',
+  'weapon loan from another faction',
+  'borrowed to repair your shelter'
+];
+
+// Utility functions
 const random = {
   percent: (min = 1, max = 99) => Math.floor(Math.random() * (max - min + 1)) + min,
   tax: () => Math.floor(Math.random() * 25) + 1,
-  discount: () => Math.floor(Math.random() * 66) + 10, // 10-75%
-  markup: () => Math.floor(Math.random() * 186) + 15, // 15-200%
-  commission: () => Math.floor(Math.random() * 18) + 3, // 3-20%
-  interest: () => Math.floor(Math.random() * 14) + 2, // 2-15%
-  percentChange: () => Math.floor(Math.random() * 76) + 5, // 5-80%
-  smallItem: () => Math.floor(Math.random() * 136) + 15, // $15-150
-  mediumItem: () => Math.floor(Math.random() * 421) + 80, // $80-500
-  largeItem: () => Math.floor(Math.random() * 1001) + 200, // $200-1200
-  salary: () => Math.floor(Math.random() * 401) + 200, // $200-600
-  sales: () => Math.floor(Math.random() * 2601) + 400, // $400-3000
-  loan: () => Math.floor(Math.random() * 4501) + 500, // $500-5000
-  finalMoney: () => Math.floor(Math.random() * 150001) + 50000, // $50k-200k
-  finalPopulation: () => Math.floor(Math.random() * 1501) + 500, // 500-2000
-  years: () => Math.floor(Math.random() * 7) + 2, // 2-8 years
+  discount: () => Math.floor(Math.random() * 66) + 10,
+  markup: () => Math.floor(Math.random() * 186) + 15,
+  commission: () => Math.floor(Math.random() * 18) + 3,
+  interest: () => Math.floor(Math.random() * 14) + 2,
+  percentChange: () => Math.floor(Math.random() * 76) + 5,
+  smallItem: () => Math.floor(Math.random() * 136) + 15,
+  mediumItem: () => Math.floor(Math.random() * 421) + 80,
+  largeItem: () => Math.floor(Math.random() * 1001) + 200,
+  salary: () => Math.floor(Math.random() * 401) + 200,
+  sales: () => Math.floor(Math.random() * 2601) + 400,
+  loan: () => Math.floor(Math.random() * 4501) + 500,
+  finalMoney: () => Math.floor(Math.random() * 150001) + 50000,
+  finalPopulation: () => Math.floor(Math.random() * 1501) + 500,
+  years: () => Math.floor(Math.random() * 7) + 2,
+  fromArray: (arr) => arr[Math.floor(Math.random() * arr.length)]
 };
 
-// Round to 2 decimal places
 const round = (num) => Math.round(num * 100) / 100;
 
-// LEVEL 1: Percent ↔ Decimal Conversion (20 problems)
+// LEVEL 1: Percent to Decimal
 export const generateLevel1Bank = () => {
   const problems = [];
-
-  // Percent to decimal conversion bank (expanded & randomized)
   const percentPool = [
     0.5, 1, 2.5, 3, 4, 5, 6, 7.5, 8, 10,
     12, 15, 18, 20, 25, 30, 33, 40, 45, 50,
     60, 66, 75, 80, 90, 99, 100, 110, 125, 150
   ];
 
-  // Shuffle and select 20 distinct values each playthrough
   const shuffled = [...percentPool].sort(() => Math.random() - 0.5);
   const selected = shuffled.slice(0, 20);
 
@@ -54,571 +118,416 @@ export const generateLevel1Bank = () => {
   return problems;
 };
 
-// LEVEL 2: Increase/Decrease/No Change (12 scenarios, randomized values)
+// LEVEL 2: Increase or Decrease
 export const generateLevel2Problem = (playerData) => {
   const scenarios = [
     {
-      template: (v) => `Weapons marked up ${v}%. Does the price increase or decrease?`,
-      answer: 'increase',
-      getValue: () => random.markup()
-    },
-    {
-      template: (v) => `Zombie repellent discounted ${v}%. Does your cost increase or decrease?`,
+      template: (item, discount, reason) => `${item} is ${discount}% off (${reason}). Does the price increase or decrease?`,
       answer: 'decrease',
-      getValue: () => random.discount()
+      getValues: () => ({
+        item: random.fromArray([...zombieItems.weapons, ...zombieItems.supplies]),
+        discount: random.discount(),
+        reason: random.fromArray(discountReasons)
+      })
     },
     {
-      template: (v) => `Sales tax is ${v}%. Does your total increase or decrease?`,
+      template: (item, tax, reason) => `${item} costs extra due to ${tax}% ${reason}. Does your total increase or decrease?`,
       answer: 'increase',
-      getValue: () => random.tax()
+      getValues: () => ({
+        item: random.fromArray([...zombieItems.protection, ...zombieItems.medicine]),
+        tax: random.tax(),
+        reason: random.fromArray(taxReasons)
+      })
     },
     {
-      template: (v) => `You earn ${v}% commission on trades. Does your income increase or decrease?`,
+      template: (npc, tip, reason) => `${npc} ${reason}. You tip ${tip}%. Does what you pay increase or decrease?`,
       answer: 'increase',
-      getValue: () => random.commission()
+      getValues: () => ({
+        npc: random.fromArray(npcs),
+        tip: random.percent(10, 25),
+        reason: random.fromArray(tipReasons)
+      })
     },
     {
-      template: (v) => `Antidote marked down ${v}%. Does the price increase or decrease?`,
+      template: (item, markup) => `Weapons dealer marks up ${item} by ${markup}% (high demand). Does the price increase or decrease?`,
+      answer: 'increase',
+      getValues: () => ({
+        item: random.fromArray(zombieItems.weapons),
+        markup: random.markup()
+      })
+    },
+    {
+      template: (decrease) => `Zombie attacks reduced survivor population by ${decrease}%. Did it increase or decrease?`,
       answer: 'decrease',
-      getValue: () => random.discount()
+      getValues: () => ({
+        decrease: random.percentChange()
+      })
     },
     {
-      template: (v) => `You tip ${v}% on shelter fees. Does the amount you pay increase or decrease?`,
-      answer: 'increase',
-      getValue: () => random.percent(15, 25)
-    },
-    {
-      template: (v) => `Interest of ${v}% is charged on a loan. Does what you owe increase or decrease?`,
-      answer: 'increase',
-      getValue: () => random.interest()
-    },
-    {
-      template: (v) => `Population decreased by ${v}% after zombie wave. Did it increase or decrease?`,
+      template: (item, discount, location) => `${item} on sale at ${location} for ${discount}% off. Does the price increase or decrease?`,
       answer: 'decrease',
-      getValue: () => random.percentChange()
+      getValues: () => ({
+        item: random.fromArray(zombieItems.supplies),
+        discount: random.discount(),
+        location: random.fromArray(locations)
+      })
     },
     {
-      template: (v) => `${playerData.friendName} raises prices by ${v}%. Does the cost increase or decrease?`,
+      template: (rate, reason) => `You borrowed supplies and must pay ${rate}% interest (${reason}). Does what you owe increase or decrease?`,
       answer: 'increase',
-      getValue: () => random.markup()
+      getValues: () => ({
+        rate: random.interest(),
+        reason: random.fromArray(loanReasons)
+      })
     },
     {
-      template: (v) => `Barricade materials on sale for ${v}% off. Does the price increase or decrease?`,
-      answer: 'decrease',
-      getValue: () => random.discount()
-    },
-    {
-      template: (v) => `${playerData.cityName} charges ${v}% tax on all trades. Does your total increase or decrease?`,
+      template: (comm, npc) => `${npc} pays you ${comm}% commission for finding supplies. Does your income increase or decrease?`,
       answer: 'increase',
-      getValue: () => random.tax()
+      getValues: () => ({
+        comm: random.commission(),
+        npc: random.fromArray(npcs)
+      })
     },
     {
-      template: (v) => `Shelter costs drop by ${v}%. Does the price increase or decrease?`,
+      template: (item, discount) => `${item} marked down ${discount}% (end-of-world clearance!). Does the price increase or decrease?`,
       answer: 'decrease',
-      getValue: () => random.percentChange()
+      getValues: () => ({
+        item: random.fromArray(zombieItems.tools),
+        discount: random.discount()
+      })
+    },
+    {
+      template: (increase) => `${playerData.friendName}'s faction grew by ${increase}% after rescue mission. Did population increase or decrease?`,
+      answer: 'increase',
+      getValues: () => ({
+        increase: random.percentChange()
+      })
+    },
+    {
+      template: (tax, reason) => `${playerData.cityName} charges ${tax}% ${reason}. Does your cost increase or decrease?`,
+      answer: 'increase',
+      getValues: () => ({
+        tax: random.tax(),
+        reason: random.fromArray(taxReasons)
+      })
+    },
+    {
+      template: (item, discount, npc) => `${npc} gives you ${discount}% off ${item} (you helped them escape zombies). Does price increase or decrease?`,
+      answer: 'decrease',
+      getValues: () => ({
+        item: random.fromArray(zombieItems.medicine),
+        discount: random.discount(),
+        npc: random.fromArray(npcs)
+      })
     }
   ];
   
   return scenarios.map(s => {
-    const value = s.getValue();
-    const correct = s.answer;
+    const values = s.getValues();
+    const templateParams = Object.values(values);
     return {
-      question: s.template(value),
-      correctAnswer: correct,
-      answer: correct,
+      question: s.template(...templateParams),
+      correctAnswer: s.answer,
+      answer: s.answer,
       choices: ['increase', 'decrease'],
       type: 'multiple-choice'
     };
   });
 };
 
-// LEVEL 3: Calculate the Amount (12 scenarios, randomized values with MORE zombie theme)
+// LEVEL 3: Calculate Amount
 export const generateLevel3Problem = (playerData) => {
+  const allItems = [...zombieItems.weapons, ...zombieItems.supplies, ...zombieItems.protection, ...zombieItems.medicine, ...zombieItems.tools];
+  
   const scenarios = [
     {
-      template: (price, tax) => `Crossbow costs $${price}. Sales tax is ${tax}%. How much is the TAX? (Round to nearest cent)`,
-      getAnswer: (price, tax) => round(price * tax / 100).toFixed(2),
-      getValue: () => ({ price: random.mediumItem(), tax: random.tax() })
+      template: (item, price, discount, reason) => `${item} costs $${price}. It's ${discount}% off (${reason}). How much do you SAVE? (Round to nearest cent)`,
+      getAnswer: (item, price, discount, reason) => round(price * discount / 100).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.mediumItem(),
+        discount: random.discount(),
+        reason: random.fromArray(discountReasons)
+      })
     },
     {
-      template: (price, discount) => `Zombie antidote marked down ${discount}% from $${price}. How much do you SAVE? (Round to nearest cent)`,
-      getAnswer: (price, discount) => round(price * discount / 100).toFixed(2),
-      getValue: () => ({ price: random.smallItem(), discount: random.discount() })
+      template: (item, price, tax, reason) => `${item} costs $${price}, plus ${tax}% ${reason}. How much is the TAX? (Round to nearest cent)`,
+      getAnswer: (item, price, tax, reason) => round(price * tax / 100).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.largeItem(),
+        tax: random.tax(),
+        reason: random.fromArray(taxReasons)
+      })
     },
     {
-      template: (sales, comm) => `You earn ${comm}% commission on $${sales} in weapon trades. How much COMMISSION? (Round to nearest cent)`,
-      getAnswer: (sales, comm) => round(sales * comm / 100).toFixed(2),
-      getValue: () => ({ sales: random.sales(), comm: random.commission() })
+      template: (npc, price, tip, reason) => `${npc} ${reason}. Service costs $${price}. You tip ${tip}%. How much is the TIP? (Round to nearest cent)`,
+      getAnswer: (npc, price, tip, reason) => round(price * tip / 100).toFixed(2),
+      getValues: () => ({
+        npc: random.fromArray(npcs),
+        price: random.smallItem(),
+        tip: random.percent(15, 25),
+        reason: random.fromArray(tipReasons)
+      })
     },
     {
-      template: (price, tip) => `Rations cost $${price}. You tip ${tip}%. How much is the TIP? (Round to nearest cent)`,
-      getAnswer: (price, tip) => round(price * tip / 100).toFixed(2),
-      getValue: () => ({ price: random.smallItem(), tip: random.percent(15, 25) })
+      template: (item, price, markup, location) => `At ${location}, ${item} marked up ${markup}% from $${price}. How much was the MARKUP? (Round to nearest cent)`,
+      getAnswer: (item, price, markup, location) => round(price * markup / 100).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.mediumItem(),
+        markup: random.markup(),
+        location: random.fromArray(locations)
+      })
     },
     {
-      template: (price, markup) => `Flamethrower marked up ${markup}% from $${price}. How much was the MARKUP? (Round to nearest cent)`,
-      getAnswer: (price, markup) => round(price * markup / 100).toFixed(2),
-      getValue: () => ({ price: random.mediumItem(), markup: random.markup() })
+      template: (principal, rate, years, reason) => `You ${reason}. Borrowed $${principal} at ${rate}% simple interest for ${years} years. How much INTEREST? (Round to nearest cent)`,
+      getAnswer: (principal, rate, years, reason) => round(principal * rate / 100 * years).toFixed(2),
+      getValues: () => ({
+        principal: random.loan(),
+        rate: random.interest(),
+        years: random.years(),
+        reason: random.fromArray(loanReasons)
+      })
     },
     {
-      template: (principal, rate, years) => `You borrowed $${principal} at ${rate}% simple interest for ${years} years. How much INTEREST? (Round to nearest cent)`,
-      getAnswer: (principal, rate, years) => round(principal * rate / 100 * years).toFixed(2),
-      getValue: () => ({ principal: random.loan(), rate: random.interest(), years: random.years() })
-    },
-    {
-      template: (price, tax) => `Safe house rental is $${price}. Tax is ${tax}%. How much is the TAX? (Round to nearest cent)`,
-      getAnswer: (price, tax) => round(price * tax / 100).toFixed(2),
-      getValue: () => ({ price: random.largeItem(), tax: random.tax() })
-    },
-    {
-      template: (price, discount) => `Survival kit discounted ${discount}% from $${price}. How much do you SAVE? (Round to nearest cent)`,
-      getAnswer: (price, discount) => round(price * discount / 100).toFixed(2),
-      getValue: () => ({ price: random.mediumItem(), discount: random.discount() })
-    },
-    {
-      template: (sales, comm) => `${playerData.friendName} earns ${comm}% commission on $${sales}. How much COMMISSION? (Round to nearest cent)`,
-      getAnswer: (sales, comm) => round(sales * comm / 100).toFixed(2),
-      getValue: () => ({ sales: random.sales(), comm: random.commission() })
-    },
-    {
-      template: (price, tip) => `Meal is $${price}. You leave ${tip}% tip. How much is the TIP? (Round to nearest cent)`,
-      getAnswer: (price, tip) => round(price * tip / 100).toFixed(2),
-      getValue: () => ({ price: random.smallItem(), tip: random.percent(15, 25) })
-    },
-    {
-      template: (price, markup) => `Fuel marked up ${markup}% from $${price}. How much was the MARKUP? (Round to nearest cent)`,
-      getAnswer: (price, markup) => round(price * markup / 100).toFixed(2),
-      getValue: () => ({ price: random.percent(2, 5), markup: random.markup() })
-    },
-    {
-      template: (price, discount) => `${playerData.cityName} supplies reduced ${discount}% from $${price}. How much SAVED? (Round to nearest cent)`,
-      getAnswer: (price, discount) => round(price * discount / 100).toFixed(2),
-      getValue: () => ({ price: random.mediumItem(), discount: random.discount() })
+      template: (sales, comm, npc) => `${npc} pays ${comm}% commission on your $${sales} in supply trades. How much COMMISSION? (Round to nearest cent)`,
+      getAnswer: (sales, comm, npc) => round(sales * comm / 100).toFixed(2),
+      getValues: () => ({
+        sales: random.sales(),
+        comm: random.commission(),
+        npc: random.fromArray(npcs)
+      })
     }
   ];
   
-  return scenarios.map(s => {
-    const values = s.getValue();
+  // Generate 12 problems by allowing duplicates
+  const problems = [];
+  for (let i = 0; i < 12; i++) {
+    const s = scenarios[i % scenarios.length];
+    const values = s.getValues();
     const valuesArray = Object.values(values);
-    return {
+    problems.push({
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
       type: 'free-response'
-    };
-  });
+    });
+  }
+  return problems;
 };
 
-// LEVEL 4: Two-Step Calculations (10 scenarios)
+// LEVEL 4: Final Price After Discount/Tax
 export const generateLevel4Problem = (playerData) => {
+  const allItems = [...zombieItems.weapons, ...zombieItems.supplies, ...zombieItems.protection, ...zombieItems.medicine, ...zombieItems.tools];
+  
   const scenarios = [
     {
-      template: (price, discount, tax) => `Weapon is $${price}. Discount is ${discount}%. Tax is ${tax}%. What's the FINAL PRICE? (Round to nearest cent)`,
-      getAnswer: (price, discount, tax) => {
+      template: (item, price, discount, reason) => `${item} costs $${price}, ${discount}% off (${reason}). What's the FINAL PRICE? (Round to nearest cent)`,
+      getAnswer: (item, price, discount, reason) => round(price - (price * discount / 100)).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.mediumItem(),
+        discount: random.discount(),
+        reason: random.fromArray(discountReasons)
+      })
+    },
+    {
+      template: (item, price, tax, reason) => `${item} costs $${price} plus ${tax}% ${reason}. What's the FINAL TOTAL? (Round to nearest cent)`,
+      getAnswer: (item, price, tax, reason) => round(price + (price * tax / 100)).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.largeItem(),
+        tax: random.tax(),
+        reason: random.fromArray(taxReasons)
+      })
+    },
+    {
+      template: (npc, price, tip, reason) => `${npc} ${reason}. Service costs $${price}, you tip ${tip}%. What's the FINAL amount you pay? (Round to nearest cent)`,
+      getAnswer: (npc, price, tip, reason) => round(price + (price * tip / 100)).toFixed(2),
+      getValues: () => ({
+        npc: random.fromArray(npcs),
+        price: random.smallItem(),
+        tip: random.percent(15, 25),
+        reason: random.fromArray(tipReasons)
+      })
+    },
+    {
+      template: (item, price, markup, location) => `At ${location}, ${item} originally $${price}, marked up ${markup}%. What's the FINAL PRICE? (Round to nearest cent)`,
+      getAnswer: (item, price, markup, location) => round(price + (price * markup / 100)).toFixed(2),
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.mediumItem(),
+        markup: random.markup(),
+        location: random.fromArray(locations)
+      })
+    }
+  ];
+  
+  const problems = [];
+  for (let i = 0; i < 10; i++) {
+    const s = scenarios[i % scenarios.length];
+    const values = s.getValues();
+    const valuesArray = Object.values(values);
+    problems.push({
+      question: s.template(...valuesArray),
+      correctAnswer: s.getAnswer(...valuesArray),
+      answer: s.getAnswer(...valuesArray),
+      type: 'free-response'
+    });
+  }
+  return problems;
+};
+
+// LEVEL 5: Basic Two-Step
+export const generateLevel5Problem = (playerData) => {
+  const allItems = [...zombieItems.weapons, ...zombieItems.supplies, ...zombieItems.protection, ...zombieItems.medicine, ...zombieItems.tools];
+  
+  const scenarios = [
+    {
+      template: (item, price, discount, tax, reason) => `${item} costs $${price}, ${discount}% off, then ${tax}% ${reason} added. What's the FINAL TOTAL? (Round to nearest cent)`,
+      getAnswer: (item, price, discount, tax, reason) => {
         const afterDiscount = price - (price * discount / 100);
         const final = afterDiscount + (afterDiscount * tax / 100);
         return round(final).toFixed(2);
       },
-      getValue: () => ({ price: random.mediumItem(), discount: random.discount(), tax: random.tax() })
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.mediumItem(),
+        discount: random.discount(),
+        tax: random.tax(),
+        reason: random.fromArray(taxReasons)
+      })
     },
     {
-      template: (price, markup, discount) => `Supplies cost $${price}, marked up ${markup}%, then discounted ${discount}%. FINAL PRICE? (Round to nearest cent)`,
-      getAnswer: (price, markup, discount) => {
+      template: (item, price, markup, discount, location) => `At ${location}, ${item} marked up ${markup}% from $${price}, then ${discount}% clearance discount. FINAL PRICE? (Round to nearest cent)`,
+      getAnswer: (item, price, markup, discount, location) => {
         const afterMarkup = price + (price * markup / 100);
         const final = afterMarkup - (afterMarkup * discount / 100);
         return round(final).toFixed(2);
       },
-      getValue: () => ({ price: random.smallItem(), markup: random.markup(), discount: random.discount() })
+      getValues: () => ({
+        item: random.fromArray(allItems),
+        price: random.smallItem(),
+        markup: random.markup(),
+        discount: random.discount(),
+        location: random.fromArray(locations)
+      })
     },
     {
-      template: (salary, comm, sales) => `${playerData.friendName}'s salary is $${salary} + ${comm}% commission on $${sales}. TOTAL EARNED? (Round to nearest cent)`,
-      getAnswer: (salary, comm, sales) => {
-        const commAmount = sales * comm / 100;
-        const total = salary + commAmount;
-        return round(total).toFixed(2);
-      },
-      getValue: () => ({ salary: random.salary(), comm: random.commission(), sales: random.sales() })
-    },
-    {
-      template: (price, tax, tip) => `Meal costs $${price}. Tax is ${tax}%. You tip ${tip}% on the total. HOW MUCH TOTAL? (Round to nearest cent)`,
-      getAnswer: (price, tax, tip) => {
+      template: (npc, price, tax, tip, reason) => `${npc} ${reason}. Meal $${price}, ${tax}% tax, then you tip ${tip}% on the total. How much do you PAY? (Round to nearest cent)`,
+      getAnswer: (npc, price, tax, tip, reason) => {
         const afterTax = price + (price * tax / 100);
         const final = afterTax + (afterTax * tip / 100);
         return round(final).toFixed(2);
       },
-      getValue: () => ({ price: random.smallItem(), tax: random.tax(), tip: random.percent(15, 25) })
-    },
-    {
-      template: (principal, rate1, rate2, years) => `Borrowed $${principal}. First ${years} years at ${rate1}%, next ${years} years at ${rate2}%. TOTAL INTEREST? (Round to nearest cent)`,
-      getAnswer: (principal, rate1, rate2, years) => {
-        const interest1 = principal * rate1 / 100 * years;
-        const interest2 = principal * rate2 / 100 * years;
-        return round(interest1 + interest2).toFixed(2);
-      },
-      getValue: () => ({ principal: random.loan(), rate1: random.interest(), rate2: random.interest(), years: random.years() / 2 })
-    },
-    {
-      template: (price, discount, tax) => `Armor costs $${price}, ${discount}% off, plus ${tax}% tax on discounted price. FINAL? (Round to nearest cent)`,
-      getAnswer: (price, discount, tax) => {
-        const afterDiscount = price - (price * discount / 100);
-        const final = afterDiscount + (afterDiscount * tax / 100);
-        return round(final).toFixed(2);
-      },
-      getValue: () => ({ price: random.mediumItem(), discount: random.discount(), tax: random.tax() })
-    },
-    {
-      template: (price, markup, tax) => `Supplies marked up ${markup}% from $${price}, then ${tax}% tax added. FINAL PRICE? (Round to nearest cent)`,
-      getAnswer: (price, markup, tax) => {
-        const afterMarkup = price + (price * markup / 100);
-        const final = afterMarkup + (afterMarkup * tax / 100);
-        return round(final).toFixed(2);
-      },
-      getValue: () => ({ price: random.smallItem(), markup: random.markup(), tax: random.tax() })
-    },
-    {
-      template: (salary, comm, sales) => `Salary $${salary}, ${comm}% commission on $${sales}. TOTAL INCOME? (Round to nearest cent)`,
-      getAnswer: (salary, comm, sales) => {
-        const commAmount = sales * comm / 100;
-        return round(salary + commAmount).toFixed(2);
-      },
-      getValue: () => ({ salary: random.salary(), comm: random.commission(), sales: random.sales() })
-    },
-    {
-      template: (pop, dec1, dec2) => `${playerData.cityName} had ${pop} people. Lost ${dec1}% in wave 1, then ${dec2}% of survivors in wave 2. HOW MANY LEFT? (Round down)`,
-      getAnswer: (pop, dec1, dec2) => {
-        const afterWave1 = pop - (pop * dec1 / 100);
-        const afterWave2 = afterWave1 - (afterWave1 * dec2 / 100);
-        return Math.floor(afterWave2).toString();
-      },
-      getValue: () => ({ pop: random.finalPopulation(), dec1: random.percentChange(), dec2: random.percentChange() })
-    },
-    {
-      template: (price, discount, tax) => `Item $${price}, ${discount}% discount, ${tax}% tax on sale price. FINAL? (Round to nearest cent)`,
-      getAnswer: (price, discount, tax) => {
-        const afterDiscount = price - (price * discount / 100);
-        const final = afterDiscount + (afterDiscount * tax / 100);
-        return round(final).toFixed(2);
-      },
-      getValue: () => ({ price: random.mediumItem(), discount: random.discount(), tax: random.tax() })
+      getValues: () => ({
+        npc: random.fromArray(npcs),
+        price: random.smallItem(),
+        tax: random.tax(),
+        tip: random.percent(15, 20),
+        reason: random.fromArray(tipReasons)
+      })
     }
   ];
   
-  return scenarios.map(s => {
-    const values = s.getValue();
+  const problems = [];
+  for (let i = 0; i < 8; i++) {
+    const s = scenarios[i % scenarios.length];
+    const values = s.getValues();
     const valuesArray = Object.values(values);
-    return {
+    problems.push({
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
       type: 'free-response'
-    };
-  });
+    });
+  }
+  return problems;
 };
 
-// LEVEL 5: Multi-Step Problems (SIMPLIFIED - single unwinding step)
-export const generateLevel5Problem = (playerData) => {
-  const scenarios = [
-    {
-      template: (finalPrice, discount) => `Weapon costs $${finalPrice} AFTER ${discount}% discount. What was ORIGINAL price? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount) => {
-        const original = finalPrice / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
-        const discount = random.discount();
-        const finalPrice = round(original - (original * discount / 100));
-        return { finalPrice, discount };
-      }
-    },
-    {
-      template: (finalPrice, markup) => `Supplies cost $${finalPrice} AFTER ${markup}% markup. What was ORIGINAL price? (Round to nearest cent)`,
-      getAnswer: (finalPrice, markup) => {
-        const original = finalPrice / (1 + markup / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.smallItem();
-        const markup = random.markup();
-        const finalPrice = round(original + (original * markup / 100));
-        return { finalPrice, markup };
-      }
-    },
-    {
-      template: (finalPop, increase) => `${playerData.cityName} has ${finalPop} survivors AFTER ${increase}% increase. ORIGINAL population? (Round to nearest whole)`,
-      getAnswer: (finalPop, increase) => {
-        const original = finalPop / (1 + increase / 100);
-        return Math.round(original).toString();
-      },
-      getValue: () => {
-        const original = random.finalPopulation();
-        const increase = random.percentChange();
-        const finalPop = Math.round(original + (original * increase / 100));
-        return { finalPop, increase };
-      }
-    },
-    {
-      template: (total, salary, comm) => `You earned $${total} (salary $${salary} + ${comm}% commission). How much in SALES? (Round to nearest cent)`,
-      getAnswer: (total, salary, comm) => {
-        const commAmount = total - salary;
-        const sales = commAmount / (comm / 100);
-        return round(sales).toFixed(2);
-      },
-      getValue: () => {
-        const salary = random.salary();
-        const comm = random.commission();
-        const sales = random.sales();
-        const total = round(salary + (sales * comm / 100));
-        return { total, salary, comm };
-      }
-    },
-    {
-      template: (finalPrice, tax) => `Total is $${finalPrice} AFTER ${tax}% tax. Price BEFORE tax? (Round to nearest cent)`,
-      getAnswer: (finalPrice, tax) => {
-        const original = finalPrice / (1 + tax / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
-        const tax = random.tax();
-        const finalPrice = round(original + (original * tax / 100));
-        return { finalPrice, tax };
-      }
-    },
-    {
-      template: (finalPop, decrease) => `After outbreak, ${finalPop} survivors remain (${decrease}% decrease). ORIGINAL population? (Round to nearest whole)`,
-      getAnswer: (finalPop, decrease) => {
-        const original = finalPop / (1 - decrease / 100);
-        return Math.round(original).toString();
-      },
-      getValue: () => {
-        const original = random.finalPopulation();
-        const decrease = random.percentChange();
-        const finalPop = Math.round(original - (original * decrease / 100));
-        return { finalPop, decrease };
-      }
-    },
-    {
-      template: (finalPrice, discount) => `Antidote costs $${finalPrice} AFTER ${discount}% discount. ORIGINAL price? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount) => {
-        const original = finalPrice / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.smallItem();
-        const discount = random.discount();
-        const finalPrice = round(original - (original * discount / 100));
-        return { finalPrice, discount };
-      }
-    },
-    {
-      template: (total, salary, comm) => `${playerData.friendName} earned $${total} ($${salary} salary + ${comm}% commission). SALES amount? (Round to nearest cent)`,
-      getAnswer: (total, salary, comm) => {
-        const commAmount = total - salary;
-        const sales = commAmount / (comm / 100);
-        return round(sales).toFixed(2);
-      },
-      getValue: () => {
-        const salary = random.salary();
-        const comm = random.commission();
-        const sales = random.sales();
-        const total = round(salary + (sales * comm / 100));
-        return { total, salary, comm };
-      }
-    }
-  ];
-  
-  return scenarios.map(s => {
-    const values = s.getValue();
-    const valuesArray = Object.values(values);
-    return {
-      question: s.template(...valuesArray),
-      correctAnswer: s.getAnswer(...valuesArray),
-      answer: s.getAnswer(...valuesArray),
-      type: 'free-response'
-    };
-  });
-};
-
-// LEVEL 6: Working Backwards (12 scenarios) - IMPROVED WORDING
+// LEVEL 6: Single Unwinding
 export const generateLevel6Problem = (playerData) => {
+  const allItems = [...zombieItems.weapons, ...zombieItems.supplies, ...zombieItems.protection, ...zombieItems.medicine, ...zombieItems.tools];
+  
   const scenarios = [
     {
-      template: (finalPrice, discount) => `Shelter costs $${finalPrice} AFTER a ${discount}% discount was applied. What was the price BEFORE the discount? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount) => {
-        const original = finalPrice / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
+      template: (item, finalPrice, discount, reason) => `${item} costs $${finalPrice} AFTER a ${discount}% discount was applied (${reason}). What was the ORIGINAL price BEFORE the discount? (Round to nearest cent)`,
+      getAnswer: (item, finalPrice, discount, reason) => round(finalPrice / (1 - discount / 100)).toFixed(2),
+      getValues: () => {
+        const original = random.mediumItem();
+        const discount = random.discount();
+        const finalPrice = round(original - (original * discount / 100));
+        return {
+          item: random.fromArray(allItems),
+          finalPrice,
+          discount,
+          reason: random.fromArray(discountReasons)
+        };
+      }
+    },
+    {
+      template: (item, finalPrice, tax, location) => `You paid $${finalPrice} total for ${item} at ${location} AFTER ${tax}% tax was added. What was the price BEFORE tax? (Round to nearest cent)`,
+      getAnswer: (item, finalPrice, tax, location) => round(finalPrice / (1 + tax / 100)).toFixed(2),
+      getValues: () => {
         const original = random.largeItem();
-        const discount = random.discount();
-        const finalPrice = round(original - (original * discount / 100));
-        return { finalPrice, discount };
-      }
-    },
-    {
-      template: (finalPrice, tax) => `You paid $${finalPrice} AFTER ${tax}% sales tax was added. What was the price BEFORE tax? (Round to nearest cent)`,
-      getAnswer: (finalPrice, tax) => {
-        const original = finalPrice / (1 + tax / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
         const tax = random.tax();
         const finalPrice = round(original + (original * tax / 100));
-        return { finalPrice, tax };
+        return {
+          item: random.fromArray(allItems),
+          finalPrice,
+          tax,
+          location: random.fromArray(locations)
+        };
       }
     },
     {
-      template: (total, salary, comm) => `${playerData.friendName} earned $${total} TOTAL (this includes a base salary of $${salary} plus ${comm}% commission). How much were the SALES? (Round to nearest cent)`,
-      getAnswer: (total, salary, comm) => {
+      template: (npc, total, salary, comm) => `${npc} earned $${total} TOTAL (base pay $${salary} + ${comm}% commission on trades). How much in SALES? (Round to nearest cent)`,
+      getAnswer: (npc, total, salary, comm) => {
         const commAmount = total - salary;
-        const sales = commAmount / (comm / 100);
-        return round(sales).toFixed(2);
+        return round(commAmount / (comm / 100)).toFixed(2);
       },
-      getValue: () => {
+      getValues: () => {
         const salary = random.salary();
         const comm = random.commission();
         const sales = random.sales();
         const total = round(salary + (sales * comm / 100));
-        return { total, salary, comm };
+        return { npc: random.fromArray(npcs), total, salary, comm };
       }
     },
     {
-      template: (finalPrice, markup) => `Weapon costs $${finalPrice} AFTER a ${markup}% markup was added. What was the ORIGINAL COST before markup? (Round to nearest cent)`,
-      getAnswer: (finalPrice, markup) => {
-        const original = finalPrice / (1 + markup / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
+      template: (item, finalPrice, markup, npc) => `${npc} sells ${item} for $${finalPrice} AFTER marking it up ${markup}%. ORIGINAL cost BEFORE markup? (Round to nearest cent)`,
+      getAnswer: (item, finalPrice, markup, npc) => round(finalPrice / (1 + markup / 100)).toFixed(2),
+      getValues: () => {
         const original = random.mediumItem();
         const markup = random.markup();
         const finalPrice = round(original + (original * markup / 100));
-        return { finalPrice, markup };
-      }
-    },
-    {
-      template: (totalOwed, rate, years) => `You owe $${totalOwed} TOTAL after borrowing money at ${rate}% simple interest for ${years} years. How much did you BORROW originally? (Round to nearest cent)`,
-      getAnswer: (totalOwed, rate, years) => {
-        const principal = totalOwed / (1 + (rate / 100 * years));
-        return round(principal).toFixed(2);
-      },
-      getValue: () => {
-        const principal = random.loan();
-        const rate = random.interest();
-        const years = random.years();
-        const totalOwed = round(principal + (principal * rate / 100 * years));
-        return { totalOwed, rate, years };
-      }
-    },
-    {
-      template: (finalPrice, discount) => `Medicine costs $${finalPrice} AFTER ${discount}% discount. What was ORIGINAL PRICE before discount? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount) => {
-        const original = finalPrice / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.smallItem();
-        const discount = random.discount();
-        const finalPrice = round(original - (original * discount / 100));
-        return { finalPrice, discount };
-      }
-    },
-    {
-      template: (finalPop, increase) => `${playerData.cityName} population is ${finalPop} AFTER a ${increase}% increase. What was ORIGINAL population? (Round to nearest whole number)`,
-      getAnswer: (finalPop, increase) => {
-        const original = finalPop / (1 + increase / 100);
-        return Math.round(original).toString();
-      },
-      getValue: () => {
-        const original = random.finalPopulation();
-        const increase = random.percentChange();
-        const finalPop = Math.round(original + (original * increase / 100));
-        return { finalPop, increase };
-      }
-    },
-    {
-      template: (finalPrice, markup) => `Supplies cost $${finalPrice} AFTER ${markup}% markup. What was ORIGINAL price before markup? (Round to nearest cent)`,
-      getAnswer: (finalPrice, markup) => {
-        const original = finalPrice / (1 + markup / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
-        const markup = random.markup();
-        const finalPrice = round(original + (original * markup / 100));
-        return { finalPrice, markup };
-      }
-    },
-    {
-      template: (total, salary, comm) => `You earned $${total} TOTAL (base salary $${salary} + ${comm}% commission). How much in SALES? (Round to nearest cent)`,
-      getAnswer: (total, salary, comm) => {
-        const commAmount = total - salary;
-        const sales = commAmount / (comm / 100);
-        return round(sales).toFixed(2);
-      },
-      getValue: () => {
-        const salary = random.salary();
-        const comm = random.commission();
-        const sales = random.sales();
-        const total = round(salary + (sales * comm / 100));
-        return { total, salary, comm };
-      }
-    },
-    {
-      template: (finalPrice, discount) => `Antidote costs $${finalPrice} AFTER ${discount}% off. What was ORIGINAL price? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount) => {
-        const original = finalPrice / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.smallItem();
-        const discount = random.discount();
-        const finalPrice = round(original - (original * discount / 100));
-        return { finalPrice, discount };
-      }
-    },
-    {
-      template: (finalPrice, tax) => `AFTER ${tax}% tax added, total is $${finalPrice}. What was price BEFORE tax? (Round to nearest cent)`,
-      getAnswer: (finalPrice, tax) => {
-        const original = finalPrice / (1 + tax / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
-        const tax = random.tax();
-        const finalPrice = round(original + (original * tax / 100));
-        return { finalPrice, tax };
-      }
-    },
-    {
-      template: (finalPop, decrease) => `After outbreak, ${finalPop} survivors remain (this is AFTER a ${decrease}% decrease). What was ORIGINAL population? (Round to nearest whole number)`,
-      getAnswer: (finalPop, decrease) => {
-        const original = finalPop / (1 - decrease / 100);
-        return Math.round(original).toString();
-      },
-      getValue: () => {
-        const original = random.finalPopulation();
-        const decrease = random.percentChange();
-        const finalPop = Math.round(original - (original * decrease / 100));
-        return { finalPop, decrease };
+        return {
+          item: random.fromArray(allItems),
+          finalPrice,
+          markup,
+          npc: random.fromArray(npcs)
+        };
       }
     }
   ];
   
-  return scenarios.map(s => {
-    const values = s.getValue();
+  const problems = [];
+  for (let i = 0; i < 12; i++) {
+    const s = scenarios[i % scenarios.length];
+    const values = s.getValues();
     const valuesArray = Object.values(values);
-    return {
+    problems.push({
       question: s.template(...valuesArray),
       correctAnswer: s.getAnswer(...valuesArray),
       answer: s.getAnswer(...valuesArray),
       type: 'free-response'
     };
-  });
+  }
+  return problems;
 };
 
-// LEVEL 7: The Final Calculation - CRITICAL FIX: Round DOWN people!
+// LEVEL 7: Finale
 export const generateLevel7Problem = (playerData) => {
   const initialPop = random.finalPopulation();
   const decrease = random.percentChange();
@@ -627,7 +536,6 @@ export const generateLevel7Problem = (playerData) => {
   const interestRate = random.interest();
   const years = random.years();
   
-  // Calculate step by step - ROUND DOWN for people (can't have partial people!)
   const afterDecrease = Math.floor(initialPop * (1 - decrease / 100));
   const finalPopulation = Math.floor(afterDecrease * (1 + increase / 100));
   const interest = moneyPool * (interestRate / 100) * years;
@@ -660,10 +568,11 @@ How much will EACH PERSON receive? (Round to the nearest cent)`;
       moneyPool,
       interestRate,
       years,
+      interest: round(interest).toFixed(2),
       totalMoney: round(totalMoney).toFixed(2),
       perPerson: round(perPerson).toFixed(2)
     },
-    requiresWholeNumber: true, // Flag for validation
-    populationWarning: "Remember: You can't have a partial person! If calculations result in decimals, round DOWN. A partial person means the zombies got them!"
+    requiresWholeNumber: true,
+    populationWarning: "Remember: You can't have a partial person! If there's only part of someone left, the zombies got them and they're turning. You CAN'T count them as a survivor! Always round DOWN when calculating people."
   };
 };
