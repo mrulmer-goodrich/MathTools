@@ -1,4 +1,4 @@
-//Update 2.3
+//Update 3.0
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -97,6 +97,32 @@ const ZombieApocalypse = () => {
     setGamePhase('playing');
     setGameStartTime(Date.now());
     setLevelStartTime(Date.now());
+  };
+
+  // DEV SHORTCUT: Jump to specific level (Ctrl+Shift+7)
+  const handleDevJumpToLevel = (level) => {
+    console.log(`🎮 DEV: Jumping to Level ${level}`);
+    setCurrentLevel(level);
+    setHearts(2);
+    setLevelStartTime(Date.now());
+    setGamePhase('playing');
+    
+    // Set fake player data if not set
+    if (!playerData.playerName) {
+      setPlayerData({
+        playerName: 'Test Player',
+        friendName: 'Test Friend',
+        cityName: 'Charlotte, NC',
+        favoriteColor: 'Blue',
+        favoriteSubject: 'Math',
+        dreamJob: 'Developer',
+        biggestFear: 'Bugs'
+      });
+    }
+    
+    if (!gameStartTime) {
+      setGameStartTime(Date.now());
+    }
   };
 
   // Handle correct answer
@@ -198,6 +224,7 @@ const ZombieApocalypse = () => {
                 onCorrectAnswer={handleCorrectAnswer}
                 onWrongAnswer={handleWrongAnswer}
                 onLevelComplete={handleLevelComplete}
+                onDevJumpToLevel={handleDevJumpToLevel}
                 levelStartTime={levelStartTime}
                 formatTime={formatTime}
               />
