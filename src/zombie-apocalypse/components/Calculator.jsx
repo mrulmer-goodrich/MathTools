@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 const Calculator = () => {
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
-  const [position, setPosition] = useState({ x: window.innerWidth - 250, y: 100 });
+  const [position, setPosition] = useState({ x: 50, y: 120 }); // LEFT SIDE, below top bar
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const calcRef = useRef(null);
