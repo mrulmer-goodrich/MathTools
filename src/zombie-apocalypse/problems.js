@@ -315,91 +315,50 @@ export const generateLevel4Problem = (playerData) => {
   });
 };
 
-// LEVEL 5: Multi-Step Problems (8 scenarios)
+// LEVEL 5: Multi-Step Problems (SIMPLIFIED - single unwinding step)
 export const generateLevel5Problem = (playerData) => {
   const scenarios = [
     {
-      template: (finalPrice, discount, tax) => `After ${discount}% off AND ${tax}% tax, you paid $${finalPrice}. What was ORIGINAL price before discount? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount, tax) => {
-        const beforeTax = finalPrice / (1 + tax / 100);
-        const original = beforeTax / (1 - discount / 100);
+      template: (finalPrice, discount) => `Weapon costs $${finalPrice} AFTER ${discount}% discount. What was ORIGINAL price? (Round to nearest cent)`,
+      getAnswer: (finalPrice, discount) => {
+        const original = finalPrice / (1 - discount / 100);
         return round(original).toFixed(2);
       },
       getValue: () => {
         const original = random.mediumItem();
         const discount = random.discount();
-        const tax = random.tax();
-        const afterDiscount = original - (original * discount / 100);
-        const finalPrice = round(afterDiscount + (afterDiscount * tax / 100));
-        return { finalPrice, discount, tax };
+        const finalPrice = round(original - (original * discount / 100));
+        return { finalPrice, discount };
       }
     },
     {
-      template: (totalEarned, salary, comm) => `You earned $${totalEarned} total (salary $${salary} + ${comm}% commission). How much SALES did you make? (Round to nearest cent)`,
-      getAnswer: (totalEarned, salary, comm) => {
-        const commAmount = totalEarned - salary;
-        const sales = commAmount / (comm / 100);
-        return round(sales).toFixed(2);
-      },
-      getValue: () => {
-        const salary = random.salary();
-        const comm = random.commission();
-        const sales = random.sales();
-        const totalEarned = round(salary + (sales * comm / 100));
-        return { totalEarned, salary, comm };
-      }
-    },
-    {
-      template: (finalPrice, markup, discount) => `After ${markup}% markup and ${discount}% discount, item costs $${finalPrice}. ORIGINAL? (Round to nearest cent)`,
-      getAnswer: (finalPrice, markup, discount) => {
-        const beforeDiscount = finalPrice / (1 - discount / 100);
-        const original = beforeDiscount / (1 + markup / 100);
+      template: (finalPrice, markup) => `Supplies cost $${finalPrice} AFTER ${markup}% markup. What was ORIGINAL price? (Round to nearest cent)`,
+      getAnswer: (finalPrice, markup) => {
+        const original = finalPrice / (1 + markup / 100);
         return round(original).toFixed(2);
       },
       getValue: () => {
         const original = random.smallItem();
         const markup = random.markup();
-        const discount = random.discount();
-        const afterMarkup = original + (original * markup / 100);
-        const finalPrice = round(afterMarkup - (afterMarkup * discount / 100));
-        return { finalPrice, markup, discount };
+        const finalPrice = round(original + (original * markup / 100));
+        return { finalPrice, markup };
       }
     },
     {
-      template: (finalPop, dec, inc) => `${playerData.cityName} lost ${dec}% in outbreak, then grew ${inc}%. Final pop: ${finalPop}. ORIGINAL? (Round to nearest whole)`,
-      getAnswer: (finalPop, dec, inc) => {
-        const afterIncrease = finalPop;
-        const afterDecrease = afterIncrease / (1 + inc / 100);
-        const original = afterDecrease / (1 - dec / 100);
+      template: (finalPop, increase) => `${playerData.cityName} has ${finalPop} survivors AFTER ${increase}% increase. ORIGINAL population? (Round to nearest whole)`,
+      getAnswer: (finalPop, increase) => {
+        const original = finalPop / (1 + increase / 100);
         return Math.round(original).toString();
       },
       getValue: () => {
         const original = random.finalPopulation();
-        const dec = random.percentChange();
-        const inc = random.percentChange();
-        const afterDec = original - (original * dec / 100);
-        const finalPop = Math.round(afterDec + (afterDec * inc / 100));
-        return { finalPop, dec, inc };
+        const increase = random.percentChange();
+        const finalPop = Math.round(original + (original * increase / 100));
+        return { finalPop, increase };
       }
     },
     {
-      template: (finalPrice, discount, tax) => `Final price $${finalPrice} after ${discount}% off and ${tax}% tax. ORIGINAL BEFORE discount? (Round to nearest cent)`,
-      getAnswer: (finalPrice, discount, tax) => {
-        const beforeTax = finalPrice / (1 + tax / 100);
-        const original = beforeTax / (1 - discount / 100);
-        return round(original).toFixed(2);
-      },
-      getValue: () => {
-        const original = random.mediumItem();
-        const discount = random.discount();
-        const tax = random.tax();
-        const afterDiscount = original - (original * discount / 100);
-        const finalPrice = round(afterDiscount + (afterDiscount * tax / 100));
-        return { finalPrice, discount, tax };
-      }
-    },
-    {
-      template: (total, salary, comm) => `Total income $${total} = $${salary} salary + ${comm}% commission. SALES AMOUNT? (Round to nearest cent)`,
+      template: (total, salary, comm) => `You earned $${total} (salary $${salary} + ${comm}% commission). How much in SALES? (Round to nearest cent)`,
       getAnswer: (total, salary, comm) => {
         const commAmount = total - salary;
         const sales = commAmount / (comm / 100);
@@ -414,36 +373,57 @@ export const generateLevel5Problem = (playerData) => {
       }
     },
     {
-      template: (finalPrice, markup, tax) => `After ${markup}% markup and ${tax}% tax, cost is $${finalPrice}. ORIGINAL before markup? (Round to nearest cent)`,
-      getAnswer: (finalPrice, markup, tax) => {
-        const beforeTax = finalPrice / (1 + tax / 100);
-        const original = beforeTax / (1 + markup / 100);
+      template: (finalPrice, tax) => `Total is $${finalPrice} AFTER ${tax}% tax. Price BEFORE tax? (Round to nearest cent)`,
+      getAnswer: (finalPrice, tax) => {
+        const original = finalPrice / (1 + tax / 100);
         return round(original).toFixed(2);
       },
       getValue: () => {
-        const original = random.smallItem();
-        const markup = random.markup();
+        const original = random.mediumItem();
         const tax = random.tax();
-        const afterMarkup = original + (original * markup / 100);
-        const finalPrice = round(afterMarkup + (afterMarkup * tax / 100));
-        return { finalPrice, markup, tax };
+        const finalPrice = round(original + (original * tax / 100));
+        return { finalPrice, tax };
       }
     },
     {
-      template: (finalPop, dec1, dec2) => `After ${dec1}% loss then ${dec2}% loss, ${finalPop} remain. ORIGINAL? (Round to nearest whole)`,
-      getAnswer: (finalPop, dec1, dec2) => {
-        const afterDec2 = finalPop;
-        const afterDec1 = afterDec2 / (1 - dec2 / 100);
-        const original = afterDec1 / (1 - dec1 / 100);
+      template: (finalPop, decrease) => `After outbreak, ${finalPop} survivors remain (${decrease}% decrease). ORIGINAL population? (Round to nearest whole)`,
+      getAnswer: (finalPop, decrease) => {
+        const original = finalPop / (1 - decrease / 100);
         return Math.round(original).toString();
       },
       getValue: () => {
         const original = random.finalPopulation();
-        const dec1 = random.percentChange();
-        const dec2 = random.percentChange();
-        const afterDec1 = original - (original * dec1 / 100);
-        const finalPop = Math.round(afterDec1 - (afterDec1 * dec2 / 100));
-        return { finalPop, dec1, dec2 };
+        const decrease = random.percentChange();
+        const finalPop = Math.round(original - (original * decrease / 100));
+        return { finalPop, decrease };
+      }
+    },
+    {
+      template: (finalPrice, discount) => `Antidote costs $${finalPrice} AFTER ${discount}% discount. ORIGINAL price? (Round to nearest cent)`,
+      getAnswer: (finalPrice, discount) => {
+        const original = finalPrice / (1 - discount / 100);
+        return round(original).toFixed(2);
+      },
+      getValue: () => {
+        const original = random.smallItem();
+        const discount = random.discount();
+        const finalPrice = round(original - (original * discount / 100));
+        return { finalPrice, discount };
+      }
+    },
+    {
+      template: (total, salary, comm) => `${playerData.friendName} earned $${total} ($${salary} salary + ${comm}% commission). SALES amount? (Round to nearest cent)`,
+      getAnswer: (total, salary, comm) => {
+        const commAmount = total - salary;
+        const sales = commAmount / (comm / 100);
+        return round(sales).toFixed(2);
+      },
+      getValue: () => {
+        const salary = random.salary();
+        const comm = random.commission();
+        const sales = random.sales();
+        const total = round(salary + (sales * comm / 100));
+        return { total, salary, comm };
       }
     }
   ];

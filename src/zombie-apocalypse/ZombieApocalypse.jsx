@@ -1,4 +1,6 @@
-//Update 3.0
+//Version 3.3.0
+//Last Updated: November 30, 2024 - 11:45 PM
+//Changes: Removed version checker, improved dev shortcuts, updated story cohesion
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -7,7 +9,6 @@ import GameScreen from './components/GameScreen';
 import VictoryScreen from './components/VictoryScreen';
 import DeathScreen from './components/DeathScreen';
 import LevelComplete from './components/LevelComplete';
-import VersionChecker from './components/VersionChecker';
 import './styles/zombie.css';
 
 const ZombieApocalypse = () => {
@@ -258,7 +259,6 @@ const ZombieApocalypse = () => {
   // Render based on game phase
   return (
     <>
-      <VersionChecker />
       {(() => {
         switch(gamePhase) {
           case 'personalization':
