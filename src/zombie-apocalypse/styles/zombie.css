@@ -1419,3 +1419,302 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
 }
+
+/* ============================================
+   ZOMBIE APOCALYPSE VERSION 3.0 - CSS ADDITIONS
+   Add these styles to your zombie.css file
+   ============================================ */
+
+/* EPIC VICTORY SCREEN STYLES */
+.za-victory-icon-massive {
+  font-size: 120px;
+  margin-bottom: 20px;
+  animation: za-massive-pulse 2s ease-in-out infinite;
+}
+
+@keyframes za-massive-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.za-victory-title-massive {
+  font-size: 96px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 40px rgba(255, 215, 0, 0.6),
+    0 0 60px rgba(255, 215, 0, 0.4),
+    3px 3px 6px rgba(0, 0, 0, 0.8);
+  margin: 20px 0;
+  letter-spacing: 8px;
+  animation: za-glow-pulse 2s ease-in-out infinite;
+}
+
+.za-victory-subtitle-big {
+  font-size: 36px;
+  color: #FF4444;
+  text-shadow: 0 0 15px rgba(255, 68, 68, 0.8);
+  margin: 20px 0;
+  letter-spacing: 4px;
+}
+
+.za-victory-tagline {
+  font-size: 24px;
+  color: #FFF;
+  margin-top: 20px;
+  opacity: 0.9;
+}
+
+.za-victory-title-epic {
+  font-size: 48px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.8),
+    3px 3px 6px rgba(0, 0, 0, 0.8);
+  margin: 40px 0 60px 0;
+  text-align: center;
+  letter-spacing: 3px;
+}
+
+.za-victory-stats-epic {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.za-stat-epic {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 3px solid #FFD700;
+  border-radius: 15px;
+  padding: 25px;
+  transition: all 0.3s ease;
+}
+
+.za-stat-epic:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.za-stat-icon {
+  font-size: 48px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.za-stat-content {
+  flex: 1;
+}
+
+.za-stat-label {
+  font-size: 16px;
+  color: #AAA;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+
+.za-stat-value-big {
+  font-size: 32px;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.za-victory-final-message-epic {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 40px;
+}
+
+.za-victory-banner {
+  font-size: 42px;
+  font-weight: 900;
+  color: #FF4444;
+  text-align: center;
+  margin-bottom: 50px;
+  letter-spacing: 6px;
+  text-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.8),
+    3px 3px 6px rgba(0, 0, 0, 0.8);
+}
+
+.za-banner-icon {
+  margin: 0 20px;
+  animation: za-rotate-weapon 3s linear infinite;
+}
+
+@keyframes za-rotate-weapon {
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+}
+
+.za-victory-text-epic {
+  font-size: 24px;
+  color: #FFF;
+  text-align: center;
+  margin: 30px 0;
+  line-height: 1.6;
+}
+
+.za-highlight-massive {
+  font-size: 32px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+}
+
+.za-highlight-gold {
+  color: #FFD700;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.za-final-line {
+  font-size: 28px;
+  margin-top: 50px;
+  padding: 30px;
+  background: rgba(139, 0, 0, 0.3);
+  border: 3px solid #8B0000;
+  border-radius: 10px;
+}
+
+.za-survivors-count {
+  font-size: 28px;
+  color: #FFF;
+  text-align: center;
+  margin: 50px 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+}
+
+.za-count-big {
+  font-size: 64px;
+  font-weight: 900;
+  color: #4CAF50;
+  display: block;
+  margin-top: 10px;
+  text-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+}
+
+.za-victory-achievement {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 100%);
+  border: 4px solid #FFD700;
+  border-radius: 20px;
+  padding: 40px;
+  margin: 60px 0 40px 0;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+}
+
+.za-achievement-title {
+  font-size: 36px;
+  font-weight: 900;
+  color: #FFD700;
+  margin: 20px 0 10px 0;
+  letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+.za-achievement-subtitle {
+  font-size: 20px;
+  color: #CCC;
+  font-style: italic;
+}
+
+.za-victory-btn-epic {
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+  color: white;
+  border: 3px solid #FFD700;
+  padding: 20px 50px;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+  letter-spacing: 2px;
+}
+
+.za-victory-btn-epic:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #DC143C 0%, #FF4444 100%);
+}
+
+.za-zombie-defeat {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.za-zombie-icon {
+  position: absolute;
+  opacity: 0.4;
+  animation: za-zombie-fall 4s ease-in infinite;
+}
+
+@keyframes za-zombie-fall {
+  0% {
+    opacity: 0.6;
+    transform: translateY(-100px) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(360deg);
+  }
+}
+
+/* LEVEL 7 POPULATION WARNING STYLES */
+.za-wrong-special {
+  background: rgba(139, 0, 0, 0.3);
+  border: 3px solid #FF4444;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  font-size: 18px;
+  color: #FFD700;
+  line-height: 1.6;
+  font-weight: bold;
+}
+
+.za-level7-warning {
+  font-size: 32px;
+  color: #FF4444;
+  text-shadow: 0 0 15px rgba(255, 68, 68, 0.8);
+  animation: za-warning-pulse 1s ease-in-out infinite;
+}
+
+@keyframes za-warning-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Enhanced glow animation for massive elements */
+@keyframes za-glow-pulse {
+  0%, 100% { 
+    text-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 40px rgba(255, 215, 0, 0.6),
+      0 0 60px rgba(255, 215, 0, 0.4),
+      3px 3px 6px rgba(0, 0, 0, 0.8);
+  }
+  50% { 
+    text-shadow: 
+      0 0 30px rgba(255, 215, 0, 1),
+      0 0 60px rgba(255, 215, 0, 0.8),
+      0 0 90px rgba(255, 215, 0, 0.6),
+      3px 3px 6px rgba(0, 0, 0, 0.8);
+  }
+}
+
