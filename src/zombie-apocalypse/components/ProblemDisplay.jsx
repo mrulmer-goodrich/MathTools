@@ -31,9 +31,7 @@ const ProblemDisplay = ({
               type="button"
               className={`za-choice-btn ${userAnswer === choice ? 'selected' : ''}`}
               onClick={() => {
-                // Update state for visual selection
                 onAnswerChange(choice);
-                // Pass the choice directly into the submit handler (avoids stale state issues)
                 onSubmit(choice);
               }}
             >
@@ -44,18 +42,18 @@ const ProblemDisplay = ({
       ) : (
         <div className="za-answer-section">
           <input
+            key={problemNumber}
             className="za-answer-input"
             type="text"
             value={userAnswer}
             onChange={(e) => onAnswerChange(e.target.value)}
             onKeyPress={onKeyPress}
             placeholder="Enter your answer..."
-            autoFocus
           />
           <button 
             className="za-submit-btn"
             type="button"
-            onClick={onSubmit}
+            onClick={() => onSubmit()}
             disabled={!userAnswer.trim()}
           >
             Submit Answer
