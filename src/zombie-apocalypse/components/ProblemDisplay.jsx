@@ -16,35 +16,20 @@ const ProblemDisplay = ({
   return (
     <div className="za-problem-container">
       <div className="za-problem-header">
-        <span className="za-problem-number">
-          Problem {problemNumber} of {totalProblems}
-        </span>
-        {problem.subtitle && (
-          <span className="za-problem-subtitle">
-            {problem.subtitle}
-          </span>
-        )}
+        Problem {problemNumber} of {totalProblems}
       </div>
 
-      <div className="za-question-text">
+      <div className="za-problem-text">
         {problem.question}
       </div>
 
-      {problem.context && (
-        <div className="za-problem-context">
-          {problem.context}
-        </div>
-      )}
-
       {isMultipleChoice ? (
-        <div className="za-choices-grid">
+        <div className="za-choice-buttons">
           {Array.isArray(problem.choices) && problem.choices.map((choice, index) => (
             <button
               key={index}
-              className={
-                'za-choice-btn' + (userAnswer === choice ? ' za-choice-btn--selected' : '')
-              }
               type="button"
+              className={\`za-choice-btn \${userAnswer === choice ? 'selected' : ''}\`}
               onClick={() => {
                 // For multiple-choice, set the answer to the literal choice string,
                 // then immediately submit using the shared onSubmit handler.
@@ -62,8 +47,8 @@ const ProblemDisplay = ({
       ) : (
         <div className="za-answer-section">
           <input
-            type="text"
             className="za-answer-input"
+            type="text"
             value={userAnswer}
             onChange={(e) => onAnswerChange(e.target.value)}
             onKeyPress={onKeyPress}
