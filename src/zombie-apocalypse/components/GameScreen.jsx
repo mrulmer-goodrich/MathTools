@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 1.2.0
-// Last Updated: November 29, 2024 10:38pm
-// Changes: Countdown timer, tick sound, wrong answer visual feedback, Level 2 bug investigation
+// VERSION: 2.0.0
+// Last Updated: November 29, 2024 11:30pm
+// Changes: Fixed input freeze bug, timer stops after Level 1, "I get it now!" button, overall time tracking
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -93,6 +93,11 @@ const GameScreen = ({
     setShowNotepad(currentLevel >= 4);
     setWrongAnswerFeedback(null);
   }, [currentLevel]);
+
+  // Clear input when problem index changes - FIXES INPUT FREEZE BUG
+  useEffect(() => {
+    setUserAnswer('');
+  }, [currentProblemIndex]);
 
   // Level 1 time limit check - COUNTDOWN MODE
   useEffect(() => {
@@ -208,9 +213,7 @@ const GameScreen = ({
           correctAnswer: currentProblem.correctAnswer,
           question: currentProblem.question
         });
-        
-        // Clear feedback after 4 seconds
-        setTimeout(() => setWrongAnswerFeedback(null), 4000);
+        // No auto-dismiss - user must click "I get it now!" button
       }
       
       onWrongAnswer();
@@ -350,6 +353,13 @@ const GameScreen = ({
               Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
             </div>
           </div>
+          
+          <button 
+            className="za-btn-primary za-got-it-btn"
+            onClick={() => setWrongAnswerFeedback(null)}
+          >
+            I get it now!
+          </button>
         </div>
       )}
 
