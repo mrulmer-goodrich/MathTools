@@ -1,18 +1,24 @@
 // IntroSequence.jsx
-// VERSION: 1.2.1
-// Last Updated: November 29, 2024 (by Lumi)
-// Changes: Added Principal Garvin story, embellished narrative, click-to-advance
+// VERSION: 2.0.0
+// Last Updated: November 29, 2024 11:15pm
+// Changes: Screen transitions, Garvin quote updated, Charlotte (no NC), visual feedback
 
 import React, { useState } from 'react';
 
 const IntroSequence = ({ playerData, onComplete, onSkip }) => {
   const [currentScreen, setCurrentScreen] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleNext = () => {
     if (currentScreen === 3) {
       onComplete();
     } else {
-      setCurrentScreen(currentScreen + 1);
+      // Add transition effect
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentScreen(currentScreen + 1);
+        setIsTransitioning(false);
+      }, 400);
     }
   };
 
@@ -22,6 +28,9 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
 
   // Check if user selected Math (for Mr. UG reference)
   const isMathStudent = playerData.favoriteSubject === 'Math';
+  
+  // Get city name (remove ", NC" if present)
+  const cityName = (playerData.cityName || 'Charlotte').replace(', NC', '').replace(',NC', '');
 
   const screens = [
     {
@@ -35,7 +44,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             {playerData.playerName}, you were in {isMathStudent ? "Mr. UG's" : "your"} {playerData.favoriteSubject || 'class'} when the alarms began. Through the windows, you saw Principal Garvin running across the courtyard, zombies shambling behind her. She didn't make it.
           </p>
           <p className="za-intro-text">
-            The infection spread like wildfire through {playerData.cityName}. Whatever caused it—a virus, a chemical spill, something worse—didn't matter anymore. Within the first hour, 80% of the city had turned. The screams... you'll never forget the screams.
+            The infection spread like wildfire through {cityName}. Whatever caused it—a virus, a chemical spill, something worse—didn't matter anymore. Within the first hour, 80% of the city had turned. The screams... you'll never forget the screams.
           </p>
           <p className="za-intro-text">
             You grabbed {playerData.friendName}, smashed through the back door of Eastway Middle, and ran for your lives. Behind you, the place where you once felt safe became a nightmare. You never looked back.
@@ -48,7 +57,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       content: (
         <>
           <p className="za-intro-text">
-            In the chaos of the first week, survivors clustered together. Seven distinct factions emerged, each with their own strategy for survival. You and {playerData.friendName} joined the Eastway Jaguars—former students and teachers who refused to give up on what Principal Garvin taught: "Jaguars are strong, smart, and stick together."
+            In the chaos of the first week, survivors clustered together. Seven distinct factions emerged, each with their own strategy for survival. You and {playerData.friendName} joined the Eastway Jaguars—former students and teachers who refused to give up on what Principal Garvin taught: "To empower everyone to be better than they were the day before."
           </p>
           <div className="za-faction-list">
             <div className="za-faction za-faction-player">
@@ -74,7 +83,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             </div>
           </div>
           <p className="za-intro-text za-intro-emphasis">
-            Resources are scarce. Territory is everything. Only ONE faction will control the future of {playerData.cityName}. For Principal Garvin. For Eastway. It has to be you.
+            Resources are scarce. Territory is everything. Only ONE faction will control the future of {cityName}. For Principal Garvin. For Eastway. It has to be you.
           </p>
         </>
       )
@@ -109,7 +118,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
       </button>
 
       <div className="za-intro-container">
-        <div className="za-intro-screen">
+        <div className={`za-intro-screen ${isTransitioning ? 'za-transitioning' : ''}`} key={currentScreen}>
           <h1 className="za-intro-title">{currentScreenData.title}</h1>
           <div className="za-intro-content">
             {currentScreenData.content}
@@ -118,6 +127,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
           <button 
             className="za-btn-primary za-intro-continue"
             onClick={handleNext}
+            disabled={isTransitioning}
           >
             {currentScreen === 3 ? "I'M READY TO SURVIVE" : 'Continue →'}
           </button>
@@ -137,4 +147,3 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
 };
 
 export default IntroSequence;
-
