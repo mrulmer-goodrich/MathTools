@@ -104,10 +104,10 @@ const VictoryScreen = ({
                 </div>
                 
                 <div className="za-stat-epic">
-                  <span className="za-stat-icon">🎨</span>
+                  <span className="za-stat-icon">🏆</span>
                   <div className="za-stat-content">
                     <div className="za-stat-label">Squad</div>
-                    <div className="za-stat-value-big">The {playerData.favoriteColor || 'Champion'} Team</div>
+                    <div className="za-stat-value-big">Eastway Jaguars</div>
                   </div>
                 </div>
                 
