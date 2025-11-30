@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 const Notepad = () => {
   const [content, setContent] = useState('');
-  const [position, setPosition] = useState({ x: window.innerWidth - 500, y: 300 });
+  const [position, setPosition] = useState({ x: 50, y: 470 }); // Aligned under calculator
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const notepadRef = useRef(null);
