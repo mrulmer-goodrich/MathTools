@@ -1,7 +1,7 @@
 // GameScreen.jsx
-// VERSION: 3.1.0
-// Last Updated: November 30, 2024
-// Changes: Story subtitles, better sound effects, guided notes for all levels
+// Version: 3.3.0
+// Last Updated: November 30, 2024 - 11:45 PM
+// Changes: Story subtitles, better sounds, guided notes, movable faction tracker
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -217,20 +217,29 @@ const GameScreen = ({
         // Extract percent from question
         const percentMatch = problem.question.match(/Convert (\d+\.?\d*)%/);
         const percent = percentMatch ? percentMatch[1] : '25';
+        const decimalAnswer = (parseFloat(percent) / 100).toString();
+        
+        // Add decimal point to percent if not present
+        const percentWithDecimal = percent.includes('.') ? percent : `${percent}.`;
+        
         return {
           title: "💡 Converting Percents to Decimals:",
           visual: (
             <>
-              <span className="za-percent-num">{percent}%</span>
-              <span className="za-arrow">→</span>
-              <span className="za-decimal-movement">
-                <span className="za-move-left">0.</span>
-                <span className="za-moved">{percent.replace('.', '')}</span>
-              </span>
+              <div className="za-decimal-conversion">
+                <span className="za-percent-visual">{percentWithDecimal}%</span>
+                <span className="za-arrow-visual">→</span>
+                <span className="za-arrow-visual">→</span>
+                <span className="za-decimal-result">
+                  <span className="za-decimal-leading">0</span>
+                  <span className="za-decimal-point-blink">.</span>
+                  <span className="za-decimal-digits">{decimalAnswer.replace('0.', '')}</span>
+                </span>
+              </div>
             </>
           ),
-          note: "Move the decimal point 2 places to the LEFT",
-          examples: "8% = 0.08  |  50% = 0.50  |  125% = 1.25"
+          note: "Move the decimal point 2 places to the LEFT (shown by arrows)",
+          examples: "Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25"
         };
 
       case 2:

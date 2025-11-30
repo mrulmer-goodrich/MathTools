@@ -1,7 +1,7 @@
 // Calculator.jsx
-// VERSION: 3.1.0
-// Last Updated: November 30, 2024
-// Changes: Keyboard support, fixed height, multi-chain calculations
+// Version: 3.3.0
+// Last Updated: November 30, 2024 - 11:45 PM
+// Changes: Keyboard support, fixed height, no interference with notepad
 
 import React, { useState, useRef, useEffect } from 'react';
 

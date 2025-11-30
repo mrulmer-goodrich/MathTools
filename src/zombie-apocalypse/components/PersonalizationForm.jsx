@@ -1,7 +1,7 @@
 // PersonalizationForm.jsx
-// VERSION: 3.1.0
-// Last Updated: November 30, 2024
-// Changes: REMOVED biggestFear field (not used in game)
+// Version: 3.3.0
+// Last Updated: November 30, 2024 - 11:45 PM
+// Changes: Removed favoriteColor, changed cityName default to Charlotte
 
 import React, { useState } from 'react';
 

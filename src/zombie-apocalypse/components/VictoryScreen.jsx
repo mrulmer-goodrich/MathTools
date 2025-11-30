@@ -3,6 +3,11 @@
 // Last Updated: November 30, 2024
 // Changes: EPIC FINALE - Ride or Die theme, bigger graphics, removed Mr. UG/fear references, fixed "Eastway Jaguars"
 
+// VictoryScreen.jsx
+// Version: 3.3.0
+// Last Updated: November 30, 2024 - 11:45 PM
+// Changes: Updated story - YOU saved friend, avengement for Principal Garvin
+
 import React, { useState, useEffect } from 'react';
 
 const VictoryScreen = ({ 
@@ -144,38 +149,39 @@ const VictoryScreen = ({
             <div className="za-victory-final-message-epic">
               <div className="za-victory-banner">
                 <span className="za-banner-icon">⚔️</span>
-                RIDE OR DIE
+                VICTORY
                 <span className="za-banner-icon">⚔️</span>
               </div>
               
               <p className="za-victory-text-epic">
-                <span className="za-highlight-massive">{playerData.playerName}</span>, you and <span className="za-highlight-massive">{playerData.friendName}</span> fought together.
+                <span className="za-highlight-massive">{playerData.playerName}</span>, YOU saved {playerData.friendName}.
               </p>
               
               <p className="za-victory-text-epic">
-                Seven levels. Seven trials. One wrong move would have killed you both.
+                YOU calculated every step perfectly. YOU defeated The Elites. YOU avenged Principal Garvin.
               </p>
               
               <p className="za-victory-text-epic">
-                But you <span className="za-highlight-gold">CALCULATED</span> your way to victory.
+                Seven factions entered. One survived. <strong>Because of YOUR math skills.</strong>
               </p>
               
               <p className="za-victory-text-epic">
-                The other factions fell because they couldn't master percents.
+                Principal Garvin's sacrifice wasn't in vain. Eastway's legacy lives on through YOU.
               </p>
               
               <p className="za-victory-text-epic za-final-line">
-                You survived because <span className="za-highlight-massive">MATH SAVES LIVES.</span>
+                {playerData.cityName} is yours. <span className="za-highlight-massive">MATH SAVED LIVES.</span>
               </p>
 
               <div className="za-survivors-count">
-                Final Survivors in {playerData.cityName}: <span className="za-count-big">2</span>
+                Final Survivors: <span className="za-count-big">2</span>
+                <div className="za-survivor-names">{playerData.playerName} & {playerData.friendName}</div>
               </div>
 
               <div className="za-victory-achievement">
                 🏆 ACHIEVEMENT UNLOCKED 🏆
-                <div className="za-achievement-title">PERCENT MASTER</div>
-                <div className="za-achievement-subtitle">Survived the Mathematical Apocalypse</div>
+                <div className="za-achievement-title">PRINCIPAL GARVIN AVENGED</div>
+                <div className="za-achievement-subtitle">Mathematical Mastermind • Eastway's Champion</div>
               </div>
             </div>
 
