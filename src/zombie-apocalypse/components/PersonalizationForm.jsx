@@ -1,15 +1,18 @@
+// PersonalizationForm.jsx
+// VERSION: 3.1.0
+// Last Updated: November 30, 2024
+// Changes: REMOVED biggestFear field (not used in game)
+
 import React, { useState } from 'react';
 
 const PersonalizationForm = ({ onComplete }) => {
   const [formData, setFormData] = useState({
     playerName: '',
     friendName: '',
-    cityName: 'Charlotte',
+    cityName: 'Charlotte, NC',
+    favoriteColor: '',
     favoriteSubject: '',
-    favoriteSubjectOther: '',
-    dreamJob: '',
-    biggestFear: '',
-    favoriteFood: ''
+    dreamJob: ''
   });
 
   const handleChange = (e) => {
@@ -24,19 +27,11 @@ const PersonalizationForm = ({ onComplete }) => {
     
     // Validate required fields
     if (!formData.playerName.trim() || !formData.friendName.trim()) {
-      alert('Please enter your first name and your best friend\'s name!');
+      alert('Please enter your name and your friend\'s name!');
       return;
     }
     
-    // Use "Other" field if selected
-    const finalData = {
-      ...formData,
-      favoriteSubject: formData.favoriteSubject === 'Other' 
-        ? formData.favoriteSubjectOther 
-        : formData.favoriteSubject
-    };
-    
-    onComplete(finalData);
+    onComplete(formData);
   };
 
   return (
@@ -45,12 +40,14 @@ const PersonalizationForm = ({ onComplete }) => {
         <div className="za-form-header">
           <h1 className="za-form-title">ZOMBIE APOCALYPSE</h1>
           <h2 className="za-form-subtitle">Percent Survival</h2>
-          <p className="za-form-intro">Before the apocalypse begins, tell us about yourself...</p>
+          <p className="za-form-intro">
+            Before we begin, let's personalize your survival story...
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="za-form">
+        <form className="za-form" onSubmit={handleSubmit}>
           <div className="za-form-group">
-            <label htmlFor="playerName">Your First Name: *</label>
+            <label htmlFor="playerName">Your Name (First name only) *</label>
             <input
               type="text"
               id="playerName"
@@ -63,20 +60,20 @@ const PersonalizationForm = ({ onComplete }) => {
           </div>
 
           <div className="za-form-group">
-            <label htmlFor="friendName">Your Best Friend: *</label>
+            <label htmlFor="friendName">Your Best Friend's Name *</label>
             <input
               type="text"
               id="friendName"
               name="friendName"
               value={formData.friendName}
               onChange={handleChange}
-              placeholder="Enter your best friend's name"
+              placeholder="Who will survive with you?"
               required
             />
           </div>
 
           <div className="za-form-group">
-            <label htmlFor="cityName">Your City:</label>
+            <label htmlFor="cityName">Your City</label>
             <input
               type="text"
               id="cityName"
@@ -88,78 +85,50 @@ const PersonalizationForm = ({ onComplete }) => {
           </div>
 
           <div className="za-form-group">
-            <label htmlFor="favoriteSubject">Favorite School Subject:</label>
+            <label htmlFor="favoriteColor">Favorite Color (for your squad)</label>
+            <input
+              type="text"
+              id="favoriteColor"
+              name="favoriteColor"
+              value={formData.favoriteColor}
+              onChange={handleChange}
+              placeholder="Blue, Red, Green, etc."
+            />
+          </div>
+
+          <div className="za-form-group">
+            <label htmlFor="favoriteSubject">Favorite Subject</label>
             <select
               id="favoriteSubject"
               name="favoriteSubject"
               value={formData.favoriteSubject}
               onChange={handleChange}
             >
-              <option value="">-- Select --</option>
+              <option value="">Select...</option>
               <option value="Math">Math</option>
               <option value="Science">Science</option>
-              <option value="ELA">ELA</option>
-              <option value="Social Studies">Social Studies</option>
+              <option value="English">English</option>
+              <option value="History">History</option>
               <option value="Art">Art</option>
               <option value="PE">PE</option>
-              <option value="Chorus">Chorus</option>
-              <option value="Horticulture">Horticulture</option>
-              <option value="Other">Other</option>
+              <option value="Music">Music</option>
             </select>
           </div>
 
-          {formData.favoriteSubject === 'Other' && (
-            <div className="za-form-group">
-              <label htmlFor="favoriteSubjectOther">Specify Subject:</label>
-              <input
-                type="text"
-                id="favoriteSubjectOther"
-                name="favoriteSubjectOther"
-                value={formData.favoriteSubjectOther}
-                onChange={handleChange}
-                placeholder="Type your favorite subject"
-              />
-            </div>
-          )}
-
           <div className="za-form-group">
-            <label htmlFor="dreamJob">Dream Job:</label>
+            <label htmlFor="dreamJob">Dream Job (before the apocalypse)</label>
             <input
               type="text"
               id="dreamJob"
               name="dreamJob"
               value={formData.dreamJob}
               onChange={handleChange}
-              placeholder="e.g., Doctor, Athlete, YouTuber"
-            />
-          </div>
-
-          <div className="za-form-group">
-            <label htmlFor="biggestFear">Biggest Fear:</label>
-            <input
-              type="text"
-              id="biggestFear"
-              name="biggestFear"
-              value={formData.biggestFear}
-              onChange={handleChange}
-              placeholder="e.g., Heights, Spiders, Dark"
-            />
-          </div>
-
-          <div className="za-form-group">
-            <label htmlFor="favoriteFood">Favorite Food:</label>
-            <input
-              type="text"
-              id="favoriteFood"
-              name="favoriteFood"
-              value={formData.favoriteFood}
-              onChange={handleChange}
-              placeholder="e.g., Pizza, Tacos, Burgers"
+              placeholder="Doctor, Engineer, Teacher, etc."
             />
           </div>
 
           <button type="submit" className="za-btn-primary">
-            ENTER THE APOCALYPSE
+            BEGIN SURVIVAL
           </button>
         </form>
       </div>
