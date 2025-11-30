@@ -1,4 +1,7 @@
 // Zombie Apocalypse - Problem Generators with Randomization
+// VERSION: 1.2.0
+// Last Updated: November 29, 2024
+// Changes: Fixed Level 2 answer logic, added version tracking
 
 // Utility functions for random value generation
 const random = {
