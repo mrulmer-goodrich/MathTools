@@ -187,3 +187,127 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
   from { transform: translateX(-50vw); }
   to   { transform: translateX(0vw); }
 }
+
+
+
+
+
+/*Appending last file replacement because it seems short*/
+
+
+
+
+/* zombietheme.css
+   SCOPED THEME FOR ZOMBIE APOCALYPSE ONLY
+   - No body / #root selectors
+   - Uses local .za-wrapper + fog layers
+   - Background images must exist under: src/zombie-apocalypse/assets/
+*/
+
+/* MAIN WRAPPER FOR ZA MODULE */
+.za-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto; /* allow vertical scrolling for tall content */
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* Base scene background — classroom by default */
+.scene-classroom {
+  background-image: url('../assets/bg_classroom.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #05060a;
+}
+
+/* If you later want cafeteria/lockers per-level, you can add:
+   .scene-cafeteria { background-image: url('../assets/bg_cafeteria.png'); }
+   .scene-lockers   { background-image: url('../assets/bg_lockers.png'); }
+*/
+
+/* INNER ROOT (existing ZA layout attaches here) */
+.za-root {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  box-sizing: border-box;
+}
+
+/* -----------------------------
+   FOG LAYERS
+------------------------------*/
+
+.za-wrapper .fog-layer {
+  position: fixed;        /* stay in viewport while ZA scrolls */
+  left: -20vw;            /* a bit wider to cover edge cases */
+  width: 160vw;
+  height: 190px;
+  pointer-events: none;   /* NEVER block clicks or hovers */
+  background-image: url('../assets/fog_A.png');
+  background-repeat: repeat-x;
+  background-size: contain;
+  opacity: 0.45;
+  z-index: 1;
+  animation: zaFogDrift 55s linear infinite;
+}
+
+.za-wrapper .fog-top {
+  top: 18%;
+  opacity: 0.35;
+}
+
+.za-wrapper .fog-mid {
+  top: 45%;
+  opacity: 0.55;
+  animation-duration: 75s;
+}
+
+.za-wrapper .fog-bottom {
+  bottom: 10%;
+  opacity: 0.4;
+  animation-direction: reverse;
+  animation-duration: 95s;
+}
+
+@keyframes zaFogDrift {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-40vw);
+  }
+}
+
+/* -----------------------------
+   OPTIONAL: WRONG FLASH
+   (used by handleWrongAnswer)
+------------------------------*/
+
+body.za-wrong-flash,
+.za-wrapper.za-wrong-flash {
+  animation: zaWrongFlashPulse 0.25s ease-out;
+}
+
+@keyframes zaWrongFlashPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.8);
+    background-color: rgba(127, 29, 29, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+    background-color: transparent;
+  }
+}
+
+/* No button, font, or layout overrides here.
+   All detailed ZA styling remains in zombie.css (your original styles).
+*/
+
