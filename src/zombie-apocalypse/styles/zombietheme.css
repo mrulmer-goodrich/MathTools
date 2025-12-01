@@ -519,3 +519,224 @@ body:has(.za-app-root) header { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ============================================
+   ZOMBIE APOCALYPSE THEME - v3.6.1 FIXED
+   - Removed problematic fog
+   - Fixed background coverage
+   - Header override for ZA module
+   - Clean, professional atmosphere
+   ============================================ */
+
+/* ============================================
+   FULL SCREEN TAKEOVER - No white gaps
+   ============================================ */
+
+.za-app-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #0a0b0d;
+  z-index: 9999; /* Cover everything */
+}
+
+/* Zombie theme enabled: Full background coverage */
+.za-app-root.za-theme-enabled {
+  background-color: #0a0b0d;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: scroll; /* Changed from fixed to prevent white gaps */
+}
+
+/* ============================================
+   SCENE BACKGROUNDS - Clean, no fog
+   ============================================ */
+
+.za-app-root.za-theme-enabled.za-scene-classroom {
+  background-image: url('/zombie/bg_classroom.png');
+}
+
+.za-app-root.za-theme-enabled.za-scene-cafeteria {
+  background-image: url('/zombie/bg_cafeteria.png');
+}
+
+.za-app-root.za-theme-enabled.za-scene-lockers {
+  background-image: url('/zombie/bg_lockers.png');
+}
+
+/* Default: No zombie theme */
+.za-app-root:not(.za-theme-enabled) {
+  background: #1a1a2e;
+}
+
+/* ============================================
+   HIDE SITE HEADER - ZA takes over
+   ============================================ */
+
+body:has(.za-app-root) #site-header,
+body:has(.za-app-root) .main-nav,
+body:has(.za-app-root) header,
+body:has(.za-app-root) .ug-header {
+  display: none !important;
+}
+
+/* ============================================
+   HOME BUTTON - Top left corner
+   ============================================ */
+
+.za-home-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10000;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.za-home-button:hover {
+  background: #FFD700;
+  color: #000;
+  transform: scale(1.05);
+}
+
+.za-home-button::before {
+  content: "🏠";
+  font-size: 20px;
+}
+
+/* ============================================
+   CONTENT WRAPPER
+   ============================================ */
+
+.za-content-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 20px 40px; /* Extra top padding for home button */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Ensure content is readable over dark backgrounds */
+.za-theme-enabled .za-content-wrapper {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* ============================================
+   DARK OVERLAY - Better readability
+   ============================================ */
+
+.za-app-root.za-theme-enabled::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   VIGNETTE - Subtle edge darkening
+   ============================================ */
+
+.za-app-root.za-theme-enabled::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ============================================
+   FLASH EFFECT (wrong answer)
+   ============================================ */
+
+@keyframes zaWrongFlash {
+  0% {
+    box-shadow: inset 0 0 200px rgba(200, 0, 0, 0.6);
+  }
+  100% {
+    box-shadow: inset 0 0 0 rgba(200, 0, 0, 0);
+  }
+}
+
+.za-app-root.za-wrong-flash {
+  animation: zaWrongFlash 0.3s ease-out;
+}
+
+/* ============================================
+   DEV THEME INDICATOR
+   ============================================ */
+
+.za-theme-indicator {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #4CAF50;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  border: 1px solid #4CAF50;
+  border-radius: 3px;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .za-content-wrapper {
+    padding: 70px 12px 20px;
+  }
+  
+  .za-home-button {
+    top: 10px;
+    left: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .za-app-root.za-theme-enabled::before,
+  .za-app-root.za-theme-enabled::after {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   NO FOG - Clean backgrounds only
+   All fog CSS removed - causing checkerboard issues
+   ============================================ */
