@@ -1,7 +1,7 @@
 // GameScreen.jsx  
-// Version: 3.4.0
-// Last Updated: November 30, 2024 - 11:59 PM
-// Changes: Added scaffolding for Levels 4-7
+// Version: 3.5.0
+// Last Updated: December 1, 2024 - 12:15 AM
+// Changes: Enhanced warning messages with specific step-by-step calculations for Levels 3-7
 
 import React, { useState, useEffect } from 'react';
 import FactionTracker from './FactionTracker';
@@ -252,16 +252,357 @@ const GameScreen = ({
       case 4:
       case 5:
       case 6:
-        return {
-          title: "💡 Problem-Solving Steps:",
-          steps: [
-            "1. Identify what you're looking for",
-            "2. List what you know",
-            "3. Determine the operation",
-            "4. Calculate carefully",
-            "5. Check if answer makes sense"
-          ]
-        };
+      case 7:
+        // Parse the question to extract numbers and operation type
+        const q = problem.question;
+        
+        // Extract all numbers from the question
+        const numbers = q.match(/\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/g)?.map(n => parseFloat(n.replace(/[$,]/g, ''))) || [];
+        const percentMatches = q.match(/(\d+(?:\.\d+)?)%/g);
+        const percents = percentMatches?.map(p => parseFloat(p.replace('%', ''))) || [];
+        
+        // Determine operation type
+        let operationType = '';
+        let steps = [];
+        
+        if (q.toLowerCase().includes('save') || (q.toLowerCase().includes('off') && currentLevel === 3)) {
+          // DISCOUNT AMOUNT calculation
+          operationType = 'DISCOUNT AMOUNT';
+          const price = numbers[0];
+          const discount = percents[0];
+          const discountDecimal = (discount / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the DISCOUNT AMOUNT (how much you save).`,
+            ``,
+            `Step 1: Convert the discount percent to a decimal`,
+            `${discount}% = ${discountDecimal}`,
+            ``,
+            `Step 2: Multiply the original price by the discount decimal`,
+            `$${price} × ${discountDecimal} = ?`,
+            ``,
+            `Go ahead and calculate that on your calculator.`
+          ];
+        }
+        else if ((q.toLowerCase().includes('tax') && !q.toLowerCase().includes('after')) && currentLevel === 3) {
+          // TAX AMOUNT calculation
+          operationType = 'TAX AMOUNT';
+          const price = numbers[0];
+          const tax = percents[0];
+          const taxDecimal = (tax / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the TAX AMOUNT.`,
+            ``,
+            `Step 1: Convert the tax percent to a decimal`,
+            `${tax}% = ${taxDecimal}`,
+            ``,
+            `Step 2: Multiply the price by the tax decimal`,
+            `$${price} × ${taxDecimal} = ?`,
+            ``,
+            `Calculate that and you'll have the tax amount.`
+          ];
+        }
+        else if (q.toLowerCase().includes('tip') && currentLevel === 3) {
+          // TIP AMOUNT calculation
+          operationType = 'TIP AMOUNT';
+          const price = numbers[0];
+          const tip = percents[0];
+          const tipDecimal = (tip / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the TIP AMOUNT.`,
+            ``,
+            `Step 1: Convert the tip percent to a decimal`,
+            `${tip}% = ${tipDecimal}`,
+            ``,
+            `Step 2: Multiply the meal cost by the tip decimal`,
+            `$${price} × ${tipDecimal} = ?`,
+            ``,
+            `Calculate that to find the tip.`
+          ];
+        }
+        else if (q.toLowerCase().includes('markup') && currentLevel === 3) {
+          // MARKUP AMOUNT calculation
+          operationType = 'MARKUP AMOUNT';
+          const price = numbers[0];
+          const markup = percents[0];
+          const markupDecimal = (markup / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the MARKUP AMOUNT.`,
+            ``,
+            `Step 1: Convert the markup percent to a decimal`,
+            `${markup}% = ${markupDecimal}`,
+            ``,
+            `Step 2: Multiply the original price by the markup decimal`,
+            `$${price} × ${markupDecimal} = ?`,
+            ``,
+            `Calculate that to find how much was added.`
+          ];
+        }
+        else if (q.toLowerCase().includes('interest') && currentLevel === 3) {
+          // INTEREST calculation
+          operationType = 'INTEREST';
+          const principal = numbers[0];
+          const rate = percents[0];
+          const years = numbers[1];
+          const rateDecimal = (rate / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the INTEREST amount.`,
+            ``,
+            `Formula: Interest = Principal × Rate × Time`,
+            ``,
+            `Step 1: Convert interest rate to decimal`,
+            `${rate}% = ${rateDecimal}`,
+            ``,
+            `Step 2: Multiply everything together`,
+            `$${principal} × ${rateDecimal} × ${years} years = ?`,
+            ``,
+            `Calculate that to find the total interest.`
+          ];
+        }
+        else if (q.toLowerCase().includes('commission') && currentLevel === 3) {
+          // COMMISSION calculation
+          operationType = 'COMMISSION';
+          const sales = numbers[0];
+          const comm = percents[0];
+          const commDecimal = (comm / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the COMMISSION amount.`,
+            ``,
+            `Step 1: Convert commission percent to decimal`,
+            `${comm}% = ${commDecimal}`,
+            ``,
+            `Step 2: Multiply sales by commission decimal`,
+            `$${sales} × ${commDecimal} = ?`,
+            ``,
+            `Calculate that to find the commission earned.`
+          ];
+        }
+        else if (q.toLowerCase().includes('final') && q.toLowerCase().includes('off')) {
+          // FINAL PRICE after discount (Level 4)
+          operationType = 'FINAL PRICE (after discount)';
+          const price = numbers[0];
+          const discount = percents[0];
+          const discountDecimal = (discount / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the FINAL PRICE after a discount.`,
+            ``,
+            `Step 1: Calculate the discount amount`,
+            `${discount}% of $${price} = $${price} × ${discountDecimal} = ?`,
+            ``,
+            `Step 2: SUBTRACT the discount from the original price`,
+            `$${price} - (discount amount) = ?`,
+            ``,
+            `Calculate both steps to get the final price.`
+          ];
+        }
+        else if (q.toLowerCase().includes('final') && (q.toLowerCase().includes('tax') || q.toLowerCase().includes('tip'))) {
+          // FINAL PRICE with tax/tip (Level 4)
+          const isTax = q.toLowerCase().includes('tax');
+          operationType = isTax ? 'FINAL TOTAL (with tax)' : 'FINAL TOTAL (with tip)';
+          const price = numbers[0];
+          const percent = percents[0];
+          const decimal = (percent / 100).toFixed(2);
+          const label = isTax ? 'tax' : 'tip';
+          
+          steps = [
+            `You need to find the FINAL TOTAL with ${label}.`,
+            ``,
+            `Step 1: Calculate the ${label} amount`,
+            `${percent}% of $${price} = $${price} × ${decimal} = ?`,
+            ``,
+            `Step 2: ADD the ${label} to the original price`,
+            `$${price} + (${label} amount) = ?`,
+            ``,
+            `Calculate both steps to get the final total.`
+          ];
+        }
+        else if (q.toLowerCase().includes('final') && q.toLowerCase().includes('marked up')) {
+          // FINAL PRICE after markup (Level 4)
+          operationType = 'FINAL PRICE (after markup)';
+          const price = numbers[0];
+          const markup = percents[0];
+          const markupDecimal = (markup / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the FINAL PRICE after a markup.`,
+            ``,
+            `Step 1: Calculate the markup amount`,
+            `${markup}% of $${price} = $${price} × ${markupDecimal} = ?`,
+            ``,
+            `Step 2: ADD the markup to the original price`,
+            `$${price} + (markup amount) = ?`,
+            ``,
+            `Calculate both steps to get the final price.`
+          ];
+        }
+        else if (currentLevel === 5) {
+          // TWO-STEP problems (Level 5)
+          operationType = 'TWO-STEP CALCULATION';
+          const price = numbers[0];
+          
+          if (q.toLowerCase().includes('off') && q.toLowerCase().includes('tax')) {
+            const discount = percents[0];
+            const tax = percents[1];
+            const discountDecimal = (discount / 100).toFixed(2);
+            const taxDecimal = (tax / 100).toFixed(2);
+            
+            steps = [
+              `This is a TWO-STEP problem: discount THEN tax.`,
+              ``,
+              `Step 1: Apply the discount`,
+              `${discount}% of $${price} = $${price} × ${discountDecimal} = ?`,
+              `$${price} - (discount) = ? ← This is your NEW price`,
+              ``,
+              `Step 2: Apply tax to the NEW price (not the original!)`,
+              `${tax}% of (new price) = (new price) × ${taxDecimal} = ?`,
+              `(new price) + (tax) = ? ← This is your FINAL answer`,
+              ``,
+              `Work through each step carefully.`
+            ];
+          } else if (q.toLowerCase().includes('marked up') && q.toLowerCase().includes('discount')) {
+            const markup = percents[0];
+            const discount = percents[1];
+            const markupDecimal = (markup / 100).toFixed(2);
+            const discountDecimal = (discount / 100).toFixed(2);
+            
+            steps = [
+              `This is a TWO-STEP problem: markup THEN discount.`,
+              ``,
+              `Step 1: Apply the markup`,
+              `${markup}% of $${price} = $${price} × ${markupDecimal} = ?`,
+              `$${price} + (markup) = ? ← This is your NEW price`,
+              ``,
+              `Step 2: Apply discount to the NEW price (not the original!)`,
+              `${discount}% of (new price) = (new price) × ${discountDecimal} = ?`,
+              `(new price) - (discount) = ? ← This is your FINAL answer`,
+              ``,
+              `Calculate each step in order.`
+            ];
+          } else if (q.toLowerCase().includes('tax') && q.toLowerCase().includes('tip')) {
+            const tax = percents[0];
+            const tip = percents[1];
+            const taxDecimal = (tax / 100).toFixed(2);
+            const tipDecimal = (tip / 100).toFixed(2);
+            
+            steps = [
+              `This is a TWO-STEP problem: tax THEN tip.`,
+              ``,
+              `Step 1: Add the tax`,
+              `${tax}% of $${price} = $${price} × ${taxDecimal} = ?`,
+              `$${price} + (tax) = ? ← This is your total WITH tax`,
+              ``,
+              `Step 2: Calculate tip on the total WITH tax`,
+              `${tip}% of (total with tax) = (total with tax) × ${tipDecimal} = ?`,
+              `(total with tax) + (tip) = ? ← This is your FINAL amount`,
+              ``,
+              `Tip is calculated on the total AFTER tax.`
+            ];
+          }
+        }
+        else if (q.toLowerCase().includes('after') && q.toLowerCase().includes('before')) {
+          // WORKING BACKWARDS (Level 6)
+          operationType = 'WORKING BACKWARDS';
+          
+          if (q.toLowerCase().includes('discount')) {
+            const finalPrice = numbers[0];
+            const discount = percents[0];
+            const multiplier = (1 - discount / 100).toFixed(2);
+            
+            steps = [
+              `You need to work BACKWARDS to find the original price.`,
+              ``,
+              `After a ${discount}% discount, the price is $${finalPrice}.`,
+              `This means the final price is ${(100 - discount)}% of the original.`,
+              ``,
+              `To find the original:`,
+              `Original = Final Price ÷ ${multiplier}`,
+              `Original = $${finalPrice} ÷ ${multiplier} = ?`,
+              ``,
+              `Calculate that to find what the price was BEFORE the discount.`
+            ];
+          } else if (q.toLowerCase().includes('tax')) {
+            const finalPrice = numbers[0];
+            const tax = percents[0];
+            const multiplier = (1 + tax / 100).toFixed(2);
+            
+            steps = [
+              `You need to work BACKWARDS to find the price before tax.`,
+              ``,
+              `After adding ${tax}% tax, the total is $${finalPrice}.`,
+              `This means the total is ${(100 + tax)}% of the original.`,
+              ``,
+              `To find the original:`,
+              `Original = Final Price ÷ ${multiplier}`,
+              `Original = $${finalPrice} ÷ ${multiplier} = ?`,
+              ``,
+              `Calculate that to find what the price was BEFORE tax.`
+            ];
+          } else if (q.toLowerCase().includes('markup')) {
+            const finalPrice = numbers[0];
+            const markup = percents[0];
+            const multiplier = (1 + markup / 100).toFixed(2);
+            
+            steps = [
+              `You need to work BACKWARDS to find the original cost.`,
+              ``,
+              `After a ${markup}% markup, the price is $${finalPrice}.`,
+              `This means the final price is ${(100 + markup)}% of the original.`,
+              ``,
+              `To find the original:`,
+              `Original = Final Price ÷ ${multiplier}`,
+              `Original = $${finalPrice} ÷ ${multiplier} = ?`,
+              ``,
+              `Calculate that to find the original cost BEFORE markup.`
+            ];
+          }
+        }
+        else if (q.toLowerCase().includes('commission') && q.toLowerCase().includes('total')) {
+          // Commission backwards problem (Level 6)
+          operationType = 'SALES from COMMISSION';
+          const total = numbers[0];
+          const salary = numbers[1];
+          const comm = percents[0];
+          const commDecimal = (comm / 100).toFixed(2);
+          
+          steps = [
+            `You need to find the SALES amount from total earnings.`,
+            ``,
+            `Step 1: Find commission amount`,
+            `Total - Salary = Commission`,
+            `$${total} - $${salary} = ?`,
+            ``,
+            `Step 2: Work backwards from commission to sales`,
+            `Sales = Commission ÷ ${commDecimal}`,
+            `(commission from step 1) ÷ ${commDecimal} = ?`,
+            ``,
+            `Calculate both steps to find the sales amount.`
+          ];
+        }
+        
+        if (steps.length > 0) {
+          return {
+            title: `💡 How to solve: ${operationType}`,
+            steps: steps
+          };
+        } else {
+          // Fallback generic guidance
+          return {
+            title: "💡 Problem-Solving Steps:",
+            steps: [
+              "1. Identify what you're looking for",
+              "2. List what you know from the problem",
+              "3. Determine the operation needed",
+              "4. Calculate step by step",
+              "5. Check if your answer makes sense"
+            ]
+          };
+        }
 
       default:
         return null;
