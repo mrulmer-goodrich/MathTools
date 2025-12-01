@@ -277,6 +277,7 @@ const GameScreen = ({
           onAnswerChange={setUserAnswer}
           onSubmit={handleSubmitAnswer}
           onKeyPress={handleKeyPress}
+          currentLevel={currentLevel}
         />
 
         {/* Timer */}
@@ -306,9 +307,10 @@ const GameScreen = ({
               <div className="za-helper-visual">
                 <span className="za-percent-num">{getPercentFromQuestion(wrongAnswerFeedback.question)}%</span>
                 <span className="za-arrow">→</span>
-                <span className="za-decimal-result">
-                  {wrongAnswerFeedback.correctAnswer}
-                </span>
+                <span className="za-blink-decimal">.</span>
+                <span className="za-blink-decimal">.</span>
+                <span className="za-arrow">→</span>
+                <span className="za-decimal-result">{wrongAnswerFeedback.correctAnswer}</span>
               </div>
               <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
               <div className="za-helper-examples">
