@@ -9,6 +9,7 @@ import GameScreen from './components/GameScreen';
 import VictoryScreen from './components/VictoryScreen';
 import DeathScreen from './components/DeathScreen';
 import LevelComplete from './components/LevelComplete';
+import './styles/zombietheme.css'; 
 import './styles/zombie.css';
 
 const ZombieApocalypse = () => {
@@ -256,23 +257,27 @@ const ZombieApocalypse = () => {
   }, [playerData, gameStartTime]);
 
 
-  // Render based on game phase
+   // Render based on game phase
   return (
-    <>
+    <div className="za-root za-bg-classroom">
       {(() => {
-        switch(gamePhase) {
+        switch (gamePhase) {
           case 'personalization':
-            return <PersonalizationForm onComplete={handlePersonalizationComplete} />;
-          
+            return (
+              <PersonalizationForm
+                onComplete={handlePersonalizationComplete}
+              />
+            );
+
           case 'intro':
             return (
-              <IntroSequence 
+              <IntroSequence
                 playerData={playerData}
                 onComplete={handleIntroComplete}
                 onSkip={handleSkipIntro}
               />
             );
-          
+
           case 'playing':
             return (
               <GameScreen
@@ -289,7 +294,7 @@ const ZombieApocalypse = () => {
                 formatTime={formatTime}
               />
             );
-          
+
           case 'level-complete':
             return (
               <div onClick={handleContinueFromLevel}>
@@ -301,7 +306,7 @@ const ZombieApocalypse = () => {
                 />
               </div>
             );
-          
+
           case 'death':
             return (
               <DeathScreen
@@ -309,24 +314,26 @@ const ZombieApocalypse = () => {
                 playerData={playerData}
               />
             );
-          
+
           case 'victory':
             return (
               <VictoryScreen
                 playerData={playerData}
                 levelStats={levelStats}
                 totalDeaths={totalDeaths}
-                totalTime={Math.floor((Date.now() - gameStartTime) / 1000)}
+                totalTime={Math.floor(
+                  (Date.now() - gameStartTime) / 1000
+                )}
                 formatTime={formatTime}
                 onRestart={() => window.location.reload()}
               />
             );
-          
+
           default:
             return null;
         }
       })()}
-    </>
+    </div>
   );
 };
 
