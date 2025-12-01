@@ -1,37 +1,38 @@
 /* ============================================
-   ZOMBIE APOCALYPSE THEME - PRODUCTION v3.6
-   Scoped to .za-theme-enabled only
-   Assets: /public/zombie/
+   ZOMBIE APOCALYPSE THEME - v3.6.1 FIXED
+   - Removed problematic fog
+   - Fixed background coverage
+   - Header override for ZA module
+   - Clean, professional atmosphere
    ============================================ */
 
 /* ============================================
-   ROOT CONTAINER - Background layers
+   FULL SCREEN TAKEOVER - No white gaps
    ============================================ */
 
 .za-app-root {
-  position: relative;
-  min-height: 100vh;
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
+  background-color: #0a0b0d;
+  z-index: 9999; /* Cover everything */
 }
 
-/* Default: No zombie theme */
-.za-app-root:not(.za-theme-enabled) {
-  background: #1a1a2e;
-}
-
-/* Zombie theme enabled: Layered scene */
+/* Zombie theme enabled: Full background coverage */
 .za-app-root.za-theme-enabled {
   background-color: #0a0b0d;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll; /* Changed from fixed to prevent white gaps */
 }
 
 /* ============================================
-   SCENE BACKGROUNDS (Phase 1 - 3 scenes)
+   SCENE BACKGROUNDS - Clean, no fog
    ============================================ */
 
 .za-app-root.za-theme-enabled.za-scene-classroom {
@@ -46,65 +47,59 @@
   background-image: url('/zombie/bg_lockers.png');
 }
 
+/* Default: No zombie theme */
+.za-app-root:not(.za-theme-enabled) {
+  background: #1a1a2e;
+}
+
 /* ============================================
-   FOG LAYERS - Subtle, professional
-   Phase 1: Single fog image (fog_A.png)
+   HIDE SITE HEADER - ZA takes over
    ============================================ */
 
-.za-fog-layer {
+body:has(.za-app-root) #site-header,
+body:has(.za-app-root) .main-nav,
+body:has(.za-app-root) header,
+body:has(.za-app-root) .ug-header {
+  display: none !important;
+}
+
+/* ============================================
+   HOME BUTTON - Top left corner
+   ============================================ */
+
+.za-home-button {
   position: fixed;
-  left: -10%;
-  width: 120%;
-  height: 180px;
-  background-image: url('/zombie/fog_A.png');
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.25; /* Subtle, not ridiculous */
+  top: 20px;
+  left: 20px;
+  z-index: 10000;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Top fog - higher, lighter, slower */
-.za-fog-top {
-  top: 15%;
-  opacity: 0.2;
-  animation: zaFogDriftSlow 90s linear infinite;
+.za-home-button:hover {
+  background: #FFD700;
+  color: #000;
+  transform: scale(1.05);
 }
 
-/* Mid fog - middle height, moderate speed */
-.za-fog-mid {
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.3;
-  animation: zaFogDriftMed 65s linear infinite reverse;
-}
-
-/* Bottom fog - lower, denser, faster */
-.za-fog-bottom {
-  bottom: 8%;
-  opacity: 0.28;
-  animation: zaFogDriftFast 50s linear infinite;
-}
-
-/* Fog animations - gentle drift */
-@keyframes zaFogDriftSlow {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@keyframes zaFogDriftMed {
-  from { transform: translateX(0) translateY(-50%); }
-  to { transform: translateX(50%) translateY(-50%); }
-}
-
-@keyframes zaFogDriftFast {
-  from { transform: translateX(0); }
-  to { transform: translateX(-80%); }
+.za-home-button::before {
+  content: "🏠";
+  font-size: 20px;
 }
 
 /* ============================================
    CONTENT WRAPPER
-   All game UI sits here, above fog/bg
    ============================================ */
 
 .za-content-wrapper {
@@ -113,50 +108,45 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 80px 20px 40px; /* Extra top padding for home button */
   min-height: 100vh;
   box-sizing: border-box;
 }
 
 /* Ensure content is readable over dark backgrounds */
 .za-theme-enabled .za-content-wrapper {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 /* ============================================
-   SUBTLE ATMOSPHERIC EFFECTS
+   DARK OVERLAY - Better readability
    ============================================ */
 
-/* Vignette - very subtle edge darkening */
 .za-app-root.za-theme-enabled::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   VIGNETTE - Subtle edge darkening
+   ============================================ */
+
+.za-app-root.za-theme-enabled::after {
   content: '';
   position: fixed;
   inset: 0;
   background: radial-gradient(
     ellipse at center,
     transparent 0%,
-    transparent 60%,
-    rgba(0, 0, 0, 0.3) 100%
+    transparent 50%,
+    rgba(0, 0, 0, 0.6) 100%
   );
   pointer-events: none;
   z-index: 2;
-}
-
-/* Optional: Subtle scan lines for retro game feel */
-.za-app-root.za-theme-enabled::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.03) 0px,
-    transparent 1px,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 3px
-  );
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.15;
 }
 
 /* ============================================
@@ -165,7 +155,7 @@
 
 @keyframes zaWrongFlash {
   0% {
-    box-shadow: inset 0 0 100px rgba(200, 0, 0, 0.4);
+    box-shadow: inset 0 0 200px rgba(200, 0, 0, 0.6);
   }
   100% {
     box-shadow: inset 0 0 0 rgba(200, 0, 0, 0);
@@ -185,28 +175,31 @@
   bottom: 10px;
   right: 10px;
   padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: #4CAF50;
   font-size: 11px;
   font-family: 'Courier New', monospace;
   border: 1px solid #4CAF50;
   border-radius: 3px;
-  z-index: 9999;
+  z-index: 10001;
   pointer-events: none;
   opacity: 0.6;
 }
 
 /* ============================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE
    ============================================ */
 
 @media (max-width: 768px) {
-  .za-fog-layer {
-    height: 120px;
+  .za-content-wrapper {
+    padding: 70px 12px 20px;
   }
   
-  .za-content-wrapper {
-    padding: 12px;
+  .za-home-button {
+    top: 10px;
+    left: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
   }
 }
 
@@ -214,70 +207,14 @@
    ACCESSIBILITY
    ============================================ */
 
-/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .za-fog-layer {
+  .za-app-root.za-theme-enabled::before,
+  .za-app-root.za-theme-enabled::after {
     animation: none !important;
   }
-  
-  .za-app-root.za-theme-enabled::after {
-    display: none;
-  }
 }
 
 /* ============================================
-   FUTURE PHASE 2+ HOOKS
-   (Commented out - ready when you are)
+   NO FOG - Clean backgrounds only
+   All fog CSS removed - causing checkerboard issues
    ============================================ */
-
-/*
-.za-sprite-zombie {
-  width: 64px;
-  height: 64px;
-  background-image: url('/zombie/zombie_sprite.png');
-  animation: zaZombieWalk 1.2s steps(8) infinite;
-}
-
-@keyframes zaZombieWalk {
-  from { background-position: 0 0; }
-  to { background-position: -512px 0; }
-}
-
-.za-flicker-light {
-  animation: zaFlicker 4s infinite;
-}
-
-@keyframes zaFlicker {
-  0%, 100% { opacity: 1; }
-  40% { opacity: 0.6; }
-  45% { opacity: 0.2; }
-  50% { opacity: 0.8; }
-}
-*/
-
-/* ============================================
-   NOTES FOR FUTURE DEVELOPMENT
-   ============================================ */
-
-/*
-Phase 2 Assets to Add:
-- Sprite sheets for zombies (8-frame walk cycles)
-- Flickering light sprites
-- UI metal panel textures
-- Biohazard icons
-- Grunge overlay textures
-
-Current Implementation:
-✅ 3 background scenes (classroom, cafeteria, lockers)
-✅ Subtle fog system (6 variations possible with fog_A.png)
-✅ Professional atmosphere without being overwhelming
-✅ Easy theme toggle (Ctrl+Shift+T)
-✅ Scoped to .za-theme-enabled only
-✅ No impact on other modules
-
-Assets Required:
-- /public/zombie/bg_classroom.png
-- /public/zombie/bg_cafeteria.png
-- /public/zombie/bg_lockers.png
-- /public/zombie/fog_A.png
-*/
