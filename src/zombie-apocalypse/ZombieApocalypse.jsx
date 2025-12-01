@@ -1,7 +1,7 @@
 // ZombieApocalypse.jsx
-// Version: 3.6.1 FIXED
+// Version: 3.7 FINAL
 // Last Updated: December 1, 2024
-// Changes: Removed fog (PNG transparency issues), fixed header overlap, added HOME button, full-screen takeover
+// Changes: Minimal containers, animated sprites integrated, floating money display, professional layout
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -252,12 +252,30 @@ const ZombieApocalypse = () => {
   // ============================================
   return (
     <div className={`za-app-root ${zombieThemeEnabled ? 'za-theme-enabled' : ''} ${getSceneClass()}`}>
-      {/* HOME BUTTON - Always visible */}
+      {/* HOME BUTTON */}
       <a href="/" className="za-home-button" title="Return to Home">
         HOME
       </a>
 
-      {/* Content wrapper - all game content goes here */}
+      {/* MONEY DISPLAY - Always visible in game */}
+      {gamePhase === 'playing' && (
+        <div className="za-money-display">
+          <div className="za-money-icon" />
+          <div className="za-money-amount">${moneyPot.toLocaleString()}</div>
+        </div>
+      )}
+
+      {/* ANIMATED WARNING LIGHT - Top right */}
+      {zombieThemeEnabled && gamePhase === 'playing' && (
+        <div className="za-warning-light" />
+      )}
+
+      {/* ZOMBIE WALKER - Bottom animated */}
+      {zombieThemeEnabled && gamePhase === 'playing' && (
+        <div className="za-zombie-walker" />
+      )}
+
+      {/* Content wrapper */}
       <div className="za-content-wrapper">
         {(() => {
           switch(gamePhase) {
@@ -333,7 +351,7 @@ const ZombieApocalypse = () => {
       {/* Dev indicator */}
       {zombieThemeEnabled && (
         <div className="za-theme-indicator">
-          ZOMBIE MODE | Ctrl+Shift+T to toggle
+          v3.7 | Ctrl+Shift+T
         </div>
       )}
     </div>
