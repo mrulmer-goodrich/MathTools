@@ -740,3 +740,736 @@ body:has(.za-app-root) .ug-header {
    NO FOG - Clean backgrounds only
    All fog CSS removed - causing checkerboard issues
    ============================================ */
+
+/* zombietheme.css v4.1 CLEAN ROLLBACK */
+/* Compatible with ZombieApocalypse v3.4.1 CLEAN */
+/* NO zombie walker, NO warning light, FIXED layout */
+/* SCROLL FIX + Help menu decimal styling */
+
+/* ==================== SCROLL FIX ==================== */
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==================== WRAPPER & CONTAINER ==================== */
+
+.za-wrapper {
+  min-height: 100vh;
+  background-color: #0a0b0d;
+  background-image: 
+    radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.85) 100%),
+    var(--za-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.za-game-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ==================== BACKGROUND SWITCHING ==================== */
+
+.za-wrapper[data-level="1"],
+.za-wrapper[data-level="2"] {
+  --za-bg-image: url('/zombie/bg_classroom.png');
+}
+
+.za-wrapper[data-level="3"],
+.za-wrapper[data-level="4"] {
+  --za-bg-image: url('/zombie/bg_cafeteria.png');
+}
+
+.za-wrapper[data-level="5"],
+.za-wrapper[data-level="6"],
+.za-wrapper[data-level="7"] {
+  --za-bg-image: url('/zombie/bg_lockers.png');
+}
+
+/* ==================== PERSONALIZATION FORM ==================== */
+
+.za-personalization-form {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(220, 20, 60, 0.6);
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+.za-personalization-form h1 {
+  color: #DC143C;
+  font-size: 36px;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(220, 20, 60, 0.8);
+  text-align: center;
+}
+
+.za-personalization-form h2 {
+  color: #FFD700;
+  font-size: 20px;
+  margin: 0 0 30px;
+  text-align: center;
+  font-weight: normal;
+}
+
+/* ==================== INTRO SEQUENCE ==================== */
+
+.za-intro-sequence {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.za-skip-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #FFF;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.za-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.za-intro-container {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(220, 20, 60, 0.6);
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+.za-intro-screen {
+  opacity: 1;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.za-intro-screen.za-transitioning {
+  opacity: 0;
+}
+
+.za-intro-title {
+  color: #DC143C;
+  font-size: 36px;
+  margin: 0 0 30px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(220, 20, 60, 0.8);
+  text-align: center;
+}
+
+.za-intro-content {
+  margin-bottom: 30px;
+}
+
+.za-intro-text {
+  color: #DDD;
+  font-size: 16px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.za-intro-emphasis {
+  color: #FFD700;
+  font-weight: bold;
+  font-style: italic;
+  text-align: center;
+}
+
+.za-faction-list {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.za-faction {
+  color: #CCC;
+  font-size: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.za-faction:last-child {
+  border-bottom: none;
+}
+
+.za-faction-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.za-faction-player {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.za-faction-enemy {
+  color: #DC143C;
+  font-weight: bold;
+}
+
+.za-faction-note {
+  color: #888;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.za-intro-continue {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.za-intro-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.za-progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s;
+}
+
+.za-progress-dot.active {
+  background: #FFD700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.za-progress-dot.complete {
+  background: #4CAF50;
+}
+
+.za-btn-primary {
+  background: linear-gradient(135deg, #DC143C, #8B0000);
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.za-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 20, 60, 0.6);
+}
+
+.za-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== GAME SCREEN ==================== */
+
+.za-game-screen {
+  background: rgba(0, 0, 0, 0.80);
+  border: 2px solid rgba(220, 20, 60, 0.6);
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 650px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+/* ==================== HEADERS ==================== */
+
+.za-game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(220, 20, 60, 0.4);
+}
+
+.za-level-indicator {
+  color: #DC143C;
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(220, 20, 60, 0.6);
+}
+
+.za-hearts-display {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.za-heart {
+  width: 28px;
+  height: 28px;
+  background-image: url('/zombie/Hearts.png');
+  background-size: 200% 100%;
+  background-position: 0 0;
+  filter: drop-shadow(0 0 4px rgba(220, 20, 60, 0.6));
+}
+
+.za-heart.lost {
+  background-position: 100% 0;
+  filter: none;
+  opacity: 0.4;
+}
+
+/* ==================== PROBLEM DISPLAY ==================== */
+
+.za-problem-container {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 20px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.za-problem-text {
+  color: #FFF;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.za-question {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* ==================== PROGRESS SECTION ==================== */
+
+.za-main-game {
+  width: 100%;
+}
+
+.za-progress-section {
+  margin-bottom: 20px;
+}
+
+.za-progress-text {
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.za-progress-bar {
+  width: 100%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.za-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.5s ease-in-out;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+/* ==================== TIMER ==================== */
+
+.za-timer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.za-timer-label {
+  color: #AAA;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.za-timer-value {
+  color: #4CAF50;
+  font-size: 36px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+.za-timer-value.warning {
+  color: #FF9800;
+  text-shadow: 0 0 10px rgba(255, 152, 0, 0.8);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.za-timer-value.critical {
+  color: #DC143C;
+  text-shadow: 0 0 15px rgba(220, 20, 60, 1);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+/* ==================== CALCULATOR ==================== */
+
+.za-calculator {
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.za-calculator-display {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(76, 175, 80, 0.4);
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  color: #4CAF50;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.za-calculator-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.za-calc-button {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 15px;
+  color: #FFF;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.za-calc-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.za-calc-button:active {
+  transform: translateY(0);
+}
+
+.za-calc-button.operator {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.3), rgba(255, 152, 0, 0.2));
+  border-color: rgba(255, 152, 0, 0.4);
+}
+
+.za-calc-button.clear {
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(220, 20, 60, 0.2));
+  border-color: rgba(220, 20, 60, 0.4);
+}
+
+.za-calc-button.equals {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.2));
+  border-color: rgba(76, 175, 80, 0.4);
+  grid-column: span 2;
+}
+
+/* ==================== SUBMIT BUTTON ==================== */
+
+.za-submit-button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.za-submit-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.za-submit-button:active {
+  transform: translateY(0);
+}
+
+.za-submit-button:disabled {
+  background: linear-gradient(135deg, #555, #333);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ==================== FEEDBACK MESSAGES ==================== */
+
+.za-feedback {
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: bold;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.za-feedback.correct {
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid rgba(76, 175, 80, 0.6);
+  color: #4CAF50;
+}
+
+.za-feedback.wrong {
+  background: rgba(220, 20, 60, 0.2);
+  border: 2px solid rgba(220, 20, 60, 0.6);
+  color: #DC143C;
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Help menu styling */
+.za-decimal-helper {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(76, 175, 80, 0.4);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 15px;
+}
+
+.za-helper-title {
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.za-helper-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 28px;
+}
+
+.za-percent-num {
+  color: #FFD700;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.za-arrow {
+  color: #FFF;
+  font-size: 24px;
+}
+
+.za-decimal-result {
+  font-size: 32px;
+  font-weight: bold;
+  color: #4CAF50;
+  font-family: 'Courier New', monospace;
+}
+
+.za-helper-note {
+  color: #AAA;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.za-helper-examples {
+  color: #888;
+  font-size: 12px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.za-wrong-feedback {
+  background: rgba(139, 0, 0, 0.3);
+  border: 2px solid rgba(220, 20, 60, 0.6);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.za-wrong-title {
+  color: #DC143C;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.za-wrong-yours,
+.za-wrong-correct {
+  color: #DDD;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.za-got-it-btn {
+  margin-top: 15px;
+  width: 100%;
+}
+
+/* ==================== VICTORY/DEATH SCREENS ==================== */
+
+.za-victory-screen,
+.za-death-screen,
+.za-level-complete {
+  text-align: center;
+  color: #FFF;
+  max-width: 700px;
+  width: 100%;
+}
+
+/* ==================== ANIMATIONS ==================== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .za-game-screen {
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .za-personalization-form,
+  .za-intro-sequence {
+    padding: 25px;
+    max-width: 100%;
+  }
+
+  .za-problem-text {
+    font-size: 16px;
+  }
+
+  .za-calculator-display {
+    font-size: 24px;
+    padding: 12px;
+  }
+
+  .za-calc-button {
+    padding: 12px;
+    font-size: 18px;
+  }
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+.za-text-center {
+  text-align: center;
+}
+
+.za-mb-20 {
+  margin-bottom: 20px;
+}
+
+.za-mt-20 {
+  margin-top: 20px;
+}
+
+/* ==================== REDUCED MOTION ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
