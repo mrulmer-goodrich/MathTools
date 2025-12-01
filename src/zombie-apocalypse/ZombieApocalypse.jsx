@@ -1,7 +1,7 @@
 // ZombieApocalypse.jsx
-// Version: 3.6.0
+// Version: 3.6.1 FIXED
 // Last Updated: December 1, 2024
-// Changes: Production zombie theme with toggle system, money tracking, proper scoping
+// Changes: Removed fog (PNG transparency issues), fixed header overlap, added HOME button, full-screen takeover
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -252,14 +252,10 @@ const ZombieApocalypse = () => {
   // ============================================
   return (
     <div className={`za-app-root ${zombieThemeEnabled ? 'za-theme-enabled' : ''} ${getSceneClass()}`}>
-      {/* Fog layers - only render if theme enabled */}
-      {zombieThemeEnabled && (
-        <>
-          <div className="za-fog-layer za-fog-top" aria-hidden="true" />
-          <div className="za-fog-layer za-fog-mid" aria-hidden="true" />
-          <div className="za-fog-layer za-fog-bottom" aria-hidden="true" />
-        </>
-      )}
+      {/* HOME BUTTON - Always visible */}
+      <a href="/" className="za-home-button" title="Return to Home">
+        HOME
+      </a>
 
       {/* Content wrapper - all game content goes here */}
       <div className="za-content-wrapper">
