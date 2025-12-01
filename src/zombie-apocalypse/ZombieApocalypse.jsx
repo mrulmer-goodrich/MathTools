@@ -1,12 +1,12 @@
 // ZombieApocalypse.jsx v4.0 - THE COMPLETE VISION
 import React, { useState, useEffect } from 'react';
-import PersonalizationForm from './PersonalizationForm';
-import IntroSequence from './IntroSequence';
-import GameScreen from './GameScreen';
-import LevelComplete from './LevelComplete';
-import DeathScreen from './DeathScreen';
-import VictoryScreen from './VictoryScreen';
-import ZombieInterlude from './ZombieInterlude';
+import PersonalizationForm from './components/PersonalizationForm';
+import IntroSequence from './components/IntroSequence';
+import GameScreen from './components/GameScreen';
+import LevelComplete from './components/LevelComplete';
+import DeathScreen from './components/DeathScreen';
+import VictoryScreen from './components/VictoryScreen';
+import ZombieInterlude from './components/ZombieInterlude';
 import './zombietheme.css';
 
 const ZombieApocalypse = () => {
