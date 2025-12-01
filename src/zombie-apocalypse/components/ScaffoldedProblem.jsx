@@ -1,4 +1,4 @@
-// ScaffoldedProblem.jsx
+// ScaffoldedProblem.jsx 
 // Version: 3.4.0
 // Last Updated: November 30, 2024 - 11:59 PM
 // Changes: New component for scaffolded multi-step problems (Levels 4-7)
