@@ -1,4 +1,4 @@
-// VictoryScreen.jsx v4.0 - Cinematic Victory Sequence
+// VictoryScreen.jsx v4.0 - Cinematic Victory Sequence 
 import React, { useEffect, useState } from 'react';
 
 const VictoryScreen = ({ playerData, totalTime, formatTime, finalMoney, onRestart }) => {
