@@ -1,13 +1,6 @@
 /* ============================================
-   ZOMBIE APOCALYPSE THEME - v3.6.1 FIXED
-   - Removed problematic fog
-   - Fixed background coverage
-   - Header override for ZA module
-   - Clean, professional atmosphere
-   ============================================ */
-
-/* ============================================
-   FULL SCREEN TAKEOVER - No white gaps
+   ZOMBIE APOCALYPSE - v3.6.2 OPTIMIZED
+   Tighter layout, professional proportions
    ============================================ */
 
 .za-app-root {
@@ -19,21 +12,15 @@
   overflow-x: hidden;
   overflow-y: auto;
   background-color: #0a0b0d;
-  z-index: 9999; /* Cover everything */
+  z-index: 9999;
 }
 
-/* Zombie theme enabled: Full background coverage */
 .za-app-root.za-theme-enabled {
-  background-color: #0a0b0d;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: scroll; /* Changed from fixed to prevent white gaps */
+  background-attachment: scroll;
 }
-
-/* ============================================
-   SCENE BACKGROUNDS - Clean, no fog
-   ============================================ */
 
 .za-app-root.za-theme-enabled.za-scene-classroom {
   background-image: url('/zombie/bg_classroom.png');
@@ -47,174 +34,311 @@
   background-image: url('/zombie/bg_lockers.png');
 }
 
-/* Default: No zombie theme */
 .za-app-root:not(.za-theme-enabled) {
   background: #1a1a2e;
 }
 
-/* ============================================
-   HIDE SITE HEADER - ZA takes over
-   ============================================ */
-
-body:has(.za-app-root) #site-header,
-body:has(.za-app-root) .main-nav,
-body:has(.za-app-root) header,
-body:has(.za-app-root) .ug-header {
+/* Hide site header */
+body:has(.za-app-root) header {
   display: none !important;
 }
 
-/* ============================================
-   HOME BUTTON - Top left corner
-   ============================================ */
-
+/* HOME BUTTON */
 .za-home-button {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: 15px;
+  left: 15px;
   z-index: 10000;
-  padding: 12px 24px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,20,20,0.9));
   border: 2px solid #FFD700;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #FFD700;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.za-home-button:hover {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.za-home-button::before {
+  content: "🏠";
+  font-size: 18px;
+}
+
+/* CONTENT */
+.za-content-wrapper {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 70px 15px 20px;
+  min-height: 100vh;
+}
+
+/* Dark overlay */
+.za-app-root.za-theme-enabled::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Vignette */
+.za-app-root.za-theme-enabled::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* GAME LAYOUT - Tighter, cleaner */
+.za-game-screen {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.za-top-bar {
+  background: linear-gradient(135deg, rgba(139,0,0,0.95), rgba(80,0,0,0.95));
+  border: 2px solid rgba(220,20,60,0.8);
+  border-radius: 8px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.za-level-title {
+  font-size: 28px;
+  color: #DC143C;
+  text-shadow: 0 0 10px rgba(220,20,60,0.6);
+  margin: 0;
+}
+
+.za-level-story {
+  font-size: 15px;
+  color: #FFD700;
+  margin: 5px 0 0;
+}
+
+.za-main-game {
+  background: linear-gradient(135deg, rgba(0,0,0,0.85), rgba(20,20,20,0.85));
+  border: 2px solid rgba(139,0,0,0.6);
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+}
+
+.za-progress-text {
+  font-size: 16px;
+  color: #FFF;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.za-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.za-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  transition: width 0.3s;
+  box-shadow: 0 0 10px rgba(255,215,0,0.6);
+}
+
+.za-problem-question {
+  font-size: 24px;
+  color: #FFF;
+  margin: 20px 0;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.za-answer-section {
+  display: flex;
+  gap: 10px;
+  max-width: 500px;
+  margin: 25px auto;
+}
+
+.za-answer-input {
+  flex: 1;
+  padding: 12px 18px;
+  font-size: 20px;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #FFD700;
+  border-radius: 6px;
+  color: #FFD700;
+  font-weight: bold;
+}
+
+.za-answer-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 12px rgba(76,175,80,0.5);
+}
+
+.za-submit-button {
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #DC143C, #8B0000);
+  border: none;
+  border-radius: 6px;
+  color: #FFF;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(220,20,60,0.4);
+}
+
+.za-submit-button:hover {
+  background: linear-gradient(135deg, #FF1744, #C62828);
+  transform: translateY(-2px);
+}
+
+.za-submit-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.za-choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  margin: 25px auto;
+}
+
+.za-choice-button {
+  padding: 15px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15));
+  border: 2px solid #FFD700;
+  border-radius: 6px;
+  color: #FFD700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.za-choice-button:hover {
+  background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,165,0,0.3));
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+}
+
+.za-choice-button.selected {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+}
+
+.za-faction-tracker {
+  position: fixed;
+  right: 15px;
+  top: 80px;
+  width: 180px;
+  background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,20,20,0.9));
+  border: 2px solid rgba(139,0,0,0.8);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.za-faction-title {
+  font-size: 16px;
+  color: #DC143C;
+  text-align: center;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.za-faction-item {
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #4CAF50;
+  border-radius: 4px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.za-home-button:hover {
-  background: #FFD700;
-  color: #000;
-  transform: scale(1.05);
+.za-faction-item.eliminated {
+  border-color: #555;
+  opacity: 0.4;
+  text-decoration: line-through;
 }
-
-.za-home-button::before {
-  content: "🏠";
-  font-size: 20px;
-}
-
-/* ============================================
-   CONTENT WRAPPER
-   ============================================ */
-
-.za-content-wrapper {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 80px 20px 40px; /* Extra top padding for home button */
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
-/* Ensure content is readable over dark backgrounds */
-.za-theme-enabled .za-content-wrapper {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-}
-
-/* ============================================
-   DARK OVERLAY - Better readability
-   ============================================ */
-
-.za-app-root.za-theme-enabled::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ============================================
-   VIGNETTE - Subtle edge darkening
-   ============================================ */
-
-.za-app-root.za-theme-enabled::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* ============================================
-   FLASH EFFECT (wrong answer)
-   ============================================ */
 
 @keyframes zaWrongFlash {
-  0% {
-    box-shadow: inset 0 0 200px rgba(200, 0, 0, 0.6);
-  }
-  100% {
-    box-shadow: inset 0 0 0 rgba(200, 0, 0, 0);
-  }
+  0% { box-shadow: inset 0 0 200px rgba(200,0,0,0.8); }
+  100% { box-shadow: inset 0 0 0 rgba(200,0,0,0); }
 }
 
 .za-app-root.za-wrong-flash {
   animation: zaWrongFlash 0.3s ease-out;
 }
 
-/* ============================================
-   DEV THEME INDICATOR
-   ============================================ */
-
 .za-theme-indicator {
   position: fixed;
-  bottom: 10px;
-  right: 10px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.8);
+  bottom: 8px;
+  right: 8px;
+  padding: 5px 10px;
+  background: rgba(0,0,0,0.8);
   color: #4CAF50;
-  font-size: 11px;
+  font-size: 10px;
   font-family: 'Courier New', monospace;
   border: 1px solid #4CAF50;
   border-radius: 3px;
   z-index: 10001;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+@media (max-width: 1024px) {
+  .za-faction-tracker {
+    position: static;
+    width: 100%;
+    margin: 15px 0;
+  }
+}
 
 @media (max-width: 768px) {
   .za-content-wrapper {
-    padding: 70px 12px 20px;
+    padding: 60px 10px 15px;
   }
-  
-  .za-home-button {
-    top: 10px;
-    left: 10px;
-    padding: 8px 16px;
-    font-size: 14px;
+  .za-level-title {
+    font-size: 22px;
+  }
+  .za-problem-question {
+    font-size: 20px;
   }
 }
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  .za-app-root.za-theme-enabled::before,
-  .za-app-root.za-theme-enabled::after {
+  * {
     animation: none !important;
+    transition: none !important;
   }
 }
-
-/* ============================================
-   NO FOG - Clean backgrounds only
-   All fog CSS removed - causing checkerboard issues
-   ============================================ */
