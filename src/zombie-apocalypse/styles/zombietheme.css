@@ -134,7 +134,8 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
 .za-wrapper {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;  /* allow vertical scroll for tall content */
+  overflow-y: auto;
 }
 
 .scene-classroom {
@@ -151,7 +152,7 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
   left: 0;
   width: 200vw;
   height: 200px;
-  pointer-events: none;   /* <-- FIX SCROLL BLOCKING */
+  pointer-events: none;   /* <-- FIX SCROLL / CLICK BLOCKING */
   background-repeat: no-repeat;
   background-size: contain; /* SCALE SINGLE IMAGE */
   opacity: 0.45;  
