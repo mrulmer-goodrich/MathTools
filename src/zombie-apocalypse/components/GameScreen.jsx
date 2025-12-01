@@ -302,17 +302,12 @@ const GameScreen = ({
             <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
             
             <div className="za-decimal-helper">
-              <div className="za-helper-title">💡 Converting Percents to Decimals:</div>
+              <div className="za-helper-title">Converting Percents to Decimals:</div>
               <div className="za-helper-visual">
                 <span className="za-percent-num">{getPercentFromQuestion(wrongAnswerFeedback.question)}%</span>
                 <span className="za-arrow">→</span>
-                <span className="za-decimal-movement">
-                  <span className="za-move-left">
-                    {parseFloat(getPercentFromQuestion(wrongAnswerFeedback.question)) >= 100 ? '' : '0.'}
-                  </span>
-                  <span className="za-moved">
-                    {getDecimalForHelp(getPercentFromQuestion(wrongAnswerFeedback.question))}
-                  </span>
+                <span className="za-decimal-result">
+                  {wrongAnswerFeedback.correctAnswer}
                 </span>
               </div>
               <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
