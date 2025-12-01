@@ -7,7 +7,7 @@ import LevelComplete from './components/LevelComplete';
 import DeathScreen from './components/DeathScreen';
 import VictoryScreen from './components/VictoryScreen';
 import ZombieInterlude from './components/ZombieInterlude';
-import './zombietheme.css';
+import '.styles/zombietheme.css';
 
 const ZombieApocalypse = () => {
   const [gamePhase, setGamePhase] = useState('personalization');
