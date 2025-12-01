@@ -1,764 +1,33 @@
-/* ============================================
-   ZOMBIE APOCALYPSE - v3.7 FINAL
-   Minimal containers, animated assets, floating UI
-   ============================================ */
-
-.za-app-root {
-  position: fixed;
-  inset: 0;
-  overflow-y: auto;
-  background-color: #0a0b0d;
-  z-index: 9999;
-}
-
-.za-app-root.za-theme-enabled {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.za-app-root.za-theme-enabled.za-scene-classroom {
-  background-image: url('/zombie/bg_classroom.png');
-}
-
-.za-app-root.za-theme-enabled.za-scene-cafeteria {
-  background-image: url('/zombie/bg_cafeteria.png');
-}
-
-.za-app-root.za-theme-enabled.za-scene-lockers {
-  background-image: url('/zombie/bg_lockers.png');
-}
-
-body:has(.za-app-root) header { display: none !important; }
-
-/* HOME BUTTON */
-.za-home-button {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  z-index: 10000;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(30,30,30,0.95));
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-}
-
-.za-home-button:hover {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
-  transform: translateY(-2px);
-}
-
-.za-home-button::before {
-  content: "🏠";
-  font-size: 16px;
-}
-
-/* CONTENT - Minimal padding */
-.za-content-wrapper {
-  position: relative;
-  z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 60px 12px 12px;
-  min-height: 100vh;
-}
-
-/* Dark overlay */
-.za-app-root.za-theme-enabled::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Vignette */
-.za-app-root.za-theme-enabled::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* ============================================
-   PERSONALIZATION FORM - NO RED BOX
-   ============================================ */
-.za-personalization-form,
-.za-intro-sequence {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 30px;
-  background: rgba(0,0,0,0.75);
-  border: 2px solid rgba(139,0,0,0.4);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.9);
-}
-
-.za-personalization-form h1,
-.za-intro-sequence h1 {
-  color: #DC143C;
-  font-size: 36px;
-  text-align: center;
-  margin: 0 0 8px;
-  text-shadow: 0 0 15px rgba(220,20,60,0.8);
-}
-
-.za-personalization-form h2,
-.za-intro-sequence h2 {
-  color: #999;
-  font-size: 18px;
-  text-align: center;
-  margin: 0 0 30px;
-  font-weight: normal;
-}
-
-/* ============================================
-   GAME SCREEN - COMPACT
-   ============================================ */
-.za-game-screen {
-  max-width: 100%;
-}
-
-/* Top bar - smaller */
-.za-top-bar {
-  background: linear-gradient(135deg, rgba(139,0,0,0.9), rgba(60,0,0,0.9));
-  border: 2px solid rgba(220,20,60,0.6);
-  border-radius: 8px;
-  padding: 12px 18px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.8);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.za-level-info {
-  flex: 1;
-  min-width: 200px;
-}
-
-.za-level-title {
-  font-size: 22px;
-  color: #DC143C;
-  text-shadow: 0 0 10px rgba(220,20,60,0.8);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.za-level-story {
-  font-size: 13px;
-  color: #FFD700;
-  margin: 4px 0 0;
-}
-
-.za-game-stats {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.za-timer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 18px;
-  color: #FFF;
-  font-weight: bold;
-}
-
-/* Hearts - Use sprite */
-.za-hearts {
-  display: flex;
-  gap: 6px;
-}
-
-.za-heart {
-  width: 32px;
-  height: 32px;
-  background-image: url('/zombie/Hearts.png');
-  background-size: 200%;
-  display: inline-block;
-}
-
-.za-heart.active {
-  background-position: 0 0;
-  filter: drop-shadow(0 0 8px rgba(255,0,0,0.6));
-}
-
-.za-heart.lost {
-  background-position: -32px 0;
-  opacity: 0.6;
-}
-
-/* Sound toggle */
-.za-sound-toggle {
-  background: rgba(0,0,0,0.6);
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.2s;
-}
-
-.za-sound-toggle:hover {
-  background: rgba(255,215,0,0.2);
-  transform: scale(1.1);
-}
-
-/* Main game - minimal */
-.za-main-game {
-  background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(15,15,15,0.8));
-  border: 2px solid rgba(139,0,0,0.5);
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.85);
-}
-
-.za-progress-text {
-  font-size: 15px;
-  color: #FFF;
-  margin: 0 0 6px;
-  text-align: center;
-}
-
-.za-progress-bar {
-  width: 100%;
-  height: 6px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.za-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #FFD700, #FFA500);
-  transition: width 0.3s;
-  box-shadow: 0 0 8px rgba(255,215,0,0.7);
-}
-
-.za-problem-question {
-  font-size: 20px;
-  color: #FFF;
-  margin: 16px 0;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.za-answer-section {
-  display: flex;
-  gap: 8px;
-  max-width: 460px;
-  margin: 20px auto;
-}
-
-.za-answer-input {
-  flex: 1;
-  padding: 10px 16px;
-  font-size: 18px;
-  background: rgba(0,0,0,0.7);
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  font-weight: bold;
-}
-
-.za-answer-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 10px rgba(76,175,80,0.6);
-}
-
-.za-submit-button {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #DC143C, #8B0000);
-  border: none;
-  border-radius: 6px;
-  color: #FFF;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(220,20,60,0.5);
-}
-
-.za-submit-button:hover {
-  background: linear-gradient(135deg, #FF1744, #C62828);
-  transform: translateY(-2px);
-}
-
-.za-submit-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.za-choices-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 380px;
-  margin: 20px auto;
-}
-
-.za-choice-button {
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,165,0,0.12));
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-}
-
-.za-choice-button:hover {
-  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,165,0,0.25));
-  transform: translateX(4px);
-  box-shadow: 0 4px 10px rgba(255,215,0,0.4);
-}
-
-.za-choice-button.selected {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
-}
-
-/* Faction tracker - floating */
-.za-faction-tracker {
-  position: fixed;
-  right: 12px;
-  top: 70px;
-  width: 170px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.92), rgba(15,15,15,0.92));
-  border: 2px solid rgba(139,0,0,0.7);
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.85);
-}
-
-.za-faction-title {
-  font-size: 14px;
-  color: #DC143C;
-  text-align: center;
-  margin: 0 0 10px;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-.za-faction-item {
-  padding: 7px;
-  margin: 5px 0;
-  border: 1px solid #4CAF50;
-  border-radius: 4px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.za-faction-item.eliminated {
-  border-color: #555;
-  opacity: 0.35;
-  text-decoration: line-through;
-}
-
-/* ============================================
-   ANIMATED SPRITES
-   ============================================ */
-
-/* Zombie walker - bottom left */
-.za-zombie-walker {
-  position: fixed;
-  bottom: 40px;
-  left: -100px;
-  width: 120px;
-  height: 120px;
-  background-image: url('/zombie/BasicZombie.png');
-  background-size: 600% 200%;
-  animation: zombieWalk 2s steps(6) infinite, zombieMove 20s linear infinite;
-  z-index: 3;
-  pointer-events: none;
-}
-
-@keyframes zombieWalk {
-  from { background-position-x: 0; }
-  to { background-position-x: -720px; }
-}
-
-@keyframes zombieMove {
-  0% { left: -120px; }
-  100% { left: calc(100% + 120px); }
-}
-
-/* Warning light - top right corner */
-.za-warning-light {
-  position: fixed;
-  top: 12px;
-  right: 200px;
-  width: 48px;
-  height: 48px;
-  background-image: url('/zombie/warninglights.png');
-  background-size: 400% 400%;
-  animation: lightFlicker 1s steps(3) infinite;
-  z-index: 10000;
-  pointer-events: none;
-  filter: drop-shadow(0 0 12px rgba(255,200,0,0.8));
-}
-
-@keyframes lightFlicker {
-  0% { background-position: 0 0; }
-  33% { background-position: -48px 0; }
-  66% { background-position: -96px 0; }
-  100% { background-position: 0 0; }
-}
-
-/* Money display - with coin icon */
-.za-money-display {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,20,20,0.95));
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 10000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-}
-
-.za-money-icon {
-  width: 32px;
-  height: 32px;
-  background-image: url('/zombie/Coins.png');
-  background-size: cover;
-  animation: coinPulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(255,215,0,0.6));
-}
-
-@keyframes coinPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.za-money-amount {
-  font-size: 18px;
-  font-weight: bold;
-  color: #FFD700;
-  text-shadow: 0 0 8px rgba(255,215,0,0.6);
-}
-
-@keyframes zaWrongFlash {
-  0% { box-shadow: inset 0 0 300px rgba(200,0,0,0.9); }
-  100% { box-shadow: inset 0 0 0 rgba(200,0,0,0); }
-}
-
-.za-app-root.za-wrong-flash {
-  animation: zaWrongFlash 0.3s ease-out;
-}
-
-.za-theme-indicator {
-  position: fixed;
-  bottom: 6px;
-  right: 6px;
-  padding: 4px 8px;
-  background: rgba(0,0,0,0.85);
-  color: #4CAF50;
-  font-size: 9px;
-  font-family: 'Courier New', monospace;
-  border: 1px solid #4CAF50;
-  border-radius: 3px;
-  z-index: 10001;
-  pointer-events: none;
-  opacity: 0.4;
-}
-
-@media (max-width: 1024px) {
-  .za-faction-tracker {
-    position: static;
-    width: 100%;
-    margin: 12px 0;
-  }
-  .za-warning-light { display: none; }
-  .za-zombie-walker { display: none; }
-}
-
-@media (max-width: 768px) {
-  .za-content-wrapper { padding: 55px 8px 8px; }
-  .za-level-title { font-size: 18px; }
-  .za-problem-question { font-size: 17px; }
-  .za-money-display {
-    top: 60px;
-    right: 8px;
-    padding: 6px 10px;
-  }
-  .za-money-icon { width: 24px; height: 24px; }
-  .za-money-amount { font-size: 15px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
-}
-
-/* ============================================
-   ZOMBIE APOCALYPSE THEME - v3.6.1 FIXED
-   - Removed problematic fog
-   - Fixed background coverage
-   - Header override for ZA module
-   - Clean, professional atmosphere
-   ============================================ */
-
-/* ============================================
-   FULL SCREEN TAKEOVER - No white gaps
-   ============================================ */
-
-.za-app-root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background-color: #0a0b0d;
-  z-index: 9999; /* Cover everything */
-}
-
-/* Zombie theme enabled: Full background coverage */
-.za-app-root.za-theme-enabled {
-  background-color: #0a0b0d;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: scroll; /* Changed from fixed to prevent white gaps */
-}
-
-/* ============================================
-   SCENE BACKGROUNDS - Clean, no fog
-   ============================================ */
-
-.za-app-root.za-theme-enabled.za-scene-classroom {
-  background-image: url('/zombie/bg_classroom.png');
-}
-
-.za-app-root.za-theme-enabled.za-scene-cafeteria {
-  background-image: url('/zombie/bg_cafeteria.png');
-}
-
-.za-app-root.za-theme-enabled.za-scene-lockers {
-  background-image: url('/zombie/bg_lockers.png');
-}
-
-/* Default: No zombie theme */
-.za-app-root:not(.za-theme-enabled) {
-  background: #1a1a2e;
-}
-
-/* ============================================
-   HIDE SITE HEADER - ZA takes over
-   ============================================ */
-
-body:has(.za-app-root) #site-header,
-body:has(.za-app-root) .main-nav,
-body:has(.za-app-root) header,
-body:has(.za-app-root) .ug-header {
-  display: none !important;
-}
-
-/* ============================================
-   HOME BUTTON - Top left corner
-   ============================================ */
-
-.za-home-button {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 10000;
-  padding: 12px 24px;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  color: #FFD700;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.za-home-button:hover {
-  background: #FFD700;
-  color: #000;
-  transform: scale(1.05);
-}
-
-.za-home-button::before {
-  content: "🏠";
-  font-size: 20px;
-}
-
-/* ============================================
-   CONTENT WRAPPER
-   ============================================ */
-
-.za-content-wrapper {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 80px 20px 40px; /* Extra top padding for home button */
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
-/* Ensure content is readable over dark backgrounds */
-.za-theme-enabled .za-content-wrapper {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-}
-
-/* ============================================
-   DARK OVERLAY - Better readability
-   ============================================ */
-
-.za-app-root.za-theme-enabled::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4); /* Dark overlay for text readability */
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* ============================================
-   VIGNETTE - Subtle edge darkening
-   ============================================ */
-
-.za-app-root.za-theme-enabled::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 0%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* ============================================
-   FLASH EFFECT (wrong answer)
-   ============================================ */
-
-@keyframes zaWrongFlash {
-  0% {
-    box-shadow: inset 0 0 200px rgba(200, 0, 0, 0.6);
-  }
-  100% {
-    box-shadow: inset 0 0 0 rgba(200, 0, 0, 0);
-  }
-}
-
-.za-app-root.za-wrong-flash {
-  animation: zaWrongFlash 0.3s ease-out;
-}
-
-/* ============================================
-   DEV THEME INDICATOR
-   ============================================ */
-
-.za-theme-indicator {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #4CAF50;
-  font-size: 11px;
-  font-family: 'Courier New', monospace;
-  border: 1px solid #4CAF50;
-  border-radius: 3px;
-  z-index: 10001;
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 768px) {
-  .za-content-wrapper {
-    padding: 70px 12px 20px;
-  }
-  
-  .za-home-button {
-    top: 10px;
-    left: 10px;
-    padding: 8px 16px;
-    font-size: 14px;
-  }
-}
-
-/* ============================================
-   ACCESSIBILITY
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-  .za-app-root.za-theme-enabled::before,
-  .za-app-root.za-theme-enabled::after {
-    animation: none !important;
-  }
-}
-
-/* ============================================
-   NO FOG - Clean backgrounds only
-   All fog CSS removed - causing checkerboard issues
-   ============================================ */
-
 /* zombietheme.css v4.1 CLEAN ROLLBACK */
 /* Compatible with ZombieApocalypse v3.4.1 CLEAN */
-/* NO zombie walker, NO warning light, FIXED layout */
-/* SCROLL FIX + Help menu decimal styling */
+/* NUCLEAR SCROLL FIX */
 
-/* ==================== SCROLL FIX ==================== */
+/* ==================== NUCLEAR SCROLL FIX ==================== */
 
-html, body {
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+  width: 100%;
+  position: relative;
   overflow-x: hidden;
-  scroll-behavior: auto;
-  margin: 0;
-  padding: 0;
+}
+
+body {
+  overflow-y: scroll;
+}
+
+/* Force wrapper to be full screen, no extra space */
+#root > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* ==================== WRAPPER & CONTAINER ==================== */
 
 .za-wrapper {
   min-height: 100vh;
+  width: 100%;
   background-color: #0a0b0d;
   background-image: 
     radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.85) 100%),
@@ -768,8 +37,8 @@ html, body {
   background-attachment: fixed;
   background-repeat: no-repeat;
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
+  margin: 0;
+  padding: 0;
 }
 
 .za-game-container {
@@ -782,6 +51,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  margin: 0;
 }
 
 /* ==================== BACKGROUND SWITCHING ==================== */
@@ -1321,11 +591,31 @@ html, body {
   font-size: 24px;
 }
 
+.za-decimal-display {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+.za-blink-decimal {
+  font-size: 32px;
+  font-weight: bold;
+  color: #DC143C;
+  font-family: 'Courier New', monospace;
+  animation: blink 1s ease-in-out infinite;
+}
+
 .za-decimal-result {
   font-size: 32px;
   font-weight: bold;
   color: #4CAF50;
   font-family: 'Courier New', monospace;
+  margin: 0 5px;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 .za-helper-note {
@@ -1370,6 +660,73 @@ html, body {
 .za-got-it-btn {
   margin-top: 15px;
   width: 100%;
+}
+
+/* ==================== SCAFFOLDING (Level 7) ==================== */
+
+.za-scaffolding-container {
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.za-scaffolding-title {
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.za-scaffold-step {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.za-scaffold-step.completed {
+  border-color: rgba(76, 175, 80, 0.6);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.za-scaffold-step.active {
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.za-scaffold-step.locked {
+  border-color: rgba(255, 255, 255, 0.1);
+  opacity: 0.5;
+}
+
+.za-step-label {
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.za-step-question {
+  color: #DDD;
+  font-size: 15px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.za-step-completed {
+  color: #4CAF50;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.za-step-locked {
+  color: #888;
+  font-size: 13px;
+  font-style: italic;
 }
 
 /* ==================== VICTORY/DEATH SCREENS ==================== */
