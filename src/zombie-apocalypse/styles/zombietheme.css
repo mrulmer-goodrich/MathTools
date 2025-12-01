@@ -126,3 +126,63 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
    If you later want zombie-colored buttons, do it with opt-in classes,
    NOT global overrides.
 */
+
+
+/* ZOMBIE MODE — ONLY when inside .za-wrapper */
+
+/* Main background */
+.za-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.scene-classroom {
+  background-image: url('/zombie-apocalypse/assets/bg_classroom.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ===== FOG LAYERS ===== */
+
+.za-wrapper .fog-layer {
+  position: absolute;
+  left: 0;
+  width: 200vw;
+  height: 200px;
+  pointer-events: none;   /* <-- FIX SCROLL BLOCKING */
+  background-repeat: no-repeat;
+  background-size: contain; /* SCALE SINGLE IMAGE */
+  opacity: 0.45;  
+  animation: drift 60s linear infinite;
+}
+
+/* Higher layer */
+.za-wrapper .fog-top {
+  top: 0;
+  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  animation-duration: 80s;
+  opacity: 0.35;
+}
+
+/* Mid layer */
+.za-wrapper .fog-mid {
+  top: 40vh;
+  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  opacity: 0.5;
+}
+
+/* Low layer */
+.za-wrapper .fog-bottom {
+  bottom: 0;
+  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  animation-duration: 120s;
+  opacity: 0.4;
+}
+
+/* Fog motion */
+@keyframes drift {
+  from { transform: translateX(-50vw); }
+  to   { transform: translateX(0vw); }
+}
