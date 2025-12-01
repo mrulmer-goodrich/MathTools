@@ -1,148 +1,153 @@
-// IntroSequence.jsx v4.0 - Enhanced Narrative
+// IntroSequence.jsx
+// VERSION: 2.3.0 ROLLBACK
+// Compatible with v3.4.1 CLEAN rollback
+
 import React, { useState, useEffect } from 'react';
 
 const IntroSequence = ({ playerData, onComplete, onSkip }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const slides = [
-    {
-      title: "THE OUTBREAK",
-      story: `${playerData.name}, listen carefully. It started in Mr. Peterson's math class. 
-      One student... then another... then chaos. Eastway Middle School is now ground zero 
-      for something we can't explain.`
-    },
-    {
-      title: "SEVEN FACTIONS",
-      story: `The survivors have split into seven groups, each fighting to escape ${playerData.city}. 
-      The Eastway Jaguars, The Runners, The Traders, The Scavengers, The Fortress, 
-      The Engineers, and The Elites. Each faction has different strengths... and needs YOU.`
-    },
-    {
-      title: "YOUR ROLE",
-      story: `Your math skills are the only thing keeping us alive. Every correct calculation 
-      earns resources. Every mistake costs us time... and lives. ${playerData.friend} is 
-      counting on you. We ALL are.`
-    },
-    {
-      title: "THE MISSION",
-      story: `Seven levels. Seven challenges. Calculate percentages, discounts, and ratios 
-      to ration supplies and plan our escape. Get the final calculation right, and the 
-      rescue helicopter comes. Get it wrong... and we're all infected.`
-    },
-    {
-      title: "EASTWAY'S LAST STAND",
-      story: `This isn't just about grades anymore, ${playerData.name}. This is survival. 
-      Ready to prove that math can save lives? Then let's move. Time is running out.`
-    }
-  ];
+  const [currentScreen, setCurrentScreen] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Scroll to top whenever screen changes
   useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        handleNext();
-      }
-      if (e.key === 'Escape') {
-        onSkip();
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSlide]);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentScreen]);
 
   const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(prev => prev + 1);
-    } else {
+    if (currentScreen === 3) {
       onComplete();
+    } else {
+      // Add transition effect
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentScreen(currentScreen + 1);
+        setIsTransitioning(false);
+        // Force scroll after screen change
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 400);
     }
   };
 
+  const handleSkip = () => {
+    onSkip();
+  };
+
+  // Check if user selected Math (for Mr. UG reference)
+  const isMathStudent = playerData.favoriteSubject === 'Math';
+  
+  // Get city name (remove ", NC" if present)
+  const cityName = (playerData.cityName || 'Charlotte').replace(', NC', '').replace(',NC', '');
+
+  const screens = [
+    {
+      title: "THE OUTBREAK",
+      content: (
+        <>
+          <p className="za-intro-text">
+            It started at Eastway Middle School on a Tuesday afternoon at 2:47 PM. Principal Garvin's voice crackled over the intercom, urgent and terrified: "All students and staff, shelter in place immediately. Lock your doors. Do NOT go outside. This is NOT a drill."
+          </p>
+          <p className="za-intro-text">
+            {playerData.playerName}, you were in {isMathStudent ? "Mr. UG's" : "your"} {playerData.favoriteSubject || 'class'} when the alarms began. Through the windows, you saw Principal Garvin running across the courtyard, zombies shambling behind her. She didn't make it.
+          </p>
+          <p className="za-intro-text">
+            The infection spread like wildfire through {cityName}. Whatever caused it—a virus, a chemical spill, something worse—didn't matter anymore. Within the first hour, 80% of the city had turned. The screams... you'll never forget the screams.
+          </p>
+          <p className="za-intro-text">
+            You grabbed {playerData.friendName}, smashed through the back door of Eastway Middle, and ran for your lives. Behind you, the place where you once felt safe became a nightmare. You never looked back.
+          </p>
+        </>
+      )
+    },
+    {
+      title: "THE FACTIONS",
+      content: (
+        <>
+          <p className="za-intro-text">
+            In the chaos of the first week, survivors clustered together. Seven distinct factions emerged, each with their own strategy for survival. You and {playerData.friendName} joined the Eastway Jaguars—former students and teachers who refused to give up on what Principal Garvin taught: "To empower everyone to be better than they were the day before."
+          </p>
+          <div className="za-faction-list">
+            <div className="za-faction za-faction-player">
+              <span className="za-faction-icon">🐆</span> The Eastway Jaguars <span className="za-faction-note">(You and {playerData.friendName} - Principal Garvin's legacy lives on)</span>
+            </div>
+            <div className="za-faction">
+              <span className="za-faction-icon">⚡</span> The Runners <span className="za-faction-note">- Fast and fearless, but reckless in their speed</span>
+            </div>
+            <div className="za-faction">
+              <span className="za-faction-icon">💰</span> The Traders <span className="za-faction-note">- Wealthy and cunning, but consumed by greed</span>
+            </div>
+            <div className="za-faction">
+              <span className="za-faction-icon">🔍</span> The Scavengers <span className="za-faction-note">- Resourceful scavengers, but growing desperate</span>
+            </div>
+            <div className="za-faction">
+              <span className="za-faction-icon">🏰</span> The Fortress <span className="za-faction-note">- Heavily fortified, but rigid and inflexible</span>
+            </div>
+            <div className="za-faction">
+              <span className="za-faction-icon">🔧</span> The Engineers <span className="za-faction-note">- Brilliant minds, but dangerously overconfident</span>
+            </div>
+            <div className="za-faction za-faction-enemy">
+              <span className="za-faction-icon">👑</span> The Elites <span className="za-faction-note">- Ruthless, organized, and your final threat</span>
+            </div>
+          </div>
+          <p className="za-intro-text za-intro-emphasis">
+            Resources are scarce. Territory is everything. Only ONE faction will control the future of {cityName}. For Principal Garvin. For Eastway. It has to be you.
+          </p>
+        </>
+      )
+    },
+    {
+      title: "THE CHALLENGE",
+      content: (
+        <>
+          <p className="za-intro-text">
+            {playerData.friendName} pulls you aside after the first faction meeting. "Listen," they whisper urgently, "survival isn't about strength anymore. It's about being smarter than everyone else. {isMathStudent ? "Remember what Mr. UG always said—math is survival." : "We need to calculate every move."} Every trade, every risk, every decision. One wrong percentage and we're dead."
+          </p>
+          <p className="za-intro-text">
+            You think back to Eastway Middle. You wanted to be {playerData.dreamJob || 'something great'}—back when the world made sense, when your biggest worry was {playerData.biggestFear || 'tests and homework'}. Now your only goal is to see another sunrise.
+          </p>
+          <p className="za-intro-text">
+            The other factions are watching. The Elites are already making their move. The dead are closing in. {isMathStudent ? "Mr. UG prepared you for this... sort of." : "You have to be ready."}
+          </p>
+          <p className="za-intro-text za-intro-emphasis">
+            This is it, {playerData.playerName}. For Principal Garvin. For Eastway. For survival. Are you ready to fight?
+          </p>
+        </>
+      )
+    }
+  ];
+
+  const currentScreenData = screens[currentScreen - 1];
+
   return (
     <div className="za-intro-sequence">
-      <div style={{
-        textAlign: 'center',
-        marginBottom: '30px'
-      }}>
-        <h1>{slides[currentSlide].title}</h1>
-        <p className="za-intro-story" style={{
-          fontSize: '15px',
-          lineHeight: '1.8',
-          color: '#DDD',
-          margin: '20px 0',
-          textAlign: 'left'
-        }}>
-          {slides[currentSlide].story}
-        </p>
-      </div>
+      <button className="za-skip-btn" onClick={handleSkip}>
+        Skip Intro →
+      </button>
 
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '8px',
-        marginBottom: '25px'
-      }}>
-        {slides.map((_, index) => (
-          <div
-            key={index}
-            style={{
-              width: '40px',
-              height: '6px',
-              background: index === currentSlide ? '#FFD700' : 'rgba(255,255,255,0.2)',
-              borderRadius: '3px',
-              transition: 'all 0.3s'
-            }}
-          />
-        ))}
-      </div>
+      <div className="za-intro-container">
+        <div className={`za-intro-screen ${isTransitioning ? 'za-transitioning' : ''}`} key={currentScreen}>
+          <h1 className="za-intro-title">{currentScreenData.title}</h1>
+          <div className="za-intro-content">
+            {currentScreenData.content}
+          </div>
 
-      <div style={{
-        display: 'flex',
-        gap: '10px'
-      }}>
-        <button
-          onClick={onSkip}
-          style={{
-            flex: '1',
-            padding: '10px',
-            background: 'rgba(255,255,255,0.1)',
-            border: '2px solid #666',
-            borderRadius: '6px',
-            color: '#AAA',
-            fontSize: '14px',
-            cursor: 'pointer',
-            transition: 'all 0.2s'
-          }}
-        >
-          Skip Intro
-        </button>
-        <button
-          onClick={handleNext}
-          style={{
-            flex: '2',
-            padding: '10px',
-            background: 'linear-gradient(135deg, #DC143C, #8B0000)',
-            border: 'none',
-            borderRadius: '6px',
-            color: '#FFF',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            textTransform: 'uppercase'
-          }}
-        >
-          {currentSlide < slides.length - 1 ? 'Continue' : 'Start Mission'}
-        </button>
-      </div>
+          <button 
+            className="za-btn-primary za-intro-continue"
+            onClick={handleNext}
+            disabled={isTransitioning}
+          >
+            {currentScreen === 3 ? "I'M READY TO SURVIVE" : 'Continue →'}
+          </button>
+        </div>
 
-      <p style={{
-        textAlign: 'center',
-        color: '#666',
-        fontSize: '11px',
-        marginTop: '15px'
-      }}>
-        Press ENTER to continue • ESC to skip
-      </p>
+        <div className="za-intro-progress">
+          {[1, 2, 3].map(num => (
+            <span 
+              key={num} 
+              className={`za-progress-dot ${num === currentScreen ? 'active' : ''} ${num < currentScreen ? 'complete' : ''}`}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
