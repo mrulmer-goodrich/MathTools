@@ -32,15 +32,18 @@ body.ug-zombie-mode #root {
    Example: <body class="ug-zombie-mode scene-lockers">
 */
 body.ug-zombie-mode.scene-classroom #root {
-  background-image: url("/zombie/bg_classroom.png");
+  background-image: url("/assets/zombie/bg_classroom.png");
 }
 
+
+
+
 body.ug-zombie-mode.scene-cafeteria #root {
-  background-image: url("/zombie/bg_cafeteria.png");
+  background-image: url("/assets/zombie/bg_cafeteria.png");
 }
 
 body.ug-zombie-mode.scene-lockers #root {
-  background-image: url("/zombie/bg_lockers.png");
+  background-image: url("/assets/zombie/bg_lockers.png");
 }
 
 /* 4) Global fog overlay – two parallax layers, click-through.
@@ -55,7 +58,7 @@ body.ug-zombie-mode #root::after {
   top: 60%;
   bottom: -10%;
   pointer-events: none;         /* do not block clicks */
-  background-image: url("/zombie/fog_A.png");
+  background-image: url("/assets/zombie/fog_A.png");
   background-repeat: repeat-x;
   background-size: auto 55%;
   opacity: 0.45;
@@ -139,7 +142,7 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
 }
 
 .scene-classroom {
-  background-image: url('/zombie-apocalypse/assets/bg_classroom.png');
+  background-image: url('/assets/zombie/bg_classroom.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -162,7 +165,7 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
 /* Higher layer */
 .za-wrapper .fog-top {
   top: 0;
-  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  background-image: url('/assets/zombie/fog_A.png');
   animation-duration: 80s;
   opacity: 0.35;
 }
@@ -170,14 +173,14 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
 /* Mid layer */
 .za-wrapper .fog-mid {
   top: 40vh;
-  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  background-image: url('/assets/zombie/fog_A.png');
   opacity: 0.5;
 }
 
 /* Low layer */
 .za-wrapper .fog-bottom {
   bottom: 0;
-  background-image: url('/zombie-apocalypse/assets/fog_A.png');
+  background-image: url('/assets/zombie/fog_A.png');
   animation-duration: 120s;
   opacity: 0.4;
 }
@@ -218,7 +221,7 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
 
 /* Base scene background — classroom by default */
 .scene-classroom {
-  background-image: url('../assets/bg_classroom.png');
+  background-image: url('/assets/zombie/bg_classroom.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -251,7 +254,7 @@ body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
   width: 160vw;
   height: 190px;
   pointer-events: none;   /* NEVER block clicks or hovers */
-  background-image: url('../assets/fog_A.png');
+  background-image: url('/assets/zombie/fog_A.png');
   background-repeat: repeat-x;
   background-size: contain;
   opacity: 0.45;
