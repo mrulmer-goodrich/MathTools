@@ -1,316 +1,283 @@
-/* zombie-theme.css
-   Lightweight visual skin for "UG Math Tools – Zombie Mode"
-   Uses 3 background scenes + 1 fog strip. Assumes files live in /public/zombie/.
-   Does NOT change layout or touch component-level styles.
-*/
+/* ============================================
+   ZOMBIE APOCALYPSE THEME - PRODUCTION v3.6
+   Scoped to .za-theme-enabled only
+   Assets: /public/zombie/
+   ============================================ */
 
-/* 1) Basic body reset for zombie mode */
-body.ug-zombie-mode {
-  background-color: #05060a;
-  color: #e5f0ff;
-}
+/* ============================================
+   ROOT CONTAINER - Background layers
+   ============================================ */
 
-/* 2) Root app container background
-   Assumes your React root element is #root (Vite/CRA default).
-   If your root id is different, change #root below but keep the rest.
-*/
-body.ug-zombie-mode #root {
-  position: relative;
-  min-height: 100vh;
-  background-color: #05060a;
-  background-image: url("/zombie/bg_classroom.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  overflow: hidden; /* keeps fog from spilling outside viewport */
-}
-
-/* 3) Optional different scenes.
-   You can add one of these classes to <body> alongside ug-zombie-mode
-   to swap the main background without touching code anywhere else.
-   Example: <body class="ug-zombie-mode scene-lockers">
-*/
-body.ug-zombie-mode.scene-classroom #root {
-  background-image: url("/assets/zombie/bg_classroom.png");
-}
-
-
-
-
-body.ug-zombie-mode.scene-cafeteria #root {
-  background-image: url("/assets/zombie/bg_cafeteria.png");
-}
-
-body.ug-zombie-mode.scene-lockers #root {
-  background-image: url("/assets/zombie/bg_lockers.png");
-}
-
-/* 4) Global fog overlay – two parallax layers, click-through.
-   Uses fog_A.png as a seamless horizontal strip.
-*/
-body.ug-zombie-mode #root::before,
-body.ug-zombie-mode #root::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 60%;
-  bottom: -10%;
-  pointer-events: none;         /* do not block clicks */
-  background-image: url("/assets/zombie/fog_A.png");
-  background-repeat: repeat-x;
-  background-size: auto 55%;
-  opacity: 0.45;
-  mix-blend-mode: screen;
-  z-index: 5;
-}
-
-/* front (slower, closer to floor) */
-body.ug-zombie-mode #root::before {
-  animation: ugFogScrollSlow 80s linear infinite;
-}
-
-/* back (faster, slightly higher & lighter) */
-body.ug-zombie-mode #root::after {
-  top: 50%;
-  opacity: 0.3;
-  animation: ugFogScrollFast 45s linear infinite;
-}
-
-/* 5) Keyframes for fog scroll */
-@keyframes ugFogScrollSlow {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
-}
-
-@keyframes ugFogScrollFast {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(50%, 0, 0); }
-}
-
-/* 6) Slight vignette around edges for drama, without touching content */
-body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 6;
-  background:
-    radial-gradient(circle at center,
-      transparent 0,
-      transparent 55%,
-      rgba(0,0,0,0.5) 100%);
-}
-
-/* Utility class if you want to wrap your existing app shell once:
-   <div id="root"><div class="ug-app-shell ug-zombie-vignette-overlay-helper">...</div></div>
-   Not required for fog; only if you decide to use the vignette helper below.
-*/
-.ug-zombie-vignette-overlay-helper {
-  position: relative;
-  z-index: 10; /* stay above background/fog, below future UI overlays */
-}
-
-/* 7) Optional: subtle "flicker" for any header bar or logo
-   Just add class="ug-zombie-flicker" to that element.
-*/
-.ug-zombie-flicker {
-  animation: ugZombieFlicker 6s infinite;
-}
-
-@keyframes ugZombieFlicker {
-  0%, 10%, 20%, 100% { opacity: 1; }
-  3%, 18% { opacity: 0.4; }
-  4%, 19% { opacity: 0.9; }
-  50% { opacity: 0.7; }
-}
-
-/* 8) Safety: do NOT touch fonts, buttons, or layout.
-   If you later want zombie-colored buttons, do it with opt-in classes,
-   NOT global overrides.
-*/
-
-
-/* ZOMBIE MODE — ONLY when inside .za-wrapper */
-
-/* Main background */
-.za-wrapper {
-  position: relative;
-  min-height: 100vh;
-  overflow-x: hidden;  /* allow vertical scroll for tall content */
-  overflow-y: auto;
-}
-
-.scene-classroom {
-  background-image: url('/assets/zombie/bg_classroom.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-/* ===== FOG LAYERS ===== */
-
-.za-wrapper .fog-layer {
-  position: absolute;
-  left: 0;
-  width: 200vw;
-  height: 200px;
-  pointer-events: none;   /* <-- FIX SCROLL / CLICK BLOCKING */
-  background-repeat: no-repeat;
-  background-size: contain; /* SCALE SINGLE IMAGE */
-  opacity: 0.45;  
-  animation: drift 60s linear infinite;
-}
-
-/* Higher layer */
-.za-wrapper .fog-top {
-  top: 0;
-  background-image: url('/assets/zombie/fog_A.png');
-  animation-duration: 80s;
-  opacity: 0.35;
-}
-
-/* Mid layer */
-.za-wrapper .fog-mid {
-  top: 40vh;
-  background-image: url('/assets/zombie/fog_A.png');
-  opacity: 0.5;
-}
-
-/* Low layer */
-.za-wrapper .fog-bottom {
-  bottom: 0;
-  background-image: url('/assets/zombie/fog_A.png');
-  animation-duration: 120s;
-  opacity: 0.4;
-}
-
-/* Fog motion */
-@keyframes drift {
-  from { transform: translateX(-50vw); }
-  to   { transform: translateX(0vw); }
-}
-
-
-
-
-
-/*Appending last file replacement because it seems short*/
-
-
-
-
-/* zombietheme.css
-   SCOPED THEME FOR ZOMBIE APOCALYPSE ONLY
-   - No body / #root selectors
-   - Uses local .za-wrapper + fog layers
-   - Background images must exist under: src/zombie-apocalypse/assets/
-*/
-
-/* MAIN WRAPPER FOR ZA MODULE */
-.za-wrapper {
+.za-app-root {
   position: relative;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
-  overflow-y: auto; /* allow vertical scrolling for tall content */
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
+  overflow-y: auto;
 }
 
-/* Base scene background — classroom by default */
-.scene-classroom {
-  background-image: url('/assets/zombie/bg_classroom.png');
+/* Default: No zombie theme */
+.za-app-root:not(.za-theme-enabled) {
+  background: #1a1a2e;
+}
+
+/* Zombie theme enabled: Layered scene */
+.za-app-root.za-theme-enabled {
+  background-color: #0a0b0d;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #05060a;
+  background-attachment: fixed;
 }
 
-/* If you later want cafeteria/lockers per-level, you can add:
-   .scene-cafeteria { background-image: url('../assets/bg_cafeteria.png'); }
-   .scene-lockers   { background-image: url('../assets/bg_lockers.png'); }
-*/
+/* ============================================
+   SCENE BACKGROUNDS (Phase 1 - 3 scenes)
+   ============================================ */
 
-/* INNER ROOT (existing ZA layout attaches here) */
-.za-root {
+.za-app-root.za-theme-enabled.za-scene-classroom {
+  background-image: url('/zombie/bg_classroom.png');
+}
+
+.za-app-root.za-theme-enabled.za-scene-cafeteria {
+  background-image: url('/zombie/bg_cafeteria.png');
+}
+
+.za-app-root.za-theme-enabled.za-scene-lockers {
+  background-image: url('/zombie/bg_lockers.png');
+}
+
+/* ============================================
+   FOG LAYERS - Subtle, professional
+   Phase 1: Single fog image (fog_A.png)
+   ============================================ */
+
+.za-fog-layer {
+  position: fixed;
+  left: -10%;
+  width: 120%;
+  height: 180px;
+  background-image: url('/zombie/fog_A.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.25; /* Subtle, not ridiculous */
+}
+
+/* Top fog - higher, lighter, slower */
+.za-fog-top {
+  top: 15%;
+  opacity: 0.2;
+  animation: zaFogDriftSlow 90s linear infinite;
+}
+
+/* Mid fog - middle height, moderate speed */
+.za-fog-mid {
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.3;
+  animation: zaFogDriftMed 65s linear infinite reverse;
+}
+
+/* Bottom fog - lower, denser, faster */
+.za-fog-bottom {
+  bottom: 8%;
+  opacity: 0.28;
+  animation: zaFogDriftFast 50s linear infinite;
+}
+
+/* Fog animations - gentle drift */
+@keyframes zaFogDriftSlow {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes zaFogDriftMed {
+  from { transform: translateX(0) translateY(-50%); }
+  to { transform: translateX(50%) translateY(-50%); }
+}
+
+@keyframes zaFogDriftFast {
+  from { transform: translateX(0); }
+  to { transform: translateX(-80%); }
+}
+
+/* ============================================
+   CONTENT WRAPPER
+   All game UI sits here, above fog/bg
+   ============================================ */
+
+.za-content-wrapper {
   position: relative;
-  z-index: 2;
+  z-index: 10;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 20px;
+  min-height: 100vh;
   box-sizing: border-box;
 }
 
-/* -----------------------------
-   FOG LAYERS
-------------------------------*/
-
-.za-wrapper .fog-layer {
-  position: fixed;        /* stay in viewport while ZA scrolls */
-  left: -20vw;            /* a bit wider to cover edge cases */
-  width: 160vw;
-  height: 190px;
-  pointer-events: none;   /* NEVER block clicks or hovers */
-  background-image: url('/assets/zombie/fog_A.png');
-  background-repeat: repeat-x;
-  background-size: contain;
-  opacity: 0.45;
-  z-index: 1;
-  animation: zaFogDrift 55s linear infinite;
+/* Ensure content is readable over dark backgrounds */
+.za-theme-enabled .za-content-wrapper {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
 }
 
-.za-wrapper .fog-top {
-  top: 18%;
-  opacity: 0.35;
+/* ============================================
+   SUBTLE ATMOSPHERIC EFFECTS
+   ============================================ */
+
+/* Vignette - very subtle edge darkening */
+.za-app-root.za-theme-enabled::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
 }
 
-.za-wrapper .fog-mid {
-  top: 45%;
-  opacity: 0.55;
-  animation-duration: 75s;
+/* Optional: Subtle scan lines for retro game feel */
+.za-app-root.za-theme-enabled::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.03) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 3px
+  );
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.15;
 }
 
-.za-wrapper .fog-bottom {
-  bottom: 10%;
-  opacity: 0.4;
-  animation-direction: reverse;
-  animation-duration: 95s;
-}
+/* ============================================
+   FLASH EFFECT (wrong answer)
+   ============================================ */
 
-@keyframes zaFogDrift {
+@keyframes zaWrongFlash {
   0% {
-    transform: translateX(0);
+    box-shadow: inset 0 0 100px rgba(200, 0, 0, 0.4);
   }
   100% {
-    transform: translateX(-40vw);
+    box-shadow: inset 0 0 0 rgba(200, 0, 0, 0);
   }
 }
 
-/* -----------------------------
-   OPTIONAL: WRONG FLASH
-   (used by handleWrongAnswer)
-------------------------------*/
-
-body.za-wrong-flash,
-.za-wrapper.za-wrong-flash {
-  animation: zaWrongFlashPulse 0.25s ease-out;
+.za-app-root.za-wrong-flash {
+  animation: zaWrongFlash 0.3s ease-out;
 }
 
-@keyframes zaWrongFlashPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.8);
-    background-color: rgba(127, 29, 29, 0.4);
+/* ============================================
+   DEV THEME INDICATOR
+   ============================================ */
+
+.za-theme-indicator {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #4CAF50;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  border: 1px solid #4CAF50;
+  border-radius: 3px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .za-fog-layer {
+    height: 120px;
   }
-  100% {
-    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
-    background-color: transparent;
+  
+  .za-content-wrapper {
+    padding: 12px;
   }
 }
 
-/* No button, font, or layout overrides here.
-   All detailed ZA styling remains in zombie.css (your original styles).
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .za-fog-layer {
+    animation: none !important;
+  }
+  
+  .za-app-root.za-theme-enabled::after {
+    display: none;
+  }
+}
+
+/* ============================================
+   FUTURE PHASE 2+ HOOKS
+   (Commented out - ready when you are)
+   ============================================ */
+
+/*
+.za-sprite-zombie {
+  width: 64px;
+  height: 64px;
+  background-image: url('/zombie/zombie_sprite.png');
+  animation: zaZombieWalk 1.2s steps(8) infinite;
+}
+
+@keyframes zaZombieWalk {
+  from { background-position: 0 0; }
+  to { background-position: -512px 0; }
+}
+
+.za-flicker-light {
+  animation: zaFlicker 4s infinite;
+}
+
+@keyframes zaFlicker {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.6; }
+  45% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+}
 */
 
+/* ============================================
+   NOTES FOR FUTURE DEVELOPMENT
+   ============================================ */
+
+/*
+Phase 2 Assets to Add:
+- Sprite sheets for zombies (8-frame walk cycles)
+- Flickering light sprites
+- UI metal panel textures
+- Biohazard icons
+- Grunge overlay textures
+
+Current Implementation:
+✅ 3 background scenes (classroom, cafeteria, lockers)
+✅ Subtle fog system (6 variations possible with fog_A.png)
+✅ Professional atmosphere without being overwhelming
+✅ Easy theme toggle (Ctrl+Shift+T)
+✅ Scoped to .za-theme-enabled only
+✅ No impact on other modules
+
+Assets Required:
+- /public/zombie/bg_classroom.png
+- /public/zombie/bg_cafeteria.png
+- /public/zombie/bg_lockers.png
+- /public/zombie/fog_A.png
+*/
