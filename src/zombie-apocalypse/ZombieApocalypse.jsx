@@ -1,7 +1,7 @@
-// ZombieApocalypse.jsx
-// Version: 3.6.1 FIXED
-// Last Updated: December 1, 2024
-// Changes: Removed fog (PNG transparency issues), fixed header overlap, added HOME button, full-screen takeover
+//Version 3.4.1 CLEAN ROLLBACK
+//Last Updated: December 1, 2025
+//This is the STABLE version BEFORE zombie walker and warning light were added
+//Use this for rollback if v4.0 has issues
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -14,16 +14,12 @@ import './styles/zombie.css';
 import './styles/zombietheme.css';
 
 const ZombieApocalypse = () => {
-  // ============================================
-  // THEME TOGGLE - Easy on/off for zombie visuals
-  // ============================================
-  const [zombieThemeEnabled, setZombieThemeEnabled] = useState(true);
-  // Set to false to use original design, true for zombie atmosphere
-  
-  // ============================================
-  // CORE GAME STATE
-  // ============================================
-  const [gamePhase, setGamePhase] = useState('personalization');
+  // -----------------------------
+  // Core game state
+  // -----------------------------
+  const [gamePhase, setGamePhase] = useState('personalization'); 
+  // phases: personalization, intro, playing, level-complete, death, victory
+
   const [playerData, setPlayerData] = useState({
     playerName: '',
     friendName: '',
@@ -35,144 +31,86 @@ const ZombieApocalypse = () => {
   });
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [hearts, setHearts] = useState(2);
+  const [hearts, setHearts] = useState(2); // can be wrong once per level
   const [levelStartTime, setLevelStartTime] = useState(Date.now());
+  const [levelStats, setLevelStats] = useState({});
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [totalDeaths, setTotalDeaths] = useState(0);
   const [gameStartTime, setGameStartTime] = useState(null);
 
-  // ============================================
-  // MONEY SYSTEM
-  // ============================================
-  const [moneyPot, setMoneyPot] = useState(100000);
-  const [levelEarnings, setLevelEarnings] = useState(0);
-  const [correctStreak, setCorrectStreak] = useState(0);
-  const [levelPerfect, setLevelPerfect] = useState(true);
-
-  // ============================================
-  // SOUND EFFECTS
-  // ============================================
+  // -----------------------------
+  // Minimal sound effects
+  // -----------------------------
   const playSound = (type) => {
     if (!soundEnabled) return;
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioContext = new AudioContext();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioContext = new AudioCtx();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
-      switch(type) {
+
+      switch (type) {
         case 'correct':
           oscillator.frequency.value = 800;
           gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
           oscillator.start();
-          oscillator.stop(audioContext.currentTime + 0.1);
+          oscillator.stop(audioContext.currentTime + 0.15);
           break;
         case 'wrong':
           oscillator.frequency.value = 200;
-          gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
           oscillator.start();
           oscillator.stop(audioContext.currentTime + 0.3);
+          break;
+        case 'death':
+          oscillator.frequency.value = 100;
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.5);
           break;
         default:
           break;
       }
     } catch (err) {
-      console.warn('Audio error:', err);
+      // silent fail if audio not supported
     }
   };
 
-  // ============================================
-  // PHASE HANDLERS
-  // ============================================
+  // -----------------------------
+  // Handlers
+  // -----------------------------
   const handlePersonalizationComplete = (data) => {
     setPlayerData(data);
     setGamePhase('intro');
   };
 
   const handleIntroComplete = () => {
-    setGamePhase('playing');
     setGameStartTime(Date.now());
-    setLevelStartTime(Date.now());
+    setGamePhase('playing');
   };
 
   const handleSkipIntro = () => {
-    setGamePhase('playing');
     setGameStartTime(Date.now());
-    setLevelStartTime(Date.now());
+    setGamePhase('playing');
   };
 
-  const handleCorrectAnswer = () => {
+  const handleCorrectAnswer = (timeSpent) => {
     playSound('correct');
-    const basePay = currentLevel <= 2 ? 500 : currentLevel <= 4 ? 1000 : 2500;
-    let multiplier = 1.0;
-    
-    // Streak bonus
-    const newStreak = correctStreak + 1;
-    setCorrectStreak(newStreak);
-    if (newStreak >= 3) multiplier *= 1.3;
-    
-    // Clutch bonus
-    if (hearts === 1) multiplier *= 1.5;
-    
-    // Lucky break
-    if (Math.random() < 0.1) multiplier *= 1.2;
-    
-    const earned = Math.round(basePay * multiplier);
-    setMoneyPot(prev => prev + earned);
-    setLevelEarnings(prev => prev + earned);
   };
 
   const handleWrongAnswer = () => {
     playSound('wrong');
-    setCorrectStreak(0);
-    setLevelPerfect(false);
-    setMoneyPot(prev => Math.max(0, prev - 750));
-    
-    const newHearts = hearts - 1;
-    setHearts(newHearts);
-    
-    if (newHearts <= 0) {
-      // Death - drop back a level
-      setTimeout(() => {
-        const newLevel = Math.max(1, currentLevel - 1);
-        setMoneyPot(prev => Math.max(0, Math.floor(prev * 0.5))); // -50% penalty
-        setCurrentLevel(newLevel);
-        setHearts(2);
-        setLevelStartTime(Date.now());
-        setGamePhase('playing');
-      }, 2000);
+    if (hearts > 0) {
+      setHearts((prev) => prev - 1);
+    } else {
+      playSound('death');
+      setTotalDeaths((prev) => prev + 1);
       setGamePhase('death');
     }
-  };
-
-  const handleLevelComplete = () => {
-    // Apply multipliers
-    if (levelPerfect) {
-      const bonus = Math.round(levelEarnings * 1.0); // 2x total
-      setMoneyPot(prev => prev + bonus);
-    }
-    
-    // Level bonus
-    const levelBonus = 500 * currentLevel;
-    setMoneyPot(prev => prev + levelBonus);
-    
-    if (currentLevel === 7) {
-      setGamePhase('victory');
-    } else {
-      setGamePhase('level-complete');
-    }
-  };
-
-  const handleContinueFromLevel = () => {
-    setCurrentLevel(prev => prev + 1);
-    setHearts(2);
-    setLevelStartTime(Date.now());
-    setLevelEarnings(0);
-    setCorrectStreak(0);
-    setLevelPerfect(true);
-    setGamePhase('playing');
   };
 
   const handleDevJumpToLevel = (level) => {
@@ -187,83 +125,102 @@ const ZombieApocalypse = () => {
         biggestFear: 'Bugs'
       });
     }
-    if (!gameStartTime) setGameStartTime(Date.now());
+
+    if (!gameStartTime) {
+      setGameStartTime(Date.now());
+    }
+
     setCurrentLevel(level);
     setHearts(2);
     setLevelStartTime(Date.now());
     setGamePhase('playing');
   };
 
+  const handleLevelComplete = (levelTime) => {
+    // store level stats
+    setLevelStats((prev) => ({
+      ...prev,
+      [currentLevel]: { time: levelTime }
+    }));
+
+    // if level 7, victory
+    if (currentLevel === 7) {
+      setGamePhase('victory');
+    } else {
+      // show Level Complete screen and wait for click
+      setGamePhase('level-complete');
+    }
+  };
+
+  const handleContinueFromLevel = () => {
+    const nextLevel = Math.min(7, currentLevel + 1);
+    setCurrentLevel(nextLevel);
+    setHearts(2);
+    setLevelStartTime(Date.now());
+    setGamePhase('playing');
+  };
+
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const safe = Math.max(0, seconds || 0);
+    const mins = Math.floor(safe / 60);
+    const secs = safe % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ============================================
-  // DEV SHORTCUTS
-  // ============================================
+  // -----------------------------
+  // DEV shortcuts (Ctrl+Shift+7, Ctrl+Shift+V)
+  // -----------------------------
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.shiftKey && (e.key === '7' || e.key === '&')) {
+      if (!e.ctrlKey || !e.shiftKey) return;
+
+      // Ctrl+Shift+7 => jump to Level 7
+      if (e.key === '7' || e.key === '&') {
         e.preventDefault();
         handleDevJumpToLevel(7);
       }
-      if (e.ctrlKey && e.shiftKey && (e.key === 'V' || e.key === 'v')) {
+
+      // Ctrl+Shift+V => jump directly to Victory
+      if (e.key === 'v' || e.key === 'V') {
         e.preventDefault();
+
         if (!playerData.playerName) {
           setPlayerData({
-            playerName: 'Test',
-            friendName: 'Friend',
-            cityName: 'Charlotte',
+            playerName: 'Test Player',
+            friendName: 'Test Friend',
+            cityName: 'Charlotte, NC',
             favoriteColor: 'Blue',
             favoriteSubject: 'Math',
-            dreamJob: 'Dev',
+            dreamJob: 'Developer',
             biggestFear: 'Bugs'
           });
         }
-        if (!gameStartTime) setGameStartTime(Date.now());
+
+        if (!gameStartTime) {
+          setGameStartTime(Date.now());
+        }
+
         setGamePhase('victory');
       }
-      // Toggle theme: Ctrl+Shift+T
-      if (e.ctrlKey && e.shiftKey && (e.key === 'T' || e.key === 't')) {
-        e.preventDefault();
-        setZombieThemeEnabled(prev => !prev);
-        console.log('🎨 Theme toggled:', !zombieThemeEnabled ? 'ZOMBIE' : 'ORIGINAL');
-      }
     };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [playerData, gameStartTime, zombieThemeEnabled]);
 
-  // ============================================
-  // SCENE SELECTION (based on level)
-  // ============================================
-  const getSceneClass = () => {
-    if (currentLevel <= 2) return 'za-scene-classroom';
-    if (currentLevel <= 4) return 'za-scene-cafeteria';
-    if (currentLevel <= 6) return 'za-scene-lockers';
-    return 'za-scene-classroom'; // Level 7 back to classroom
-  };
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [playerData, gameStartTime]);
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // -----------------------------
+  // Render
+  // -----------------------------
   return (
-    <div className={`za-app-root ${zombieThemeEnabled ? 'za-theme-enabled' : ''} ${getSceneClass()}`}>
-      {/* HOME BUTTON - Always visible */}
-      <a href="/" className="za-home-button" title="Return to Home">
-        HOME
-      </a>
-
-      {/* Content wrapper - all game content goes here */}
-      <div className="za-content-wrapper">
+    <div className="za-wrapper">
+      <div className="za-game-container">
         {(() => {
-          switch(gamePhase) {
+          switch (gamePhase) {
             case 'personalization':
-              return <PersonalizationForm onComplete={handlePersonalizationComplete} />;
-            
+              return (
+                <PersonalizationForm onComplete={handlePersonalizationComplete} />
+              );
+
             case 'intro':
               return (
                 <IntroSequence
@@ -272,7 +229,7 @@ const ZombieApocalypse = () => {
                   onSkip={handleSkipIntro}
                 />
               );
-            
+
             case 'playing':
               return (
                 <GameScreen
@@ -280,31 +237,28 @@ const ZombieApocalypse = () => {
                   currentLevel={currentLevel}
                   hearts={hearts}
                   soundEnabled={soundEnabled}
-                  onToggleSound={() => setSoundEnabled(prev => !prev)}
+                  onToggleSound={() => setSoundEnabled((prev) => !prev)}
                   onCorrectAnswer={handleCorrectAnswer}
                   onWrongAnswer={handleWrongAnswer}
                   onLevelComplete={handleLevelComplete}
+                  onDevJumpToLevel={handleDevJumpToLevel}
                   levelStartTime={levelStartTime}
                   formatTime={formatTime}
-                  onDevJumpToLevel={handleDevJumpToLevel}
-                  moneyPot={moneyPot}
                 />
               );
-            
+
             case 'level-complete':
               return (
                 <div onClick={handleContinueFromLevel}>
                   <LevelComplete
                     level={currentLevel}
                     playerData={playerData}
-                    time={Math.floor((Date.now() - levelStartTime) / 1000)}
+                    time={levelStats[currentLevel]?.time || 0}
                     formatTime={formatTime}
-                    moneyEarned={levelEarnings}
-                    totalPot={moneyPot}
                   />
                 </div>
               );
-            
+
             case 'death':
               return (
                 <DeathScreen
@@ -312,30 +266,28 @@ const ZombieApocalypse = () => {
                   playerData={playerData}
                 />
               );
-            
+
             case 'victory':
               return (
                 <VictoryScreen
                   playerData={playerData}
-                  totalTime={gameStartTime ? Math.floor((Date.now() - gameStartTime) / 1000) : 0}
+                  levelStats={levelStats}
+                  totalDeaths={totalDeaths}
+                  totalTime={
+                    gameStartTime
+                      ? Math.floor((Date.now() - gameStartTime) / 1000)
+                      : 0
+                  }
                   formatTime={formatTime}
-                  finalMoney={moneyPot}
                   onRestart={() => window.location.reload()}
                 />
               );
-            
+
             default:
               return null;
           }
         })()}
       </div>
-
-      {/* Dev indicator */}
-      {zombieThemeEnabled && (
-        <div className="za-theme-indicator">
-          ZOMBIE MODE | Ctrl+Shift+T to toggle
-        </div>
-      )}
     </div>
   );
 };
