@@ -1,6 +1,7 @@
-//Version 3.4.0
-//Last Updated: November 30, 2025 - 11:55 PM
-//Changes: Wrapped app in .za-wrapper scene-classroom and added fog layers for local zombie visuals only.
+//Version 3.4.1
+//Last Updated: December 1, 2025
+//Changes: Rebuilt full component (no ellipses), scoped visuals via .za-wrapper,
+//         added local fog layers, kept original game state & flow intact.
 
 import React, { useState, useEffect } from 'react';
 import PersonalizationForm from './components/PersonalizationForm';
@@ -10,11 +11,15 @@ import VictoryScreen from './components/VictoryScreen';
 import DeathScreen from './components/DeathScreen';
 import LevelComplete from './components/LevelComplete';
 import './styles/zombie.css';
-import './styles/zombietheme.css'; 
+import './styles/zombietheme.css';
 
 const ZombieApocalypse = () => {
-  // Game state management
-  const [gamePhase, setGamePhase] = useState('personalization'); // personalization, intro, playing, level-complete, death, victory
+  // -----------------------------
+  // Core game state
+  // -----------------------------
+  const [gamePhase, setGamePhase] = useState('personalization'); 
+  // phases: personalization, intro, playing, level-complete, death, victory
+
   const [playerData, setPlayerData] = useState({
     playerName: '',
     friendName: '',
@@ -26,90 +31,102 @@ const ZombieApocalypse = () => {
   });
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [hearts, setHearts] = useState(2); // Can be wrong once per level
+  const [hearts, setHearts] = useState(2); // can be wrong once per level
   const [levelStartTime, setLevelStartTime] = useState(Date.now());
   const [levelStats, setLevelStats] = useState({});
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [totalDeaths, setTotalDeaths] = useState(0);
   const [gameStartTime, setGameStartTime] = useState(null);
 
-  // Sound effect player (based on VaultHeist pattern)
+  // -----------------------------
+  // Minimal sound effects
+  // -----------------------------
   const playSound = (type) => {
     if (!soundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioContext = new AudioCtx();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+      const now = audioContext.currentTime;
 
-    switch(type) {
-      case 'correct':
-        oscillator.frequency.value = 800;
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.15);
-        break;
-      case 'wrong':
-        oscillator.frequency.value = 200;
-        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.4);
-        break;
-      case 'death':
-        oscillator.frequency.value = 150;
-        gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.8);
-        break;
-      case 'level-complete':
-        oscillator.frequency.value = 1000;
-        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.6);
-        break;
-      case 'victory':
-        // Epic victory fanfare
-        oscillator.frequency.value = 1200;
-        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 1.0);
-        break;
-      default:
-        break;
+      switch (type) {
+        case 'correct':
+          oscillator.frequency.value = 800;
+          gainNode.gain.setValueAtTime(0.25, now);
+          oscillator.start();
+          oscillator.stop(now + 0.15);
+          break;
+        case 'wrong':
+          oscillator.frequency.value = 220;
+          gainNode.gain.setValueAtTime(0.4, now);
+          oscillator.start();
+          oscillator.stop(now + 0.35);
+          break;
+        case 'death':
+          oscillator.frequency.value = 160;
+          gainNode.gain.setValueAtTime(0.55, now);
+          oscillator.start();
+          oscillator.stop(now + 0.7);
+          break;
+        case 'level-complete':
+          oscillator.frequency.value = 980;
+          gainNode.gain.setValueAtTime(0.35, now);
+          oscillator.start();
+          oscillator.stop(now + 0.5);
+          break;
+        case 'victory':
+          oscillator.frequency.value = 1200;
+          gainNode.gain.setValueAtTime(0.45, now);
+          oscillator.start();
+          oscillator.stop(now + 0.9);
+          break;
+        default:
+          oscillator.frequency.value = 600;
+          gainNode.gain.setValueAtTime(0.2, now);
+          oscillator.start();
+          oscillator.stop(now + 0.1);
+          break;
+      }
+    } catch (err) {
+      // fail silently if AudioContext is blocked or unavailable
+      console.warn('ZombieApocalypse sound error:', err);
     }
   };
 
-  // Handle personalization complete
+  // -----------------------------
+  // Phase handlers
+  // -----------------------------
   const handlePersonalizationComplete = (data) => {
     setPlayerData(data);
     setGamePhase('intro');
   };
 
-  // Handle intro complete
   const handleIntroComplete = () => {
+    const now = Date.now();
     setGamePhase('playing');
-    setGameStartTime(Date.now());
-    setLevelStartTime(Date.now());
+    setGameStartTime(now);
+    setLevelStartTime(now);
   };
 
-  // Skip intro
   const handleSkipIntro = () => {
+    const now = Date.now();
     setGamePhase('playing');
-    setGameStartTime(Date.now());
-    setLevelStartTime(Date.now());
+    setGameStartTime(now);
+    setLevelStartTime(now);
   };
 
-  // DEV SHORTCUT: Jump to specific level (Ctrl+Shift+7)
+  // Dev: jump directly to a level
   const handleDevJumpToLevel = (level) => {
-    console.log(`🎮 DEV: Jumping to Level ${level}`);
-    setCurrentLevel(level);
-    setHearts(2);
-    setLevelStartTime(Date.now());
-    setGamePhase('playing');
+    const safeLevel = Math.max(1, Math.min(7, level || 1));
+    console.log(`🎮 DEV: Jumping to Level ${safeLevel}`);
 
-    // Set fake player data if not set
+    // ensure we have some player data
     if (!playerData.playerName) {
       setPlayerData({
         playerName: 'Test Player',
@@ -125,28 +142,33 @@ const ZombieApocalypse = () => {
     if (!gameStartTime) {
       setGameStartTime(Date.now());
     }
+
+    setCurrentLevel(safeLevel);
+    setHearts(2);
+    setLevelStartTime(Date.now());
+    setGamePhase('playing');
   };
 
-  // Handle correct answer
   const handleCorrectAnswer = () => {
     playSound('correct');
   };
 
-  // Handle wrong answer
   const handleWrongAnswer = () => {
     playSound('wrong');
 
-    // Flash screen red
+    // brief global flash (ZA only; class removed quickly)
     document.body.classList.add('za-wrong-flash');
-    setTimeout(() => document.body.classList.remove('za-wrong-flash'), 300);
+    setTimeout(() => {
+      document.body.classList.remove('za-wrong-flash');
+    }, 280);
 
-    const newHearts = hearts - 1;
-    setHearts(newHearts);
+    const nextHearts = hearts - 1;
+    setHearts(nextHearts);
 
-    if (newHearts <= 0) {
-      // Death - go back a level
+    if (nextHearts <= 0) {
+      // death: lose a level, then restart after a short delay
       playSound('death');
-      setTotalDeaths(totalDeaths + 1);
+      setTotalDeaths((prev) => prev + 1);
       setGamePhase('death');
 
       setTimeout(() => {
@@ -159,88 +181,69 @@ const ZombieApocalypse = () => {
     }
   };
 
-  // Handle level complete
   const handleLevelComplete = () => {
     playSound('level-complete');
+    const elapsedSeconds = Math.floor((Date.now() - levelStartTime) / 1000);
 
-    const timeElapsed = Math.floor((Date.now() - levelStartTime) / 1000);
-    setLevelStats({
-      ...levelStats,
+    setLevelStats((prev) => ({
+      ...prev,
       [currentLevel]: {
-        time: timeElapsed,
-        hearts: hearts
+        time: elapsedSeconds,
+        hearts
       }
-    });
+    }));
 
     if (currentLevel === 7) {
-      // VICTORY!
+      // final victory
       playSound('victory');
       setGamePhase('victory');
     } else {
+      // show Level Complete screen and wait for click
       setGamePhase('level-complete');
-      // NO auto-advance - wait for click
     }
   };
 
-  // Handle click to continue from level-complete screen
   const handleContinueFromLevel = () => {
-    setCurrentLevel(currentLevel + 1);
+    const nextLevel = Math.min(7, currentLevel + 1);
+    setCurrentLevel(nextLevel);
     setHearts(2);
     setLevelStartTime(Date.now());
     setGamePhase('playing');
   };
 
-  // Format time
   const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const safe = Math.max(0, seconds || 0);
+    const mins = Math.floor(safe / 60);
+    const secs = safe % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Global dev shortcut listener - FIXED
+  // -----------------------------
+  // DEV shortcuts (Ctrl+Shift+7, Ctrl+Shift+V)
+  // -----------------------------
   useEffect(() => {
-    const handleDevShortcut = (e) => {
-      // Debug logging
-      console.log('Key pressed:', e.key, 'Ctrl:', e.ctrlKey, 'Shift:', e.shiftKey);
+    const handleKeyDown = (e) => {
+      if (!e.ctrlKey || !e.shiftKey) return;
 
-      // Ctrl+Shift+7 to jump to Level 7 (try both '7' and '&' for different keyboards)
-      if (e.ctrlKey && e.shiftKey && (e.key === '7' || e.key === '&')) {
+      // Ctrl+Shift+7 => jump to Level 7
+      if (e.key === '7' || e.key === '&') {
         e.preventDefault();
-        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Level 7');
-
-        // Set player data if not set
-        if (!playerData.playerName) {
-          setPlayerData({
-            playerName: 'Test Player',
-            friendName: 'Test Friend',
-            cityName: 'Charlotte',
-            favoriteColor: 'Blue',
-            favoriteSubject: 'Math',
-            dreamJob: 'Developer'
-          });
-        }
-
-        // Set game start time if not set
-        if (!gameStartTime) {
-          setGameStartTime(Date.now());
-        }
-
         handleDevJumpToLevel(7);
       }
 
-      // Ctrl+Shift+V to jump to Victory
-      if (e.ctrlKey && e.shiftKey && (e.key === 'V' || e.key === 'v')) {
+      // Ctrl+Shift+V => jump directly to Victory
+      if (e.key === 'v' || e.key === 'V') {
         e.preventDefault();
-        console.log('🎮 DEV SHORTCUT ACTIVATED: Jumping to Victory');
 
         if (!playerData.playerName) {
           setPlayerData({
             playerName: 'Test Player',
             friendName: 'Test Friend',
-            cityName: 'Charlotte',
+            cityName: 'Charlotte, NC',
             favoriteColor: 'Blue',
             favoriteSubject: 'Math',
-            dreamJob: 'Developer'
+            dreamJob: 'Developer',
+            biggestFear: 'Bugs'
           });
         }
 
@@ -252,27 +255,26 @@ const ZombieApocalypse = () => {
       }
     };
 
-    document.addEventListener('keydown', handleDevShortcut, true); // Use capture phase
-    return () => document.removeEventListener('keydown', handleDevShortcut, true);
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [playerData, gameStartTime]);
 
-  // Render based on game phase
+  // -----------------------------
+  // Render by phase
+  // -----------------------------
   return (
     <div className="za-wrapper scene-classroom">
-      {/* Fog layers live ONLY inside ZA, do not block clicks or scrolling */}
-      <div className="fog-layer fog-top" />
-      <div className="fog-layer fog-mid" />
-      <div className="fog-layer fog-bottom" />
+      {/* ZA-only fog strips; do not block clicks or scroll */}
+      <div className="fog-layer fog-top" aria-hidden="true" />
+      <div className="fog-layer fog-mid" aria-hidden="true" />
+      <div className="fog-layer fog-bottom" aria-hidden="true" />
 
-      {/* Existing ZA UI container */}
       <div className="za-root">
         {(() => {
           switch (gamePhase) {
             case 'personalization':
               return (
-                <PersonalizationForm
-                  onComplete={handlePersonalizationComplete}
-                />
+                <PersonalizationForm onComplete={handlePersonalizationComplete} />
               );
 
             case 'intro':
@@ -291,7 +293,7 @@ const ZombieApocalypse = () => {
                   currentLevel={currentLevel}
                   hearts={hearts}
                   soundEnabled={soundEnabled}
-                  onToggleSound={() => setSoundEnabled(!soundEnabled)}
+                  onToggleSound={() => setSoundEnabled((prev) => !prev)}
                   onCorrectAnswer={handleCorrectAnswer}
                   onWrongAnswer={handleWrongAnswer}
                   onLevelComplete={handleLevelComplete}
@@ -327,9 +329,11 @@ const ZombieApocalypse = () => {
                   playerData={playerData}
                   levelStats={levelStats}
                   totalDeaths={totalDeaths}
-                  totalTime={Math.floor(
-                    (Date.now() - gameStartTime) / 1000
-                  )}
+                  totalTime={
+                    gameStartTime
+                      ? Math.floor((Date.now() - gameStartTime) / 1000)
+                      : 0
+                  }
                   formatTime={formatTime}
                   onRestart={() => window.location.reload()}
                 />
