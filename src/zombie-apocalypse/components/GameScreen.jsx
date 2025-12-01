@@ -1,6 +1,6 @@
 // GameScreen.jsx
-// VERSION: 4.1 - BUGFIX: Dynamic help menu for Level 1
-// FIXED: Shows actual percent value instead of hardcoded 25%
+// VERSION: 2.3.0 CLEAN ROLLBACK
+// REMOVED: FactionTracker (was blocking gameplay)
 
 import React, { useState, useEffect } from 'react';
 import Calculator from './Calculator';
@@ -122,9 +122,7 @@ const GameScreen = ({
     const userVal = parseFloat(userAnswer);
     const correctVal = parseFloat(currentProblem.answer);
 
-    const isCorrect = Math.abs(userVal - correctVal) < 0.01;
-
-    if (isCorrect) {
+    if (Math.abs(userVal - correctVal) < 0.01) {
       // Correct answer
       onCorrectAnswer(currentTime);
       const newCorrect = problemsCorrect + 1;
@@ -139,18 +137,12 @@ const GameScreen = ({
         onLevelComplete(currentTime);
       }
     } else {
-      // Wrong answer - store full problem data for help menu
-      if (currentLevel === 1) {
-        setWrongAnswerFeedback({
-          userAnswer: userAnswer,
-          correctAnswer: currentProblem.answer,
-          question: currentProblem.question
-        });
-      }
-      
+      // Wrong answer
       onWrongAnswer();
+      setWrongAnswerFeedback(currentProblem.answer);
 
       if (hearts === 0) {
+        // Game over handled by parent
         return;
       }
 
@@ -158,7 +150,7 @@ const GameScreen = ({
         setTimeout(() => {
           setCurrentProblemIndex(currentProblemIndex + 1);
           setWrongAnswerFeedback(null);
-        }, 4000); // Give 4 seconds to read help
+        }, 2000);
       } else {
         onLevelComplete(currentTime);
       }
@@ -168,33 +160,6 @@ const GameScreen = ({
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSubmitAnswer();
-    }
-  };
-
-  // Extract percent value from question for dynamic help menu
-  const getPercentFromQuestion = (question) => {
-    if (!question) return '25'; // fallback
-    
-    // Extract number before the % symbol
-    const match = question.match(/([\d.]+)%/);
-    if (match && match[1]) {
-      return match[1];
-    }
-    return '25'; // fallback
-  };
-
-  // Get decimal with proper formatting for help menu
-  const getDecimalForHelp = (percentStr) => {
-    const num = parseFloat(percentStr);
-    const decimal = num / 100;
-    
-    // Format nicely: remove trailing zeros but keep at least 2 decimal places for small numbers
-    if (decimal < 0.1) {
-      return decimal.toFixed(2);
-    } else if (decimal >= 1) {
-      return decimal.toString();
-    } else {
-      return decimal.toFixed(2).replace(/\.?0+$/, '');
     }
   };
 
@@ -277,7 +242,7 @@ const GameScreen = ({
           onAnswerChange={setUserAnswer}
           onSubmit={handleSubmitAnswer}
           onKeyPress={handleKeyPress}
-          currentLevel={currentLevel}
+          wrongAnswerFeedback={wrongAnswerFeedback}
         />
 
         {/* Timer */}
@@ -292,38 +257,6 @@ const GameScreen = ({
             >
               {formatTime(remainingTime)}
             </div>
-          </div>
-        )}
-
-        {/* Wrong Answer Feedback (Level 1 only) - FIXED WITH DYNAMIC PERCENT */}
-        {wrongAnswerFeedback && currentLevel === 1 && (
-          <div className="za-wrong-feedback">
-            <div className="za-wrong-title">Not quite!</div>
-            <div className="za-wrong-yours">You answered: {wrongAnswerFeedback.userAnswer}</div>
-            <div className="za-wrong-correct">Correct answer: {wrongAnswerFeedback.correctAnswer}</div>
-            
-            <div className="za-decimal-helper">
-              <div className="za-helper-title">Converting Percents to Decimals:</div>
-              <div className="za-helper-visual">
-                <span className="za-percent-num">{getPercentFromQuestion(wrongAnswerFeedback.question)}%</span>
-                <span className="za-arrow">→</span>
-                <span className="za-blink-decimal">.</span>
-                <span className="za-blink-decimal">.</span>
-                <span className="za-arrow">→</span>
-                <span className="za-decimal-result">{wrongAnswerFeedback.correctAnswer}</span>
-              </div>
-              <div className="za-helper-note">Move the decimal point 2 places to the LEFT</div>
-              <div className="za-helper-examples">
-                Examples: 8% = 0.08  |  50% = 0.50  |  125% = 1.25
-              </div>
-            </div>
-            
-            <button 
-              className="za-btn-primary za-got-it-btn"
-              onClick={() => setWrongAnswerFeedback(null)}
-            >
-              I get it now!
-            </button>
           </div>
         )}
 
