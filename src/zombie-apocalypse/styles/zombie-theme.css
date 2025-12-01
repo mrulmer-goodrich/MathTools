@@ -1,0 +1,128 @@
+/* zombie-theme.css
+   Lightweight visual skin for "UG Math Tools – Zombie Mode"
+   Uses 3 background scenes + 1 fog strip. Assumes files live in /public/zombie/.
+   Does NOT change layout or touch component-level styles.
+*/
+
+/* 1) Basic body reset for zombie mode */
+body.ug-zombie-mode {
+  background-color: #05060a;
+  color: #e5f0ff;
+}
+
+/* 2) Root app container background
+   Assumes your React root element is #root (Vite/CRA default).
+   If your root id is different, change #root below but keep the rest.
+*/
+body.ug-zombie-mode #root {
+  position: relative;
+  min-height: 100vh;
+  background-color: #05060a;
+  background-image: url("/zombie/bg_classroom.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  overflow: hidden; /* keeps fog from spilling outside viewport */
+}
+
+/* 3) Optional different scenes.
+   You can add one of these classes to <body> alongside ug-zombie-mode
+   to swap the main background without touching code anywhere else.
+   Example: <body class="ug-zombie-mode scene-lockers">
+*/
+body.ug-zombie-mode.scene-classroom #root {
+  background-image: url("/zombie/bg_classroom.png");
+}
+
+body.ug-zombie-mode.scene-cafeteria #root {
+  background-image: url("/zombie/bg_cafeteria.png");
+}
+
+body.ug-zombie-mode.scene-lockers #root {
+  background-image: url("/zombie/bg_lockers.png");
+}
+
+/* 4) Global fog overlay – two parallax layers, click-through.
+   Uses fog_A.png as a seamless horizontal strip.
+*/
+body.ug-zombie-mode #root::before,
+body.ug-zombie-mode #root::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 60%;
+  bottom: -10%;
+  pointer-events: none;         /* do not block clicks */
+  background-image: url("/zombie/fog_A.png");
+  background-repeat: repeat-x;
+  background-size: auto 55%;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  z-index: 5;
+}
+
+/* front (slower, closer to floor) */
+body.ug-zombie-mode #root::before {
+  animation: ugFogScrollSlow 80s linear infinite;
+}
+
+/* back (faster, slightly higher & lighter) */
+body.ug-zombie-mode #root::after {
+  top: 50%;
+  opacity: 0.3;
+  animation: ugFogScrollFast 45s linear infinite;
+}
+
+/* 5) Keyframes for fog scroll */
+@keyframes ugFogScrollSlow {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes ugFogScrollFast {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(50%, 0, 0); }
+}
+
+/* 6) Slight vignette around edges for drama, without touching content */
+body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  background:
+    radial-gradient(circle at center,
+      transparent 0,
+      transparent 55%,
+      rgba(0,0,0,0.5) 100%);
+}
+
+/* Utility class if you want to wrap your existing app shell once:
+   <div id="root"><div class="ug-app-shell ug-zombie-vignette-overlay-helper">...</div></div>
+   Not required for fog; only if you decide to use the vignette helper below.
+*/
+.ug-zombie-vignette-overlay-helper {
+  position: relative;
+  z-index: 10; /* stay above background/fog, below future UI overlays */
+}
+
+/* 7) Optional: subtle "flicker" for any header bar or logo
+   Just add class="ug-zombie-flicker" to that element.
+*/
+.ug-zombie-flicker {
+  animation: ugZombieFlicker 6s infinite;
+}
+
+@keyframes ugZombieFlicker {
+  0%, 10%, 20%, 100% { opacity: 1; }
+  3%, 18% { opacity: 0.4; }
+  4%, 19% { opacity: 0.9; }
+  50% { opacity: 0.7; }
+}
+
+/* 8) Safety: do NOT touch fonts, buttons, or layout.
+   If you later want zombie-colored buttons, do it with opt-in classes,
+   NOT global overrides.
+*/
