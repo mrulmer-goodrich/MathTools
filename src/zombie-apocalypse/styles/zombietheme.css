@@ -1,33 +1,11 @@
-/* zombietheme.css v4.1 CLEAN ROLLBACK */
+/* zombietheme.css v3.5 CLEAN ROLLBACK */
 /* Compatible with ZombieApocalypse v3.4.1 CLEAN */
-/* NUCLEAR SCROLL FIX */
-
-/* ==================== NUCLEAR SCROLL FIX ==================== */
-
-html, body, #root {
-  margin: 0 !important;
-  padding: 0 !important;
-  height: 100%;
-  width: 100%;
-  position: relative;
-  overflow-x: hidden;
-}
-
-body {
-  overflow-y: scroll;
-}
-
-/* Force wrapper to be full screen, no extra space */
-#root > * {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
+/* NO zombie walker, NO warning light, FIXED layout */
 
 /* ==================== WRAPPER & CONTAINER ==================== */
 
 .za-wrapper {
   min-height: 100vh;
-  width: 100%;
   background-color: #0a0b0d;
   background-image: 
     radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.85) 100%),
@@ -37,8 +15,7 @@ body {
   background-attachment: fixed;
   background-repeat: no-repeat;
   position: relative;
-  margin: 0;
-  padding: 0;
+  overflow-x: hidden;
 }
 
 .za-game-container {
@@ -51,7 +28,6 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  margin: 0;
 }
 
 /* ==================== BACKGROUND SWITCHING ==================== */
@@ -552,181 +528,6 @@ body {
   border: 2px solid rgba(220, 20, 60, 0.6);
   color: #DC143C;
   animation: shake 0.5s ease-in-out;
-}
-
-/* Help menu styling */
-.za-decimal-helper {
-  background: rgba(0, 0, 0, 0.6);
-  border: 2px solid rgba(76, 175, 80, 0.4);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 15px;
-}
-
-.za-helper-title {
-  color: #FFD700;
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-.za-helper-visual {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  font-size: 28px;
-}
-
-.za-percent-num {
-  color: #FFD700;
-  font-weight: bold;
-  font-family: 'Courier New', monospace;
-}
-
-.za-arrow {
-  color: #FFF;
-  font-size: 24px;
-}
-
-.za-decimal-display {
-  display: flex;
-  align-items: center;
-  gap: 0px;
-}
-
-.za-blink-decimal {
-  font-size: 32px;
-  font-weight: bold;
-  color: #DC143C;
-  font-family: 'Courier New', monospace;
-  animation: blink 1s ease-in-out infinite;
-}
-
-.za-decimal-result {
-  font-size: 32px;
-  font-weight: bold;
-  color: #4CAF50;
-  font-family: 'Courier New', monospace;
-  margin: 0 5px;
-}
-
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-.za-helper-note {
-  color: #AAA;
-  font-size: 13px;
-  text-align: center;
-  margin-bottom: 10px;
-  font-style: italic;
-}
-
-.za-helper-examples {
-  color: #888;
-  font-size: 12px;
-  text-align: center;
-  font-family: 'Courier New', monospace;
-}
-
-.za-wrong-feedback {
-  background: rgba(139, 0, 0, 0.3);
-  border: 2px solid rgba(220, 20, 60, 0.6);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
-}
-
-.za-wrong-title {
-  color: #DC143C;
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.za-wrong-yours,
-.za-wrong-correct {
-  color: #DDD;
-  font-size: 14px;
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.za-got-it-btn {
-  margin-top: 15px;
-  width: 100%;
-}
-
-/* ==================== SCAFFOLDING (Level 7) ==================== */
-
-.za-scaffolding-container {
-  background: rgba(0, 0, 0, 0.7);
-  border: 2px solid rgba(255, 215, 0, 0.5);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
-}
-
-.za-scaffolding-title {
-  color: #FFD700;
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.za-scaffold-step {
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 15px;
-}
-
-.za-scaffold-step.completed {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: rgba(76, 175, 80, 0.1);
-}
-
-.za-scaffold-step.active {
-  border-color: rgba(255, 215, 0, 0.6);
-  background: rgba(255, 215, 0, 0.05);
-}
-
-.za-scaffold-step.locked {
-  border-color: rgba(255, 255, 255, 0.1);
-  opacity: 0.5;
-}
-
-.za-step-label {
-  color: #FFD700;
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.za-step-question {
-  color: #DDD;
-  font-size: 15px;
-  margin-bottom: 15px;
-  line-height: 1.6;
-}
-
-.za-step-completed {
-  color: #4CAF50;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.za-step-locked {
-  color: #888;
-  font-size: 13px;
-  font-style: italic;
 }
 
 /* ==================== VICTORY/DEATH SCREENS ==================== */
