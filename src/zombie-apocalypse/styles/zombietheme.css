@@ -1,771 +1,315 @@
-/* ============================================
-   ZOMBIE APOCALYPSE v4.0 - THE COMPLETE VISION
-   Compact containers, transparent overlays, 
-   cinematic animations, professional polish
-   ============================================ */
+/* zombie-theme.css
+   Lightweight visual skin for "UG Math Tools – Zombie Mode"
+   Uses 3 background scenes + 1 fog strip. Assumes files live in /public/zombie/.
+   Does NOT change layout or touch component-level styles.
+*/
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* 1) Basic body reset for zombie mode */
+body.ug-zombie-mode {
+  background-color: #05060a;
+  color: #e5f0ff;
 }
 
-.za-app-root {
-  position: fixed;
-  inset: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background-color: #0a0b0d;
-  z-index: 9999;
-  font-family: 'Arial', sans-serif;
-}
-
-.za-app-root.za-theme-enabled {
+/* 2) Root app container background
+   Assumes your React root element is #root (Vite/CRA default).
+   If your root id is different, change #root below but keep the rest.
+*/
+body.ug-zombie-mode #root {
+  position: relative;
+  min-height: 100vh;
+  background-color: #05060a;
+  background-image: url("/zombie/bg_classroom.png");
+  background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  background-repeat: no-repeat;
   background-attachment: fixed;
+  overflow: hidden; /* keeps fog from spilling outside viewport */
 }
 
-.za-app-root.za-theme-enabled.za-scene-classroom {
-  background-image: url('/zombie/bg_classroom.png');
+/* 3) Optional different scenes.
+   You can add one of these classes to <body> alongside ug-zombie-mode
+   to swap the main background without touching code anywhere else.
+   Example: <body class="ug-zombie-mode scene-lockers">
+*/
+body.ug-zombie-mode.scene-classroom #root {
+  background-image: url("/assets/zombie/bg_classroom.png");
 }
 
-.za-app-root.za-theme-enabled.za-scene-cafeteria {
-  background-image: url('/zombie/bg_cafeteria.png');
+
+
+
+body.ug-zombie-mode.scene-cafeteria #root {
+  background-image: url("/assets/zombie/bg_cafeteria.png");
 }
 
-.za-app-root.za-theme-enabled.za-scene-lockers {
-  background-image: url('/zombie/bg_lockers.png');
+body.ug-zombie-mode.scene-lockers #root {
+  background-image: url("/assets/zombie/bg_lockers.png");
 }
 
-body:has(.za-app-root) header { display: none !important; }
-
-/* ============================================
-   HOME BUTTON
-   ============================================ */
-.za-home-button {
+/* 4) Global fog overlay – two parallax layers, click-through.
+   Uses fog_A.png as a seamless horizontal strip.
+*/
+body.ug-zombie-mode #root::before,
+body.ug-zombie-mode #root::after {
+  content: "";
   position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 10000;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(25,25,25,0.95));
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.9);
+  left: 0;
+  right: 0;
+  top: 60%;
+  bottom: -10%;
+  pointer-events: none;         /* do not block clicks */
+  background-image: url("/assets/zombie/fog_A.png");
+  background-repeat: repeat-x;
+  background-size: auto 55%;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  z-index: 5;
 }
 
-.za-home-button:hover {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
-  transform: translateY(-2px);
+/* front (slower, closer to floor) */
+body.ug-zombie-mode #root::before {
+  animation: ugFogScrollSlow 80s linear infinite;
 }
 
-.za-home-button::before {
-  content: "🏠";
-  font-size: 16px;
+/* back (faster, slightly higher & lighter) */
+body.ug-zombie-mode #root::after {
+  top: 50%;
+  opacity: 0.3;
+  animation: ugFogScrollFast 45s linear infinite;
 }
 
-/* ============================================
-   MONEY DISPLAY
-   ============================================ */
-.za-money-display {
+/* 5) Keyframes for fog scroll */
+@keyframes ugFogScrollSlow {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes ugFogScrollFast {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(50%, 0, 0); }
+}
+
+/* 6) Slight vignette around edges for drama, without touching content */
+body.ug-zombie-mode #root > .ug-zombie-vignette-overlay {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.95), rgba(25,25,25,0.95));
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 10000;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.9), 0 0 20px rgba(255,215,0,0.3);
-}
-
-.za-money-icon {
-  width: 32px;
-  height: 32px;
-  background-image: url('/zombie/Coins.png');
-  background-size: cover;
-  animation: coinPulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(255,215,0,0.7));
-}
-
-@keyframes coinPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(5deg); }
-}
-
-.za-money-amount {
-  font-size: 18px;
-  font-weight: bold;
-  color: #FFD700;
-  text-shadow: 0 0 10px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.9);
-  font-family: 'Courier New', monospace;
-}
-
-/* ============================================
-   WARNING LIGHT (Slow pulse, not spin)
-   ============================================ */
-.za-warning-light {
-  position: fixed;
-  top: 10px;
-  right: 180px;
-  width: 48px;
-  height: 48px;
-  background-image: url('/zombie/warninglights.png');
-  background-size: 400% 400%;
-  background-position: 0 0;
-  animation: lightPulse 2s ease-in-out infinite;
-  z-index: 9999;
+  inset: 0;
   pointer-events: none;
-  filter: drop-shadow(0 0 15px rgba(255,200,0,0.9));
+  z-index: 6;
+  background:
+    radial-gradient(circle at center,
+      transparent 0,
+      transparent 55%,
+      rgba(0,0,0,0.5) 100%);
 }
 
-@keyframes lightPulse {
-  0%, 100% { 
-    opacity: 0.6;
-    filter: drop-shadow(0 0 10px rgba(255,200,0,0.6));
-  }
-  50% { 
-    opacity: 1;
-    filter: drop-shadow(0 0 25px rgba(255,200,0,1));
-  }
-}
-
-/* ============================================
-   ZOMBIE WALKER
-   ============================================ */
-.za-zombie-walker {
-  position: fixed;
-  bottom: 40px;
-  left: -120px;
-  width: 120px;
-  height: 120px;
-  background-image: url('/zombie/BasicZombie.png');
-  background-size: 600% 200%;
-  animation: zombieWalk 1.5s steps(6) infinite, zombieStumble 25s linear infinite;
-  z-index: 3;
-  pointer-events: none;
-  filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.8));
-}
-
-@keyframes zombieWalk {
-  from { background-position-x: 0; }
-  to { background-position-x: -720px; }
-}
-
-@keyframes zombieStumble {
-  0% { 
-    left: -120px;
-    transform: translateY(0);
-  }
-  15% { transform: translateY(-5px); }
-  30% { transform: translateY(5px); }
-  45% { transform: translateY(-3px); }
-  60% { transform: translateY(2px); }
-  75% { transform: translateY(-2px); }
-  100% { 
-    left: calc(100% + 120px);
-    transform: translateY(0);
-  }
-}
-
-/* ============================================
-   CONTENT WRAPPER - Compact
-   ============================================ */
-.za-content-wrapper {
+/* Utility class if you want to wrap your existing app shell once:
+   <div id="root"><div class="ug-app-shell ug-zombie-vignette-overlay-helper">...</div></div>
+   Not required for fog; only if you decide to use the vignette helper below.
+*/
+.ug-zombie-vignette-overlay-helper {
   position: relative;
-  z-index: 10;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 60px 10px 10px;
+  z-index: 10; /* stay above background/fog, below future UI overlays */
+}
+
+/* 7) Optional: subtle "flicker" for any header bar or logo
+   Just add class="ug-zombie-flicker" to that element.
+*/
+.ug-zombie-flicker {
+  animation: ugZombieFlicker 6s infinite;
+}
+
+@keyframes ugZombieFlicker {
+  0%, 10%, 20%, 100% { opacity: 1; }
+  3%, 18% { opacity: 0.4; }
+  4%, 19% { opacity: 0.9; }
+  50% { opacity: 0.7; }
+}
+
+/* 8) Safety: do NOT touch fonts, buttons, or layout.
+   If you later want zombie-colored buttons, do it with opt-in classes,
+   NOT global overrides.
+*/
+
+
+/* ZOMBIE MODE — ONLY when inside .za-wrapper */
+
+/* Main background */
+.za-wrapper {
+  position: relative;
   min-height: 100vh;
+  overflow-x: hidden;  /* allow vertical scroll for tall content */
+  overflow-y: auto;
 }
 
-/* ============================================
-   DARK OVERLAY & VIGNETTE
-   ============================================ */
-.za-app-root.za-theme-enabled::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  pointer-events: none;
-  z-index: 1;
+.scene-classroom {
+  background-image: url('/assets/zombie/bg_classroom.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.za-app-root.za-theme-enabled::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.85) 100%);
-  pointer-events: none;
-  z-index: 2;
+/* ===== FOG LAYERS ===== */
+
+.za-wrapper .fog-layer {
+  position: absolute;
+  left: 0;
+  width: 200vw;
+  height: 200px;
+  pointer-events: none;   /* <-- FIX SCROLL / CLICK BLOCKING */
+  background-repeat: no-repeat;
+  background-size: contain; /* SCALE SINGLE IMAGE */
+  opacity: 0.45;  
+  animation: drift 60s linear infinite;
 }
 
-/* ============================================
-   PERSONALIZATION & INTRO - COMPACT & MATCHING
-   ============================================ */
-.za-personalization-form,
-.za-intro-sequence {
-  max-width: 500px;
-  margin: 60px auto;
-  padding: 25px 30px;
-  background: rgba(0,0,0,0.8);
-  border: 2px solid rgba(139,0,0,0.5);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.95);
-  backdrop-filter: blur(4px);
+/* Higher layer */
+.za-wrapper .fog-top {
+  top: 0;
+  background-image: url('/assets/zombie/fog_A.png');
+  animation-duration: 80s;
+  opacity: 0.35;
 }
 
-.za-personalization-form h1,
-.za-intro-sequence h1 {
-  color: #DC143C;
-  font-size: 32px;
-  text-align: center;
-  margin: 0 0 6px;
-  text-shadow: 0 0 20px rgba(220,20,60,1), 0 2px 8px rgba(0,0,0,0.9);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.za-personalization-form h2,
-.za-intro-sequence .za-intro-story {
-  color: #AAA;
-  font-size: 15px;
-  text-align: center;
-  margin: 0 0 25px;
-  font-weight: normal;
-  line-height: 1.6;
-  font-style: italic;
-}
-
-/* ============================================
-   GAME SCREEN - COMPACT 600PX MAX
-   ============================================ */
-.za-game-screen {
-  max-width: 650px;
-  margin: 0 auto;
-}
-
-.za-top-bar {
-  background: linear-gradient(135deg, rgba(139,0,0,0.85), rgba(50,0,0,0.85));
-  border: 2px solid rgba(220,20,60,0.6);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.9);
-  backdrop-filter: blur(3px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.za-level-info {
-  flex: 1;
-  min-width: 180px;
-}
-
-.za-level-title {
-  font-size: 20px;
-  color: #DC143C;
-  text-shadow: 0 0 15px rgba(220,20,60,1), 0 2px 6px rgba(0,0,0,0.9);
-  margin: 0;
-  line-height: 1.2;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.za-level-story {
-  font-size: 12px;
-  color: #FFD700;
-  margin: 4px 0 0;
-  line-height: 1.4;
-}
-
-.za-game-stats {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.za-timer {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 16px;
-  color: #FFF;
-  font-weight: bold;
-  font-family: 'Courier New', monospace;
-}
-
-.za-hearts {
-  display: flex;
-  gap: 4px;
-}
-
-.za-heart {
-  width: 28px;
-  height: 28px;
-  background-image: url('/zombie/Hearts.png');
-  background-size: 200% 100%;
-  display: inline-block;
-  transition: all 0.3s;
-}
-
-.za-heart.active {
-  background-position: 0 0;
-  filter: drop-shadow(0 0 6px rgba(255,0,0,0.8));
-}
-
-.za-heart.lost {
-  background-position: 100% 0;
+/* Mid layer */
+.za-wrapper .fog-mid {
+  top: 40vh;
+  background-image: url('/assets/zombie/fog_A.png');
   opacity: 0.5;
 }
 
-.za-sound-toggle {
-  background: rgba(0,0,0,0.7);
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-}
-
-.za-sound-toggle:hover {
-  background: rgba(255,215,0,0.3);
-  transform: scale(1.1);
-}
-
-/* ============================================
-   MAIN GAME CONTAINER - Transparent
-   ============================================ */
-.za-main-game {
-  background: rgba(0,0,0,0.75);
-  border: 2px solid rgba(139,0,0,0.6);
-  border-radius: 8px;
-  padding: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.95);
-  backdrop-filter: blur(4px);
-}
-
-.za-progress-text {
-  font-size: 14px;
-  color: #FFF;
-  margin: 0 0 5px;
-  text-align: center;
-  font-weight: bold;
-}
-
-.za-progress-bar {
-  width: 100%;
-  height: 6px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 14px;
-}
-
-.za-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #FFD700, #FFA500);
-  transition: width 0.4s ease;
-  box-shadow: 0 0 10px rgba(255,215,0,0.8);
-}
-
-.za-problem-question {
-  font-size: 18px;
-  color: #FFF;
-  margin: 14px 0;
-  text-align: center;
-  line-height: 1.6;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-}
-
-.za-answer-section {
-  display: flex;
-  gap: 8px;
-  max-width: 450px;
-  margin: 18px auto;
-}
-
-.za-answer-input {
-  flex: 1;
-  padding: 10px 14px;
-  font-size: 17px;
-  background: rgba(0,0,0,0.8);
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  font-weight: bold;
-  font-family: 'Courier New', monospace;
-}
-
-.za-answer-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 12px rgba(76,175,80,0.7);
-}
-
-.za-submit-button {
-  padding: 10px 22px;
-  background: linear-gradient(135deg, #DC143C, #8B0000);
-  border: none;
-  border-radius: 6px;
-  color: #FFF;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(220,20,60,0.6);
-  text-transform: uppercase;
-}
-
-.za-submit-button:hover {
-  background: linear-gradient(135deg, #FF1744, #C62828);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(220,20,60,0.8);
-}
-
-.za-submit-button:disabled {
-  background: #444;
-  cursor: not-allowed;
-  opacity: 0.4;
-  box-shadow: none;
-}
-
-.za-choices-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
-  margin: 18px auto;
-}
-
-.za-choice-button {
-  padding: 11px 18px;
-  font-size: 15px;
-  font-weight: bold;
-  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.1));
-  border: 2px solid #FFD700;
-  border-radius: 6px;
-  color: #FFD700;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-}
-
-.za-choice-button:hover {
-  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,165,0,0.25));
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(255,215,0,0.5);
-}
-
-.za-choice-button.selected {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #000;
-  border-color: #FFA500;
-}
-
-/* ============================================
-   FACTION TRACKER - Floating sidebar
-   ============================================ */
-.za-faction-tracker {
-  position: fixed;
-  right: 10px;
-  top: 70px;
-  width: 160px;
-  background: rgba(0,0,0,0.85);
-  border: 2px solid rgba(139,0,0,0.7);
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.9);
-  backdrop-filter: blur(3px);
-}
-
-.za-faction-title {
-  font-size: 13px;
-  color: #DC143C;
-  text-align: center;
-  margin: 0 0 8px;
-  text-transform: uppercase;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(220,20,60,0.8);
-}
-
-.za-faction-item {
-  padding: 6px;
-  margin: 4px 0;
-  border: 1px solid #4CAF50;
-  border-radius: 4px;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(0,0,0,0.4);
-}
-
-.za-faction-item.eliminated {
-  border-color: #555;
-  opacity: 0.3;
-  text-decoration: line-through;
-}
-
-/* ============================================
-   ZOMBIE INTERLUDE
-   ============================================ */
-.za-interlude-container {
-  max-width: 700px;
-  margin: 50px auto;
-  padding: 25px;
-  background: rgba(0,0,0,0.85);
-  border: 3px solid #DC143C;
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.95);
-  backdrop-filter: blur(4px);
-  position: relative;
-}
-
-.za-interlude-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.za-interlude-title {
-  font-size: 28px;
-  color: #DC143C;
-  text-shadow: 0 0 20px rgba(220,20,60,1);
-  margin: 0 0 10px;
-  text-transform: uppercase;
-  animation: pulseRed 1s ease-in-out infinite;
-}
-
-@keyframes pulseRed {
-  0%, 100% { text-shadow: 0 0 15px rgba(220,20,60,0.8); }
-  50% { text-shadow: 0 0 30px rgba(220,20,60,1); }
-}
-
-.za-interlude-story {
-  font-size: 15px;
-  color: #FFF;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.za-interlude-stats {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-  padding: 10px;
-  background: rgba(0,0,0,0.6);
-  border-radius: 6px;
-}
-
-.za-interlude-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.za-stat-label {
-  font-size: 11px;
-  color: #AAA;
-  text-transform: uppercase;
-}
-
-.za-stat-value {
-  font-size: 18px;
-  color: #FFD700;
-  font-weight: bold;
-  font-family: 'Courier New', monospace;
-}
-
-.za-interlude-game-area {
-  position: relative;
-  width: 100%;
-  height: 350px;
-  background: linear-gradient(90deg, rgba(0,50,0,0.3) 0%, rgba(50,0,0,0.3) 100%);
-  border: 2px solid rgba(139,0,0,0.6);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.za-interlude-zombie {
-  position: absolute;
-  cursor: crosshair;
-  transition: transform 0.1s;
-  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8));
-}
-
-.za-interlude-zombie:hover {
-  transform: scale(1.1);
-}
-
-.za-zombie-sprite {
-  width: 100%;
-  height: 100%;
-  background-image: url('/zombie/BasicZombie.png');
-  background-size: 600% 100%;
-  animation: zombieWalkFast 0.8s steps(6) infinite;
-}
-
-@keyframes zombieWalkFast {
-  from { background-position-x: 0; }
-  to { background-position-x: -600%; }
-}
-
-.za-player-position {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 48px;
-}
-
-.za-bitten-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, rgba(139,0,0,0.9) 0%, rgba(0,0,0,0.95) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.za-bite-effect {
-  font-size: 48px;
-  color: #DC143C;
-  text-shadow: 0 0 30px rgba(220,20,60,1);
-  animation: shake 0.5s infinite;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-10px); }
-  75% { transform: translateX(10px); }
-}
-
-.za-interlude-complete {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  animation: fadeIn 0.5s;
-}
-
-.za-interlude-complete h3 {
-  font-size: 36px;
-  color: #4CAF50;
-  text-shadow: 0 0 20px rgba(76,175,80,1);
-  margin: 0 0 15px;
-}
-
-.za-interlude-complete p {
-  font-size: 18px;
-  color: #FFF;
-  margin: 5px 0;
-}
-
-.za-money-big {
-  font-size: 32px !important;
-  color: #FFD700 !important;
-  font-weight: bold;
-  text-shadow: 0 0 20px rgba(255,215,0,1);
-  margin-top: 15px !important;
-}
-
-/* ============================================
-   WRONG ANSWER FLASH
-   ============================================ */
-@keyframes zaWrongFlash {
-  0% { box-shadow: inset 0 0 400px rgba(200,0,0,1); }
-  100% { box-shadow: inset 0 0 0 rgba(200,0,0,0); }
-}
-
-.za-app-root.za-wrong-flash {
-  animation: zaWrongFlash 0.4s ease-out;
-}
-
-/* ============================================
-   DEV INDICATOR
-   ============================================ */
-.za-theme-indicator {
-  position: fixed;
-  bottom: 5px;
-  right: 5px;
-  padding: 3px 8px;
-  background: rgba(0,0,0,0.9);
-  color: #4CAF50;
-  font-size: 9px;
-  font-family: 'Courier New', monospace;
-  border: 1px solid #4CAF50;
-  border-radius: 3px;
-  z-index: 10001;
-  pointer-events: none;
+/* Low layer */
+.za-wrapper .fog-bottom {
+  bottom: 0;
+  background-image: url('/assets/zombie/fog_A.png');
+  animation-duration: 120s;
   opacity: 0.4;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 1024px) {
-  .za-faction-tracker {
-    position: static;
-    width: 100%;
-    max-width: 500px;
-    margin: 10px auto;
-  }
-  .za-warning-light { display: none; }
+/* Fog motion */
+@keyframes drift {
+  from { transform: translateX(-50vw); }
+  to   { transform: translateX(0vw); }
 }
 
-@media (max-width: 768px) {
-  .za-content-wrapper { padding: 55px 8px 8px; }
-  .za-level-title { font-size: 17px; }
-  .za-problem-question { font-size: 16px; }
-  .za-money-display {
-    top: 55px;
-    padding: 6px 10px;
+
+
+
+
+/*Appending last file replacement because it seems short*/
+
+
+
+
+/* zombietheme.css
+   SCOPED THEME FOR ZOMBIE APOCALYPSE ONLY
+   - No body / #root selectors
+   - Uses local .za-wrapper + fog layers
+   - Background images must exist under: src/zombie-apocalypse/assets/
+*/
+
+/* MAIN WRAPPER FOR ZA MODULE */
+.za-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto; /* allow vertical scrolling for tall content */
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+/* Base scene background — classroom by default */
+.scene-classroom {
+  background-image: url('/assets/zombie/bg_classroom.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #05060a;
+}
+
+/* If you later want cafeteria/lockers per-level, you can add:
+   .scene-cafeteria { background-image: url('../assets/bg_cafeteria.png'); }
+   .scene-lockers   { background-image: url('../assets/bg_lockers.png'); }
+*/
+
+/* INNER ROOT (existing ZA layout attaches here) */
+.za-root {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  box-sizing: border-box;
+}
+
+/* -----------------------------
+   FOG LAYERS
+------------------------------*/
+
+.za-wrapper .fog-layer {
+  position: fixed;        /* stay in viewport while ZA scrolls */
+  left: -20vw;            /* a bit wider to cover edge cases */
+  width: 160vw;
+  height: 190px;
+  pointer-events: none;   /* NEVER block clicks or hovers */
+  background-image: url('/assets/zombie/fog_A.png');
+  background-repeat: repeat-x;
+  background-size: contain;
+  opacity: 0.45;
+  z-index: 1;
+  animation: zaFogDrift 55s linear infinite;
+}
+
+.za-wrapper .fog-top {
+  top: 18%;
+  opacity: 0.35;
+}
+
+.za-wrapper .fog-mid {
+  top: 45%;
+  opacity: 0.55;
+  animation-duration: 75s;
+}
+
+.za-wrapper .fog-bottom {
+  bottom: 10%;
+  opacity: 0.4;
+  animation-direction: reverse;
+  animation-duration: 95s;
+}
+
+@keyframes zaFogDrift {
+  0% {
+    transform: translateX(0);
   }
-  .za-money-icon { width: 24px; height: 24px; }
-  .za-money-amount { font-size: 14px; }
-  .za-zombie-walker { display: none; }
-  .za-personalization-form,
-  .za-intro-sequence {
-    margin: 30px auto;
-    padding: 20px;
+  100% {
+    transform: translateX(-40vw);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
+/* -----------------------------
+   OPTIONAL: WRONG FLASH
+   (used by handleWrongAnswer)
+------------------------------*/
+
+body.za-wrong-flash,
+.za-wrapper.za-wrong-flash {
+  animation: zaWrongFlashPulse 0.25s ease-out;
+}
+
+@keyframes zaWrongFlashPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.8);
+    background-color: rgba(127, 29, 29, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+    background-color: transparent;
   }
 }
+
+/* No button, font, or layout overrides here.
+   All detailed ZA styling remains in zombie.css (your original styles).
+*/
