@@ -1,172 +1,148 @@
-// IntroSequence.jsx
-// VERSION: 3.1.0
-// Last Updated: November 30, 2024
-// Changes: Shortened text, centered button, removed fear reference, tighter story
-
+// IntroSequence.jsx v4.0 - Enhanced Narrative
 import React, { useState, useEffect } from 'react';
 
 const IntroSequence = ({ playerData, onComplete, onSkip }) => {
-  const [currentScreen, setCurrentScreen] = useState(1);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Scroll to top whenever screen changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [currentScreen]);
-
-  const handleNext = () => {
-    if (currentScreen === 3) {
-      onComplete();
-    } else {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentScreen(currentScreen + 1);
-        setIsTransitioning(false);
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      }, 400);
-    }
-  };
-
-  const handleSkip = () => {
-    onSkip();
-  };
-
-  // Check if user selected Math (for Mr. UG reference)
-  const isMathStudent = playerData.favoriteSubject === 'Math';
+  const [currentSlide, setCurrentSlide] = useState(0);
   
-  // Get city name (remove ", NC" if present)
-  const cityName = (playerData.cityName || 'Charlotte').replace(', NC', '').replace(',NC', '');
-
-  const screens = [
+  const slides = [
     {
       title: "THE OUTBREAK",
-      content: (
-        <>
-          <p className="za-intro-text">
-            Tuesday, 2:47 PM. Principal Garvin's voice crackled over the intercom: <strong>"Shelter in place. Lock your doors. This is NOT a drill."</strong>
-          </p>
-          <p className="za-intro-text">
-            Through the windows of {isMathStudent ? "Mr. UG's class" : `${playerData.favoriteSubject || 'class'}`}, you saw her running across the courtyard. Zombies shambling behind her. She didn't make it.
-          </p>
-          <p className="za-intro-text">
-            Within the first hour, 80% of {cityName} had turned. You grabbed {playerData.friendName} and ran. Eastway Middle became a nightmare. You never looked back.
-          </p>
-        </>
-      )
+      story: `${playerData.name}, listen carefully. It started in Mr. Peterson's math class. 
+      One student... then another... then chaos. Eastway Middle School is now ground zero 
+      for something we can't explain.`
     },
     {
-      title: "THE FACTIONS",
-      content: (
-        <>
-          <p className="za-intro-text">
-            Seven factions emerged from the chaos. You and {playerData.friendName} joined the <strong>Eastway Jaguars</strong>—carrying on Principal Garvin's legacy.
-          </p>
-          <div className="za-faction-list">
-            <div className="za-faction za-faction-player">
-              <span className="za-faction-icon">🏆</span> <strong>The Eastway Jaguars</strong> <span className="za-faction-note">(You & {playerData.friendName})</span>
-            </div>
-            <div className="za-faction">
-              <span className="za-faction-icon">⚡</span> The Runners <span className="za-faction-note">- Fast but reckless</span>
-            </div>
-            <div className="za-faction">
-              <span className="za-faction-icon">💰</span> The Traders <span className="za-faction-note">- Wealthy but greedy</span>
-            </div>
-            <div className="za-faction">
-              <span className="za-faction-icon">🔍</span> The Scavengers <span className="za-faction-note">- Resourceful but desperate</span>
-            </div>
-            <div className="za-faction">
-              <span className="za-faction-icon">🏰</span> The Fortress <span className="za-faction-note">- Strong but inflexible</span>
-            </div>
-            <div className="za-faction">
-              <span className="za-faction-icon">🔧</span> The Engineers <span className="za-faction-note">- Brilliant but overconfident</span>
-            </div>
-            <div className="za-faction za-faction-enemy">
-              <span className="za-faction-icon">👑</span> The Elites <span className="za-faction-note">- Ruthless & organized</span>
-            </div>
-          </div>
-          <p className="za-intro-text za-intro-emphasis">
-            Only ONE faction will control {cityName}.
-          </p>
-          <p className="za-intro-text za-intro-emphasis">
-            For Principal Garvin.
-          </p>
-          <p className="za-intro-text za-intro-emphasis">
-            For Eastway.
-          </p>
-          <p className="za-intro-text za-intro-emphasis">
-            <strong>It has to be you.</strong>
-          </p>
-        </>
-      )
+      title: "SEVEN FACTIONS",
+      story: `The survivors have split into seven groups, each fighting to escape ${playerData.city}. 
+      The Eastway Jaguars, The Runners, The Traders, The Scavengers, The Fortress, 
+      The Engineers, and The Elites. Each faction has different strengths... and needs YOU.`
     },
     {
-      title: "THE CHALLENGE",
-      content: (
-        <>
-          <p className="za-intro-text">
-            {playerData.friendName} pulls you aside. "Survival isn't about strength anymore. It's about being <strong>smarter than everyone else</strong>. {isMathStudent ? "Remember what Mr. UG always said—math is survival." : "We need to calculate every move."}"
-          </p>
-          <p className="za-intro-text">
-            Every trade. Every risk. Every decision. <strong>One wrong percentage and you're dead.</strong>
-          </p>
-          <p className="za-intro-text">
-            You wanted to be {playerData.dreamJob ? `a ${playerData.dreamJob}` : 'something great'}—back when the world made sense. Now your only goal is to see another sunrise.
-          </p>
-          <p className="za-intro-text za-intro-emphasis">
-            The other factions are watching. The Elites are making their move. The zombies are closing in.
-          </p>
-          <p className="za-intro-text za-intro-final">
-            This is it, {playerData.playerName}.
-          </p>
-          <p className="za-intro-text za-intro-final">
-            For Principal Garvin.
-          </p>
-          <p className="za-intro-text za-intro-final">
-            For Eastway.
-          </p>
-          <p className="za-intro-text za-intro-final">
-            <strong>Are you ready to fight?</strong>
-          </p>
-        </>
-      )
+      title: "YOUR ROLE",
+      story: `Your math skills are the only thing keeping us alive. Every correct calculation 
+      earns resources. Every mistake costs us time... and lives. ${playerData.friend} is 
+      counting on you. We ALL are.`
+    },
+    {
+      title: "THE MISSION",
+      story: `Seven levels. Seven challenges. Calculate percentages, discounts, and ratios 
+      to ration supplies and plan our escape. Get the final calculation right, and the 
+      rescue helicopter comes. Get it wrong... and we're all infected.`
+    },
+    {
+      title: "EASTWAY'S LAST STAND",
+      story: `This isn't just about grades anymore, ${playerData.name}. This is survival. 
+      Ready to prove that math can save lives? Then let's move. Time is running out.`
     }
   ];
 
-  const currentScreenData = screens[currentScreen - 1];
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleNext();
+      }
+      if (e.key === 'Escape') {
+        onSkip();
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSlide]);
+
+  const handleNext = () => {
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide(prev => prev + 1);
+    } else {
+      onComplete();
+    }
+  };
 
   return (
     <div className="za-intro-sequence">
-      <button className="za-skip-btn" onClick={handleSkip}>
-        Skip Intro →
-      </button>
-
-      <div className="za-intro-container">
-        <div className={`za-intro-screen ${isTransitioning ? 'za-transitioning' : ''}`} key={currentScreen}>
-          <h1 className="za-intro-title">{currentScreenData.title}</h1>
-          <div className="za-intro-content">
-            {currentScreenData.content}
-          </div>
-
-          <div className="za-intro-buttons">
-            <button 
-              className="za-btn-primary za-intro-continue"
-              onClick={handleNext}
-              disabled={isTransitioning}
-            >
-              {currentScreen === 3 ? "I'M READY TO SURVIVE" : 'Continue →'}
-            </button>
-          </div>
-        </div>
-
-        <div className="za-intro-progress">
-          {[1, 2, 3].map(num => (
-            <span 
-              key={num} 
-              className={`za-progress-dot ${num === currentScreen ? 'active' : ''} ${num < currentScreen ? 'complete' : ''}`}
-            />
-          ))}
-        </div>
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '30px'
+      }}>
+        <h1>{slides[currentSlide].title}</h1>
+        <p className="za-intro-story" style={{
+          fontSize: '15px',
+          lineHeight: '1.8',
+          color: '#DDD',
+          margin: '20px 0',
+          textAlign: 'left'
+        }}>
+          {slides[currentSlide].story}
+        </p>
       </div>
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        marginBottom: '25px'
+      }}>
+        {slides.map((_, index) => (
+          <div
+            key={index}
+            style={{
+              width: '40px',
+              height: '6px',
+              background: index === currentSlide ? '#FFD700' : 'rgba(255,255,255,0.2)',
+              borderRadius: '3px',
+              transition: 'all 0.3s'
+            }}
+          />
+        ))}
+      </div>
+
+      <div style={{
+        display: 'flex',
+        gap: '10px'
+      }}>
+        <button
+          onClick={onSkip}
+          style={{
+            flex: '1',
+            padding: '10px',
+            background: 'rgba(255,255,255,0.1)',
+            border: '2px solid #666',
+            borderRadius: '6px',
+            color: '#AAA',
+            fontSize: '14px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          Skip Intro
+        </button>
+        <button
+          onClick={handleNext}
+          style={{
+            flex: '2',
+            padding: '10px',
+            background: 'linear-gradient(135deg, #DC143C, #8B0000)',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#FFF',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            textTransform: 'uppercase'
+          }}
+        >
+          {currentSlide < slides.length - 1 ? 'Continue' : 'Start Mission'}
+        </button>
+      </div>
+
+      <p style={{
+        textAlign: 'center',
+        color: '#666',
+        fontSize: '11px',
+        marginTop: '15px'
+      }}>
+        Press ENTER to continue • ESC to skip
+      </p>
     </div>
   );
 };
