@@ -9,8 +9,9 @@ import GameScreen from './components/GameScreen';
 import VictoryScreen from './components/VictoryScreen';
 import DeathScreen from './components/DeathScreen';
 import LevelComplete from './components/LevelComplete';
-import './styles/zombietheme.css'; 
 import './styles/zombie.css';
+import './styles/zombietheme.css'; 
+
 
 const ZombieApocalypse = () => {
   // Game state management
