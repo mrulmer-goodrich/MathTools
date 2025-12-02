@@ -1721,3 +1721,37 @@ body:has(.za-app-root) header { display: none !important; }
 /* ============================================================================ */
 /* END v4.2 COMPLETE CSS */
 /* ============================================================================ */
+
+/* Timer resize to match mute button */
+.za-timer-container {
+  display: inline-block;
+  margin-right: 15px;
+  vertical-align: middle;
+}
+
+.za-timer-box {
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  min-width: 85px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.za-timer-box.za-timer-warning {
+  border-color: #DC143C;
+  color: #DC143C;
+}
+
+/* Make sure mute button is same height */
+.za-sound-toggle {
+  height: 40px;
+  width: 40px;
+}
