@@ -30,18 +30,31 @@ const ZombieApocalypse = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [gamePhase, currentLevel]);
 
-  // Keyboard shortcuts
+  
+  // Keyboard shortcuts - v4.1 ENHANCED
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Toggle zombie theme
       if (e.ctrlKey && e.shiftKey && e.key === 'T') {
         e.preventDefault();
         setZombieThemeEnabled(prev => !prev);
       }
-      if (e.ctrlKey && e.shiftKey && e.key === '7') {
+      
+      // Jump to specific levels (Shift+Ctrl+1 through Shift+Ctrl+7)
+      if (e.ctrlKey && e.shiftKey && (e.key >= '1' && e.key <= '7')) {
         e.preventDefault();
-        setCurrentLevel(7);
+        const level = parseInt(e.key);
+        console.log(`Dev shortcut: Jumping to Level ${level}`);
+        setCurrentLevel(level);
+        setHearts(3); // Reset hearts
         setGamePhase('playing');
+        setLevelStartTime(Date.now());
+        if (!gameStartTime) {
+          setGameStartTime(Date.now());
+        }
       }
+      
+      // Jump to victory screen
       if (e.ctrlKey && e.shiftKey && e.key === 'V') {
         e.preventDefault();
         setGamePhase('victory');
@@ -50,7 +63,18 @@ const ZombieApocalypse = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [gameStartTime]);
+
+/* 
+USAGE:
+- Shift+Ctrl+1 through Shift+Ctrl+7: Jump to any level
+- Shift+Ctrl+T: Toggle theme
+- Shift+Ctrl+V: Jump to victory screen
+
+All level jumps reset hearts to 3 and set proper game phase.
+*/
+
+  
 
   const handlePersonalizationComplete = (data) => {
     setPlayerData(data);
