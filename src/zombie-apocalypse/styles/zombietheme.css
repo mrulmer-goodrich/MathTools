@@ -1101,3 +1101,217 @@ body:has(.za-app-root) header { display: none !important; }
   border-color: #444;
 }
 
+/* v4.2 EMERGENCY FIX - Add to END of your zombietheme.css */
+
+/* ============================================================================ */
+/* SCAFFOLDED PROBLEM FIX - Makes Level 4-7 readable again */
+/* ============================================================================ */
+
+.za-scaffolded-container {
+  background: rgba(20,20,20,0.95);
+  border: 2px solid #FFD700;
+  border-radius: 10px;
+  padding: 25px;
+  margin: 20px 0;
+}
+
+.za-scaffold-main-question {
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.za-scaffold-steps-container {
+  margin-top: 20px;
+}
+
+.za-scaffold-step {
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #666;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.za-scaffold-step.completed {
+  border-color: #4CAF50;
+  background: rgba(76,175,80,0.1);
+}
+
+.za-scaffold-step.active {
+  border-color: #FFD700;
+  background: rgba(255,215,0,0.1);
+}
+
+.za-scaffold-step.locked {
+  opacity: 0.5;
+  border-color: #444;
+}
+
+.za-scaffold-step-label {
+  color: #FFD700;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.za-scaffold-step-question {
+  color: #FFF;
+  font-size: 16px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.za-scaffold-step-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(0,0,0,0.7);
+  border: 2px solid #FFD700;
+  border-radius: 6px;
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.za-scaffold-step-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 10px rgba(76,175,80,0.5);
+}
+
+.za-scaffold-step-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  border: none;
+  border-radius: 6px;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.za-scaffold-step-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(76,175,80,0.5);
+}
+
+.za-scaffold-step-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.za-scaffold-step-completed {
+  color: #4CAF50;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.za-scaffold-step-error {
+  color: #DC143C;
+  font-size: 14px;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(220,20,60,0.1);
+  border-radius: 4px;
+}
+
+.za-scaffold-final-answer {
+  margin-top: 25px;
+  padding: 20px;
+  background: rgba(255,215,0,0.1);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+}
+
+.za-scaffold-final-label {
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.za-scaffold-final-input {
+  width: 100%;
+  padding: 14px;
+  background: rgba(0,0,0,0.8);
+  border: 3px solid #FFD700;
+  border-radius: 6px;
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.za-scaffold-final-button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 14px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.za-scaffold-final-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,215,0,0.6);
+}
+
+.za-scaffold-hint {
+  color: #4CAF50;
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(76,175,80,0.1);
+  border-radius: 4px;
+  border-left: 3px solid #4CAF50;
+}
+
+/* ============================================================================ */
+/* TIMER FIX - Smaller, inline with hearts */
+/* ============================================================================ */
+
+.za-timer-container {
+  display: inline-block;
+  margin-right: 15px;
+}
+
+.za-timer-box {
+  background: rgba(0,0,0,0.8);
+  border: 2px solid #FFD700;
+  border-radius: 6px;
+  padding: 8px 16px;
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  min-width: 80px;
+  text-align: center;
+}
+
+.za-timer-box.za-timer-warning {
+  border-color: #DC143C;
+  color: #DC143C;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* ============================================================================ */
+/* END v4.2 EMERGENCY FIXES */
+/* ============================================================================ */
