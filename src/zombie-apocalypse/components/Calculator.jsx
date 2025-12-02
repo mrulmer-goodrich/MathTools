@@ -1,5 +1,4 @@
-// Calculator.jsx v4.1 - FIXED
-// Clean positioning fix for Level 3+ visibility
+// Calculator.jsx v4.2 - Touch support added, clean UI
 import React, { useState, useRef, useEffect } from 'react';
 
 const Calculator = () => {
@@ -12,7 +11,7 @@ const Calculator = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const calcRef = useRef(null);
 
-  // Mouse drag handlers
+  // Mouse handlers
   const handleMouseDown = (e) => {
     if (e.target.closest('.za-calc-btn')) return;
     setIsDragging(true);
@@ -47,10 +46,9 @@ const Calculator = () => {
     };
   }, [isDragging, dragOffset]);
 
-  // Touch handlers for tablets
+  // Touch handlers for tablets/phones
   const handleTouchStart = (e) => {
     if (e.target.closest('.za-calc-btn')) return;
-    e.preventDefault();
     const touch = e.touches[0];
     setIsDragging(true);
     setDragOffset({
@@ -150,11 +148,9 @@ const Calculator = () => {
       ref={calcRef}
       className="za-calculator"
       style={{ 
-        position: 'fixed',
         left: `${position.x}px`, 
         top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'grab',
-        zIndex: 10000,
         touchAction: 'none'
       }}
       onMouseDown={handleMouseDown}
