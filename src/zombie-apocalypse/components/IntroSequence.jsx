@@ -1,4 +1,4 @@
-// IntroSequence.jsx v4.0 - Enhanced Narrative
+// IntroSequence.jsx v4.1 - FIXED
 import React, { useState, useEffect } from 'react';
 
 const IntroSequence = ({ playerData, onComplete, onSkip }) => {
@@ -7,7 +7,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
   const slides = [
     {
       title: "THE OUTBREAK",
-      story: `${playerData.name}, listen carefully. It started in Mr. Peterson's math class. 
+      story: `${playerData.name}, listen carefully. It started after Electives. 
       One student... then another... then chaos. Eastway Middle School is now ground zero 
       for something we can't explain.`
     },
@@ -32,7 +32,7 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
     {
       title: "EASTWAY'S LAST STAND",
       story: `This isn't just about grades anymore, ${playerData.name}. This is survival. 
-      Ready to prove that math can save lives? Then let's move. Time is running out.`
+      Ready to prove that MATH SAVES LIVES? Then let's move. Time is running out.`
     }
   ];
 
@@ -102,13 +102,14 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
         <button
           onClick={onSkip}
           style={{
-            flex: '1',
-            padding: '10px',
+            flex: 1,
+            padding: '12px',
             background: 'rgba(255,255,255,0.1)',
-            border: '2px solid #666',
+            border: '2px solid rgba(255,255,255,0.3)',
             borderRadius: '6px',
-            color: '#AAA',
+            color: '#FFF',
             fontSize: '14px',
+            fontWeight: 'bold',
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
@@ -118,8 +119,8 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
         <button
           onClick={handleNext}
           style={{
-            flex: '2',
-            padding: '10px',
+            flex: 2,
+            padding: '12px',
             background: 'linear-gradient(135deg, #DC143C, #8B0000)',
             border: 'none',
             borderRadius: '6px',
@@ -131,18 +132,18 @@ const IntroSequence = ({ playerData, onComplete, onSkip }) => {
             textTransform: 'uppercase'
           }}
         >
-          {currentSlide < slides.length - 1 ? 'Continue' : 'Start Mission'}
+          {currentSlide < slides.length - 1 ? 'CONTINUE' : 'BEGIN SURVIVAL'}
         </button>
       </div>
 
-      <p style={{
+      <div style={{
         textAlign: 'center',
-        color: '#666',
-        fontSize: '11px',
-        marginTop: '15px'
+        marginTop: '20px',
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.4)'
       }}>
-        Press ENTER to continue • ESC to skip
-      </p>
+        Press ENTER or SPACE to continue • ESC to skip
+      </div>
     </div>
   );
 };
