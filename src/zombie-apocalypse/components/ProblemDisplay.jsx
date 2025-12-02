@@ -1,6 +1,5 @@
-// ProblemDisplay.jsx v4.1 - COMPLETE REWRITE
-// All fixes: Help popup, blinking decimals, unlocked final answer, capitalization, no emojis
-import React, { useRef, useEffect, useState } from 'react';
+// ProblemDisplay.jsx v4.2 - FIXED decimal positions
+import React, { useRef, useEffect } from 'react';
 
 const ProblemDisplay = ({
   problem,
@@ -24,19 +23,16 @@ const ProblemDisplay = ({
 
   if (!problem) return null;
 
-  // Helper: Capitalize first letter of problem text
   const capitalizeFirstLetter = (text) => {
     if (!text) return text;
     return text.charAt(0).toUpperCase() + text.slice(1);
   };
 
-  // Helper: Extract percent value from question for help menu
   const extractPercent = (question) => {
     const match = question.match(/(\d+(?:\.\d+)?)%/);
     return match ? match[1] : '25';
   };
 
-  // Handle multiple choice clicks
   const handleChoiceClick = (choice) => {
     onAnswerChange(choice);
     setTimeout(() => {
@@ -91,14 +87,16 @@ const ProblemDisplay = ({
         )}
       </div>
 
-      {/* Help Menu Popup - Level 1 */}
+      {/* Help Menu Popup - Level 1 FIXED DECIMALS */}
       {wrongAnswerFeedback && currentLevel === 1 && (
         <div className="za-help-overlay" onClick={onDismissHelp}>
           <div className="za-help-popup" onClick={(e) => e.stopPropagation()}>
             <div className="za-help-title">Converting Percents to Decimals:</div>
             
             <div className="za-help-example">
-              {extractPercent(problem.question)}% → 
+              {extractPercent(problem.question)}
+              <span className="za-blink-decimal">.</span>
+              % → 
               <span className="za-blink-decimal">.</span>
               <span className="za-blink-decimal">.</span> → 
               <span className="za-help-answer">{wrongAnswerFeedback.correctAnswer}</span>
@@ -122,21 +120,53 @@ const ProblemDisplay = ({
         </div>
       )}
 
-      {/* Help Menu Popup - Levels 2+ (Generic) */}
+      {/* Help Menu Popup - Levels 2+ */}
       {wrongAnswerFeedback && currentLevel > 1 && (
         <div className="za-help-overlay" onClick={onDismissHelp}>
           <div className="za-help-popup" onClick={(e) => e.stopPropagation()}>
-            <div className="za-help-title">Incorrect Answer</div>
+            <div className="za-help-title">Not Quite!</div>
             
-            <div style={{
-              color: '#FFF',
-              fontSize: '16px',
-              textAlign: 'center',
-              margin: '20px 0',
-              lineHeight: '1.6'
-            }}>
-              {wrongAnswerFeedback.hint || 'Check your calculation and try again.'}
-            </div>
+            {wrongAnswerFeedback.guidedNotes && (
+              <div className="za-guided-notes">
+                <div className="za-guided-title">{wrongAnswerFeedback.guidedNotes.title}</div>
+                
+                {wrongAnswerFeedback.guidedNotes.visual && (
+                  <div className="za-guided-visual">{wrongAnswerFeedback.guidedNotes.visual}</div>
+                )}
+                
+                {wrongAnswerFeedback.guidedNotes.explanation && (
+                  <div className="za-guided-explanation">{wrongAnswerFeedback.guidedNotes.explanation}</div>
+                )}
+                
+                {wrongAnswerFeedback.guidedNotes.steps && (
+                  <div className="za-guided-steps">
+                    {wrongAnswerFeedback.guidedNotes.steps.map((step, idx) => (
+                      <div key={idx} className="za-guided-step">{step}</div>
+                    ))}
+                  </div>
+                )}
+                
+                {wrongAnswerFeedback.guidedNotes.note && (
+                  <div className="za-guided-note">{wrongAnswerFeedback.guidedNotes.note}</div>
+                )}
+                
+                {wrongAnswerFeedback.guidedNotes.examples && (
+                  <div className="za-guided-examples">{wrongAnswerFeedback.guidedNotes.examples}</div>
+                )}
+              </div>
+            )}
+            
+            {!wrongAnswerFeedback.guidedNotes && wrongAnswerFeedback.hint && (
+              <div style={{
+                color: '#FFF',
+                fontSize: '16px',
+                textAlign: 'center',
+                margin: '20px 0',
+                lineHeight: '1.6'
+              }}>
+                {wrongAnswerFeedback.hint}
+              </div>
+            )}
             
             {wrongAnswerFeedback.correctAnswer && (
               <div style={{
