@@ -1755,3 +1755,99 @@ body:has(.za-app-root) header { display: none !important; }
   height: 40px;
   width: 40px;
 }
+
+/* ZOMBIE INTERLUDE FIX - Make zombies visible */
+.za-interlude-container {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  background: linear-gradient(to bottom, #1a1a1a 0%, #0d0d0d 100%);
+  border: 3px solid #DC143C;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.za-interlude-game-area {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  background: rgba(0,0,0,0.6);
+  margin: 10px 0;
+}
+
+.za-interlude-zombie {
+  position: absolute;
+  transition: all 0.05s linear;
+  z-index: 10;
+}
+
+.za-zombie-sprite {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #4CAF50 0%, #2E7D32 50%, #1B5E20 100%);
+  border-radius: 50%;
+  border: 3px solid #8BC34A;
+  cursor: crosshair;
+  position: relative;
+  animation: zombiePulse 0.5s ease-in-out infinite;
+}
+
+.za-zombie-sprite::before {
+  content: '🧟';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+}
+
+@keyframes zombiePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.za-player-position {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.za-interlude-complete {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.95);
+  padding: 40px;
+  border: 3px solid #4CAF50;
+  border-radius: 12px;
+  text-align: center;
+  z-index: 100;
+}
+
+.za-bitten-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(220,20,60,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.za-bite-effect {
+  font-size: 48px;
+  color: #FFFFFF;
+  font-weight: bold;
+  animation: bitePulse 0.5s ease-in-out infinite;
+}
+
+@keyframes bitePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
