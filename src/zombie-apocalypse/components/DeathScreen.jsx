@@ -1,7 +1,7 @@
-// DeathScreen.jsx v4.0 - Cinematic Death Sequence
+// DeathScreen.jsx v4.1 - FIXED
 import React, { useEffect, useState } from 'react';
 
-const DeathScreen = ({ currentLevel, playerData }) => {
+const DeathScreen = ({ currentLevel, playerData, onRestartLevel }) => {
   const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
@@ -19,6 +19,15 @@ const DeathScreen = ({ currentLevel, playerData }) => {
       7: `All seven factions pooled their hope into you, ${playerData?.name || 'survivor'}. The helicopter was in the air. But the final percentage... you got it wrong. The pilot turned back. We never stood a chance.`
     };
     return messages[currentLevel] || `The outbreak claimed another victim. ${playerData?.name || 'Survivor'} fought bravely, but the math... the math was unforgiving.`;
+  };
+
+  const handleTryAgain = () => {
+    if (onRestartLevel) {
+      onRestartLevel();
+    } else {
+      // Fallback to reload if onRestartLevel not provided
+      window.location.reload();
+    }
   };
 
   return (
@@ -115,7 +124,7 @@ const DeathScreen = ({ currentLevel, playerData }) => {
 
         {/* Restart button */}
         <button
-          onClick={() => window.location.reload()}
+          onClick={handleTryAgain}
           style={{
             padding: '15px 40px',
             background: 'linear-gradient(135deg, #DC143C, #8B0000)',
@@ -141,14 +150,6 @@ const DeathScreen = ({ currentLevel, playerData }) => {
         >
           Try Again
         </button>
-
-        <p style={{
-          fontSize: '11px',
-          color: '#444',
-          marginTop: '20px'
-        }}>
-          Press R to restart
-        </p>
       </div>
 
       {/* Ambient zombie shadows */}
