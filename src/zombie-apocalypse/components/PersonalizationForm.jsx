@@ -1,11 +1,11 @@
-// PersonalizationForm.jsx v4.0 - Story Integration
+// PersonalizationForm.jsx v4.1 - FIXED
 import React, { useState } from 'react';
 
 const PersonalizationForm = ({ onComplete }) => {
   const [formData, setFormData] = useState({
     name: '',
     friend: '',
-    city: 'Matthews'
+    city: 'Charlotte'
   });
 
   const handleSubmit = (e) => {
@@ -35,7 +35,7 @@ const PersonalizationForm = ({ onComplete }) => {
         lineHeight: '1.6',
         fontStyle: 'italic'
       }}>
-        The outbreak started during 6th period. Before we barricade ourselves in, 
+        The outbreak started during Mr. UG's 2nd block. Before we barricade ourselves in, 
         tell me who you are...
       </p>
 
@@ -148,7 +148,7 @@ const PersonalizationForm = ({ onComplete }) => {
             opacity: formData.name && formData.friend ? 1 : 0.5
           }}
         >
-          Begin Survival
+          ATTEMPT TO SURVIVE
         </button>
       </form>
     </div>
