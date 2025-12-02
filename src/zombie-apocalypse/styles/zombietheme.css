@@ -1315,3 +1315,409 @@ body:has(.za-app-root) header { display: none !important; }
 /* ============================================================================ */
 /* END v4.2 EMERGENCY FIXES */
 /* ============================================================================ */
+
+/* ============================================================================ */
+/* v4.2 COMPLETE CSS FIXES - Add to END of zombietheme.css */
+/* ============================================================================ */
+
+/* SCAFFOLDED PROBLEM STYLING - Makes Level 4-7 visible and usable */
+/* ============================================================================ */
+
+.za-scaffolded-container {
+  background: rgba(20,20,20,0.95);
+  border: 3px solid #FFD700;
+  border-radius: 12px;
+  padding: 30px;
+  margin: 20px auto;
+  max-width: 900px;
+}
+
+.za-scaffold-main-question {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 25px;
+  line-height: 1.7;
+  text-align: center;
+  padding: 15px;
+  background: rgba(255,215,0,0.1);
+  border-radius: 8px;
+}
+
+.za-scaffold-steps-container {
+  margin-top: 25px;
+}
+
+.za-scaffold-step {
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #666;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.za-scaffold-step.completed {
+  border-color: #4CAF50;
+  background: rgba(76,175,80,0.15);
+}
+
+.za-scaffold-step.active {
+  border-color: #FFD700;
+  background: rgba(255,215,0,0.1);
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+}
+
+.za-scaffold-step.locked {
+  opacity: 0.4;
+  border-color: #444;
+}
+
+.za-scaffold-step-label {
+  color: #FFD700;
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.za-scaffold-step-question {
+  color: #FFFFFF;
+  font-size: 17px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.za-scaffold-step-input {
+  width: 100%;
+  padding: 14px;
+  background: rgba(0,0,0,0.8);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.za-scaffold-step-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 15px rgba(76,175,80,0.5);
+}
+
+.za-scaffold-step-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #666;
+}
+
+.za-scaffold-step-button {
+  margin-top: 12px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.za-scaffold-step-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(76,175,80,0.6);
+}
+
+.za-scaffold-step-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666;
+}
+
+.za-scaffold-step-completed {
+  color: #4CAF50;
+  font-size: 17px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(76,175,80,0.1);
+  border-radius: 6px;
+}
+
+.za-scaffold-step-error {
+  color: #DC143C;
+  font-size: 15px;
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(220,20,60,0.15);
+  border-radius: 6px;
+  border-left: 4px solid #DC143C;
+}
+
+.za-scaffold-final-answer {
+  margin-top: 30px;
+  padding: 25px;
+  background: rgba(255,215,0,0.15);
+  border: 3px solid #FFD700;
+  border-radius: 10px;
+}
+
+.za-scaffold-final-label {
+  color: #FFD700;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+.za-scaffold-final-input {
+  width: 100%;
+  padding: 16px;
+  background: rgba(0,0,0,0.8);
+  border: 3px solid #FFD700;
+  border-radius: 8px;
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.za-scaffold-final-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 20px rgba(76,175,80,0.5);
+}
+
+.za-scaffold-final-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+}
+
+.za-scaffold-final-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255,215,0,0.7);
+}
+
+.za-scaffold-final-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.za-scaffold-hint {
+  color: #4CAF50;
+  font-size: 14px;
+  font-style: italic;
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(76,175,80,0.1);
+  border-radius: 6px;
+  border-left: 4px solid #4CAF50;
+}
+
+.za-scaffold-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.za-scaffold-choice-btn {
+  padding: 12px 20px;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid #FFD700;
+  border-radius: 6px;
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.za-scaffold-choice-btn:hover {
+  background: rgba(255,215,0,0.2);
+  transform: translateX(5px);
+}
+
+/* TIMER FIXES - Smaller, inline display */
+/* ============================================================================ */
+
+.za-timer-container {
+  display: inline-block;
+  margin-right: 20px;
+  vertical-align: middle;
+}
+
+.za-timer-box {
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 10px 18px;
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  min-width: 90px;
+  text-align: center;
+  display: inline-block;
+}
+
+.za-timer-box.za-timer-warning {
+  border-color: #DC143C;
+  color: #DC143C;
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.05);
+  }
+}
+
+/* HELP POPUP DECIMAL FIXES - Show 3.% → . . → 0.03 */
+/* ============================================================================ */
+
+.za-help-example {
+  font-size: 32px;
+  font-family: 'Courier New', monospace;
+  color: #FFFFFF;
+  text-align: center;
+  margin: 25px 0;
+  letter-spacing: 4px;
+}
+
+.za-blink-decimal {
+  color: #DC143C;
+  font-size: 36px;
+  font-weight: bold;
+  animation: blinkDecimal 1s step-start infinite;
+}
+
+@keyframes blinkDecimal {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.za-help-answer {
+  color: #4CAF50;
+  font-size: 36px;
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(76,175,80,0.8);
+}
+
+/* GUIDED NOTES STYLING - For Levels 2-7 */
+/* ============================================================================ */
+
+.za-guided-notes {
+  margin: 20px 0;
+}
+
+.za-guided-title {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.za-guided-visual {
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  color: #FFFFFF;
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 8px;
+}
+
+.za-guided-explanation {
+  color: #FFFFFF;
+  font-size: 16px;
+  margin: 15px 0;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.za-guided-steps {
+  margin: 20px 0;
+}
+
+.za-guided-step {
+  color: #FFFFFF;
+  font-size: 15px;
+  margin: 8px 0;
+  padding: 10px 15px;
+  background: rgba(0,0,0,0.4);
+  border-left: 4px solid #4CAF50;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.za-guided-note {
+  color: #4CAF50;
+  font-size: 15px;
+  font-weight: bold;
+  margin: 15px 0;
+  padding: 12px;
+  background: rgba(76,175,80,0.1);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.za-guided-examples {
+  color: #FFD700;
+  font-size: 14px;
+  margin: 15px 0;
+  padding: 10px;
+  text-align: center;
+  background: rgba(255,215,0,0.1);
+  border-radius: 6px;
+}
+
+/* CALCULATOR POSITIONING */
+/* ============================================================================ */
+
+.za-calculator {
+  position: fixed !important;
+  z-index: 10000 !important;
+}
+
+/* PROBLEM COUNTER - White text */
+/* ============================================================================ */
+
+.za-problem-counter {
+  color: #FFFFFF !important;
+  font-weight: bold !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+/* ============================================================================ */
+/* END v4.2 COMPLETE CSS */
+/* ============================================================================ */
