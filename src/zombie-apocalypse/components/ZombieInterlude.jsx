@@ -1,5 +1,5 @@
-// ZombieInterlude.jsx 
-// Version: 4.0
+// ZombieInterlude.jsx v4.1 - FIXED (No white backgrounds)
+// Version: 4.1
 // Zombie clicking mini-game between levels
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -149,12 +149,16 @@ const ZombieInterlude = ({ onComplete, playerData }) => {
                 top: `${baseTop + zigzagAmount}%`,
                 width: `${zombie.size}px`,
                 height: `${zombie.size}px`,
-                cursor: 'crosshair'
+                cursor: 'crosshair',
+                background: 'transparent' // v4.1 FIX: Ensure no white background
               }}
               onClick={() => clickZombie(zombie.id)}
             >
-              {/* Placeholder: Will use sprite animation */}
-              <div className="za-zombie-sprite" />
+              {/* Placeholder: Will use sprite animation - NO WHITE BACKGROUND */}
+              <div className="za-zombie-sprite" style={{
+                background: 'transparent', // v4.1 FIX
+                mixBlendMode: 'normal' // v4.1 FIX: Proper blending
+              }} />
             </div>
           );
         })}
