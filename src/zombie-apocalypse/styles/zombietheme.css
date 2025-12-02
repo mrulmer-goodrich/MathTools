@@ -769,3 +769,335 @@ body:has(.za-app-root) header { display: none !important; }
     transition: none !important;
   }
 }
+
+
+/*CSS Modifications 4.1*/
+
+/* Help Popup Overlay - v4.1 */
+.za-help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+  backdrop-filter: blur(5px);
+}
+
+.za-help-popup {
+  background: linear-gradient(135deg, rgba(30,20,20,0.98), rgba(20,10,10,0.98));
+  border: 3px solid #DC143C;
+  border-radius: 12px;
+  padding: 35px;
+  max-width: 550px;
+  width: 90%;
+  box-shadow: 0 0 60px rgba(220,20,60,0.9), inset 0 0 40px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.za-help-title {
+  color: #FFD700;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.za-help-example {
+  color: #FFF;
+  font-size: 28px;
+  text-align: center;
+  margin: 25px 0;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.za-blink-decimal {
+  color: #DC143C;
+  font-size: 36px;
+  font-weight: bold;
+  animation: blink 1s ease-in-out infinite;
+  margin: 0 5px;
+  display: inline-block;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.za-help-answer {
+  color: #4CAF50;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(76,175,80,0.8);
+}
+
+.za-help-instruction {
+  color: #FFD700;
+  font-size: 16px;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.za-help-examples {
+  color: #AAA;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.6;
+}
+
+.za-help-dismiss-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 25px;
+  background: linear-gradient(135deg, #DC143C, #8B0000);
+  border: none;
+  border-radius: 8px;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(220,20,60,0.5);
+}
+
+.za-help-dismiss-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(220,20,60,0.8);
+  background: linear-gradient(135deg, #FF1744, #DC143C);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+
+
+/* Timer Container - v4.1 (like mute button) */
+.za-timer-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.za-timer-box {
+  background: rgba(0,0,0,0.85);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 12px 24px;
+  color: #FFD700;
+  font-size: 24px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(255,215,0,0.2);
+  text-align: center;
+  min-width: 120px;
+  letter-spacing: 2px;
+}
+
+.za-timer-box.za-timer-warning {
+  border-color: #DC143C;
+  color: #DC143C;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+
+
+/* Calculator Fix - v4.1 */
+.za-calculator {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 10000 !important;
+  background: rgba(30,30,30,0.95) !important;
+  border: 2px solid #FFD700 !important;
+  border-radius: 8px !important;
+  padding: 15px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8) !important;
+  user-select: none !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.za-calculator.za-hidden {
+  display: none !important;
+}
+
+.za-calc-display {
+  background: rgba(0,0,0,0.8);
+  border: 2px solid #4CAF50;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+  color: #4CAF50;
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  text-align: right;
+  min-height: 40px;
+  font-weight: bold;
+}
+
+.za-calc-btn {
+  background: rgba(50,50,50,0.9);
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: #FFF;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 12px;
+}
+
+.za-calc-btn:hover {
+  background: rgba(80,80,80,0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+}
+
+.za-calc-btn:active {
+  transform: translateY(0);
+}
+
+.za-calc-btn.za-calc-operator {
+  background: rgba(220,20,60,0.3);
+  border-color: #DC143C;
+  color: #FFD700;
+}
+
+.za-calc-btn.za-calc-clear {
+  background: rgba(76,175,80,0.3);
+  border-color: #4CAF50;
+}
+
+
+/* Problem Counter - v4.1 */
+.za-problem-counter {
+  color: #FFFFFF !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  text-align: center;
+  margin: 15px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  letter-spacing: 1px;
+}
+
+
+/* Zombie Sprite - v4.1 (transparent backgrounds) */
+.za-zombie-sprite {
+  width: 100%;
+  height: 100%;
+  background-image: url('/zombie/zombie_face_on.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent !important;
+  mix-blend-mode: normal;
+  image-rendering: crisp-edges;
+}
+
+.za-interlude-zombie {
+  background: transparent !important;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.8));
+}
+
+
+/* Level Complete - v4.1 (entire screen clickable) */
+.za-level-complete-screen {
+  cursor: pointer;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.za-level-complete-screen * {
+  pointer-events: none; /* Allow clicks to pass through to parent */
+}
+
+.za-level-complete-screen button {
+  pointer-events: auto; /* Except buttons */
+}
+
+
+
+/* Scaffolding - v4.1 (unlocked final answer) */
+.za-final-answer-unlocked {
+  border: 2px solid #4CAF50 !important;
+  background: rgba(76,175,80,0.15) !important;
+  color: #FFF !important;
+  font-size: 18px !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  font-weight: bold !important;
+}
+
+.za-final-answer-unlocked::placeholder {
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+}
+
+.za-final-answer-unlocked:focus {
+  outline: none;
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 15px rgba(255,215,0,0.5);
+}
+
+/* Hide removed elements - v4.1 */
+.za-faction-tracker,
+.za-warning-light,
+.za-zombie-walker {
+  display: none !important;
+}
+
+
+/* Progress bar - Already works with dynamic total */
+.za-progress-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.za-progress-box {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #666;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.za-progress-filled {
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  border-color: #4CAF50;
+  box-shadow: 0 0 10px rgba(76,175,80,0.6);
+}
+
+.za-progress-empty {
+  background: rgba(0,0,0,0.5);
+  border-color: #444;
+}
+
