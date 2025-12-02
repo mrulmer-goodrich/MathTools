@@ -1,23 +1,33 @@
-// Calculator.jsx v4.2 - Touch support added, clean UI
 import React, { useState, useRef, useEffect } from 'react';
 
 const Calculator = () => {
   const [display, setDisplay] = useState('0');
   const [equation, setEquation] = useState('');
-  const [lastResult, setLastResult] = useState(null);
-  const [justCalculated, setJustCalculated] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 300, y: 120 });
+  const [position, setPosition] = useState({ x: 50, y: 120 }); // LEFT SIDE, below top bar
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const calcRef = useRef(null);
 
-  // Mouse handlers
+  // MOUSE EVENTS (desktop)
   const handleMouseDown = (e) => {
     if (e.target.closest('.za-calc-btn')) return;
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - position.x,
       y: e.clientY - position.y
+    });
+  };
+
+  // TOUCH EVENTS (mobile/tablet)
+  const handleTouchStart = (e) => {
+    if (e.target.closest('.za-calc-btn')) return;
+    e.preventDefault(); // Prevent scrolling while dragging
+    
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragOffset({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y
     });
   };
 
@@ -31,60 +41,45 @@ const Calculator = () => {
       }
     };
 
+    const handleTouchMove = (e) => {
+      if (isDragging) {
+        e.preventDefault(); // Prevent scrolling
+        const touch = e.touches[0];
+        setPosition({
+          x: touch.clientX - dragOffset.x,
+          y: touch.clientY - dragOffset.y
+        });
+      }
+    };
+
     const handleMouseUp = () => {
       setIsDragging(false);
     };
 
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+
     if (isDragging) {
+      // Mouse listeners
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      
+      // Touch listeners
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isDragging, dragOffset]);
 
-  // Touch handlers for tablets/phones
-  const handleTouchStart = (e) => {
-    if (e.target.closest('.za-calc-btn')) return;
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragOffset({
-      x: touch.clientX - position.x,
-      y: touch.clientY - position.y
-    });
-  };
-
-  const handleTouchMove = (e) => {
-    if (isDragging) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      setPosition({
-        x: touch.clientX - dragOffset.x,
-        y: touch.clientY - dragOffset.y
-      });
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  const formatNumber = (num) => {
-    const numValue = parseFloat(num);
-    if (isNaN(numValue)) return '0';
-    if (Number.isInteger(numValue)) return numValue.toString();
-    const fixed = numValue.toFixed(4);
-    return parseFloat(fixed).toString();
-  };
-
   const handleNumber = (num) => {
-    if (justCalculated) {
-      setDisplay(num);
-      setJustCalculated(false);
-    } else if (display === '0' || display === 'Error') {
+    if (display === '0' || display === 'Error') {
       setDisplay(num);
     } else {
       setDisplay(display + num);
@@ -92,45 +87,29 @@ const Calculator = () => {
   };
 
   const handleOperator = (op) => {
-    if (justCalculated && lastResult !== null) {
-      setEquation(lastResult + ' ' + op + ' ');
-      setDisplay('0');
-      setJustCalculated(false);
-    } else {
-      setEquation(display + ' ' + op + ' ');
-      setDisplay('0');
-    }
+    setEquation(display + ' ' + op + ' ');
+    setDisplay('0');
   };
 
   const handleEquals = () => {
     try {
       const fullEquation = equation + display;
       const result = eval(fullEquation.replace(/×/g, '*').replace(/÷/g, '/'));
-      const formattedResult = formatNumber(result);
-      setDisplay(formattedResult);
-      setLastResult(formattedResult);
-      setJustCalculated(true);
+      setDisplay(result.toString());
       setEquation('');
     } catch (error) {
       setDisplay('Error');
       setEquation('');
-      setLastResult(null);
-      setJustCalculated(false);
     }
   };
 
   const handleClear = () => {
     setDisplay('0');
     setEquation('');
-    setLastResult(null);
-    setJustCalculated(false);
   };
 
   const handleDecimal = () => {
-    if (justCalculated) {
-      setDisplay('0.');
-      setJustCalculated(false);
-    } else if (!display.includes('.')) {
+    if (!display.includes('.')) {
       setDisplay(display + '.');
     }
   };
@@ -151,14 +130,12 @@ const Calculator = () => {
         left: `${position.x}px`, 
         top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'grab',
-        touchAction: 'none'
+        touchAction: 'none' // Prevent default touch behaviors
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
-      <div className="za-calc-header">Calculator</div>
+      <div className="za-calc-header">Calculator (drag me)</div>
       <div className="za-calc-display">
         {equation && <div className="za-calc-equation">{equation}</div>}
         <div className="za-calc-value">{display}</div>
