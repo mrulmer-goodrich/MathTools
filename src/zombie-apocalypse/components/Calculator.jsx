@@ -1,8 +1,5 @@
-// Calculator.jsx
-// VERSION: 3.0.0
-// Last Updated: November 30, 2024
-// Changes: Cap decimals at 4 places, enable chaining calculations from result
-
+// Calculator.jsx v4.1 - FIXED
+// Clean positioning fix for Level 3+ visibility
 import React, { useState, useRef, useEffect } from 'react';
 
 const Calculator = () => {
@@ -10,11 +7,12 @@ const Calculator = () => {
   const [equation, setEquation] = useState('');
   const [lastResult, setLastResult] = useState(null);
   const [justCalculated, setJustCalculated] = useState(false);
-  const [position, setPosition] = useState({ x: 50, y: 120 });
+  const [position, setPosition] = useState({ x: window.innerWidth - 300, y: 120 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const calcRef = useRef(null);
 
+  // Mouse drag handlers
   const handleMouseDown = (e) => {
     if (e.target.closest('.za-calc-btn')) return;
     setIsDragging(true);
@@ -49,22 +47,43 @@ const Calculator = () => {
     };
   }, [isDragging, dragOffset]);
 
+  // Touch handlers for tablets
+  const handleTouchStart = (e) => {
+    if (e.target.closest('.za-calc-btn')) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragOffset({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y
+    });
+  };
+
+  const handleTouchMove = (e) => {
+    if (isDragging) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragOffset.x,
+        y: touch.clientY - dragOffset.y
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   const formatNumber = (num) => {
-    // Cap at 4 decimal places
     const numValue = parseFloat(num);
     if (isNaN(numValue)) return '0';
-    
-    // If it's a whole number, return as is
     if (Number.isInteger(numValue)) return numValue.toString();
-    
-    // Otherwise, cap at 4 decimal places and remove trailing zeros
     const fixed = numValue.toFixed(4);
     return parseFloat(fixed).toString();
   };
 
   const handleNumber = (num) => {
     if (justCalculated) {
-      // If we just calculated, start fresh
       setDisplay(num);
       setJustCalculated(false);
     } else if (display === '0' || display === 'Error') {
@@ -76,7 +95,6 @@ const Calculator = () => {
 
   const handleOperator = (op) => {
     if (justCalculated && lastResult !== null) {
-      // Use the last result to continue calculating
       setEquation(lastResult + ' ' + op + ' ');
       setDisplay('0');
       setJustCalculated(false);
@@ -132,11 +150,17 @@ const Calculator = () => {
       ref={calcRef}
       className="za-calculator"
       style={{ 
+        position: 'fixed',
         left: `${position.x}px`, 
         top: `${position.y}px`,
-        cursor: isDragging ? 'grabbing' : 'grab'
+        cursor: isDragging ? 'grabbing' : 'grab',
+        zIndex: 10000,
+        touchAction: 'none'
       }}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="za-calc-header">Calculator</div>
       <div className="za-calc-display">
