@@ -1,13 +1,13 @@
-// LevelComplete.jsx v4.0 - Celebrate with Visuals
+// LevelComplete.jsx v4.1 - FIXED
 import React from 'react';
 
-const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, totalPot }) => {
+const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, totalPot, onContinue }) => {
   
   const getLevelMessage = () => {
     const messages = {
       1: `The classroom door holds... for now. ${playerData?.friend || 'Your friend'} nods at you. "Nice work with those percentages. We're not dead yet."`,
       2: `You hear the groans fading. The Eastway Jaguars regroup. "${playerData?.name || 'Survivor'}, your calculations bought us time to barricade. Let's move to the cafeteria."`,
-      3: `The Traders unlock their supply room. "You proved yourself," DeShawn says, handing you rations. "The kitchen is next. Stay sharp."`,
+      3: `The Traders unlock their supply room. "You proved yourself," ${playerData?.friend || 'your friend'} says, handing you rations. "The kitchen is next. Stay sharp."`,
       4: `You slam the kitchen door shut just in time. The Runners are already planning the next move. "The hallway," Sofia gasps. "The lockers. That's our path to the roof."`,
       5: `The locker corridor clears. Jake from The Fortress slaps your back. "That percentage work? Flawless. The Engineers say they can get us to the roof. One more push."`,
       6: `Maya grins, holding up a keycard. "The Engineers came through. Roof access is open. But ${playerData?.name}... the final calculation decides everything. Seven factions are counting on you."`,
@@ -16,16 +16,25 @@ const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, total
     return messages[level] || `Level ${level} complete. Keep moving.`;
   };
 
+  const handleClick = () => {
+    if (onContinue) {
+      onContinue();
+    }
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      cursor: 'pointer',
-      background: 'radial-gradient(ellipse at center, rgba(76,175,80,0.1) 0%, transparent 70%)'
-    }}>
+    <div 
+      onClick={handleClick}
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        cursor: 'pointer',
+        background: 'radial-gradient(ellipse at center, rgba(76,175,80,0.1) 0%, transparent 70%)'
+      }}
+    >
       <div style={{
         maxWidth: '700px',
         width: '100%',
@@ -98,85 +107,83 @@ const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, total
           }}>
             <p style={{
               fontSize: '12px',
-              color: '#888',
+              color: '#999',
               margin: '0 0 8px',
               textTransform: 'uppercase',
               letterSpacing: '1px'
             }}>
-              Level Earnings
+              Time
             </p>
             <p style={{
-              fontSize: '32px',
+              fontSize: '28px',
               color: '#FFD700',
               fontWeight: 'bold',
-              margin: 0,
-              fontFamily: "'Courier New', monospace"
+              margin: 0
             }}>
-              +${moneyEarned.toLocaleString()}
+              {formatTime ? formatTime(time) : `${time}s`}
             </p>
           </div>
 
           <div style={{
             background: 'rgba(0,0,0,0.7)',
-            border: '2px solid rgba(76,175,80,0.5)',
+            border: '2px solid rgba(255,215,0,0.5)',
             borderRadius: '8px',
             padding: '20px'
           }}>
             <p style={{
               fontSize: '12px',
-              color: '#888',
+              color: '#999',
               margin: '0 0 8px',
               textTransform: 'uppercase',
               letterSpacing: '1px'
             }}>
-              Time Taken
+              Money Earned
+            </p>
+            <p style={{
+              fontSize: '28px',
+              color: '#FFD700',
+              fontWeight: 'bold',
+              margin: 0
+            }}>
+              ${moneyEarned || 0}
+            </p>
+          </div>
+        </div>
+
+        {/* Total pot display */}
+        {totalPot !== undefined && (
+          <div style={{
+            background: 'rgba(0,0,0,0.6)',
+            border: '2px solid rgba(76,175,80,0.5)',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '40px'
+          }}>
+            <p style={{
+              fontSize: '13px',
+              color: '#8BC34A',
+              margin: '0 0 5px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Total Survival Fund
             </p>
             <p style={{
               fontSize: '32px',
               color: '#4CAF50',
               fontWeight: 'bold',
               margin: 0,
-              fontFamily: "'Courier New', monospace"
+              textShadow: '0 0 10px rgba(76,175,80,0.6)'
             }}>
-              {formatTime(time)}
+              ${totalPot}
             </p>
           </div>
-        </div>
-
-        {/* Total pot */}
-        <div style={{
-          background: 'rgba(0,0,0,0.8)',
-          border: '2px solid rgba(255,215,0,0.6)',
-          borderRadius: '10px',
-          padding: '20px',
-          marginBottom: '30px',
-          boxShadow: '0 0 30px rgba(255,215,0,0.2)'
-        }}>
-          <p style={{
-            fontSize: '13px',
-            color: '#AAA',
-            margin: '0 0 8px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px'
-          }}>
-            Total Resources Secured
-          </p>
-          <p style={{
-            fontSize: '48px',
-            color: '#FFD700',
-            fontWeight: 'bold',
-            margin: 0,
-            fontFamily: "'Courier New', monospace",
-            textShadow: '0 0 20px rgba(255,215,0,0.6)'
-          }}>
-            ${totalPot.toLocaleString()}
-          </p>
-        </div>
+        )}
 
         {/* Continue prompt */}
         <div style={{
-          padding: '15px 30px',
-          background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
+          background: 'linear-gradient(135deg, #4CAF50, #388E3C)',
+          padding: '12px 30px',
           borderRadius: '8px',
           display: 'inline-block',
           animation: 'pulse 2s ease-in-out infinite'
@@ -192,14 +199,6 @@ const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, total
             Click to Continue →
           </p>
         </div>
-
-        <p style={{
-          fontSize: '11px',
-          color: '#444',
-          marginTop: '20px'
-        }}>
-          Click anywhere • Press SPACE • Press ENTER
-        </p>
       </div>
 
       {/* Coin burst overlay (placeholder for coin_burst_anim.png) */}
