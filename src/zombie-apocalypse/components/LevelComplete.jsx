@@ -10,7 +10,7 @@ const LevelComplete = ({ level, playerData, time, formatTime, moneyEarned, total
       3: `The Traders unlock their supply room. "You proved yourself," ${playerData?.friend || 'your friend'} says, handing you rations. "The kitchen is next. Stay sharp."`,
       4: `You slam the kitchen door shut just in time. The Runners are already planning the next move. "The hallway," ${playerData?.name} gasps. "The lockers. That's our path to the roof."`,
       5: `The locker corridor clears. Jake from The Fortress slaps your back. "That percentage work? Flawless. The Engineers say they can get us to the roof. One more push."`,
-      6: `${playerData?.name grins, holding up a keycard. "The Engineers came through. Roof access is open. But ${playerData?.name}... the final calculation decides everything. Seven factions are counting on you."`,
+      6: `${playerData?.name} grins, holding up a keycard. "The Engineers came through. Roof access is open. But ${playerData?.name}... the final calculation decides everything. Seven factions are counting on you."`,
       7: `Should never see this - Victory screen should trigger`
     };
     return messages[level] || `Level ${level} complete. Keep moving.`;
