@@ -441,17 +441,21 @@ const MultiplicationDojo = () => {
     setPracticeTable(table);
     setPracticePhase('accuracy');
     setPracticeAttempts(0);
+    setScreen('table-preview');
     
-    const probs = generatePracticeProblems(table, 10);
-    setProblems(probs);
-    setCurrentProblemIndex(0);
-    setAnswers([]);
-    setUserAnswer('');
-    setStartTime(Date.now());
-    setElapsedTime(0);
-    setStreak(0);
-    setShowFeedback(null);
-    setScreen('practice');
+    // After 3 seconds of animation, start the actual practice
+    setTimeout(() => {
+      const probs = generatePracticeProblems(table, 10);
+      setProblems(probs);
+      setCurrentProblemIndex(0);
+      setAnswers([]);
+      setUserAnswer('');
+      setStartTime(Date.now());
+      setElapsedTime(0);
+      setStreak(0);
+      setShowFeedback(null);
+      setScreen('practice');
+    }, 3500);
   };
   
   const startBeltTest = (beltType) => {
@@ -726,6 +730,10 @@ const MultiplicationDojo = () => {
     const isWarning = timeLimit && elapsedTime > timeLimit * 0.7;
     const isCritical = timeLimit && elapsedTime > timeLimit * 0.9;
     
+    // Calculate current score
+    const currentCorrect = answers.filter((ans, idx) => ans === problems[idx].answer).length;
+    const currentAccuracy = answers.length > 0 ? ((currentCorrect / answers.length) * 100).toFixed(0) : 0;
+    
     let title = 'DIAGNOSTIC TEST';
     if (screen === 'practice') {
       if (practicePhase === 'accuracy') {
@@ -749,8 +757,13 @@ const MultiplicationDojo = () => {
               {timeLimit && ` / ${formatTime(timeLimit)}`}
             </div>
             <div className="progress-label">
-              Progress: {currentProblemIndex + 1}/{problems.length}
+              {currentProblemIndex + 1} of {problems.length}
             </div>
+            {answers.length > 0 && (
+              <div className="current-score-header">
+                {currentCorrect}/{answers.length} ({currentAccuracy}%)
+              </div>
+            )}
           </div>
         </div>
         
@@ -798,13 +811,6 @@ const MultiplicationDojo = () => {
               {streak} in a row! 🔥
             </div>
           )}
-        </div>
-        
-        <div className="test-footer">
-          <div className="current-score">
-            Score: {answers.filter((ans, idx) => ans === problems[idx].answer).length}/{answers.length}
-            {answers.length > 0 && ` (${((answers.filter((ans, idx) => ans === problems[idx].answer).length / answers.length) * 100).toFixed(0)}%)`}
-          </div>
         </div>
       </div>
     );
@@ -1109,6 +1115,39 @@ const MultiplicationDojo = () => {
     );
   };
   
+  const renderTablePreview = () => {
+    const tableData = [];
+    for (let i = 0; i <= 12; i++) {
+      tableData.push({
+        problem: `${practiceTable} × ${i}`,
+        answer: practiceTable * i
+      });
+    }
+    
+    return (
+      <div className="table-preview-screen">
+        <h2>TRAINING: ×{practiceTable} TABLE</h2>
+        <p className="preview-subtitle">Study these facts - practice starts in a moment...</p>
+        
+        <div className="table-facts-container">
+          {tableData.map((fact, index) => (
+            <div 
+              key={index} 
+              className="table-fact"
+              style={{
+                animationDelay: `${index * 0.25}s`
+              }}
+            >
+              <span className="fact-problem">{fact.problem}</span>
+              <span className="fact-equals">=</span>
+              <span className="fact-answer">{fact.answer}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
@@ -1118,6 +1157,7 @@ const MultiplicationDojo = () => {
       {screen === 'main-menu' && renderMainMenu()}
       {screen === 'practice-select' && renderPracticeSelect()}
       {screen === 'belt-select' && renderBeltSelect()}
+      {screen === 'table-preview' && renderTablePreview()}
       {(screen === 'diagnostic' || screen === 'practice' || screen === 'belt-test') && renderTestScreen()}
       {screen === 'report' && renderReport()}
       {screen === 'results' && renderResults()}
