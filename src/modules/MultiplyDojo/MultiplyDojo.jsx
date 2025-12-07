@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './DojoStyles.css';
+import './MultiplicationDojo.css';
 
 // ============================================================================
 // MULTIPLICATION DOJO - Complete Component
