@@ -1,4 +1,4 @@
-// src/App.jsx — v12.1.0 
+// src/App.jsx — v12.2.0 (Added Multiplication Dojo)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -8,6 +8,7 @@ import ProportionalTablesModule from './modules/ptables/ProportionalTablesModule
 import ProportionalGraphsModule from './modules/pgraphs/ProportionalGraphsModule.jsx'
 import MixedNumbersModule from './modules/mixed/MixedNumbersModule.jsx'
 import MultiplicationModule from './modules/multiply/MultiplicationModule.jsx'
+import MultiplicationDojo from './modules/MultiplyDojo/MultiplyDojo.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
 import VaultHeistModule from './vault-heist/VaultHeist.jsx'
 import ZombieApocalypseModule from './zombie-apocalypse/ZombieApocalypse.jsx'
@@ -34,8 +35,8 @@ export default function App() {
   const [turkeyStreak, setTurkeyStreak] = useState(0)
   const [isGoldenTurkey, setIsGoldenTurkey] = useState(false)
   
-  console.log('📧 Current stats state:', stats)
-  console.log('📧 About to define updateStats function')
+  console.log('🔧 Current stats state:', stats)
+  console.log('🔧 About to define updateStats function')
   
   // Refs to hold each module's reset function
   const zombieResetRef = useRef(null)
@@ -46,6 +47,7 @@ export default function App() {
   const pgraphsResetRef = useRef(null)
   const mixedResetRef = useRef(null)
   const multiplyResetRef = useRef(null)
+  const multiplyDojoResetRef = useRef(null)
   const circlesResetRef = useRef(null)
   const vaultHeistResetRef = useRef(null)
 
@@ -124,12 +126,15 @@ export default function App() {
       case 'multiply':
         multiplyResetRef.current = resetFn
         break
-        case 'circles':
-  circlesResetRef.current = resetFn
-  break
-        case 'vault-heist':
-  vaultHeistResetRef.current = resetFn
-  break
+      case 'multiply-dojo':
+        multiplyDojoResetRef.current = resetFn
+        break
+      case 'circles':
+        circlesResetRef.current = resetFn
+        break
+      case 'vault-heist':
+        vaultHeistResetRef.current = resetFn
+        break
     }
   }
 
@@ -172,12 +177,15 @@ export default function App() {
       case 'multiply':
         multiplyResetRef.current?.()
         break
-        case 'circles':
-  circlesResetRef.current?.()
-  break
-        case 'vault-heist':
-  vaultHeistResetRef.current?.()
-  break
+      case 'multiply-dojo':
+        multiplyDojoResetRef.current?.()
+        break
+      case 'circles':
+        circlesResetRef.current?.()
+        break
+      case 'vault-heist':
+        vaultHeistResetRef.current?.()
+        break
     }
   }
 
@@ -199,6 +207,7 @@ export default function App() {
       case 'pgraphs': return 'Proportional Graphs'
       case 'mixed': return 'Mixed Numbers'
       case 'multiply': return 'Multiplication'
+      case 'multiply-dojo': return 'Multiplication Dojo'
       default: return 'Unknown Module'
     }
   }
@@ -235,20 +244,23 @@ export default function App() {
               Mixed Numbers
             </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('circles')}>
-  Circles
-</BigButton>
+              Circles
+            </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('vault-heist')}>
-  Vault Heist
-</BigButton>
+              Vault Heist
+            </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
               Multiplication
+            </BigButton>
+            <BigButton className="tile-btn" onClick={() => setRoute('multiply-dojo')}>
+              Multiplication Dojo
             </BigButton>
           </div>
         </>
       )}
 
-      {/* Unified header for all modules EXCEPT battle royale (it has its own) */}
-      {route !== 'home' && route !== 'battle-royale' && (
+      {/* Unified header for all modules EXCEPT battle royale and multiply-dojo */}
+      {route !== 'home' && route !== 'battle-royale' && route !== 'multiply-dojo' && (
         <>
           <div className="module-header">
             <button 
@@ -338,19 +350,21 @@ export default function App() {
             )}
 
             {route === 'circles' && (
-          <CirclesModule 
-    onProblemComplete={handleProblemComplete}
-    registerReset={(fn) => registerReset('circles', fn)}
-    updateStats={updateStats}
-  />
-)}
+              <CirclesModule 
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('circles', fn)}
+                updateStats={updateStats}
+              />
+            )}
+
             {route === 'vault-heist' && (
-  <VaultHeistModule 
-    onProblemComplete={handleProblemComplete}
-    registerReset={(fn) => registerReset('vault-heist', fn)}
-    updateStats={updateStats}
-  />
-)}
+              <VaultHeistModule 
+                onProblemComplete={handleProblemComplete}
+                registerReset={(fn) => registerReset('vault-heist', fn)}
+                updateStats={updateStats}
+              />
+            )}
+
             {route === 'multiply' && (
               <MultiplicationModule 
                 onProblemComplete={handleProblemComplete}
@@ -359,6 +373,29 @@ export default function App() {
               />
             )}
           </div>
+        </>
+      )}
+
+      {/* Multiplication Dojo gets full screen (no header, manages its own navigation) */}
+      {route === 'multiply-dojo' && (
+        <>
+          {/* Add a small back button in top-left */}
+          <button 
+            onClick={goHome}
+            className="button secondary"
+            style={{
+              position: 'fixed',
+              top: '1rem',
+              left: '1rem',
+              zIndex: 10000,
+              padding: '0.75rem 1.5rem',
+              fontSize: '1.1rem'
+            }}
+          >
+            ← Back to Home
+          </button>
+          
+          <MultiplicationDojo />
         </>
       )}
 
