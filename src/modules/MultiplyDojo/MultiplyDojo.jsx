@@ -37,6 +37,9 @@ const MultiplicationDojo = () => {
   // Belt test state
   const [beltTestType, setBeltTestType] = useState(null); // yellow, orange, green, blue, black
   
+  const [practiceRound, setPracticeRound] = useState(1); // 1=ordered, 2=mixed, 3=timed
+  const [showPreviewButton, setShowPreviewButton] = useState(false);
+  
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   
@@ -238,6 +241,22 @@ const MultiplicationDojo = () => {
     };
   };
   
+  const determineBeltFromDiagnostic = (accuracy, time, masteredCount) => {
+    // Determine belt based on performance
+    if (masteredCount >= 13 && accuracy >= 0.95 && time <= 150) {
+      return 'black';
+    } else if (masteredCount >= 11 && accuracy >= 0.90) {
+      return 'blue';
+    } else if (masteredCount >= 9 && accuracy >= 0.85) {
+      return 'green';
+    } else if (masteredCount >= 7 && accuracy >= 0.80) {
+      return 'orange';
+    } else if (masteredCount >= 5 && accuracy >= 0.75) {
+      return 'yellow';
+    }
+    return 'white';
+  };
+  
   const getRecommendedTable = (needsWork) => {
     // Find easiest table that needs work
     for (const table of TABLE_DIFFICULTY.easy) {
@@ -341,13 +360,21 @@ const MultiplicationDojo = () => {
     if (screen === 'diagnostic') {
       const analysis = analyzeResults(problems, finalAnswers);
       
+      // Update mastered tables from diagnostic
+      setMasteredTables(analysis.mastered);
+      
+      // Determine and set belt based on performance
+      const newBelt = determineBeltFromDiagnostic(accuracy, totalTime, analysis.mastered.length);
+      setCurrentBelt(newBelt);
+      
       setDiagnosticData({
         problems: problems.length,
         correct: correctCount,
         accuracy,
         time: totalTime,
         problemsPerMin: (problems.length / totalTime * 60).toFixed(1),
-        analysis
+        analysis,
+        earnedBelt: newBelt
       });
       
       setScreen('report');
@@ -360,10 +387,18 @@ const MultiplicationDojo = () => {
   
   const handlePracticeComplete = (correctCount, accuracy, totalTime) => {
     if (practicePhase === 'accuracy') {
-      if (accuracy >= 0.9) {
+      if (practiceRound === 1 && accuracy >= 0.9) {
+        // Completed ordered round, move to mixed round
+        setPracticeRound(2);
+        setShowPreviewButton(false);
+        setScreen('table-preview');
+        setTimeout(() => setShowPreviewButton(true), 2000);
+      } else if (practiceRound === 2 && accuracy >= 0.9) {
+        // Completed mixed round, move to speed phase
         setPracticePhase('speed');
         setScreen('results');
       } else {
+        // Failed, retry current round
         setPracticeAttempts(practiceAttempts + 1);
         setScreen('results');
       }
@@ -385,6 +420,7 @@ const MultiplicationDojo = () => {
         setScreen('results');
       } else {
         setPracticePhase('accuracy');
+        setPracticeRound(1);
         setPracticeAttempts(0);
         setScreen('results');
       }
@@ -441,21 +477,38 @@ const MultiplicationDojo = () => {
     setPracticeTable(table);
     setPracticePhase('accuracy');
     setPracticeAttempts(0);
+    setPracticeRound(1);
+    setShowPreviewButton(false);
     setScreen('table-preview');
     
-    // After 3 seconds of animation, start the actual practice
+    // Show "Got It" button after 2 seconds
     setTimeout(() => {
-      const probs = generatePracticeProblems(table, 10);
-      setProblems(probs);
-      setCurrentProblemIndex(0);
-      setAnswers([]);
-      setUserAnswer('');
-      setStartTime(Date.now());
-      setElapsedTime(0);
-      setStreak(0);
-      setShowFeedback(null);
-      setScreen('practice');
-    }, 3500);
+      setShowPreviewButton(true);
+    }, 2000);
+  };
+  
+  const startPracticeAfterPreview = () => {
+    const probs = practiceRound === 1 
+      ? generateOrderedPracticeProblems(practiceTable, 10)
+      : generatePracticeProblems(practiceTable, 10);
+    
+    setProblems(probs);
+    setCurrentProblemIndex(0);
+    setAnswers([]);
+    setUserAnswer('');
+    setStartTime(Date.now());
+    setElapsedTime(0);
+    setStreak(0);
+    setShowFeedback(null);
+    setScreen('practice');
+  };
+  
+  const generateOrderedPracticeProblems = (table, count = 10) => {
+    const problems = [];
+    for (let i = 1; i <= count; i++) {
+      problems.push({ a: table, b: i, answer: table * i });
+    }
+    return problems;
   };
   
   const startBeltTest = (beltType) => {
@@ -538,6 +591,12 @@ const MultiplicationDojo = () => {
   
   const canTakeBeltTest = (beltType) => {
     const req = BELT_REQUIREMENTS[beltType];
+    
+    // Calculate how many tables need to be mastered
+    // If student has mastered all 13, they can take any test
+    if (masteredTables.length === 13) return true;
+    
+    // Otherwise, they need to have mastered the required number
     return masteredTables.length >= req.tablesNeeded;
   };
   
@@ -823,8 +882,11 @@ const MultiplicationDojo = () => {
       return renderBeltTestReport();
     }
     
-    const { problems, correct, accuracy, time, problemsPerMin, analysis } = diagnosticData;
+    const { problems, correct, accuracy, time, problemsPerMin, analysis, earnedBelt } = diagnosticData;
     const recommendedTable = getRecommendedTable(analysis.needsWork);
+    
+    // Show belt promotion if applicable
+    const beltChanged = earnedBelt !== 'white';
     
     return (
       <div className="report-screen">
@@ -832,6 +894,14 @@ const MultiplicationDojo = () => {
           <div className="report-header">
             <h2>MULTIPLICATION DOJO REPORT</h2>
           </div>
+          
+          {beltChanged && (
+            <div className="belt-promotion">
+              <div className="promotion-icon">🏆</div>
+              <h3>Belt Earned: {earnedBelt.toUpperCase()} BELT!</h3>
+              <p>Your performance has earned you a new rank!</p>
+            </div>
+          )}
           
           <div className="report-section">
             <h3>DIAGNOSTIC RESULTS</h3>
@@ -850,8 +920,8 @@ const MultiplicationDojo = () => {
               </div>
               <div className="stat">
                 <span className="stat-label">Current Rank:</span>
-                <span className="stat-value belt-display" data-belt={currentBelt}>
-                  {currentBelt.toUpperCase()} BELT
+                <span className="stat-value belt-display" data-belt={earnedBelt}>
+                  {earnedBelt.toUpperCase()} BELT
                 </span>
               </div>
             </div>
@@ -876,6 +946,9 @@ const MultiplicationDojo = () => {
                   <span key={table} className="table-badge needs-work">×{table}</span>
                 ))}
               </div>
+              <p className="practice-instruction">
+                You need to practice {analysis.needsWork.length} table{analysis.needsWork.length !== 1 ? 's' : ''} to advance.
+              </p>
             </div>
           )}
           
@@ -1010,20 +1083,36 @@ const MultiplicationDojo = () => {
     let title, message, nextAction;
     
     if (practicePhase === 'accuracy') {
+      const roundName = practiceRound === 1 ? 'Ordered Round' : 'Mixed Round';
+      
       if (accuracy >= 0.9) {
-        title = 'Accuracy Phase Complete!';
-        message = `Great job! You got ${correctCount}/${problems.length} correct. Ready for speed training?`;
-        nextAction = (
-          <button className="action-btn primary" onClick={continueToNextPhase}>
-            Start Speed Training
-          </button>
-        );
+        if (practiceRound === 1) {
+          title = 'Ordered Round Complete!';
+          message = `Great job! You got ${correctCount}/${problems.length} correct. Ready for the mixed round?`;
+          nextAction = (
+            <button className="action-btn primary" onClick={startPracticeAfterPreview}>
+              Start Mixed Round
+            </button>
+          );
+        } else {
+          title = 'Mixed Round Complete!';
+          message = `Excellent! You got ${correctCount}/${problems.length} correct. Ready for speed training?`;
+          nextAction = (
+            <button className="action-btn primary" onClick={continueToNextPhase}>
+              Start Speed Training
+            </button>
+          );
+        }
       } else {
-        title = 'Keep Practicing';
+        title = `Keep Practicing - ${roundName}`;
         message = `You got ${correctCount}/${problems.length}. You need 9/10 to advance. Try again!`;
         nextAction = (
-          <button className="action-btn primary" onClick={() => startPractice(practiceTable)}>
-            Retry Accuracy Phase
+          <button className="action-btn primary" onClick={() => {
+            setShowPreviewButton(false);
+            setScreen('table-preview');
+            setTimeout(() => setShowPreviewButton(true), 2000);
+          }}>
+            Retry {roundName}
           </button>
         );
       }
@@ -1079,7 +1168,10 @@ const MultiplicationDojo = () => {
         nextAction = (
           <button className="action-btn primary" onClick={() => {
             setPracticePhase('accuracy');
-            startPractice(practiceTable);
+            setPracticeRound(1);
+            setShowPreviewButton(false);
+            setScreen('table-preview');
+            setTimeout(() => setShowPreviewButton(true), 2000);
           }}>
             Return to Accuracy Training
           </button>
@@ -1124,10 +1216,15 @@ const MultiplicationDojo = () => {
       });
     }
     
+    const roundTitle = practiceRound === 1 ? 'Ordered Round' : 'Mixed Round';
+    const roundDesc = practiceRound === 1 
+      ? 'First, practice in order from ×1 to ×10' 
+      : 'Now practice with problems in random order';
+    
     return (
       <div className="table-preview-screen">
         <h2>TRAINING: ×{practiceTable} TABLE</h2>
-        <p className="preview-subtitle">Study these facts - practice starts in a moment...</p>
+        <p className="preview-subtitle">{roundTitle} - {roundDesc}</p>
         
         <div className="table-facts-container">
           {tableData.map((fact, index) => (
@@ -1135,7 +1232,7 @@ const MultiplicationDojo = () => {
               key={index} 
               className="table-fact"
               style={{
-                animationDelay: `${index * 0.25}s`
+                animationDelay: `${index * 0.15}s`
               }}
             >
               <span className="fact-problem">{fact.problem}</span>
@@ -1144,6 +1241,15 @@ const MultiplicationDojo = () => {
             </div>
           ))}
         </div>
+        
+        {showPreviewButton && (
+          <button 
+            className="preview-continue-btn"
+            onClick={startPracticeAfterPreview}
+          >
+            Got It - Start Practice
+          </button>
+        )}
       </div>
     );
   };
