@@ -809,7 +809,13 @@ const MultiplicationDojo = () => {
     return (
       <div className="test-screen">
         <div className="test-header">
-          <h2>{title}</h2>
+          <div className="test-title-row">
+            <button className="test-back-btn" onClick={() => setScreen('main-menu')}>
+              ← Menu
+            </button>
+            <h2>{title}</h2>
+            <div className="spacer"></div>
+          </div>
           <div className="test-stats">
             <div className={`timer ${isWarning ? 'warning' : ''} ${isCritical ? 'critical' : ''}`}>
               Time: {formatTime(elapsedTime)}
@@ -1223,8 +1229,13 @@ const MultiplicationDojo = () => {
     
     return (
       <div className="table-preview-screen">
-        <h2>TRAINING: ×{practiceTable} TABLE</h2>
-        <p className="preview-subtitle">{roundTitle} - {roundDesc}</p>
+        <div className="preview-header">
+          <button className="preview-back-btn" onClick={() => setScreen('main-menu')}>
+            ← Back to Menu
+          </button>
+          <h2>TRAINING: ×{practiceTable} TABLE</h2>
+          <p className="preview-subtitle">{roundTitle} - {roundDesc}</p>
+        </div>
         
         <div className="table-facts-container">
           {tableData.map((fact, index) => (
@@ -1232,7 +1243,7 @@ const MultiplicationDojo = () => {
               key={index} 
               className="table-fact"
               style={{
-                animationDelay: `${index * 0.15}s`
+                animationDelay: `${index * 0.4}s`
               }}
             >
               <span className="fact-problem">{fact.problem}</span>
@@ -1243,12 +1254,14 @@ const MultiplicationDojo = () => {
         </div>
         
         {showPreviewButton && (
-          <button 
-            className="preview-continue-btn"
-            onClick={startPracticeAfterPreview}
-          >
-            Got It - Start Practice
-          </button>
+          <div className="preview-button-container">
+            <button 
+              className="preview-continue-btn"
+              onClick={startPracticeAfterPreview}
+            >
+              Got It - Start Practice
+            </button>
+          </div>
         )}
       </div>
     );
