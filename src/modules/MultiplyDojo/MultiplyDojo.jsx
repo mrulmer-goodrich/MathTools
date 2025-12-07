@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './DojoStyles.css';
+import './MultiplyDojo.css';
 
 // ============================================================================
 // MULTIPLICATION DOJO - Complete Component
@@ -329,6 +329,11 @@ const MultiplicationDojo = () => {
   };
   
   const finishTest = (finalAnswers) => {
+    // Stop the timer immediately
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     const totalTime = Math.floor((Date.now() - startTime) / 1000);
     const correctCount = finalAnswers.filter((ans, idx) => ans === problems[idx].answer).length;
     const accuracy = correctCount / problems.length;
@@ -755,7 +760,7 @@ const MultiplicationDojo = () => {
         
         <div className="problem-area">
           <div className="problem-display">
-            {problem.a} × {problem.b} = ?
+            {problem.a} × {problem.b}
           </div>
           
           <div className="answer-input-area">
@@ -820,13 +825,6 @@ const MultiplicationDojo = () => {
         <div className="report-container">
           <div className="report-header">
             <h2>MULTIPLICATION DOJO REPORT</h2>
-            <input
-              type="text"
-              placeholder="Enter your name (optional)"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              className="name-input"
-            />
           </div>
           
           <div className="report-section">
@@ -908,7 +906,7 @@ const MultiplicationDojo = () => {
               Retake Diagnostic
             </button>
             <button className="action-btn primary" onClick={() => setScreen('main-menu')}>
-              Return to Main Menu
+              Back to Menu
             </button>
           </div>
         </div>
@@ -990,7 +988,7 @@ const MultiplicationDojo = () => {
               </button>
             )}
             <button className="action-btn primary" onClick={() => setScreen('main-menu')}>
-              Return to Main Menu
+              Back to Menu
             </button>
           </div>
         </div>
@@ -1102,6 +1100,9 @@ const MultiplicationDojo = () => {
           
           <div className="results-actions">
             {nextAction}
+            <button className="action-btn secondary" onClick={() => setScreen('main-menu')}>
+              Back to Menu
+            </button>
           </div>
         </div>
       </div>
