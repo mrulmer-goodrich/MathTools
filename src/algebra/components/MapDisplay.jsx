@@ -1,3 +1,6 @@
+// MapDisplay.jsx - COMPLETE FILE WITH CORRECT PATHS
+// Location: src/algebra/components/MapDisplay.jsx
+
 import React from 'react';
 import '../styles/map-display.css';
 
@@ -25,7 +28,7 @@ const MapDisplay = ({ completedLevels, currentLevel }) => {
           className="map-region region-1"
           style={{
             opacity: 0.3 + (module1Progress / 100) * 0.7,
-            backgroundImage: 'url(/assets/maps/base-camp.png)'
+            backgroundImage: 'url(/assets/algebra/map-base-camp.png)'
           }}
         >
           <div className="region-label">Base Camp</div>
@@ -34,7 +37,7 @@ const MapDisplay = ({ completedLevels, currentLevel }) => {
             <div 
               className="explorer-marker"
               style={{
-                backgroundImage: 'url(/assets/ui/explorer-avatar.png)'
+                backgroundImage: 'url(/assets/algebra/ui-explorer.png)'
               }}
             >
               📍
@@ -47,7 +50,7 @@ const MapDisplay = ({ completedLevels, currentLevel }) => {
           className="map-region region-2"
           style={{
             opacity: module1Progress === 100 ? 0.3 + (module2Progress / 100) * 0.7 : 0.1,
-            backgroundImage: 'url(/assets/maps/river-crossing.png)'
+            backgroundImage: 'url(/assets/algebra/map-river.png)'
           }}
         >
           <div className="region-label">Territory</div>
@@ -62,7 +65,7 @@ const MapDisplay = ({ completedLevels, currentLevel }) => {
           className="map-region region-3"
           style={{
             opacity: module2Progress === 100 ? 0.3 + (module3Progress / 100) * 0.7 : 0.1,
-            backgroundImage: 'url(/assets/maps/frontier-boundary.png)'
+            backgroundImage: 'url(/assets/algebra/map-frontier.png)'
           }}
         >
           <div className="region-label">The Frontier</div>
