@@ -4,7 +4,7 @@ import ClickToSelect from './InputMethods/ClickToSelect';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import levels, { storyline } from '../../data/levelData';
+import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
 
 const LevelPlayer = ({ 
@@ -22,7 +22,6 @@ const LevelPlayer = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showLevelIntro, setShowLevelIntro] = useState(true);
   const [levelComplete, setLevelComplete] = useState(false);
 
   const level = levels[levelId];
@@ -115,34 +114,6 @@ const LevelPlayer = ({
     }
   };
 
-  if (showLevelIntro && storyline.levels[levelId]) {
-    return (
-      <div className="level-intro">
-        <div className="intro-container">
-          <div className="level-header">
-            <h2>Level {level.number}: {level.name}</h2>
-            <p className="skill-description">{level.skill}</p>
-          </div>
-          
-          <div className="story-snippet">
-            <p className="story-text">{storyline.levels[levelId].intro}</p>
-          </div>
-
-          <div className="level-requirements">
-            <p>Master this skill by solving <strong>{level.problemsRequired} problems in a row</strong></p>
-          </div>
-
-          <button 
-            className="btn-start-level"
-            onClick={() => setShowLevelIntro(false)}
-          >
-            Start Challenge →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (!currentProblem) {
     return <div className="loading">Generating problem...</div>;
   }
@@ -153,39 +124,31 @@ const LevelPlayer = ({
         <div className="completion-container">
           <div className="completion-icon">🎉</div>
           <h2>Level Complete!</h2>
-          <h3>{level.name} Mastered</h3>
+          <h3>{level.name}</h3>
           
           {level.badge && (
             <div className="badge-earned">
-              <p>Badge Earned:</p>
+              <p><strong>Badge Earned!</strong></p>
               <div className="badge-display">🏆 {level.badge}</div>
             </div>
           )}
 
-          {level.moduleBadge && (
-            <div className="module-badge-earned">
-              <p>MODULE COMPLETE!</p>
-              <div className="module-badge-display">
-                ⭐ {level.moduleBadge} ⭐
-              </div>
-              {storyline.modules[level.module]?.completion && (
-                <div className="completion-story">
-                  <p>{storyline.modules[level.module].completion}</p>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="completion-stats">
-            <p>Problems Solved: {level.problemsRequired}</p>
-            <p>Streak: {correctStreak}</p>
+            <div>
+              <strong>{level.problemsRequired}</strong>
+              <div style={{fontSize: '0.85rem', color: '#666'}}>Problems Solved</div>
+            </div>
+            <div>
+              <strong>{correctStreak}</strong>
+              <div style={{fontSize: '0.85rem', color: '#666'}}>Final Streak</div>
+            </div>
           </div>
 
           <button 
             className="btn-continue-expedition"
             onClick={handleContinueFromComplete}
           >
-            {level.moduleBadge ? 'Continue Expedition' : 'Next Challenge'} →
+            {level.moduleBadge ? 'Continue Expedition' : 'Next Level'} →
           </button>
         </div>
       </div>
