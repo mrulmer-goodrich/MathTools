@@ -1197,3 +1197,55 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
+
+/* Answer choice buttons - more compact */
+.answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.answer-choice {
+  padding: 16px 20px;  /* Was probably bigger */
+  font-size: 18px;      /* Reduced from probably 24px+ */
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 60px;     /* Consistent height */
+}
+
+.answer-choice:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.answer-choice.selected {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Submit button - more reasonable */
+.submit-button {
+  padding: 14px 32px;   /* Reduced from probably 20px 40px */
+  font-size: 18px;      /* Reduced */
+  margin-top: 20px;
+}
+
+/* Modal buttons */
+.continue-button {
+  padding: 12px 28px;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+/* Back to Home button */
+.back-button {
+  padding: 10px 20px;
+  font-size: 14px;
+}
