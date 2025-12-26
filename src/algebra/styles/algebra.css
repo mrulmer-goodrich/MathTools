@@ -1,8 +1,4 @@
-/* Algebra Expedition - Updated Stylesheet (Zombie Apocalypse Style) */
-
-/* ========================================
-   GLOBAL & BASE STYLES
-   ======================================== */
+/* Algebra Expedition - No Scroll, Consistent Sizing */
 
 * {
   box-sizing: border-box;
@@ -17,11 +13,13 @@
   overflow: hidden;
   background: linear-gradient(135deg, #f5e6d3 0%, #d4c4a8 100%);
   color: #2c2416;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 /* ========================================
-   DIFFICULTY SELECTOR - FULL SCREEN
+   DIFFICULTY SELECTOR - COMPACT
    ======================================== */
 
 .difficulty-selector,
@@ -37,39 +35,37 @@
 
 .selector-container,
 .story-container {
-  max-width: 900px;
+  max-width: 1000px;
   width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
 .selector-container h1 {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #3d5a3d;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .selector-subtitle {
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #5a5a5a;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-weight: 400;
 }
 
 .difficulty-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .difficulty-card {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -89,31 +85,34 @@
 }
 
 .card-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .difficulty-card h2 {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #3d5a3d;
   font-weight: 700;
+  font-size: 1.3rem;
 }
 
 .card-description p {
   margin-bottom: 0.5rem;
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .card-description ul {
   list-style: none;
   padding: 0;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 
 .card-description li {
-  padding: 0.25rem 0;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
 }
 
 .card-description li::before {
@@ -124,32 +123,33 @@
 
 .card-example {
   background: #f5f5f5;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 
 .example-label {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
 }
 
 .card-example code {
   display: block;
   font-family: 'Courier New', monospace;
-  font-size: 1.1rem;
-  margin: 0.5rem 0;
+  font-size: 1rem;
+  margin: 0.25rem 0;
   color: #3d5a3d;
 }
 
 .btn-select {
   width: 100%;
-  padding: 1rem;
+  padding: 0.75rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -168,21 +168,29 @@
   background: #e68900;
 }
 
-/* STORY INTRO */
+.selector-note {
+  background: #fff3cd;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+  font-size: 0.85rem;
+}
+
+/* STORY INTRO - COMPACT */
 
 .journal-entry {
   background: #f9f6f0;
   border: 2px solid #8b7355;
   border-radius: 8px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .journal-header {
   border-bottom: 2px solid #8b7355;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .journal-header h2 {
@@ -190,31 +198,34 @@
   color: #3d5a3d;
   font-family: 'Georgia', serif;
   font-weight: 700;
+  font-size: 1.5rem;
 }
 
 .date {
   font-style: italic;
   color: #666;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   font-weight: 400;
+  font-size: 0.85rem;
 }
 
 .journal-content p {
   font-family: 'Georgia', serif;
-  line-height: 1.8;
-  margin-bottom: 1rem;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
 }
 
 .signature {
   text-align: right;
   font-style: italic;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   color: #3d5a3d;
 }
 
 .present-day {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px dashed #8b7355;
 }
 
@@ -222,19 +233,20 @@
   font-weight: 700;
   color: #d35400;
   margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .btn-continue {
   display: block;
   width: 100%;
-  max-width: 300px;
+  max-width: 250px;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: #3d5a3d;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -246,7 +258,7 @@
 }
 
 /* ========================================
-   MAIN MENU - FULL SCREEN
+   MAIN MENU - COMPACT
    ======================================== */
 
 .main-menu {
@@ -260,31 +272,30 @@
 }
 
 .menu-container {
-  max-width: 1000px;
+  max-width: 900px;
   width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
 .menu-header h1 {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #3d5a3d;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-weight: 700;
 }
 
 .progress-summary {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
 }
 
 .progress-bar {
   width: 100%;
-  max-width: 500px;
-  height: 20px;
+  max-width: 400px;
+  height: 16px;
   background: rgba(0,0,0,0.1);
-  border-radius: 10px;
+  border-radius: 8px;
   margin: 0.5rem auto;
   overflow: hidden;
 }
@@ -297,23 +308,24 @@
 
 .menu-story {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 8px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   border-left: 4px solid #3d5a3d;
+  font-size: 0.9rem;
 }
 
 .menu-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .menu-card {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -328,35 +340,88 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .menu-card h2 {
   margin: 0;
   color: #3d5a3d;
   font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .mode-badge {
   background: #4CAF50;
   color: white;
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 700;
+}
+
+.practice-badge {
+  background: #2196F3;
+}
+
+.menu-card p {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.practice-features {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+
+.practice-features li {
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.practice-features li::before {
+  content: "• ";
+  color: #2196F3;
+  font-weight: bold;
+}
+
+.module-preview {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.module-status {
+  flex: 1;
+  background: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.module-status.unlocked {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.module-num {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .btn-primary,
 .btn-secondary {
   width: 100%;
-  padding: 1rem;
+  padding: 0.75rem;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -369,8 +434,17 @@
   background: #2d4a2d;
 }
 
+.btn-secondary {
+  background: #2196F3;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #1976D2;
+}
+
 /* ========================================
-   LEVEL PLAYER - NO SCROLL
+   LEVEL PLAYER - FIXED HEIGHT, NO SCROLL
    ======================================== */
 
 .level-player {
@@ -387,96 +461,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.5rem;
   background: rgba(255,255,255,0.9);
   border-radius: 12px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .level-header h2 {
   margin: 0;
   color: #3d5a3d;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
 }
 
-/* LEVEL INTRO - FULL SCREEN */
-
-.level-intro,
-.module-intro {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.intro-container {
-  max-width: 700px;
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.skill-description {
-  color: #666;
-  font-size: 1.1rem;
-  font-weight: 400;
-}
-
-.story-snippet {
-  background: #f9f6f0;
-  padding: 1.5rem;
-  border-left: 4px solid #8b7355;
-  border-radius: 4px;
-  margin: 1.5rem 0;
-}
-
-.story-text {
-  font-family: 'Georgia', serif;
-  font-style: italic;
-  line-height: 1.6;
-}
-
-.level-requirements {
-  text-align: center;
-  margin: 1.5rem 0;
-  padding: 1rem;
-  background: #fff3cd;
-  border-radius: 8px;
-}
-
-.btn-start-level {
-  display: block;
-  width: 100%;
-  padding: 1rem;
-  background: #3d5a3d;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.3s;
-  font-family: 'Poppins', sans-serif;
-}
-
-.btn-start-level:hover {
-  background: #2d4a2d;
-}
-
-/* PROBLEM DISPLAY - CENTERED, NO SCROLL */
+/* PROBLEM DISPLAY - COMPACT */
 
 .problem-display {
   flex-shrink: 0;
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 12px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -485,41 +491,41 @@
 }
 
 .problem-label {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #666;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
 .problem-text {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-family: 'Courier New', monospace;
   color: #3d5a3d;
   font-weight: bold;
 }
 
-/* PROGRESS TRACKER */
+/* PROGRESS TRACKER - COMPACT */
 
 .progress-tracker {
   text-align: center;
 }
 
 .progress-label {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: #3d5a3d;
   font-weight: 600;
 }
 
 .progress-dots {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: center;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 
 .progress-dot {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #e0e0e0;
   transition: background 0.3s;
@@ -529,33 +535,34 @@
   background: #4CAF50;
 }
 
-/* CLICK TO SELECT INPUT - NO SCROLL */
+/* CLICK TO SELECT - FIXED SIZE */
 
 .click-to-select {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
+  min-height: 0;
 }
 
 .choices-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .choice-button {
-  padding: 1.5rem 1rem;
-  font-size: 1.8rem;
+  padding: 1.25rem 0.75rem;
+  font-size: 1.6rem;
   font-family: 'Courier New', monospace;
   background: white;
   border: 3px solid #ddd;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
-  min-height: 80px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -583,14 +590,14 @@
 .btn-submit-answer {
   display: block;
   width: 100%;
-  max-width: 300px;
+  max-width: 250px;
   margin: 0 auto;
-  padding: 1.25rem 2rem;
+  padding: 1rem 1.5rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -607,7 +614,7 @@
 }
 
 /* ========================================
-   SUCCESS OVERLAY (2 SECOND - THEMED)
+   SUCCESS OVERLAY
    ======================================== */
 
 .success-overlay {
@@ -635,8 +642,8 @@
 }
 
 .success-icon {
-  font-size: 6rem;
-  margin-bottom: 1rem;
+  font-size: 5rem;
+  margin-bottom: 0.75rem;
   animation: bounceIn 0.5s ease;
 }
 
@@ -647,20 +654,20 @@
 }
 
 .success-message {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .success-submessage {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   opacity: 0.9;
   font-weight: 400;
 }
 
 /* ========================================
-   WRONG ANSWER MODAL (POPUP)
+   WRONG ANSWER MODAL
    ======================================== */
 
 .feedback-modal-overlay {
@@ -683,7 +690,7 @@
   border-radius: 12px;
   max-width: 600px;
   width: 100%;
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   animation: slideUp 0.4s ease;
@@ -707,25 +714,25 @@
 .feedback-header {
   background: #f44336;
   color: white;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   border-radius: 12px 12px 0 0;
 }
 
 .feedback-icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 .feedback-header h3 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
 }
 
 .feedback-content {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .explanation-steps {
@@ -733,11 +740,11 @@
 }
 
 .explanation-step {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .step-description {
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin-bottom: 0.5rem;
   color: #333;
   font-weight: 600;
@@ -746,10 +753,10 @@
 .step-work {
   font-family: 'Courier New', monospace;
   background: #f5f5f5;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 4px;
   overflow-x: auto;
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   white-space: pre;
 }
@@ -757,29 +764,31 @@
 .rule-box {
   background: #fff3cd;
   border-left: 4px solid #ffc107;
-  padding: 1rem;
-  margin: 1.5rem 0;
+  padding: 0.75rem;
+  margin: 1.25rem 0;
   border-radius: 4px;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .correct-answer-display {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
   border-top: 1px solid #ddd;
+  font-size: 0.95rem;
 }
 
 .btn-try-again {
   display: block;
   width: 100%;
-  max-width: 300px;
-  margin: 1.5rem auto 0;
-  padding: 1rem 2rem;
+  max-width: 250px;
+  margin: 1.25rem auto 0;
+  padding: 0.85rem 1.5rem;
   background: #2196F3;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -803,40 +812,63 @@
 }
 
 .completion-container {
-  max-width: 600px;
+  max-width: 550px;
   background: white;
   border-radius: 12px;
-  padding: 3rem;
+  padding: 2.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   text-align: center;
 }
 
 .completion-icon {
-  font-size: 5rem;
-  margin-bottom: 1rem;
+  font-size: 4rem;
+  margin-bottom: 0.75rem;
 }
 
 .completion-container h2 {
   color: #4CAF50;
-  font-size: 2.5rem;
+  font-size: 2rem;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .completion-container h3 {
   color: #3d5a3d;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.badge-earned {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.badge-display {
+  font-size: 2.5rem;
+  margin-top: 0.75rem;
+}
+
+.completion-stats {
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 1rem;
+  background: #e8f5e9;
+  border-radius: 8px;
+  font-size: 0.95rem;
 }
 
 .btn-continue-expedition {
   width: 100%;
-  padding: 1.25rem 2rem;
+  padding: 1rem 1.5rem;
   background: #3d5a3d;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -848,71 +880,19 @@
 }
 
 /* ========================================
-   OVERLAYS (Stats & Map)
-   ======================================== */
-
-.stats-overlay,
-.map-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 2rem;
-}
-
-.stats-panel,
-.map-display {
-  background: white;
-  border-radius: 12px;
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-}
-
-.stats-header,
-.map-header {
-  background: #3d5a3d;
-  color: white;
-  padding: 1.5rem 2rem;
-  border-radius: 12px 12px 0 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stats-header h2,
-.map-header h2 {
-  font-weight: 700;
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  transition: transform 0.2s;
-}
-
-.btn-close:hover {
-  transform: scale(1.2);
-}
-
-/* ========================================
    RESPONSIVE
    ======================================== */
+
+@media (max-width: 1200px) {
+  .problem-text {
+    font-size: 2rem;
+  }
+  
+  .choice-button {
+    font-size: 1.4rem;
+    height: 65px;
+  }
+}
 
 @media (max-width: 768px) {
   .difficulty-cards,
@@ -925,11 +905,12 @@
   }
 
   .problem-text {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .choice-button {
-    padding: 1.5rem 1rem;
-    font-size: 1.5rem;
+    padding: 1rem;
+    font-size: 1.3rem;
+    height: 60px;
   }
 }
