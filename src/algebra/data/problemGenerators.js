@@ -1325,6 +1325,302 @@ export const generateComplexSimplifyProblem = (difficulty) => {
   }
 };
 
+// ============================================
+// PHASE 6: ONE-STEP EQUATIONS (Levels 17-20)
+// Copy these 4 functions and paste them BEFORE the EXPORTS section
+// ============================================
+
+// ============================================
+// LEVEL 1-17: RIVER CROSSING (Addition Equations)
+// ============================================
+
+export const generateAdditionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(1, 20);
+    const addend = randomInt(1, 15);
+    const sum = answer + addend;
+    
+    const problem = `x + ${addend} = ${sum}`;
+    
+    const choices = [
+      answer,
+      sum - addend - 1, // Off by one
+      addend, // Used wrong number
+      sum // Used sum as answer
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, SUBTRACT ${addend} from both sides`, work: `x + ${addend} - ${addend} = ${sum} - ${addend}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} + ${addend} = ${sum} ✓`, work: `` }
+        ],
+        rule: "To undo ADDITION, use SUBTRACTION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const addend = randomDecimal();
+    const sum = Math.round((answer + addend) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${variable} + ${addend} = ${sum}`;
+    
+    const choices = [
+      answer,
+      Math.round((sum - addend - 0.25) * 100) / 100,
+      addend,
+      sum
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${addend} from both sides`, work: `${variable} = ${sum} - ${addend}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo addition with subtraction",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-18: BRIDGE REPAIRS (Subtraction Equations)
+// ============================================
+
+export const generateSubtractionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(10, 30);
+    const subtrahend = randomInt(1, 15);
+    const difference = answer - subtrahend;
+    
+    const problem = `x - ${subtrahend} = ${difference}`;
+    
+    const choices = [
+      answer,
+      difference + subtrahend - 1, // Off by one
+      difference - subtrahend, // Subtracted instead of added
+      subtrahend // Used wrong number
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, ADD ${subtrahend} to both sides`, work: `x - ${subtrahend} + ${subtrahend} = ${difference} + ${subtrahend}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} - ${subtrahend} = ${difference} ✓`, work: `` }
+        ],
+        rule: "To undo SUBTRACTION, use ADDITION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = Math.round((randomInt(10, 30) + randomDecimal()) * 100) / 100;
+    const subtrahend = randomDecimal();
+    const difference = Math.round((answer - subtrahend) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${variable} - ${subtrahend} = ${difference}`;
+    
+    const choices = [
+      answer,
+      Math.round((difference + subtrahend - 0.5) * 100) / 100,
+      Math.round((difference - subtrahend) * 100) / 100,
+      subtrahend
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${subtrahend} to both sides`, work: `${variable} = ${difference} + ${subtrahend}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo subtraction with addition",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-19: ROPE BRIDGE (Multiplication Equations)
+// ============================================
+
+export const generateMultiplicationEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 12);
+    const coefficient = randomInt(2, 9);
+    const product = answer * coefficient;
+    
+    const problem = `${coefficient}x = ${product}`;
+    
+    const choices = [
+      answer,
+      product - coefficient, // Subtracted instead
+      product / coefficient - 1, // Off by one
+      coefficient // Used coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, DIVIDE both sides by ${coefficient}`, work: `${coefficient}x ÷ ${coefficient} = ${product} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient} × ${answer} = ${product} ✓`, work: `` }
+        ],
+        rule: "To undo MULTIPLICATION, use DIVISION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 9);
+    const product = Math.round((answer * coefficient) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${coefficient}${variable} = ${product}`;
+    
+    const choices = [
+      answer,
+      Math.round((product / coefficient - 0.25) * 100) / 100,
+      Math.round((product - coefficient) * 100) / 100,
+      coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Divide both sides by ${coefficient}`, work: `${variable} = ${product} ÷ ${coefficient}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo multiplication with division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-20: CANYON JUMP (Division Equations)
+// ============================================
+
+export const generateDivisionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 8);
+    const quotient = randomInt(2, 12);
+    const answer = divisor * quotient;
+    
+    const problem = `x ÷ ${divisor} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      quotient + divisor, // Added instead
+      answer - 1, // Off by one
+      quotient // Used quotient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, MULTIPLY both sides by ${divisor}`, work: `x ÷ ${divisor} × ${divisor} = ${quotient} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "To undo DIVISION, use MULTIPLICATION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 8);
+    const quotient = randomDecimal();
+    const answer = Math.round((divisor * quotient) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${variable} ÷ ${divisor} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round((quotient * divisor - 0.5) * 100) / 100,
+      Math.round((quotient + divisor) * 100) / 100,
+      quotient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Multiply both sides by ${divisor}`, work: `${variable} = ${quotient} × ${divisor}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo division with multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
 
 // ============================================
 // EXPORTS
@@ -1347,6 +1643,10 @@ export const problemGenerators = {
   '1-14': generateDistributeSubtractProblem,
   '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
+  '1-17': generateAdditionEquationProblem,
+  '1-18': generateSubtractionEquationProblem,
+  '1-19': generateMultiplicationEquationProblem,
+  '1-20': generateDivisionEquationProblem,
 };
 
 export default problemGenerators;
