@@ -1,9 +1,25 @@
-// FeedbackModal.jsx - UPDATED to use StackedEquation component
-// REPLACE your current FeedbackModal.jsx with this
+// FeedbackModal.jsx - COMPLETE FILE
+// Location: src/algebra/components/LevelPlayer/FeedbackModal.jsx
 
 import React from 'react';
-import StackedEquation from './StackedEquation';
-import '../styles/algebra.css';
+import '../../styles/algebra.css';
+
+const StackedEquation = ({ steps }) => {
+  return (
+    <div className="stacked-equations-container">
+      {steps.map((step, index) => (
+        <div key={index} className="equation-step">
+          {step.description && (
+            <div className="step-description">{step.description}</div>
+          )}
+          {step.work && (
+            <pre className="step-work">{step.work}</pre>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
   if (!explanation) return null;
