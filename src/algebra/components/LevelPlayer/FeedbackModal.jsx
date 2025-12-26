@@ -1,6 +1,3 @@
-// FeedbackModal.jsx - COMPLETE FILE
-// Location: src/algebra/components/LevelPlayer/FeedbackModal.jsx
-
 import React from 'react';
 import '../../styles/algebra.css';
 
@@ -63,9 +60,12 @@ const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
           </div>
         )}
 
-        <button className="continue-button" onClick={onContinue}>
-          {isCorrect ? 'Continue' : 'Try Again'}
-        </button>
+        {/* FIXED: Proper footer for button */}
+        <div className="feedback-modal-footer">
+          <button className="continue-button" onClick={onContinue}>
+            {isCorrect ? 'Continue' : 'Try Again'}
+          </button>
+        </div>
       </div>
     </div>
   );
