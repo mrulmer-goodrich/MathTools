@@ -1623,30 +1623,962 @@ export const generateDivisionEquationProblem = (difficulty) => {
 };
 
 // ============================================
+// PHASES 7-9: FINAL 11 LEVELS (21-31)
+// Copy these 11 functions and paste them BEFORE the EXPORTS section
+// ============================================
+
+// ============================================
+// PHASE 7: TWO-STEP EQUATIONS (Levels 21-24)
+// ============================================
+
+// ============================================
+// LEVEL 1-21: NARROW PATH (Two-Step: Multiply then Add)
+// ============================================
+
+export const generateTwoStepAddProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 12);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = coefficient * answer + constant;
+    
+    const problem = `${coefficient}x + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      result - constant, // Forgot to divide
+      (result - constant) / coefficient - 1, // Off by one
+      result / coefficient // Divided first (wrong order)
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x = ${result} - ${constant}` },
+          { description: `Simplify`, work: `${coefficient}x = ${result - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x = ${result - constant} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient}(${answer}) + ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "TWO-STEP: Undo addition/subtraction FIRST, then undo multiplication/division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = Math.round((coefficient * answer + constant) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${coefficient}${variable} + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result - constant) * 100) / 100,
+      Math.round(((result - constant) / coefficient - 0.5) * 100) / 100,
+      Math.round((result / coefficient) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${constant}: ${coefficient}${variable} = ${result - constant}`, work: `` },
+          { description: `Divide by ${coefficient}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo addition first, then multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-22: CLIFF EDGE (Two-Step: Multiply then Subtract)
+// ============================================
+
+export const generateTwoStepSubtractProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(5, 15);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = coefficient * answer - constant;
+    
+    const problem = `${coefficient}x - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      result + constant, // Forgot to divide
+      (result + constant) / coefficient - 1, // Off by one
+      result / coefficient // Wrong order
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Add ${constant} to both sides`, work: `${coefficient}x = ${result} + ${constant}` },
+          { description: `Simplify`, work: `${coefficient}x = ${result + constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x = ${result + constant} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient}(${answer}) - ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "Undo subtraction FIRST, then undo multiplication",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = Math.round((coefficient * answer - constant) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${coefficient}${variable} - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result + constant) * 100) / 100,
+      Math.round(((result + constant) / coefficient - 0.5) * 100) / 100,
+      Math.round((result / coefficient) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${constant}: ${coefficient}${variable} = ${result + constant}`, work: `` },
+          { description: `Divide by ${coefficient}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo subtraction first, then multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-23: WATERFALL (Two-Step: Divide then Add)
+// ============================================
+
+export const generateTwoStepDivideAddProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const quotient = randomInt(3, 10);
+    const answer = divisor * (quotient - constant);
+    
+    const problem = `x ÷ ${divisor} + ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      (quotient - constant) * divisor - divisor, // Off by one divisor
+      quotient * divisor, // Didn't subtract constant
+      divisor * (quotient + constant) // Added instead of subtracted
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `x ÷ ${divisor} = ${quotient} - ${constant}` },
+          { description: `Simplify`, work: `x ÷ ${divisor} = ${quotient - constant}` },
+          { description: `STEP 2: Multiply both sides by ${divisor}`, work: `x = ${quotient - constant} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} + ${constant} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "Undo addition FIRST, then undo division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 6);
+    const constant = randomDecimal();
+    const quotient = randomInt(3, 10);
+    const answer = Math.round((divisor * (quotient - constant)) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${variable} ÷ ${divisor} + ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round(((quotient - constant) * divisor - 1) * 100) / 100,
+      Math.round((quotient * divisor) * 100) / 100,
+      Math.round((divisor * (quotient + constant)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${constant}: ${variable} ÷ ${divisor} = ${quotient - constant}`, work: `` },
+          { description: `Multiply by ${divisor}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo addition first, then division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-24: FINAL DESCENT (Two-Step: Divide then Subtract)
+// ============================================
+
+export const generateTwoStepDivideSubtractProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 6);
+    const constant = randomInt(1, 8);
+    const quotient = randomInt(3, 10);
+    const answer = divisor * (quotient + constant);
+    
+    const problem = `x ÷ ${divisor} - ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      (quotient + constant) * divisor - divisor, // Off by divisor
+      quotient * divisor, // Didn't add constant
+      divisor * (quotient - constant) // Subtracted instead
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Add ${constant} to both sides`, work: `x ÷ ${divisor} = ${quotient} + ${constant}` },
+          { description: `Simplify`, work: `x ÷ ${divisor} = ${quotient + constant}` },
+          { description: `STEP 2: Multiply both sides by ${divisor}`, work: `x = ${quotient + constant} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} - ${constant} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "Undo subtraction FIRST, then undo division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 6);
+    const constant = randomDecimal();
+    const quotient = randomInt(3, 10);
+    const answer = Math.round((divisor * (quotient + constant)) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${variable} ÷ ${divisor} - ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round(((quotient + constant) * divisor - 1) * 100) / 100,
+      Math.round((quotient * divisor) * 100) / 100,
+      Math.round((divisor * (quotient - constant)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${constant}: ${variable} ÷ ${divisor} = ${Math.round((quotient + constant) * 100) / 100}`, work: `` },
+          { description: `Multiply by ${divisor}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo subtraction first, then division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// PHASE 8: MULTI-STEP EQUATIONS (Levels 25-28)
+// ============================================
+
+// ============================================
+// LEVEL 1-25: HIDDEN CAVE (Variables on Both Sides)
+// ============================================
+
+export const generateVariablesBothSidesProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const leftCoef = randomInt(3, 7);
+    const rightCoef = randomInt(1, leftCoef - 1);
+    const constant = randomInt(1, 10);
+    
+    // leftCoef * x = rightCoef * x + constant
+    // Solve: (leftCoef - rightCoef) * x = constant
+    const actualConstant = (leftCoef - rightCoef) * answer;
+    
+    const problem = `${leftCoef}x = ${rightCoef}x + ${actualConstant}`;
+    
+    const choices = [
+      answer,
+      actualConstant, // Used constant as answer
+      answer + 1, // Off by one
+      actualConstant / leftCoef // Wrong operation
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${rightCoef}x from both sides`, work: `${leftCoef}x - ${rightCoef}x = ${actualConstant}` },
+          { description: `Simplify`, work: `${leftCoef - rightCoef}x = ${actualConstant}` },
+          { description: `STEP 2: Divide by ${leftCoef - rightCoef}`, work: `x = ${actualConstant} ÷ ${leftCoef - rightCoef}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${leftCoef}(${answer}) = ${rightCoef}(${answer}) + ${actualConstant} ✓`, work: `` }
+        ],
+        rule: "Get all variables on one side, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftCoef = randomInt(3, 7);
+    const rightCoef = randomInt(1, leftCoef - 1);
+    const actualConstant = Math.round(((leftCoef - rightCoef) * answer) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${leftCoef}${variable} = ${rightCoef}${variable} + ${actualConstant}`;
+    
+    const choices = [
+      answer,
+      actualConstant,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((actualConstant / leftCoef) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${rightCoef}${variable}: ${leftCoef - rightCoef}${variable} = ${actualConstant}`, work: `` },
+          { description: `Divide by ${leftCoef - rightCoef}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Collect variables on one side",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-26: ANCIENT RUINS (Distribute & Combine)
+// ============================================
+
+export const generateDistributeEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const outside = randomInt(2, 4);
+    const insideTerm = randomInt(1, 5);
+    const result = outside * answer + outside * insideTerm;
+    
+    const problem = `${outside}(x + ${insideTerm}) = ${result}`;
+    
+    const choices = [
+      answer,
+      result / outside - insideTerm - 1, // Off by one
+      result - insideTerm, // Didn't distribute
+      result / outside // Forgot inside term
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${outside}x + ${outside * insideTerm} = ${result}` },
+          { description: `STEP 2: Subtract ${outside * insideTerm}`, work: `${outside}x = ${result - outside * insideTerm}` },
+          { description: `STEP 3: Divide by ${outside}`, work: `x = ${answer}` },
+          { description: `CHECK: ${outside}(${answer} + ${insideTerm}) = ${result} ✓`, work: `` }
+        ],
+        rule: "Distribute first, then solve like normal",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = randomInt(2, 4);
+    const insideTerm = randomInt(1, 5);
+    const result = Math.round((outside * answer + outside * insideTerm) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${outside}(${variable} + ${insideTerm}) = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result / outside - insideTerm - 0.5) * 100) / 100,
+      Math.round((result - insideTerm) * 100) / 100,
+      Math.round((result / outside) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute: ${outside}${variable} + ${outside * insideTerm} = ${result}`, work: `` },
+          { description: `Subtract: ${outside}${variable} = ${result - outside * insideTerm}`, work: `` },
+          { description: `Divide: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Distribute, then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-27: MAZE (Combine & Solve)
+// ============================================
+
+export const generateCombineSolveProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const coef1 = randomInt(2, 5);
+    const coef2 = randomInt(1, 4);
+    const constant = randomInt(1, 8);
+    const result = (coef1 + coef2) * answer + constant;
+    
+    const problem = `${coef1}x + ${coef2}x + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      (result - constant) - 1, // Forgot to divide
+      result / (coef1 + coef2), // Didn't subtract constant
+      (result - constant) / coef1 // Used wrong coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Combine like terms`, work: `${coef1 + coef2}x + ${constant} = ${result}` },
+          { description: `STEP 2: Subtract ${constant}`, work: `${coef1 + coef2}x = ${result - constant}` },
+          { description: `STEP 3: Divide by ${coef1 + coef2}`, work: `x = ${answer}` },
+          { description: `CHECK: ${coef1}(${answer}) + ${coef2}(${answer}) + ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "Combine like terms FIRST, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coef1 = randomInt(2, 5);
+    const coef2 = randomInt(1, 4);
+    const constant = randomInt(1, 8);
+    const result = Math.round(((coef1 + coef2) * answer + constant) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${coef1}${variable} + ${coef2}${variable} + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result - constant - 1) * 100) / 100,
+      Math.round((result / (coef1 + coef2)) * 100) / 100,
+      Math.round(((result - constant) / coef1) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Combine: ${coef1 + coef2}${variable} + ${constant} = ${result}`, work: `` },
+          { description: `Subtract: ${coef1 + coef2}${variable} = ${result - constant}`, work: `` },
+          { description: `Divide: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Combine, then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-28: PUZZLE CHAMBER (Complex Multi-Step)
+// ============================================
+
+export const generateComplexMultiStepProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const outside = randomInt(2, 3);
+    const insideTerm = randomInt(1, 4);
+    const addedCoef = randomInt(1, 3);
+    const constant = randomInt(1, 6);
+    
+    // outside(x + insideTerm) + addedCoef*x - constant = result
+    const distributedCoef = outside;
+    const distributedConstant = outside * insideTerm;
+    const totalCoef = distributedCoef + addedCoef;
+    const leftSide = totalCoef * answer + distributedConstant - constant;
+    const result = leftSide;
+    
+    const problem = `${outside}(x + ${insideTerm}) + ${addedCoef}x - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      result / totalCoef,
+      (result + constant) / totalCoef
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${distributedCoef}x + ${distributedConstant} + ${addedCoef}x - ${constant} = ${result}` },
+          { description: `STEP 2: Combine like terms`, work: `${totalCoef}x + ${distributedConstant - constant} = ${result}` },
+          { description: `STEP 3: Subtract ${distributedConstant - constant}`, work: `${totalCoef}x = ${result - (distributedConstant - constant)}` },
+          { description: `STEP 4: Divide by ${totalCoef}`, work: `x = ${answer}` }
+        ],
+        rule: "Distribute → Combine → Solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = randomInt(2, 3);
+    const insideTerm = randomInt(1, 4);
+    const addedCoef = randomInt(1, 3);
+    const constant = randomInt(1, 6);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const distributedCoef = outside;
+    const distributedConstant = outside * insideTerm;
+    const totalCoef = distributedCoef + addedCoef;
+    const result = Math.round((totalCoef * answer + distributedConstant - constant) * 100) / 100;
+    
+    const problem = `${outside}(${variable} + ${insideTerm}) + ${addedCoef}${variable} - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((result / totalCoef) * 100) / 100,
+      Math.round(((result + constant) / totalCoef) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute → Combine → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Multi-step: work systematically",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// PHASE 9: VAULT (Final Challenge - Levels 29-31)
+// ============================================
+
+// ============================================
+// LEVEL 1-29: OUTER VAULT (Variables Both Sides + Constants)
+// ============================================
+
+export const generateVaultLevel1Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(3, 12);
+    const leftCoef = randomInt(4, 8);
+    const rightCoef = randomInt(1, leftCoef - 2);
+    const leftConst = randomInt(1, 8);
+    const rightConst = randomInt(1, 8);
+    
+    // leftCoef*x + leftConst = rightCoef*x + rightConst
+    // (leftCoef - rightCoef)*x = rightConst - leftConst
+    const constDiff = (leftCoef - rightCoef) * answer - leftConst + rightConst;
+    
+    const problem = `${leftCoef}x + ${leftConst} = ${rightCoef}x + ${leftConst + constDiff}`;
+    
+    const choices = [
+      answer,
+      constDiff,
+      answer + 1,
+      constDiff / (leftCoef - rightCoef)
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${rightCoef}x from both sides`, work: `${leftCoef - rightCoef}x + ${leftConst} = ${leftConst + constDiff}` },
+          { description: `STEP 2: Subtract ${leftConst} from both sides`, work: `${leftCoef - rightCoef}x = ${constDiff}` },
+          { description: `STEP 3: Divide by ${leftCoef - rightCoef}`, work: `x = ${answer}` }
+        ],
+        rule: "Variables one side, constants other side, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftCoef = randomInt(4, 8);
+    const rightCoef = randomInt(1, leftCoef - 2);
+    const leftConst = randomInt(1, 8);
+    const constDiff = Math.round(((leftCoef - rightCoef) * answer) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const problem = `${leftCoef}${variable} + ${leftConst} = ${rightCoef}${variable} + ${leftConst + constDiff}`;
+    
+    const choices = [
+      answer,
+      Math.round(constDiff * 100) / 100,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((constDiff / (leftCoef - rightCoef)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Collect variables → Collect constants → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Organize then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-30: INNER VAULT (Distribute Both Sides)
+// ============================================
+
+export const generateVaultLevel2Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const leftOut = randomInt(2, 4);
+    const leftIn = randomInt(1, 4);
+    const rightOut = randomInt(1, 3);
+    const rightIn = randomInt(1, 4);
+    
+    // leftOut(x + leftIn) = rightOut(x + rightIn)
+    // leftOut*x + leftOut*leftIn = rightOut*x + rightOut*rightIn
+    // (leftOut - rightOut)*x = rightOut*rightIn - leftOut*leftIn
+    
+    const leftDist = leftOut * answer + leftOut * leftIn;
+    const rightDist = rightOut * answer + rightOut * rightIn;
+    
+    const problem = `${leftOut}(x + ${leftIn}) = ${rightOut}(x + ${Math.round((leftDist - rightDist) / rightOut + rightIn)})`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      leftOut * leftIn,
+      rightOut * rightIn
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute both sides`, work: `${leftOut}x + ${leftOut * leftIn} = ...` },
+          { description: `STEP 2: Get variables on one side`, work: `` },
+          { description: `STEP 3: Solve for x`, work: `x = ${answer}` }
+        ],
+        rule: "Distribute both sides, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftOut = randomInt(2, 4);
+    const leftIn = randomInt(1, 4);
+    const rightOut = randomInt(1, 3);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const leftDist = Math.round((leftOut * answer + leftOut * leftIn) * 100) / 100;
+    const rightDist = Math.round((rightOut * answer) * 100) / 100;
+    const rightIn = Math.round(((leftDist - rightDist) / rightOut) * 100) / 100;
+    
+    const problem = `${leftOut}(${variable} + ${leftIn}) = ${rightOut}(${variable} + ${rightIn})`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((leftOut * leftIn) * 100) / 100,
+      Math.round((rightOut * rightIn) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute both sides → Collect → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Distribute everywhere first",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-31: THE VAULT (Ultimate Challenge)
+// ============================================
+
+export const generateVaultLevel3Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const leftOut = randomInt(2, 3);
+    const leftIn1 = randomInt(1, 3);
+    const middleCoef = randomInt(1, 3);
+    const rightConst = randomInt(1, 5);
+    
+    // leftOut(x + leftIn1) + middleCoef*x - rightConst = result
+    const leftDist = leftOut * answer + leftOut * leftIn1;
+    const middle = middleCoef * answer;
+    const result = leftDist + middle - rightConst;
+    
+    const problem = `${leftOut}(x + ${leftIn1}) + ${middleCoef}x - ${rightConst} = ${result}`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      result / (leftOut + middleCoef),
+      (result + rightConst) / leftOut
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL CHALLENGE! 🎉`, work: `` },
+          { description: `STEP 1: Distribute ${leftOut}`, work: `${leftOut}x + ${leftOut * leftIn1} + ${middleCoef}x - ${rightConst} = ${result}` },
+          { description: `STEP 2: Combine like terms`, work: `${leftOut + middleCoef}x + ${leftOut * leftIn1 - rightConst} = ${result}` },
+          { description: `STEP 3: Subtract ${leftOut * leftIn1 - rightConst}`, work: `${leftOut + middleCoef}x = ${result - (leftOut * leftIn1 - rightConst)}` },
+          { description: `STEP 4: Divide by ${leftOut + middleCoef}`, work: `x = ${answer}` },
+          { description: `🏆 VAULT UNLOCKED! 🏆`, work: `` }
+        ],
+        rule: "YOU DID IT! All skills combined to solve the ultimate puzzle!",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftOut = randomInt(2, 3);
+    const leftIn1 = randomInt(1, 3);
+    const middleCoef = randomInt(1, 3);
+    const rightConst = randomInt(1, 5);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const totalCoef = leftOut + middleCoef;
+    const constTerm = leftOut * leftIn1 - rightConst;
+    const result = Math.round((totalCoef * answer + constTerm) * 100) / 100;
+    
+    const problem = `${leftOut}(${variable} + ${leftIn1}) + ${middleCoef}${variable} - ${rightConst} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((result / totalCoef) * 100) / 100,
+      Math.round(((result + rightConst) / leftOut) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL CHALLENGE! 🎉`, work: `` },
+          { description: `Distribute → Combine → Solve`, work: `${variable} = ${answer}` },
+          { description: `🏆 VAULT UNLOCKED! 🏆`, work: `` }
+        ],
+        rule: "CONGRATULATIONS! Algebra Expedition COMPLETE!",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
 // EXPORTS
 // ============================================
 
 export const problemGenerators = {
+  // Phase 1: Integer Operations (1-4)
   '1-1': generateAdditionProblem,
   '1-2': generateSubtractionProblem,
   '1-3': generateMultiplicationProblem,
   '1-4': generateDivisionProblem,
+  
+  // Phase 2: Distribution (5-8)
   '1-5': generateBasicDistributionProblem,
   '1-6': generateDistributionSubtractionProblem,
   '1-7': generateNegativeOutsideProblem,
   '1-8': generateNegativeInsideProblem,
+  
+  // Phase 3: Combining Like Terms (9-12)
   '1-9': generateBasicLikeTermsProblem,
   '1-10': generateUnlikeTermsProblem,
   '1-11': generateMultipleLikeTermsProblem,
   '1-12': generateSubtractLikeTermsProblem,
+  
+  // Phase 4: Simplifying Expressions (13-16)
   '1-13': generateDistributeCombineProblem,
   '1-14': generateDistributeSubtractProblem,
   '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
+  
+  // Phase 5: One-Step Equations (17-20)
   '1-17': generateAdditionEquationProblem,
   '1-18': generateSubtractionEquationProblem,
   '1-19': generateMultiplicationEquationProblem,
   '1-20': generateDivisionEquationProblem,
+  
+  // Phase 6: Two-Step Equations (21-24)
+  '1-21': generateTwoStepAddProblem,
+  '1-22': generateTwoStepSubtractProblem,
+  '1-23': generateTwoStepDivideAddProblem,
+  '1-24': generateTwoStepDivideSubtractProblem,
+  
+  // Phase 7: Multi-Step Equations (25-28)
+  '1-25': generateVariablesBothSidesProblem,
+  '1-26': generateDistributeEquationProblem,
+  '1-27': generateCombineSolveProblem,
+  '1-28': generateComplexMultiStepProblem,
+  
+  // Phase 8: The Vault - Final Challenges (29-31)
+  '1-29': generateVaultLevel1Problem,
+  '1-30': generateVaultLevel2Problem,
+  '1-31': generateVaultLevel3Problem,
 };
 
 export default problemGenerators;
