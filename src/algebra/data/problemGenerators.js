@@ -658,6 +658,317 @@ export const generateNegativeInsideProblem = (difficulty) => {
   }
 };
 
+// PHASE 4: COMBINING LIKE TERMS (Levels 9-12)
+// Add these functions to your problemGenerators.js file
+
+// ============================================
+// LEVEL 1-9: GATHER SUPPLIES (Basic Like Terms)
+// ============================================
+
+export const generateBasicLikeTermsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const coef1 = randomInt(2, 8);
+    const coef2 = randomInt(2, 8);
+    const combined = coef1 + coef2;
+    
+    const answer = `${combined}x`;
+    const problem = `${coef1}x + ${coef2}x`;
+
+    const choices = [
+      answer,
+      `${coef1 + coef2}x²`, // Common error: added exponent
+      `${coef1}x + ${coef2}x`, // Didn't combine
+      `${coef1 * coef2}x` // Multiplied instead of added
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `These are LIKE TERMS (same variable, same exponent)`, work: `` },
+          { description: `Add the coefficients: ${coef1} + ${coef2} = ${combined}`, work: `` },
+          { description: `Keep the variable`, work: `${answer}` }
+        ],
+        rule: "LIKE TERMS: Same variable with same exponent. Add/subtract the coefficients, keep the variable.",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const coef1 = randomDecimal();
+    const coef2 = randomDecimal();
+    const combined = Math.round((coef1 + coef2) * 100) / 100;
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const answer = `${combined}${variable}`;
+    const problem = `${coef1}${variable} + ${coef2}${variable}`;
+
+    const choices = [
+      answer,
+      `${coef1}${variable} + ${coef2}${variable}`,
+      `${Math.round((coef1 * coef2) * 100) / 100}${variable}`,
+      `${combined}${variable}²`
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Like terms: add coefficients`, work: `${coef1} + ${coef2} = ${combined}` },
+          { description: `Result`, work: `${answer}` }
+        ],
+        rule: "Add coefficients, keep variable",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-10: COUNT INVENTORY (Unlike Terms)
+// ============================================
+
+export const generateUnlikeTermsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const coefX = randomInt(2, 8);
+    const constant = randomInt(1, 10);
+    
+    const answer = `${coefX}x + ${constant}`;
+    const problem = `${coefX}x + ${constant}`;
+
+    const choices = [
+      answer,
+      `${coefX + constant}x`, // Tried to combine unlike terms
+      `${coefX}x${constant}`, // Multiplied
+      `${coefX + constant}` // Lost variable
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `${coefX}x and ${constant} are NOT like terms`, work: `` },
+          { description: `One has a variable (x), one doesn't`, work: `` },
+          { description: `CANNOT combine - leave as is`, work: `${answer}` }
+        ],
+        rule: "UNLIKE TERMS: Different variables OR one has variable and one doesn't. CANNOT be combined!",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const coefX = randomDecimal();
+    const coefY = randomDecimal();
+    const varX = randomFrom(['x', 'a', 'n']);
+    const varY = randomFrom(['y', 'b', 'm']);
+    
+    const answer = `${coefX}${varX} + ${coefY}${varY}`;
+    const problem = `${coefX}${varX} + ${coefY}${varY}`;
+
+    const choices = [
+      answer,
+      `${Math.round((coefX + coefY) * 100) / 100}${varX}`,
+      `${Math.round((coefX + coefY) * 100) / 100}${varX}${varY}`,
+      `${coefX}${varX}${coefY}${varY}`
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Different variables: ${varX} and ${varY}`, work: `` },
+          { description: `Cannot combine`, work: `${answer}` }
+        ],
+        rule: "Different variables = unlike terms",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-11: SORT SUPPLIES (Multiple Like Terms)
+// ============================================
+
+export const generateMultipleLikeTermsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const coef1 = randomInt(2, 6);
+    const coef2 = randomInt(2, 6);
+    const coef3 = randomInt(1, 5);
+    
+    const xTerms = coef1 + coef2;
+    const constant = coef3;
+    
+    const answer = `${xTerms}x + ${constant}`;
+    const problem = `${coef1}x + ${coef2}x + ${constant}`;
+
+    const choices = [
+      answer,
+      `${coef1 + coef2 + coef3}x`, // Combined all
+      `${coef1}x + ${coef2 + coef3}`, // Combined wrong terms
+      `${xTerms}x${constant}` // Concatenated
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `Identify like terms: ${coef1}x and ${coef2}x are LIKE`, work: `` },
+          { description: `${constant} is UNLIKE (no variable)`, work: `` },
+          { description: `Combine like terms: ${coef1}x + ${coef2}x = ${xTerms}x`, work: `` },
+          { description: `Keep unlike term separate`, work: `${answer}` }
+        ],
+        rule: "Only combine LIKE terms. Leave unlike terms separate.",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const coefX1 = randomInt(2, 6);
+    const coefX2 = randomInt(2, 6);
+    const coefY = randomDecimal();
+    const constant = randomInt(1, 10);
+    
+    const xTerms = coefX1 + coefX2;
+    
+    const answer = `${xTerms}x + ${coefY}y + ${constant}`;
+    const problem = `${coefX1}x + ${coefX2}x + ${coefY}y + ${constant}`;
+
+    const choices = [
+      answer,
+      `${xTerms + coefY + constant}xy`,
+      `${xTerms}x + ${coefY + constant}y`,
+      `${coefX1 + coefX2 + constant}x + ${coefY}y`
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Combine x terms: ${coefX1}x + ${coefX2}x = ${xTerms}x`, work: `` },
+          { description: `y term stays: ${coefY}y`, work: `` },
+          { description: `Constant stays: ${constant}`, work: `` },
+          { description: `Result`, work: `${answer}` }
+        ],
+        rule: "Combine all like terms separately",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-12: PACK IT UP (Subtraction of Like Terms)
+// ============================================
+
+export const generateSubtractLikeTermsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const coef1 = randomInt(5, 12);
+    const coef2 = randomInt(2, coef1 - 1);
+    const combined = coef1 - coef2;
+    
+    const answer = `${combined}x`;
+    const problem = `${coef1}x - ${coef2}x`;
+
+    const choices = [
+      answer,
+      `${coef1 + coef2}x`, // Added instead of subtracted
+      `${coef1}x - ${coef2}x`, // Didn't combine
+      `-${combined}x` // Wrong sign
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `Like terms with subtraction`, work: `` },
+          { description: `Subtract coefficients: ${coef1} - ${coef2} = ${combined}`, work: `` },
+          { description: `Keep the variable`, work: `${answer}` }
+        ],
+        rule: "Subtracting like terms: subtract coefficients, keep variable",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const coef1 = randomInt(5, 12);
+    const coef2 = randomInt(2, coef1 - 1);
+    const coef3 = randomInt(1, 5);
+    const combined = coef1 - coef2;
+    
+    const answer = `${combined}x - ${coef3}`;
+    const problem = `${coef1}x - ${coef2}x - ${coef3}`;
+
+    const choices = [
+      answer,
+      `${combined}x + ${coef3}`,
+      `${coef1 - coef2 - coef3}x`,
+      `${combined - coef3}x`
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Combine x terms: ${coef1}x - ${coef2}x = ${combined}x`, work: `` },
+          { description: `Constant stays separate: -${coef3}`, work: `` },
+          { description: `Result`, work: `${answer}` }
+        ],
+        rule: "Combine like terms, keep unlike terms separate",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
 // ============================================
 // EXPORTS
 // ============================================
@@ -671,6 +982,10 @@ export const problemGenerators = {
   '1-6': generateDistributionSubtractionProblem,
   '1-7': generateNegativeOutsideProblem,
   '1-8': generateNegativeInsideProblem,
+  '1-9': generateBasicLikeTermsProblem,
+  '1-10': generateUnlikeTermsProblem,
+  '1-11': generateMultipleLikeTermsProblem,
+  '1-12': generateSubtractLikeTermsProblem,
 };
 
 export default problemGenerators;
