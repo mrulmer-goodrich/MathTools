@@ -1,4 +1,4 @@
-/* Algebra Expedition - No Scroll, Consistent Sizing */
+/* Algebra Expedition - Consistent Styling, Proper Spacing */
 
 * {
   box-sizing: border-box;
@@ -18,8 +18,14 @@
   left: 0;
 }
 
+/* Remove any icons/badges that shouldn't show */
+.header-badges,
+.badge-mini {
+  display: none !important;
+}
+
 /* ========================================
-   DIFFICULTY SELECTOR - COMPACT
+   STORY INTRO - THEMED
    ======================================== */
 
 .difficulty-selector,
@@ -33,39 +39,176 @@
   padding: 2rem;
 }
 
-.selector-container,
 .story-container {
+  max-width: 900px;
+  width: 100%;
+}
+
+.journal-entry {
+  background: linear-gradient(145deg, #f9f6f0 0%, #ede8dc 100%);
+  border: 3px solid #8b7355;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+/* Aged paper texture */
+.journal-entry::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(139, 115, 85, 0.03) 2px,
+    rgba(139, 115, 85, 0.03) 4px
+  );
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.journal-header {
+  border-bottom: 3px double #8b7355;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.journal-header h2 {
+  margin: 0;
+  color: #3d5a3d;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+.date {
+  font-style: italic;
+  color: #666;
+  margin-top: 0.5rem;
+  font-weight: 400;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.journal-content p {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #2c2416;
+}
+
+.signature {
+  text-align: right;
+  font-style: italic;
+  margin-top: 1.5rem;
+  color: #3d5a3d;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.present-day {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px dashed #8b7355;
+  background: rgba(211, 84, 0, 0.05);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.present-label {
+  font-weight: 700;
+  color: #d35400;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.present-day p {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.7;
+  color: #2c2416;
+}
+
+.present-day p:last-child {
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.btn-continue {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #3d5a3d 0%, #2d4a2d 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 12px rgba(61, 90, 61, 0.3);
+}
+
+.btn-continue:hover {
+  background: linear-gradient(135deg, #2d4a2d 0%, #1d3a1d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(61, 90, 61, 0.4);
+}
+
+/* ========================================
+   DIFFICULTY SELECTOR
+   ======================================== */
+
+.selector-container {
   max-width: 1000px;
   width: 100%;
 }
 
 .selector-container h1 {
   text-align: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #3d5a3d;
   margin-bottom: 0.5rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .selector-subtitle {
   text-align: center;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: #5a5a5a;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   font-weight: 400;
+  font-family: 'Poppins', sans-serif;
 }
 
 .difficulty-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .difficulty-card {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -85,34 +228,37 @@
 }
 
 .card-icon {
-  font-size: 2rem;
+  font-size: 2.5rem;
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .difficulty-card h2 {
   text-align: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   color: #3d5a3d;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .card-description p {
   margin-bottom: 0.5rem;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .card-description ul {
   list-style: none;
   padding: 0;
-  margin: 0.75rem 0;
+  margin: 1rem 0;
 }
 
 .card-description li {
-  padding: 0.2rem 0;
-  font-size: 0.85rem;
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .card-description li::before {
@@ -123,33 +269,34 @@
 
 .card-example {
   background: #f5f5f5;
-  padding: 0.75rem;
+  padding: 1rem;
   border-radius: 8px;
-  margin: 0.75rem 0;
+  margin: 1rem 0;
 }
 
 .example-label {
   font-weight: 600;
-  margin-bottom: 0.25rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .card-example code {
   display: block;
   font-family: 'Courier New', monospace;
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin: 0.25rem 0;
   color: #3d5a3d;
 }
 
 .btn-select {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.85rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -170,95 +317,15 @@
 
 .selector-note {
   background: #fff3cd;
-  padding: 0.75rem;
+  padding: 1rem;
   border-radius: 8px;
   border-left: 4px solid #ffc107;
-  font-size: 0.85rem;
-}
-
-/* STORY INTRO - COMPACT */
-
-.journal-entry {
-  background: #f9f6f0;
-  border: 2px solid #8b7355;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  margin-bottom: 1.5rem;
-}
-
-.journal-header {
-  border-bottom: 2px solid #8b7355;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.journal-header h2 {
-  margin: 0;
-  color: #3d5a3d;
-  font-family: 'Georgia', serif;
-  font-weight: 700;
-  font-size: 1.5rem;
-}
-
-.date {
-  font-style: italic;
-  color: #666;
-  margin-top: 0.25rem;
-  font-weight: 400;
-  font-size: 0.85rem;
-}
-
-.journal-content p {
-  font-family: 'Georgia', serif;
-  line-height: 1.6;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
-}
-
-.signature {
-  text-align: right;
-  font-style: italic;
-  margin-top: 1rem;
-  color: #3d5a3d;
-}
-
-.present-day {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px dashed #8b7355;
-}
-
-.present-label {
-  font-weight: 700;
-  color: #d35400;
-  margin-bottom: 0.5rem;
   font-size: 0.9rem;
-}
-
-.btn-continue {
-  display: block;
-  width: 100%;
-  max-width: 250px;
-  margin: 0 auto;
-  padding: 0.75rem 1.5rem;
-  background: #3d5a3d;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.3s;
   font-family: 'Poppins', sans-serif;
 }
 
-.btn-continue:hover {
-  background: #2d4a2d;
-}
-
 /* ========================================
-   MAIN MENU - COMPACT
+   MAIN MENU
    ======================================== */
 
 .main-menu {
@@ -278,25 +345,27 @@
 
 .menu-header h1 {
   text-align: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #3d5a3d;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .progress-summary {
   text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .progress-bar {
   width: 100%;
   max-width: 400px;
-  height: 16px;
+  height: 20px;
   background: rgba(0,0,0,0.1);
-  border-radius: 8px;
-  margin: 0.5rem auto;
+  border-radius: 10px;
+  margin: 0.75rem auto;
   overflow: hidden;
 }
 
@@ -308,24 +377,26 @@
 
 .menu-story {
   background: white;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   border-left: 4px solid #3d5a3d;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.6;
 }
 
 .menu-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .menu-card {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -340,23 +411,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .menu-card h2 {
   margin: 0;
   color: #3d5a3d;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .mode-badge {
   background: #4CAF50;
   color: white;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .practice-badge {
@@ -364,64 +437,22 @@
 }
 
 .menu-card p {
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.practice-features {
-  list-style: none;
-  padding: 0;
-  margin: 0.75rem 0;
-}
-
-.practice-features li {
-  padding: 0.2rem 0;
-  font-size: 0.85rem;
-}
-
-.practice-features li::before {
-  content: "• ";
-  color: #2196F3;
-  font-weight: bold;
-}
-
-.module-preview {
-  display: flex;
-  gap: 0.75rem;
-  margin: 0.75rem 0;
-}
-
-.module-status {
-  flex: 1;
-  background: #f5f5f5;
-  padding: 0.5rem;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 0.75rem;
-}
-
-.module-status.unlocked {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.module-num {
-  display: block;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  font-family: 'Poppins', sans-serif;
 }
 
 .btn-primary,
 .btn-secondary {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.85rem;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
-  margin-top: 0.75rem;
+  margin-top: 1rem;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -444,7 +475,7 @@
 }
 
 /* ========================================
-   LEVEL PLAYER - FIXED HEIGHT, NO SCROLL
+   LEVEL PLAYER - BALANCED SPACING
    ======================================== */
 
 .level-player {
@@ -453,7 +484,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 1.5rem;
+  gap: 1rem;
 }
 
 .level-header {
@@ -461,28 +493,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  background: rgba(255,255,255,0.9);
+  padding: 1rem 2rem;
+  background: rgba(255,255,255,0.95);
   border-radius: 12px;
-  margin-bottom: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .level-header h2 {
   margin: 0;
   color: #3d5a3d;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* PROBLEM DISPLAY - COMPACT */
+/* PROBLEM DISPLAY - PROPER SPACING */
 
 .problem-display {
   flex-shrink: 0;
   background: white;
-  padding: 1.5rem;
+  padding: 2.5rem 2rem;
   border-radius: 12px;
-  margin-bottom: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
@@ -491,41 +522,43 @@
 }
 
 .problem-label {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #666;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 .problem-text {
-  font-size: 2.2rem;
+  font-size: 2.5rem;
   font-family: 'Courier New', monospace;
   color: #3d5a3d;
   font-weight: bold;
 }
 
-/* PROGRESS TRACKER - COMPACT */
+/* PROGRESS TRACKER */
 
 .progress-tracker {
   text-align: center;
 }
 
 .progress-label {
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #3d5a3d;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 .progress-dots {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   justify-content: center;
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
 }
 
 .progress-dot {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #e0e0e0;
   transition: background 0.3s;
@@ -535,38 +568,37 @@
   background: #4CAF50;
 }
 
-/* CLICK TO SELECT - FIXED SIZE */
+/* CLICK TO SELECT - BALANCED */
 
 .click-to-select {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0.5rem 0;
   min-height: 0;
 }
 
 .choices-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .choice-button {
-  padding: 1.25rem 0.75rem;
-  font-size: 1.6rem;
+  padding: 1.75rem 1rem;
+  font-size: 1.8rem;
   font-family: 'Courier New', monospace;
   background: white;
   border: 3px solid #ddd;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
-  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  min-height: 85px;
 }
 
 .choice-button:hover:not(:disabled) {
@@ -590,14 +622,14 @@
 .btn-submit-answer {
   display: block;
   width: 100%;
-  max-width: 250px;
+  max-width: 280px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 1.1rem 2rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -642,8 +674,8 @@
 }
 
 .success-icon {
-  font-size: 5rem;
-  margin-bottom: 0.75rem;
+  font-size: 6rem;
+  margin-bottom: 1rem;
   animation: bounceIn 0.5s ease;
 }
 
@@ -654,16 +686,17 @@
 }
 
 .success-message {
-  font-size: 2.2rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .success-submessage {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   opacity: 0.9;
   font-weight: 400;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* ========================================
@@ -714,49 +747,51 @@
 .feedback-header {
   background: #f44336;
   color: white;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 2rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   border-radius: 12px 12px 0 0;
 }
 
 .feedback-icon {
-  font-size: 2rem;
+  font-size: 2.5rem;
 }
 
 .feedback-header h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .feedback-content {
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .explanation-steps {
-  margin: 1rem 0;
+  margin: 1.25rem 0;
 }
 
 .explanation-step {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .step-description {
-  font-size: 1rem;
+  font-size: 1.05rem;
   margin-bottom: 0.5rem;
   color: #333;
   font-weight: 600;
+  font-family: 'Poppins', sans-serif;
 }
 
 .step-work {
   font-family: 'Courier New', monospace;
   background: #f5f5f5;
-  padding: 0.75rem;
+  padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
   white-space: pre;
 }
@@ -764,31 +799,33 @@
 .rule-box {
   background: #fff3cd;
   border-left: 4px solid #ffc107;
-  padding: 0.75rem;
-  margin: 1.25rem 0;
+  padding: 1rem;
+  margin: 1.5rem 0;
   border-radius: 4px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .correct-answer-display {
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #ddd;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .btn-try-again {
   display: block;
   width: 100%;
-  max-width: 250px;
-  margin: 1.25rem auto 0;
-  padding: 0.85rem 1.5rem;
+  max-width: 280px;
+  margin: 1.5rem auto 0;
+  padding: 1rem 2rem;
   background: #2196F3;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -812,63 +849,70 @@
 }
 
 .completion-container {
-  max-width: 550px;
+  max-width: 600px;
   background: white;
   border-radius: 12px;
-  padding: 2.5rem;
+  padding: 3rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   text-align: center;
 }
 
 .completion-icon {
-  font-size: 4rem;
-  margin-bottom: 0.75rem;
+  font-size: 5rem;
+  margin-bottom: 1rem;
 }
 
 .completion-container h2 {
   color: #4CAF50;
-  font-size: 2rem;
+  font-size: 2.2rem;
   margin-bottom: 0.5rem;
   font-weight: 700;
+  font-family: 'Poppins', sans-serif;
 }
 
 .completion-container h3 {
   color: #3d5a3d;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .badge-earned {
-  margin: 1.5rem 0;
-  padding: 1.25rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
   background: #f5f5f5;
   border-radius: 8px;
 }
 
+.badge-earned p {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
 .badge-display {
-  font-size: 2.5rem;
-  margin-top: 0.75rem;
+  font-size: 3rem;
+  margin-top: 1rem;
 }
 
 .completion-stats {
-  margin: 1.5rem 0;
+  margin: 2rem 0;
   display: flex;
   justify-content: space-around;
-  padding: 1rem;
+  padding: 1.25rem;
   background: #e8f5e9;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
 }
 
 .btn-continue-expedition {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1.1rem 2rem;
   background: #3d5a3d;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -885,12 +929,11 @@
 
 @media (max-width: 1200px) {
   .problem-text {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
   .choice-button {
-    font-size: 1.4rem;
-    height: 65px;
+    font-size: 1.6rem;
   }
 }
 
@@ -905,12 +948,10 @@
   }
 
   .problem-text {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
 
   .choice-button {
-    padding: 1rem;
-    font-size: 1.3rem;
-    height: 60px;
+    font-size: 1.5rem;
   }
 }
