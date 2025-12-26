@@ -2529,56 +2529,629 @@ export const generateVaultLevel3Problem = (difficulty) => {
 };
 
 // ============================================
+// MODULE 3: INEQUALITIES (Levels 32-37)
+// Add these 6 functions to problemGenerators.js
+// ============================================
+
+// Helper function to generate number line SVG
+const generateNumberLine = (value, type, isOpen) => {
+  // type: 'greater', 'less', 'greaterEqual', 'lessEqual'
+  const direction = (type === 'greater' || type === 'greaterEqual') ? 'right' : 'left';
+  const circle = isOpen ? 'open' : 'closed';
+  
+  return {
+    value: value,
+    direction: direction,
+    circleType: circle,
+    svgData: `numberline-${value}-${direction}-${circle}` // Placeholder for actual SVG
+  };
+};
+
+// ============================================
+// LEVEL 1-32: BOUNDARY MARKERS (Speed Round - Match Inequality to Line)
+// ============================================
+
+export const generateBoundaryMarkersProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const value = randomInt(-10, 10);
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater':
+        symbol = '>';
+        isOpen = true;
+        direction = 'right';
+        break;
+      case 'less':
+        symbol = '<';
+        isOpen = true;
+        direction = 'left';
+        break;
+      case 'greaterEqual':
+        symbol = '≥';
+        isOpen = false;
+        direction = 'right';
+        break;
+      case 'lessEqual':
+        symbol = '≤';
+        isOpen = false;
+        direction = 'left';
+        break;
+    }
+    
+    const problem = `x ${symbol} ${value}`;
+    const answer = generateNumberLine(value, inequalityType, isOpen);
+    
+    // Generate 3 wrong number lines
+    const wrongChoices = [
+      generateNumberLine(value, inequalityType === 'greater' ? 'less' : 'greater', isOpen), // Wrong direction
+      generateNumberLine(value, inequalityType, !isOpen), // Wrong circle type
+      generateNumberLine(value + 1, inequalityType, isOpen) // Wrong value
+    ];
+    
+    const choices = [answer, ...wrongChoices].sort(() => Math.random() - 0.5);
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer.svgData, // The correct SVG identifier
+      choices: choices.map(c => c.svgData),
+      inputType: 'numberLine', // NEW: tells UI to display number line options
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `The symbol ${symbol} means ${symbol === '>' ? 'greater than' : symbol === '<' ? 'less than' : symbol === '≥' ? 'greater than or equal to' : 'less than or equal to'}`, work: `` },
+          { description: `Circle type: ${isOpen ? 'OPEN (not including the value)' : 'CLOSED (including the value)'}`, work: `` },
+          { description: `Arrow direction: ${direction === 'right' ? 'RIGHT (values getting larger)' : 'LEFT (values getting smaller)'}`, work: `` }
+        ],
+        rule: `> and < use OPEN circles. ≥ and ≤ use CLOSED circles. Arrow shows all values that make the inequality true.`,
+        finalAnswer: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow pointing ${direction}`
+      }
+    };
+  } else {
+    const value = randomDecimal();
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const problem = `${variable} ${symbol} ${value}`;
+    const answer = generateNumberLine(value, inequalityType, isOpen);
+    
+    const wrongChoices = [
+      generateNumberLine(value, inequalityType === 'greater' ? 'less' : 'greater', isOpen),
+      generateNumberLine(value, inequalityType, !isOpen),
+      generateNumberLine(Math.round((value + 0.5) * 100) / 100, inequalityType, isOpen)
+    ];
+    
+    const choices = [answer, ...wrongChoices].sort(() => Math.random() - 0.5);
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer.svgData,
+      choices: choices.map(c => c.svgData),
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `${symbol} → ${isOpen ? 'Open' : 'Closed'} circle, arrow ${direction}`, work: `` }
+        ],
+        rule: `Match symbol to circle type and direction`,
+        finalAnswer: `${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow ${direction}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-33: BOUNDARY REVERSE (Speed Round - Match Line to Inequality)
+// ============================================
+
+export const generateBoundaryReverseProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const value = randomInt(-10, 10);
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const numberLine = generateNumberLine(value, inequalityType, isOpen);
+    const answer = `x ${symbol} ${value}`;
+    
+    // Wrong answers
+    const wrongSymbol1 = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const wrongSymbol2 = symbol === '>' ? '≥' : symbol === '<' ? '≤' : symbol === '≥' ? '>' : '<';
+    
+    const choices = [
+      answer,
+      `x ${wrongSymbol1} ${value}`,
+      `x ${wrongSymbol2} ${value}`,
+      `x ${symbol} ${value + 1}`
+    ];
+    
+    const finalChoices = ensureFourChoices(choices, answer);
+    
+    return {
+      problem: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow pointing ${direction}`,
+      displayProblem: numberLine.svgData, // UI will show actual number line graphic
+      answer: answer,
+      choices: finalChoices,
+      inputType: 'clickToSelect', // Normal click to select
+      explanation: {
+        originalProblem: `Number line shown`,
+        steps: [
+          { description: `Circle type: ${isOpen ? 'OPEN' : 'CLOSED'}`, work: `${isOpen ? '> or <' : '≥ or ≤'}` },
+          { description: `Arrow direction: ${direction.toUpperCase()}`, work: `${direction === 'right' ? '> or ≥' : '< or ≤'}` },
+          { description: `Combining these clues`, work: `Symbol is ${symbol}` },
+          { description: `Value at circle: ${value}`, work: `` }
+        ],
+        rule: `Open circle = strict inequality (>, <). Closed circle = includes equal (≥, ≤). Arrow shows direction.`,
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const value = randomDecimal();
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const numberLine = generateNumberLine(value, inequalityType, isOpen);
+    const answer = `${variable} ${symbol} ${value}`;
+    
+    const wrongSymbol1 = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const wrongSymbol2 = symbol === '>' ? '≥' : symbol === '<' ? '≤' : symbol === '≥' ? '>' : '<';
+    
+    const choices = [
+      answer,
+      `${variable} ${wrongSymbol1} ${value}`,
+      `${variable} ${wrongSymbol2} ${value}`,
+      `${variable} ${symbol} ${Math.round((value + 0.5) * 100) / 100}`
+    ];
+    
+    const finalChoices = ensureFourChoices(choices, answer);
+    
+    return {
+      problem: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow ${direction}`,
+      displayProblem: numberLine.svgData,
+      answer: answer,
+      choices: finalChoices,
+      inputType: 'clickToSelect',
+      explanation: {
+        originalProblem: `Number line shown`,
+        steps: [
+          { description: `Circle + Arrow → ${symbol}`, work: `` }
+        ],
+        rule: `Read the number line correctly`,
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-34: SECURE PERIMETER (Two-Step, No Flip)
+// ============================================
+
+export const generateSecurePerimeterProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const leftSide = coefficient * answer + constant;
+    const problem = `${coefficient}x + ${constant} ${symbol} ${leftSide}`;
+    
+    const isOpen = (symbol === '>' || symbol === '<');
+    const direction = (symbol === '>' || symbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'less' : 'greater', isOpen).svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer + 1, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x ${symbol} ${leftSide - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x ${symbol} ${answer}` },
+          { description: `Note: Dividing by POSITIVE ${coefficient} does NOT flip the sign!`, work: `` },
+          { description: `Graph: ${isOpen ? 'Open' : 'Closed'} circle at ${answer}, arrow ${direction}`, work: `` }
+        ],
+        rule: `When dividing by a POSITIVE number, the inequality sign stays the SAME.`,
+        finalAnswer: `x ${symbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const leftSide = Math.round((coefficient * answer + constant) * 100) / 100;
+    const problem = `${coefficient}${variable} + ${constant} ${symbol} ${leftSide}`;
+    
+    const isOpen = (symbol === '>' || symbol === '<');
+    const direction = (symbol === '>' || symbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'less' : 'greater', isOpen).svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Solve like equation, sign stays same`, work: `${variable} ${symbol} ${answer}` }
+        ],
+        rule: `Positive operations = no flip`,
+        finalAnswer: `${variable} ${symbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-35: SHIFTING BOUNDARIES (Sign Flip - Divide by Negative)
+// ============================================
+
+export const generateShiftingBoundariesProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = -randomInt(2, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const rightSide = coefficient * answer;
+    const problem = `${coefficient}x ${symbol} ${rightSide}`;
+    
+    // FLIP the symbol when dividing by negative!
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const direction = (flippedSymbol === '>' || flippedSymbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      // Wrong: didn't flip
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      // Wrong: wrong circle type
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      // Wrong: wrong value
+      generateNumberLine(answer + 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true, // NEW: triggers warning popup in UI
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `⚠️ CRITICAL: Dividing by NEGATIVE ${coefficient}`, work: `` },
+          { description: `Divide both sides by ${coefficient}`, work: `x ${symbol} ${rightSide / coefficient}` },
+          { description: `⚠️ FLIP THE SIGN when dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `Graph: ${isOpen ? 'Open' : 'Closed'} circle at ${answer}, arrow ${direction}`, work: `` }
+        ],
+        rule: `CRITICAL RULE: When multiplying or dividing by a NEGATIVE number, you MUST flip the inequality sign!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = -randomInt(2, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const rightSide = Math.round((coefficient * answer) * 100) / 100;
+    const problem = `${coefficient}${variable} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `⚠️ Negative division → FLIP!`, work: `${variable} ${flippedSymbol} ${answer}` }
+        ],
+        rule: `Divide by negative = flip sign`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-36: TWISTED PATHS (Multi-Step with Flip)
+// ============================================
+
+export const generateTwistedPathsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = -randomInt(2, 5);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const rightSide = coefficient * answer + constant;
+    const problem = `${coefficient}x + ${constant} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer - 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x ${symbol} ${rightSide - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x ${symbol} ${(rightSide - constant) / coefficient}` },
+          { description: `⚠️ FLIP because dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `Graph the solution`, work: `` }
+        ],
+        rule: `Two-step: (1) Undo addition/subtraction, (2) Undo multiplication/division, (3) FLIP if dividing by negative!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = -randomInt(2, 5);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const rightSide = Math.round((coefficient * answer + constant) * 100) / 100;
+    const problem = `${coefficient}${variable} + ${constant} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer - 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Two-step with flip`, work: `${variable} ${flippedSymbol} ${answer}` }
+        ],
+        rule: `Multi-step with negative = flip`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-37: FINAL FRONTIER (Complex with Distribution + Flip)
+// ============================================
+
+export const generateFinalFrontierProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-8, 8);
+    const outside = -randomInt(2, 4);
+    const inside = randomInt(1, 4);
+    const addConstant = randomInt(1, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    // -2(x - 3) + 4 < result
+    // -2x + 6 + 4 < result
+    // -2x + 10 < result
+    // -2x < result - 10
+    // x > (result - 10) / -2  (FLIP!)
+    
+    const distributed = outside * answer + outside * (-inside) + addConstant;
+    const problem = `${outside}(x - ${inside}) + ${addConstant} ${symbol} ${distributed}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer + 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL FRONTIER! 🎉`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${outside}x + ${outside * (-inside)} + ${addConstant} ${symbol} ${distributed}` },
+          { description: `STEP 2: Combine constants`, work: `${outside}x + ${outside * (-inside) + addConstant} ${symbol} ${distributed}` },
+          { description: `STEP 3: Subtract ${outside * (-inside) + addConstant}`, work: `${outside}x ${symbol} ${distributed - (outside * (-inside) + addConstant)}` },
+          { description: `STEP 4: Divide by ${outside}`, work: `x ${symbol} ${(distributed - (outside * (-inside) + addConstant)) / outside}` },
+          { description: `⚠️ FLIP because dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `🏆 FRONTIER EXPLORED! 🏆`, work: `` }
+        ],
+        rule: `MASTER LEVEL: Distribute → Combine → Solve → FLIP if negative! You conquered the mathematical frontier!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = -randomInt(2, 4);
+    const inside = randomInt(1, 4);
+    const addConstant = randomInt(1, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    
+    const distributed = Math.round((outside * answer + outside * (-inside) + addConstant) * 100) / 100;
+    const problem = `${outside}(${variable} - ${inside}) + ${addConstant} ${symbol} ${distributed}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL FRONTIER! 🎉`, work: `` },
+          { description: `Distribute → Combine → Solve → FLIP!`, work: `${variable} ${flippedSymbol} ${answer}` },
+          { description: `🏆 EXPEDITION COMPLETE! 🏆`, work: `` }
+        ],
+        rule: `CONGRATULATIONS! You've mastered all algebra skills!`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+
+
+
+// ============================================
 // EXPORTS
 // ============================================
 
 export const problemGenerators = {
-  // Phase 1: Integer Operations (1-4)
+  // Module 1: Base Camp (Levels 1-16)
   '1-1': generateAdditionProblem,
   '1-2': generateSubtractionProblem,
   '1-3': generateMultiplicationProblem,
   '1-4': generateDivisionProblem,
-  
-  // Phase 2: Distribution (5-8)
   '1-5': generateBasicDistributionProblem,
   '1-6': generateDistributionSubtractionProblem,
   '1-7': generateNegativeOutsideProblem,
   '1-8': generateNegativeInsideProblem,
-  
-  // Phase 3: Combining Like Terms (9-12)
   '1-9': generateBasicLikeTermsProblem,
   '1-10': generateUnlikeTermsProblem,
   '1-11': generateMultipleLikeTermsProblem,
   '1-12': generateSubtractLikeTermsProblem,
-  
-  // Phase 4: Simplifying Expressions (13-16)
   '1-13': generateDistributeCombineProblem,
   '1-14': generateDistributeSubtractProblem,
   '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
   
-  // Phase 5: One-Step Equations (17-20)
+  // Module 2: Territory (Levels 17-31)
   '1-17': generateAdditionEquationProblem,
   '1-18': generateSubtractionEquationProblem,
   '1-19': generateMultiplicationEquationProblem,
   '1-20': generateDivisionEquationProblem,
-  
-  // Phase 6: Two-Step Equations (21-24)
   '1-21': generateTwoStepAddProblem,
   '1-22': generateTwoStepSubtractProblem,
   '1-23': generateTwoStepDivideAddProblem,
   '1-24': generateTwoStepDivideSubtractProblem,
-  
-  // Phase 7: Multi-Step Equations (25-28)
   '1-25': generateVariablesBothSidesProblem,
   '1-26': generateDistributeEquationProblem,
   '1-27': generateCombineSolveProblem,
   '1-28': generateComplexMultiStepProblem,
-  
-  // Phase 8: The Vault - Final Challenges (29-31)
   '1-29': generateVaultLevel1Problem,
   '1-30': generateVaultLevel2Problem,
   '1-31': generateVaultLevel3Problem,
+  
+  // Module 3: The Frontier - Inequalities (Levels 32-37)
+  '1-32': generateBoundaryMarkersProblem,
+  '1-33': generateBoundaryReverseProblem,
+  '1-34': generateSecurePerimeterProblem,
+  '1-35': generateShiftingBoundariesProblem,
+  '1-36': generateTwistedPathsProblem,
+  '1-37': generateFinalFrontierProblem,
 };
 
 export default problemGenerators;
