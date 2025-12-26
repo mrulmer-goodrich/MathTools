@@ -1,4 +1,4 @@
-/* Algebra Expedition - Consistent Styling, Proper Spacing */
+/* Algebra Expedition - Fixed Story Intro Sizing */
 
 * {
   box-sizing: border-box;
@@ -20,12 +20,13 @@
 
 /* Remove any icons/badges that shouldn't show */
 .header-badges,
-.badge-mini {
+.badge-mini,
+.algebra-header {
   display: none !important;
 }
 
 /* ========================================
-   STORY INTRO - THEMED
+   STORY INTRO - PROPERLY SIZED
    ======================================== */
 
 .difficulty-selector,
@@ -36,22 +37,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 3rem 2rem;
 }
 
 .story-container {
-  max-width: 900px;
+  max-width: 800px;
   width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .journal-entry {
   background: linear-gradient(145deg, #f9f6f0 0%, #ede8dc 100%);
   border: 3px solid #8b7355;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
-  margin-bottom: 2rem;
   position: relative;
+  flex-shrink: 1;
+  overflow-y: auto;
+  max-height: calc(85vh - 100px);
 }
 
 /* Aged paper texture */
@@ -75,8 +82,8 @@
 
 .journal-header {
   border-bottom: 3px double #8b7355;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
   position: relative;
 }
 
@@ -85,42 +92,42 @@
   color: #3d5a3d;
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 
 .date {
   font-style: italic;
   color: #666;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .journal-content p {
   font-family: 'Poppins', sans-serif;
-  line-height: 1.8;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
   color: #2c2416;
 }
 
 .signature {
   text-align: right;
   font-style: italic;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   color: #3d5a3d;
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
 }
 
 .present-day {
-  margin-top: 2rem;
-  padding-top: 2rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
   border-top: 2px dashed #8b7355;
   background: rgba(211, 84, 0, 0.05);
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-radius: 8px;
   margin-left: -0.5rem;
   margin-right: -0.5rem;
@@ -129,8 +136,8 @@
 .present-label {
   font-weight: 700;
   color: #d35400;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
   font-family: 'Poppins', sans-serif;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -138,31 +145,33 @@
 
 .present-day p {
   font-family: 'Poppins', sans-serif;
-  line-height: 1.7;
+  line-height: 1.6;
   color: #2c2416;
+  font-size: 0.9rem;
 }
 
 .present-day p:last-child {
   font-weight: 600;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .btn-continue {
   display: block;
   width: 100%;
-  max-width: 300px;
+  max-width: 280px;
   margin: 0 auto;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, #3d5a3d 0%, #2d4a2d 100%);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
   font-family: 'Poppins', sans-serif;
   box-shadow: 0 4px 12px rgba(61, 90, 61, 0.3);
+  flex-shrink: 0;
 }
 
 .btn-continue:hover {
@@ -172,7 +181,7 @@
 }
 
 /* ========================================
-   DIFFICULTY SELECTOR
+   DIFFICULTY SELECTOR - COMPACT
    ======================================== */
 
 .selector-container {
@@ -182,7 +191,7 @@
 
 .selector-container h1 {
   text-align: center;
-  font-size: 2.2rem;
+  font-size: 2rem;
   color: #3d5a3d;
   margin-bottom: 0.5rem;
   font-weight: 700;
@@ -191,9 +200,9 @@
 
 .selector-subtitle {
   text-align: center;
-  font-size: 1.05rem;
+  font-size: 1rem;
   color: #5a5a5a;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-weight: 400;
   font-family: 'Poppins', sans-serif;
 }
@@ -201,14 +210,14 @@
 .difficulty-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-bottom: 1.5rem;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .difficulty-card {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -228,36 +237,36 @@
 }
 
 .card-icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
   text-align: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .difficulty-card h2 {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #3d5a3d;
   font-weight: 700;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .card-description p {
   margin-bottom: 0.5rem;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .card-description ul {
   list-style: none;
   padding: 0;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 
 .card-description li {
-  padding: 0.25rem 0;
-  font-size: 0.9rem;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -269,34 +278,34 @@
 
 .card-example {
   background: #f5f5f5;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
 }
 
 .example-label {
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
   font-family: 'Poppins', sans-serif;
 }
 
 .card-example code {
   display: block;
   font-family: 'Courier New', monospace;
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0.25rem 0;
   color: #3d5a3d;
 }
 
 .btn-select {
   width: 100%;
-  padding: 0.85rem;
+  padding: 0.75rem;
   background: #4CAF50;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.3s;
@@ -317,10 +326,10 @@
 
 .selector-note {
   background: #fff3cd;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
   border-left: 4px solid #ffc107;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -921,6 +930,18 @@
 
 .btn-continue-expedition:hover {
   background: #2d4a2d;
+}
+
+/* Loading state */
+.loading {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  color: #3d5a3d;
 }
 
 /* ========================================
