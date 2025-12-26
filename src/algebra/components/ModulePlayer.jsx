@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LevelPlayer from './LevelPlayer/LevelPlayer';
-import levels, { storyline } from '../data/levelData';
+import levels from '../data/levelData';
 
 const ModulePlayer = ({ 
   difficulty, 
@@ -14,7 +14,6 @@ const ModulePlayer = ({
   onReturnToMenu 
 }) => {
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const [showModuleIntro, setShowModuleIntro] = useState(true);
 
   useEffect(() => {
     if (playMode === 'play') {
@@ -43,7 +42,6 @@ const ModulePlayer = ({
           <h2>Practice Mode - Select a Level</h2>
           <p>Choose any skill to practice:</p>
           
-          {/* Module selector would go here */}
           {Object.keys(levels)
             .filter(id => id.startsWith(`${currentModule}-`))
             .map(levelId => {
@@ -52,10 +50,7 @@ const ModulePlayer = ({
                 <div 
                   key={levelId}
                   className="practice-level-option"
-                  onClick={() => {
-                    setSelectedLevel(levelId);
-                    setShowModuleIntro(false);
-                  }}
+                  onClick={() => setSelectedLevel(levelId)}
                 >
                   <h3>{level.name}</h3>
                   <p>{level.skill}</p>
@@ -70,29 +65,6 @@ const ModulePlayer = ({
     );
   }
 
-  if (showModuleIntro && storyline.modules[currentModule]) {
-    return (
-      <div className="module-intro">
-        <div className="intro-container">
-          <div className="journal-entry">
-            <div className="journal-header">
-              <h2>Module {currentModule}: {storyline.modules[currentModule].name}</h2>
-            </div>
-            <div className="journal-content">
-              <p>{storyline.modules[currentModule].intro}</p>
-            </div>
-          </div>
-          <button 
-            className="btn-continue"
-            onClick={() => setShowModuleIntro(false)}
-          >
-            Begin Module →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (!selectedLevel) {
     return (
       <div className="loading">
@@ -101,6 +73,7 @@ const ModulePlayer = ({
     );
   }
 
+  // NO MODULE INTRO - go straight to level
   return (
     <div className="module-player">
       <LevelPlayer
