@@ -1249,3 +1249,178 @@ body {
   padding: 10px 20px;
   font-size: 14px;
 }
+
+/* ============================================
+   APPEND TO algebra.css - Final UI Fixes
+   ============================================ */
+
+/* Practice Mode Styling */
+.practice-selector {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px;
+}
+
+.practice-selector h2 {
+  text-align: center;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.practice-selector > p {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin-bottom: 30px;
+}
+
+.practice-level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.practice-level-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.practice-level-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.level-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.level-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.level-skill {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.no-completed-levels {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.no-completed-levels p {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Back to Menu Button in Level Player */
+.back-to-menu-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-to-menu-button:hover {
+  color: var(--color-primary);
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.level-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
+/* Better button spacing */
+.btn-primary, .btn-secondary {
+  display: block;
+  margin: 20px auto 0;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #6d3710;
+  transform: translateY(-2px);
+}
+
+/* Completion Screen Button */
+.btn-continue-expedition {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+}
