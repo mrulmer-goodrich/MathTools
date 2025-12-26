@@ -1,25 +1,43 @@
-// Problem generators for Levels 1-8
+// Problem generators for Levels 1-8 - ALL FIXES APPLIED
 
-// Utility functions
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const getRandomDecimal = () => randomFrom([0.5, 0.25, 0.75, 1.5, 2.5, 0.2, 0.4, 0.6, 0.8]);
-const getRandomFraction = () => randomFrom(['1/2', '1/3', '1/4', '2/3', '3/4', '1/5', '2/5', '3/5', '4/5']);
+const randomDecimal = () => randomFrom([0.5, 0.25, 0.75, 1.5, 2.5, 0.2, 0.4, 0.6, 0.8]);
 
-// Convert fraction string to decimal for calculations
-const fractionToDecimal = (frac) => {
-  const [num, den] = frac.split('/').map(Number);
-  return num / den;
+// Helper to format expressions consistently (NO duplicates like -2x+-6)
+const formatAnswer = (coefficient, variable, constant) => {
+  const varPart = coefficient === -1 ? `-${variable}` : 
+                  coefficient === 1 ? variable :
+                  `${coefficient}${variable}`;
+  
+  if (constant >= 0) {
+    return `${varPart} + ${constant}`;
+  } else {
+    return `${varPart} - ${Math.abs(constant)}`;
+  }
 };
 
-// Format fraction for display
-const formatFraction = (frac) => {
-  const [num, den] = frac.split('/');
-  return `(${num}/${den})`;
+// Helper to ensure exactly 4 unique choices
+const ensureFourChoices = (choices, answer) => {
+  const uniqueChoices = [...new Set(choices)];
+  let attempts = 0;
+  while (uniqueChoices.length < 4 && attempts < 20) {
+    const offset = randomInt(1, 10);
+    const filler = Math.random() < 0.5 ? answer + offset : answer - offset;
+    if (!uniqueChoices.includes(filler)) {
+      uniqueChoices.push(filler);
+    }
+    attempts++;
+  }
+  return uniqueChoices.slice(0, 4).sort(() => Math.random() - 0.5);
 };
 
 // ============================================
-// LEVEL 1-1: Addition
+// LEVEL 1-1: ADDITION
 // ============================================
 
 export const generateAdditionProblem = (difficulty) => {
@@ -50,36 +68,26 @@ export const generateAdditionProblem = (difficulty) => {
         break;
     }
 
-    const distractors = new Set([
+    const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
+    
+    const choices = [
+      answer,
       -answer,
       Math.abs(num1) + Math.abs(num2),
       -(Math.abs(num1) + Math.abs(num2))
-    ]);
+    ];
     
-    const choices = [answer];
-    for (let distractor of distractors) {
-      if (distractor !== answer && !choices.includes(distractor)) {
-        choices.push(distractor);
-      }
-    }
-    
-    while (choices.length < 4) {
-      const randomDistractor = answer + randomInt(-10, 10);
-      if (!choices.includes(randomDistractor) && randomDistractor !== 0) {
-        choices.push(randomDistractor);
-      }
-    }
-
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} + ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: choices.slice(0, 4),
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
-          { description: `Problem: ${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`, work: `` },
+          { description: `Problem: ${problem}`, work: `` },
           { description: num2 >= 0 ? `Start at ${num1}, move ${num2} right` : `Start at ${num1}, move ${Math.abs(num2)} left`, work: `Result: ${answer}` }
         ],
         rule: num1 >= 0 && num2 >= 0 ? "Adding positives: add normally" : "Different signs: subtract smaller from larger, use sign of larger",
@@ -90,6 +98,7 @@ export const generateAdditionProblem = (difficulty) => {
     const num1 = randomDecimal();
     const num2 = Math.random() < 0.5 ? randomDecimal() : -randomDecimal();
     const answer = Math.round((num1 + num2) * 100) / 100;
+    const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [
       answer,
@@ -98,18 +107,16 @@ export const generateAdditionProblem = (difficulty) => {
       Math.round((-(Math.abs(num1) + Math.abs(num2))) * 100) / 100
     ];
     
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} + ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4),
+      choices: finalChoices,
       explanation: {
-        steps: [
-          { description: `Problem: ${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`, work: `` },
-          { description: `Calculate: ${answer}`, work: `` }
-        ],
+        originalProblem: problem,
+        steps: [{ description: `${problem} = ${answer}`, work: `` }],
         rule: "Same rules apply with decimals",
         finalAnswer: answer
       }
@@ -118,7 +125,7 @@ export const generateAdditionProblem = (difficulty) => {
 };
 
 // ============================================
-// LEVEL 1-2: Subtraction
+// LEVEL 1-2: SUBTRACTION
 // ============================================
 
 export const generateSubtractionProblem = (difficulty) => {
@@ -149,38 +156,27 @@ export const generateSubtractionProblem = (difficulty) => {
         break;
     }
 
-    const distractors = new Set([
+    const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
+    const isSubtractingNegative = num2 < 0;
+    
+    const choices = [
+      answer,
       -answer,
       num1 + num2,
       num2 - num1
-    ]);
+    ];
     
-    const choices = [answer];
-    for (let distractor of distractors) {
-      if (distractor !== answer && !choices.includes(distractor)) {
-        choices.push(distractor);
-      }
-    }
-    
-    while (choices.length < 4) {
-      const randomDistractor = answer + randomInt(-10, 10);
-      if (!choices.includes(randomDistractor)) {
-        choices.push(randomDistractor);
-      }
-    }
-
-    choices.sort(() => Math.random() - 0.5);
-
-    const isSubtractingNegative = num2 < 0;
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} - ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: choices.slice(0, 4),
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
-          { description: `Problem: ${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`, work: `` },
+          { description: `Problem: ${problem}`, work: `` },
           ...(isSubtractingNegative ? [{ description: "Subtracting negative = adding positive", work: `${num1} - (${num2}) = ${num1} + ${-num2}` }] : []),
           { description: "Calculate", work: `Result: ${answer}` }
         ],
@@ -192,17 +188,19 @@ export const generateSubtractionProblem = (difficulty) => {
     const num1 = randomDecimal();
     const num2 = Math.random() < 0.5 ? randomDecimal() : -randomDecimal();
     const answer = Math.round((num1 - num2) * 100) / 100;
+    const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [answer, -answer, Math.round((num1 + num2) * 100) / 100, Math.round((num2 - num1) * 100) / 100];
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} - ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4),
+      choices: finalChoices,
       explanation: {
-        steps: [{ description: `${num1} - ${num2 >= 0 ? num2 : `(${num2})`} = ${answer}`, work: `` }],
+        originalProblem: problem,
+        steps: [{ description: `${problem} = ${answer}`, work: `` }],
         rule: "Same rules with decimals",
         finalAnswer: answer
       }
@@ -211,7 +209,7 @@ export const generateSubtractionProblem = (difficulty) => {
 };
 
 // ============================================
-// LEVEL 1-3: Multiplication
+// LEVEL 1-3: MULTIPLICATION
 // ============================================
 
 export const generateMultiplicationProblem = (difficulty) => {
@@ -239,16 +237,18 @@ export const generateMultiplicationProblem = (difficulty) => {
     }
     
     answer = num1 * num2;
+    const problem = `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [answer, -answer, Math.abs(num1) * Math.abs(num2), -(Math.abs(num1) * Math.abs(num2))];
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} × ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4),
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Multiply absolute values: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
           { description: `Apply sign rule`, work: `Result: ${answer}` }
@@ -261,17 +261,19 @@ export const generateMultiplicationProblem = (difficulty) => {
     const num1 = Math.random() < 0.5 ? randomDecimal() : randomInt(2, 12);
     const num2 = Math.random() < 0.5 ? -randomDecimal() : -randomInt(2, 12);
     const answer = Math.round((num1 * num2) * 100) / 100;
+    const problem = `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [answer, -answer, Math.round((Math.abs(num1) * Math.abs(num2)) * 100) / 100, 0];
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} × ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4),
+      choices: finalChoices,
       explanation: {
-        steps: [{ description: `${num1} × ${num2 >= 0 ? num2 : `(${num2})`} = ${answer}`, work: `` }],
+        originalProblem: problem,
+        steps: [{ description: `${problem} = ${answer}`, work: `` }],
         rule: "Same sign rules apply",
         finalAnswer: answer
       }
@@ -280,7 +282,7 @@ export const generateMultiplicationProblem = (difficulty) => {
 };
 
 // ============================================
-// LEVEL 1-4: Division
+// LEVEL 1-4: DIVISION
 // ============================================
 
 export const generateDivisionProblem = (difficulty) => {
@@ -308,16 +310,18 @@ export const generateDivisionProblem = (difficulty) => {
     }
     
     const num1 = num2 * answer;
+    const problem = `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [answer, -answer, Math.abs(answer), num1];
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4),
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Divide absolute values: ${Math.abs(num1)} ÷ ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
           { description: `Apply sign rule`, work: `Result: ${answer}` }
@@ -330,17 +334,19 @@ export const generateDivisionProblem = (difficulty) => {
     const num2 = Math.random() < 0.5 ? randomInt(2, 10) : -randomInt(2, 10);
     const answer = Math.random() < 0.5 ? randomDecimal() : randomInt(2, 10);
     const num1 = Math.round((num2 * answer) * 100) / 100;
+    const problem = `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`;
 
     const choices = [answer, -answer, Math.abs(answer), 1];
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
 
     return {
-      problem: `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`,
-      displayProblem: `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`} = ?`,
+      problem: problem,
+      displayProblem: `${problem} = ?`,
       answer: answer,
-      choices: [...new Set(choices)].slice(0, 4).map(n => Math.round(n * 100) / 100),
+      choices: finalChoices,
       explanation: {
-        steps: [{ description: `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`} = ${answer}`, work: `` }],
+        originalProblem: problem,
+        steps: [{ description: `${problem} = ${answer}`, work: `` }],
         rule: "Same sign rules apply",
         finalAnswer: answer
       }
@@ -348,36 +354,38 @@ export const generateDivisionProblem = (difficulty) => {
   }
 };
 
+// This continues from PART 1 - combine both files into one problemGenerators.js
+
 // ============================================
-// LEVEL 1-5: Clear Path (Basic Distribution)
+// LEVEL 1-5: BASIC DISTRIBUTION
 // ============================================
 
 export const generateBasicDistributionProblem = (difficulty) => {
   if (difficulty === 'easy') {
     const outside = randomInt(2, 8);
-    const term1 = 'x';
     const term2 = randomInt(1, 10);
     
-    const distributed1 = `${outside}x`;
+    const distributed1Coef = outside;
     const distributed2 = outside * term2;
-    const answer = `${distributed1} + ${distributed2}`;
+    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
+    const problem = `${outside}(x + ${term2})`;
 
-    // Distractors
     const choices = [
       answer,
-      `${outside}x + ${term2}`, // Forgot to distribute to constant
-      `x + ${distributed2}`, // Forgot to distribute to variable
-      `${distributed1} - ${distributed2}` // Wrong sign
+      `${outside}x + ${term2}`,
+      `x + ${distributed2}`,
+      formatAnswer(distributed1Coef, 'x', -distributed2)
     ];
 
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${outside}(x + ${term2})`,
-      displayProblem: `${outside}(x + ${term2})`,
+      problem: problem,
+      displayProblem: problem,
       answer: answer,
-      choices: choices,
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Distribute ${outside} to BOTH terms inside`, work: `` },
           { description: `${outside} × x = ${outside}x`, work: `` },
@@ -389,82 +397,43 @@ export const generateBasicDistributionProblem = (difficulty) => {
       }
     };
   } else {
-    // Not Easy: fractions or decimals
-    const useFraction = Math.random() < 0.5;
+    const outside = randomDecimal();
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    const term2 = randomInt(2, 12);
     
-    if (useFraction) {
-      const frac = getRandomFraction();
-      const fracDecimal = fractionToDecimal(frac);
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = fracDecimal * term2;
-      const answer = `${formatFraction(frac)}${variable} + ${distributed2}`;
+    const distributed2 = Math.round(outside * term2 * 100) / 100;
+    const answer = `${outside}${variable} + ${distributed2}`;
+    const problem = `${outside}(${variable} + ${term2})`;
 
-      const choices = [
-        answer,
-        `${formatFraction(frac)}${variable} + ${term2}`,
-        `${variable} + ${distributed2}`,
-        `${formatFraction(frac)}${variable} - ${distributed2}`
-      ];
+    const choices = [
+      answer,
+      `${outside}${variable} + ${term2}`,
+      `${variable} + ${distributed2}`,
+      `${outside}${variable} - ${distributed2}`
+    ];
 
-      choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
-      return {
-        problem: `${formatFraction(frac)}(${variable} + ${term2})`,
-        displayProblem: `${formatFraction(frac)}(${variable} + ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${formatFraction(frac)} to both terms`, work: `` },
-            { description: `${formatFraction(frac)} × ${variable} = ${formatFraction(frac)}${variable}`, work: `` },
-            { description: `${formatFraction(frac)} × ${term2} = ${distributed2}`, work: `` },
-            { description: `Result`, work: `${answer}` }
-          ],
-          rule: "Distribute to ALL terms inside parentheses",
-          finalAnswer: answer
-        }
-      };
-    } else {
-      const decimal = randomDecimal();
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(decimal * term2 * 100) / 100;
-      const answer = `${decimal}${variable} + ${distributed2}`;
-
-      const choices = [
-        answer,
-        `${decimal}${variable} + ${term2}`,
-        `${variable} + ${distributed2}`,
-        `${decimal}${variable} - ${distributed2}`
-      ];
-
-      choices.sort(() => Math.random() - 0.5);
-
-      return {
-        problem: `${decimal}(${variable} + ${term2})`,
-        displayProblem: `${decimal}(${variable} + ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${decimal} to both terms`, work: `` },
-            { description: `${decimal} × ${variable} = ${decimal}${variable}`, work: `` },
-            { description: `${decimal} × ${term2} = ${distributed2}`, work: `` },
-            { description: `Result`, work: `${answer}` }
-          ],
-          rule: "Distribute to ALL terms",
-          finalAnswer: answer
-        }
-      };
-    }
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute ${outside} to both terms`, work: `` },
+          { description: `Result: ${answer}`, work: `` }
+        ],
+        rule: "Distribute to ALL terms",
+        finalAnswer: answer
+      }
+    };
   }
 };
 
 // ============================================
-// LEVEL 1-6: Rocky Trail (Distribution with Subtraction)
+// LEVEL 1-6: DISTRIBUTION WITH SUBTRACTION
 // ============================================
 
 export const generateDistributionSubtractionProblem = (difficulty) => {
@@ -472,29 +441,31 @@ export const generateDistributionSubtractionProblem = (difficulty) => {
     const outside = randomInt(2, 8);
     const term2 = randomInt(1, 10);
     
-    const distributed1 = `${outside}x`;
-    const distributed2 = outside * term2;
-    const answer = `${distributed1} - ${distributed2}`;
+    const distributed1Coef = outside;
+    const distributed2 = -(outside * term2);
+    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
+    const problem = `${outside}(x - ${term2})`;
 
     const choices = [
       answer,
-      `${distributed1} + ${distributed2}`, // Wrong sign
-      `${outside}x - ${term2}`, // Forgot to distribute to constant
-      `x - ${distributed2}` // Forgot to distribute to variable
+      formatAnswer(distributed1Coef, 'x', -distributed2),
+      `${outside}x - ${term2}`,
+      `x - ${Math.abs(distributed2)}`
     ];
 
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${outside}(x - ${term2})`,
-      displayProblem: `${outside}(x - ${term2})`,
+      problem: problem,
+      displayProblem: problem,
       answer: answer,
-      choices: choices,
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Distribute ${outside} to BOTH terms`, work: `` },
           { description: `${outside} × x = ${outside}x`, work: `` },
-          { description: `${outside} × (-${term2}) = -${distributed2}`, work: `` },
+          { description: `${outside} × (-${term2}) = ${distributed2}`, work: `` },
           { description: `Keep the subtraction sign!`, work: `${answer}` }
         ],
         rule: "When distributing with subtraction, multiply by the NEGATIVE number",
@@ -502,76 +473,42 @@ export const generateDistributionSubtractionProblem = (difficulty) => {
       }
     };
   } else {
-    const useFraction = Math.random() < 0.5;
+    const outside = randomDecimal();
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    const term2 = randomInt(2, 12);
     
-    if (useFraction) {
-      const frac = getRandomFraction();
-      const fracDecimal = fractionToDecimal(frac);
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(fracDecimal * term2 * 100) / 100;
-      const answer = `${formatFraction(frac)}${variable} - ${distributed2}`;
+    const distributed2 = -Math.round(outside * term2 * 100) / 100;
+    const answer = `${outside}${variable} - ${Math.abs(distributed2)}`;
+    const problem = `${outside}(${variable} - ${term2})`;
 
-      const choices = [
-        answer,
-        `${formatFraction(frac)}${variable} + ${distributed2}`,
-        `${formatFraction(frac)}${variable} - ${term2}`,
-        `${variable} - ${distributed2}`
-      ];
+    const choices = [
+      answer,
+      `${outside}${variable} + ${Math.abs(distributed2)}`,
+      `${outside}${variable} - ${term2}`,
+      `${variable} - ${Math.abs(distributed2)}`
+    ];
 
-      choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
-      return {
-        problem: `${formatFraction(frac)}(${variable} - ${term2})`,
-        displayProblem: `${formatFraction(frac)}(${variable} - ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${formatFraction(frac)}`, work: `` },
-            { description: `Result: ${answer}`, work: `` }
-          ],
-          rule: "Keep the subtraction!",
-          finalAnswer: answer
-        }
-      };
-    } else {
-      const decimal = randomDecimal();
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(decimal * term2 * 100) / 100;
-      const answer = `${decimal}${variable} - ${distributed2}`;
-
-      const choices = [
-        answer,
-        `${decimal}${variable} + ${distributed2}`,
-        `${decimal}${variable} - ${term2}`,
-        `${variable} - ${distributed2}`
-      ];
-
-      choices.sort(() => Math.random() - 0.5);
-
-      return {
-        problem: `${decimal}(${variable} - ${term2})`,
-        displayProblem: `${decimal}(${variable} - ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${decimal}`, work: `${answer}` }
-          ],
-          rule: "Maintain the subtraction sign",
-          finalAnswer: answer
-        }
-      };
-    }
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute ${outside}`, work: `${answer}` }
+        ],
+        rule: "Maintain the subtraction sign",
+        finalAnswer: answer
+      }
+    };
   }
 };
 
 // ============================================
-// LEVEL 1-7: Dark Forest (Negative Outside)
+// LEVEL 1-7: DARK FOREST (Negative Outside)
 // ============================================
 
 export const generateNegativeOutsideProblem = (difficulty) => {
@@ -579,25 +516,27 @@ export const generateNegativeOutsideProblem = (difficulty) => {
     const outside = -randomInt(2, 8);
     const term2 = randomInt(1, 10);
     
-    const distributed1 = `${outside}x`;
+    const distributed1Coef = outside;
     const distributed2 = outside * term2;
-    const answer = `${distributed1} - ${Math.abs(distributed2)}`;
+    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
+    const problem = `${outside}(x + ${term2})`;
 
     const choices = [
       answer,
-      `${distributed1} + ${Math.abs(distributed2)}`, // Wrong sign
-      `${Math.abs(outside)}x - ${Math.abs(distributed2)}`, // Forgot negative on x term
-      `${distributed1} + ${distributed2}` // Double negative confusion
+      formatAnswer(distributed1Coef, 'x', -distributed2),
+      formatAnswer(-distributed1Coef, 'x', distributed2),
+      `${distributed1Coef}x + ${distributed2}`
     ];
 
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${outside}(x + ${term2})`,
-      displayProblem: `${outside}(x + ${term2})`,
+      problem: problem,
+      displayProblem: problem,
       answer: answer,
-      choices: choices,
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Distribute ${outside} to BOTH terms`, work: `` },
           { description: `${outside} × x = ${outside}x`, work: `` },
@@ -609,75 +548,42 @@ export const generateNegativeOutsideProblem = (difficulty) => {
       }
     };
   } else {
-    const useFraction = Math.random() < 0.5;
+    const outside = -randomDecimal();
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    const term2 = randomInt(2, 12);
     
-    if (useFraction) {
-      const frac = getRandomFraction();
-      const fracDecimal = -fractionToDecimal(frac);
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(fracDecimal * term2 * 100) / 100;
-      const answer = `-${formatFraction(frac)}${variable} - ${Math.abs(distributed2)}`;
+    const distributed2 = Math.round(outside * term2 * 100) / 100;
+    const answer = `${outside}${variable} - ${Math.abs(distributed2)}`;
+    const problem = `${outside}(${variable} + ${term2})`;
 
-      const choices = [
-        answer,
-        `-${formatFraction(frac)}${variable} + ${Math.abs(distributed2)}`,
-        `${formatFraction(frac)}${variable} - ${Math.abs(distributed2)}`,
-        `-${formatFraction(frac)}${variable} + ${distributed2}`
-      ];
+    const choices = [
+      answer,
+      `${outside}${variable} + ${Math.abs(distributed2)}`,
+      `${Math.abs(outside)}${variable} - ${Math.abs(distributed2)}`,
+      `${outside}${variable} + ${distributed2}`
+    ];
 
-      choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
-      return {
-        problem: `-${formatFraction(frac)}(${variable} + ${term2})`,
-        displayProblem: `-${formatFraction(frac)}(${variable} + ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute negative fraction`, work: `${answer}` }
-          ],
-          rule: "Negative distributes to ALL terms",
-          finalAnswer: answer
-        }
-      };
-    } else {
-      const decimal = -randomDecimal();
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(decimal * term2 * 100) / 100;
-      const answer = `${decimal}${variable} - ${Math.abs(distributed2)}`;
-
-      const choices = [
-        answer,
-        `${decimal}${variable} + ${Math.abs(distributed2)}`,
-        `${Math.abs(decimal)}${variable} - ${Math.abs(distributed2)}`,
-        `${decimal}${variable} + ${distributed2}`
-      ];
-
-      choices.sort(() => Math.random() - 0.5);
-
-      return {
-        problem: `${decimal}(${variable} + ${term2})`,
-        displayProblem: `${decimal}(${variable} + ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${decimal}`, work: `${answer}` }
-          ],
-          rule: "Negative outside makes all terms negative",
-          finalAnswer: answer
-        }
-      };
-    }
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute ${outside}`, work: `${answer}` }
+        ],
+        rule: "Negative outside makes all terms negative",
+        finalAnswer: answer
+      }
+    };
   }
 };
 
 // ============================================
-// LEVEL 1-8: Mixed Terrain (Negative Inside)
+// LEVEL 1-8: MIXED TERRAIN (Negative Inside)
 // ============================================
 
 export const generateNegativeInsideProblem = (difficulty) => {
@@ -685,25 +591,27 @@ export const generateNegativeInsideProblem = (difficulty) => {
     const outside = -randomInt(2, 8);
     const term2 = randomInt(1, 10);
     
-    const distributed1 = `${outside}x`;
+    const distributed1Coef = outside;
     const distributed2 = -(outside * term2); // Negative × Negative = Positive!
-    const answer = `${distributed1} + ${distributed2}`;
+    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
+    const problem = `${outside}(x - ${term2})`;
 
     const choices = [
       answer,
-      `${distributed1} - ${distributed2}`, // Forgot double negative
-      `${Math.abs(outside)}x + ${distributed2}`, // Wrong sign on x
-      `${distributed1} - ${Math.abs(distributed2)}` // Both negative
+      formatAnswer(distributed1Coef, 'x', -distributed2),
+      formatAnswer(-distributed1Coef, 'x', distributed2),
+      `${distributed1Coef}x - ${Math.abs(distributed2)}`
     ];
 
-    choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
     return {
-      problem: `${outside}(x - ${term2})`,
-      displayProblem: `${outside}(x - ${term2})`,
+      problem: problem,
+      displayProblem: problem,
       answer: answer,
-      choices: choices,
+      choices: finalChoices,
       explanation: {
+        originalProblem: problem,
         steps: [
           { description: `Distribute ${outside} to BOTH terms`, work: `` },
           { description: `${outside} × x = ${outside}x`, work: `` },
@@ -715,76 +623,45 @@ export const generateNegativeInsideProblem = (difficulty) => {
       }
     };
   } else {
-    const useFraction = Math.random() < 0.5;
+    const outside = -randomDecimal();
+    const variable = randomFrom(['x', 'y', 'n', 'm']);
+    const term2 = randomInt(2, 12);
     
-    if (useFraction) {
-      const frac = getRandomFraction();
-      const fracDecimal = -fractionToDecimal(frac);
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(-(fracDecimal * term2) * 100) / 100;
-      const answer = `-${formatFraction(frac)}${variable} + ${distributed2}`;
+    const distributed2 = -(Math.round(outside * term2 * 100) / 100);
+    const answer = `${outside}${variable} + ${distributed2}`;
+    const problem = `${outside}(${variable} - ${term2})`;
 
-      const choices = [
-        answer,
-        `-${formatFraction(frac)}${variable} - ${distributed2}`,
-        `${formatFraction(frac)}${variable} + ${distributed2}`,
-        `-${formatFraction(frac)}${variable} - ${Math.abs(distributed2)}`
-      ];
+    const choices = [
+      answer,
+      `${outside}${variable} - ${distributed2}`,
+      `${Math.abs(outside)}${variable} + ${distributed2}`,
+      `${outside}${variable} - ${Math.abs(distributed2)}`
+    ];
 
-      choices.sort(() => Math.random() - 0.5);
+    const finalChoices = ensureFourChoices(choices, answer);
 
-      return {
-        problem: `-${formatFraction(frac)}(${variable} - ${term2})`,
-        displayProblem: `-${formatFraction(frac)}(${variable} - ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute negative fraction to both terms`, work: `` },
-            { description: `Negative × Negative = Positive for constant`, work: `${answer}` }
-          ],
-          rule: "Double negative makes positive!",
-          finalAnswer: answer
-        }
-      };
-    } else {
-      const decimal = -randomDecimal();
-      const variable = randomFrom(['x', 'y', 'n', 'm']);
-      const term2 = randomInt(2, 12);
-      
-      const distributed2 = Math.round(-(decimal * term2) * 100) / 100;
-      const answer = `${decimal}${variable} + ${distributed2}`;
-
-      const choices = [
-        answer,
-        `${decimal}${variable} - ${distributed2}`,
-        `${Math.abs(decimal)}${variable} + ${distributed2}`,
-        `${decimal}${variable} - ${Math.abs(distributed2)}`
-      ];
-
-      choices.sort(() => Math.random() - 0.5);
-
-      return {
-        problem: `${decimal}(${variable} - ${term2})`,
-        displayProblem: `${decimal}(${variable} - ${term2})`,
-        answer: answer,
-        choices: choices,
-        explanation: {
-          steps: [
-            { description: `Distribute ${decimal}`, work: `` },
-            { description: `Negative × Negative = Positive`, work: `${answer}` }
-          ],
-          rule: "Double negative = positive",
-          finalAnswer: answer
-        }
-      };
-    }
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute ${outside}`, work: `` },
+          { description: `Negative × Negative = Positive`, work: `${answer}` }
+        ],
+        rule: "Double negative = positive",
+        finalAnswer: answer
+      }
+    };
   }
 };
 
-// Export all generators
+// ============================================
+// EXPORTS
+// ============================================
+
 export const problemGenerators = {
   '1-1': generateAdditionProblem,
   '1-2': generateSubtractionProblem,
