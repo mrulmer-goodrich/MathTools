@@ -1,3 +1,6 @@
+// LevelPlayer.jsx - COMPLETE FIXED VERSION
+// Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
+
 import React, { useState, useEffect } from 'react';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
@@ -28,6 +31,8 @@ const LevelPlayer = ({
 
   useEffect(() => {
     generateNewProblem();
+    setCorrectStreak(0);
+    setLevelComplete(false);
   }, [levelId]);
 
   const generateNewProblem = () => {
@@ -62,7 +67,6 @@ const LevelPlayer = ({
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
 
-    // Update stats
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
@@ -73,23 +77,17 @@ const LevelPlayer = ({
     if (correct) {
       const newStreak = correctStreak + 1;
       setCorrectStreak(newStreak);
-      
-      // Show success overlay for 2 seconds
       setShowSuccess(true);
       
       setTimeout(() => {
         setShowSuccess(false);
-        
-        // Check if level complete
         if (newStreak >= level.problemsRequired) {
           setLevelComplete(true);
         } else {
-          // Auto-generate next problem
           generateNewProblem();
         }
-      }, 2000);
+      }, 1500);
     } else {
-      // Show wrong answer modal
       setCorrectStreak(0);
       setShowFeedback(true);
     }
@@ -101,17 +99,8 @@ const LevelPlayer = ({
   };
 
   const handleContinueFromComplete = () => {
-    // Award badges if applicable
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
-    
-    if (level.moduleBadge || level.finalModule) {
-      // Return to menu for module completion
-      onReturnToMenu();
-    } else {
-      // Would advance to next level in full implementation
-      onReturnToMenu();
-    }
   };
 
   if (!currentProblem) {
@@ -129,7 +118,7 @@ const LevelPlayer = ({
           {level.badge && (
             <div className="badge-earned">
               <p><strong>Badge Earned!</strong></p>
-              <div className="badge-display">🏆 {level.badge}</div>
+              <div className="badge-display">{level.badge}</div>
             </div>
           )}
 
@@ -148,7 +137,7 @@ const LevelPlayer = ({
             className="btn-continue-expedition"
             onClick={handleContinueFromComplete}
           >
-            {level.moduleBadge ? 'Continue Expedition' : 'Next Level'} →
+            Continue →
           </button>
         </div>
       </div>
@@ -158,6 +147,9 @@ const LevelPlayer = ({
   return (
     <div className="level-player">
       <div className="level-header">
+        <button className="back-to-menu-button" onClick={onReturnToMenu}>
+          ← Back to Menu
+        </button>
         <h2>{level.name}</h2>
         <ProgressTracker 
           current={correctStreak} 
@@ -167,28 +159,22 @@ const LevelPlayer = ({
 
       <ProblemDisplay problem={currentProblem} />
 
-      {/* Render appropriate input method based on level */}
-      {level.inputMethod === 'clickToSelect' && (
-        <ClickToSelect
-          choices={currentProblem.choices}
-          onSubmit={handleAnswerSubmit}
-          disabled={showFeedback || showSuccess}
-          selectedAnswer={selectedAnswer}
-        />
-      )}
+      <ClickToSelect
+        choices={currentProblem.choices}
+        onSubmit={handleAnswerSubmit}
+        disabled={showFeedback || showSuccess}
+        selectedAnswer={selectedAnswer}
+      />
 
-      {/* Success Overlay */}
       {showSuccess && (
         <SuccessOverlay message={getSuccessMessage()} />
       )}
 
-      {/* Wrong Answer Modal */}
       {showFeedback && (
         <FeedbackModal
+          isCorrect={isCorrect}
           explanation={currentProblem.explanation}
           onContinue={handleContinueFromFeedback}
-          correctAnswer={currentProblem.answer}
-          selectedAnswer={selectedAnswer}
         />
       )}
     </div>
