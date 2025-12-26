@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ClickToSelect = ({ choices, onSubmit, disabled, selectedAnswer }) => {
   const [selected, setSelected] = useState(null);
+
+  // Reset selection when choices change (new problem)
+  useEffect(() => {
+    setSelected(null);
+  }, [choices]);
 
   const handleSelect = (choice) => {
     if (disabled) return;
