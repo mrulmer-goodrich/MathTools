@@ -1,57 +1,55 @@
-import React from 'react';
+// FeedbackModal.jsx - UPDATED to use StackedEquation component
+// REPLACE your current FeedbackModal.jsx with this
 
-const FeedbackModal = ({ 
-  explanation, 
-  onContinue, 
-  correctAnswer, 
-  selectedAnswer 
-}) => {
+import React from 'react';
+import StackedEquation from './StackedEquation';
+import '../styles/algebra.css';
+
+const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
+  if (!explanation) return null;
+
   return (
     <div className="feedback-modal-overlay">
-      <div className="feedback-modal incorrect">
+      <div className="feedback-modal-content">
         <div className="feedback-header">
-          <span className="feedback-icon">❌</span>
-          <h3>Not Quite!</h3>
+          {isCorrect ? (
+            <h2 className="feedback-correct">✓ Correct!</h2>
+          ) : (
+            <h2 className="feedback-incorrect">✗ Not Quite!</h2>
+          )}
         </div>
 
-        <div className="feedback-content">
-          {explanation.originalProblem && (
-            <div className="original-problem">
-              <div className="original-problem-label">Original Problem:</div>
-              <div className="original-problem-text">{explanation.originalProblem}</div>
-            </div>
-          )}
+        {!isCorrect && (
+          <div className="feedback-body">
+            {explanation.originalProblem && (
+              <div className="original-problem">
+                <div className="original-problem-label">Original Problem:</div>
+                <div className="original-problem-text">{explanation.originalProblem}</div>
+              </div>
+            )}
 
-          {explanation.steps && explanation.steps.length > 0 && (
-            <div className="explanation-steps">
-              {explanation.steps.map((step, index) => (
-                <div key={index} className="explanation-step">
-                  <p className="step-description">{step.description}</p>
-                  {step.work && (
-                    <pre className="step-work">{step.work}</pre>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+            {explanation.steps && explanation.steps.length > 0 && (
+              <StackedEquation steps={explanation.steps} />
+            )}
 
-          {explanation.rule && (
-            <div className="rule-box">
-              <strong>RULE:</strong> {explanation.rule}
-            </div>
-          )}
+            {explanation.rule && (
+              <div className="rule-box">
+                <div className="rule-label">📐 RULE:</div>
+                <div className="rule-text">{explanation.rule}</div>
+              </div>
+            )}
 
-          <div className="correct-answer-display">
-            <p>The correct answer is: <strong>{correctAnswer}</strong></p>
-            {selectedAnswer !== null && (
-              <p className="selected-answer">You selected: {selectedAnswer}</p>
+            {explanation.finalAnswer && (
+              <div className="final-answer">
+                <strong>Answer:</strong> {explanation.finalAnswer}
+              </div>
             )}
           </div>
+        )}
 
-          <button className="btn-try-again" onClick={onContinue}>
-            Try Another Problem →
-          </button>
-        </div>
+        <button className="continue-button" onClick={onContinue}>
+          {isCorrect ? 'Continue' : 'Try Again'}
+        </button>
       </div>
     </div>
   );
