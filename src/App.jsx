@@ -1,4 +1,4 @@
-// src/App.jsx — v12.2.0 (Added Multiplication Dojo)
+// src/App.jsx — v12.2.0 (Added Multiplication Dojo) 
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
