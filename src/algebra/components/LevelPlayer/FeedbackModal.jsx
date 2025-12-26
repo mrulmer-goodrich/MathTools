@@ -15,6 +15,13 @@ const FeedbackModal = ({
         </div>
 
         <div className="feedback-content">
+          {explanation.originalProblem && (
+            <div className="original-problem">
+              <div className="original-problem-label">Original Problem:</div>
+              <div className="original-problem-text">{explanation.originalProblem}</div>
+            </div>
+          )}
+
           {explanation.steps && explanation.steps.length > 0 && (
             <div className="explanation-steps">
               {explanation.steps.map((step, index) => (
