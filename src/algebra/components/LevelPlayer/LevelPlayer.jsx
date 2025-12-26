@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
-import FeedbackPanel from './FeedbackPanel';
+import FeedbackModal from './FeedbackModal';
+import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels, { storyline } from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
@@ -18,6 +19,7 @@ const LevelPlayer = ({
   const [currentProblem, setCurrentProblem] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showLevelIntro, setShowLevelIntro] = useState(true);
@@ -35,17 +37,31 @@ const LevelPlayer = ({
       const problem = generator(difficulty);
       setCurrentProblem(problem);
       setShowFeedback(false);
+      setShowSuccess(false);
       setSelectedAnswer(null);
     } else {
       console.error(`No generator found for level ${levelId}`);
     }
   };
 
+  const getSuccessMessage = () => {
+    const messages = [
+      { icon: "🎯", text: "Perfect Shot!", sub: "You're navigating well!" },
+      { icon: "⛰️", text: "Summit Reached!", sub: "Onward to the next peak!" },
+      { icon: "🧭", text: "True North!", sub: "Your calculations are precise!" },
+      { icon: "🏕️", text: "Camp Secured!", sub: "Another challenge conquered!" },
+      { icon: "🗺️", text: "Territory Mapped!", sub: "The path is clear!" },
+      { icon: "⭐", text: "Stellar Work!", sub: "Dr. Martinez would be proud!" },
+      { icon: "🔥", text: "On Fire!", sub: "Keep blazing this trail!" },
+      { icon: "💎", text: "Gem Found!", sub: "Mathematical excellence!" }
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
+
   const handleAnswerSubmit = (answer) => {
     setSelectedAnswer(answer);
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
-    setShowFeedback(true);
 
     // Update stats
     setStats(prev => ({
@@ -59,33 +75,43 @@ const LevelPlayer = ({
       const newStreak = correctStreak + 1;
       setCorrectStreak(newStreak);
       
-      // Check if level complete
-      if (newStreak >= level.problemsRequired) {
-        setLevelComplete(true);
-      }
+      // Show success overlay for 2 seconds
+      setShowSuccess(true);
+      
+      setTimeout(() => {
+        setShowSuccess(false);
+        
+        // Check if level complete
+        if (newStreak >= level.problemsRequired) {
+          setLevelComplete(true);
+        } else {
+          // Auto-generate next problem
+          generateNewProblem();
+        }
+      }, 2000);
     } else {
+      // Show wrong answer modal
       setCorrectStreak(0);
+      setShowFeedback(true);
     }
   };
 
-  const handleContinue = () => {
-    if (levelComplete) {
-      // Award badges if applicable
-      const badge = level.badge || level.moduleBadge;
-      onLevelComplete(levelId, badge);
-      
-      if (level.moduleBadge || level.finalModule) {
-        // Show module completion screen
-        // For now, return to menu
-        onReturnToMenu();
-      } else {
-        // Move to next level (if in play mode)
-        // For now, just return to menu
-        onReturnToMenu();
-      }
+  const handleContinueFromFeedback = () => {
+    setShowFeedback(false);
+    generateNewProblem();
+  };
+
+  const handleContinueFromComplete = () => {
+    // Award badges if applicable
+    const badge = level.badge || level.moduleBadge;
+    onLevelComplete(levelId, badge);
+    
+    if (level.moduleBadge || level.finalModule) {
+      // Return to menu for module completion
+      onReturnToMenu();
     } else {
-      // Generate next problem
-      generateNewProblem();
+      // Would advance to next level in full implementation
+      onReturnToMenu();
     }
   };
 
@@ -157,7 +183,7 @@ const LevelPlayer = ({
 
           <button 
             className="btn-continue-expedition"
-            onClick={handleContinue}
+            onClick={handleContinueFromComplete}
           >
             {level.moduleBadge ? 'Continue Expedition' : 'Next Challenge'} →
           </button>
@@ -183,28 +209,25 @@ const LevelPlayer = ({
         <ClickToSelect
           choices={currentProblem.choices}
           onSubmit={handleAnswerSubmit}
-          disabled={showFeedback}
+          disabled={showFeedback || showSuccess}
           selectedAnswer={selectedAnswer}
         />
       )}
 
-      {/* Other input methods will be added here */}
+      {/* Success Overlay */}
+      {showSuccess && (
+        <SuccessOverlay message={getSuccessMessage()} />
+      )}
 
+      {/* Wrong Answer Modal */}
       {showFeedback && (
-        <FeedbackPanel
-          isCorrect={isCorrect}
+        <FeedbackModal
           explanation={currentProblem.explanation}
-          onContinue={handleContinue}
+          onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
           selectedAnswer={selectedAnswer}
         />
       )}
-
-      <div className="level-actions">
-        <button className="btn-exit" onClick={onReturnToMenu}>
-          Exit Level
-        </button>
-      </div>
     </div>
   );
 };
