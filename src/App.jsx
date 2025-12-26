@@ -12,6 +12,7 @@ import MultiplicationDojo from './modules/MultiplyDojo/MultiplyDojo.jsx'
 import CirclesModule from './modules/circles/CirclesModule.jsx'
 import VaultHeistModule from './vault-heist/VaultHeist.jsx'
 import ZombieApocalypseModule from './zombie-apocalypse/ZombieApocalypse.jsx'
+import AlgebraExpedition from './algebra/Algebra.jsx'
 import zombietheme from './zombie-apocalypse/styles/zombietheme.css'
 import { StatsReport, TurkeyOverlay } from './components/StatsSystem.jsx'
 
@@ -222,6 +223,9 @@ export default function App() {
           </div>
 
           <div className="row home-buttons">
+            <BigButton className="tile-btn" onClick={() => setRoute('algebra')}>
+              Algebra Expedition
+            </BigButton>
             <BigButton className="tile-btn" onClick={() => setRoute('zombie')}>
               Zombie Apocalypse
             </BigButton>
@@ -373,6 +377,29 @@ export default function App() {
               />
             )}
           </div>
+        </>
+      )}
+
+      {/* Algebra Expedition gets full screen (manages its own navigation) */}
+      {route === 'algebra' && (
+        <>
+          {/* Add a small back button in top-left */}
+          <button 
+            onClick={goHome}
+            className="button secondary"
+            style={{
+              position: 'fixed',
+              top: '1rem',
+              left: '1rem',
+              zIndex: 10000,
+              padding: '0.75rem 1.5rem',
+              fontSize: '1.1rem'
+            }}
+          >
+            ← Back to Home
+          </button>
+          
+          <AlgebraExpedition />
         </>
       )}
 
