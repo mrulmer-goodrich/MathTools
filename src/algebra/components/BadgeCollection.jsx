@@ -1,16 +1,19 @@
+// BadgeCollection.jsx - COMPLETE FILE WITH CORRECT PATHS
+// Location: src/algebra/components/BadgeCollection.jsx
+
 import React from 'react';
 import '../styles/badge-collection.css';
 
 const BADGES = {
-  4: { name: 'Backpack', emoji: '🎒', image: '/assets/badges/backpack.png' },
-  8: { name: 'Compass', emoji: '🧭', image: '/assets/badges/compass.png' },
-  12: { name: 'Camping Gear', emoji: '⛺', image: '/assets/badges/camping-gear.png' },
-  16: { name: 'Trail Map', emoji: '🗺️', image: '/assets/badges/trail-map.png' },
-  20: { name: 'Binoculars', emoji: '🔭', image: '/assets/badges/binoculars.png' },
-  24: { name: 'Climbing Rope', emoji: '🪢', image: '/assets/badges/climbing-rope.png' },
-  28: { name: 'Pickaxe', emoji: '⛏️', image: '/assets/badges/pickaxe.png' },
-  31: { name: 'Vault Master', emoji: '🏆', image: '/assets/badges/vault-master.png', special: true },
-  37: { name: 'Frontier Explorer', emoji: '🌟', image: '/assets/badges/frontier-explorer.png', special: true }
+  4: { name: 'Backpack', emoji: '🎒', image: '/assets/algebra/badge-backpack.png' },
+  8: { name: 'Compass', emoji: '🧭', image: '/assets/algebra/badge-compass.png' },
+  12: { name: 'Camping Gear', emoji: '⛺', image: '/assets/algebra/badge-camping-gear.png' },
+  16: { name: 'Trail Map', emoji: '🗺️', image: '/assets/algebra/badge-trail-map.png' },
+  20: { name: 'Binoculars', emoji: '🔭', image: '/assets/algebra/badge-binoculars.png' },
+  24: { name: 'Climbing Rope', emoji: '🪢', image: '/assets/algebra/badge-climbing-rope.png' },
+  28: { name: 'Pickaxe', emoji: '⛏️', image: '/assets/algebra/badge-pickaxe.png' },
+  31: { name: 'Vault Master', emoji: '🏆', image: '/assets/algebra/badge-base-camp-master.png', special: true },
+  37: { name: 'Frontier Explorer', emoji: '🌟', image: '/assets/algebra/badge-frontier-explorer.png', special: true }
 };
 
 const BadgeCollection = ({ completedLevels, isCompact = false }) => {
