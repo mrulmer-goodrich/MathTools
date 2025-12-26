@@ -1013,3 +1013,62 @@
   }
 }
 
+:root {
+  /* Primary Theme Colors */
+  --color-background: #f5f1e8;  /* Light tan/cream */
+  --color-primary: #27ae60;      /* Earth green */
+  --color-secondary: #8b4513;    /* Brown */
+  --color-accent: #f39c12;       /* Gold */
+  
+  /* Status Colors */
+  --color-success: #2ecc71;      /* Muted green */
+  --color-error: #e74c3c;        /* Muted red */
+  --color-warning: #f39c12;      /* Gold/orange */
+  
+  /* Text Colors */
+  --color-text-primary: #2c3e50; /* Dark gray/black */
+  --color-text-secondary: #7f8c8d; /* Medium gray */
+  
+  /* Module/Region Colors */
+  --color-module-1: #27ae60;     /* Green - Base Camp */
+  --color-module-2: #8b4513;     /* Brown - Territory */
+  --color-module-3: #f39c12;     /* Gold - Frontier */
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.button-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.button-secondary {
+  background: var(--color-secondary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-secondary:hover {
+  background: #6d3710;
+  transform: translateY(-2px);
+}
