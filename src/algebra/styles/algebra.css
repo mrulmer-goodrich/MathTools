@@ -4092,3 +4092,254 @@ body {
     font-size: 16px;
   }
 }
+
+/* ============================================
+   APPEND TO END OF algebra.css - FINAL POLISH FIXES
+   ============================================ */
+
+/* FIX #1: Show problem in feedback modal */
+.feedback-modal .problem-repeat {
+  display: block !important;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 18px;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  color: #2c2416;
+}
+
+/* FIX #2: Level Complete - Scrollable to prevent cut-off */
+.level-complete {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.completion-container {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  margin: auto;
+}
+
+.badge-earned {
+  margin: 24px 0;
+  padding: 24px;
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%);
+  border: 3px solid #f39c12;
+  border-radius: 12px;
+}
+
+.badge-display {
+  font-size: 48px;
+  margin-top: 12px;
+}
+
+/* FIX #3: Main Menu - No scroll, better layout */
+.main-menu {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.menu-container {
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.menu-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin: 32px 0;
+}
+
+.menu-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-color: #27ae60;
+}
+
+.card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.menu-card h3 {
+  font-size: 24px;
+  margin: 12px 0;
+  color: #2c3e50;
+}
+
+.mode-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mode-badge.sequential {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+}
+
+.mode-badge.free-practice {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.menu-card p {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-start-play,
+.btn-start-practice {
+  background: transparent;
+  border: 2px solid #27ae60;
+  color: #27ae60;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  pointer-events: none;
+  margin-top: auto;
+}
+
+.menu-card:hover .btn-start-play,
+.menu-card:hover .btn-start-practice {
+  background: #27ae60;
+  color: white;
+  transform: translateX(4px);
+}
+
+/* Badges Preview - Compact at bottom */
+.badges-preview {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(139, 115, 85, 0.2);
+}
+
+.badges-preview h3 {
+  color: #3d5a3d;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.badges-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.badge-item {
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%);
+  border: 2px solid #f39c12;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.badge-item:hover {
+  transform: scale(1.1);
+}
+
+/* FIX #4: Make header badge icons match bottom badges */
+.badge-mini {
+  font-size: 24px !important;
+  padding: 6px 10px !important;
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%) !important;
+  border: 2px solid #f39c12 !important;
+  border-radius: 6px !important;
+}
+
+/* Progress Summary */
+.progress-summary {
+  text-align: center;
+  margin: 24px 0;
+}
+
+.progress-summary h2 {
+  font-size: 22px;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.progress-text {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Journal Teaser */
+.journal-teaser {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  border-left: 4px solid #3d5a3d;
+  margin-bottom: 32px;
+}
+
+.journal-teaser p {
+  margin: 0;
+  font-style: italic;
+  color: #2c2416;
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .menu-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .menu-card {
+    min-height: auto;
+  }
+  
+  .completion-container {
+    padding: 24px;
+  }
+  
+  .badge-display {
+    font-size: 36px;
+  }
+}
