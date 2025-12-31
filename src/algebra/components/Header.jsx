@@ -1,4 +1,4 @@
-// Header.jsx - FIXED: Badge collection always visible
+// Header.jsx - FIXED: Shows actual badge emojis (not just trophy)
 // Location: src/algebra/components/Header.jsx
 
 import React from 'react';
@@ -32,15 +32,15 @@ const Header = ({
       </div>
       
       <div className="header-right">
-        {/* Badge Collection - ALWAYS SHOW */}
+        {/* FIXED: Show actual badge emojis, same as menu */}
         {badges && badges.length > 0 && (
           <div className="badge-collection-compact">
             <span style={{fontSize: '12px', color: '#666', marginRight: '4px'}}>
               Badges:
             </span>
             {badges.map((badge, index) => (
-              <div key={index} className="badge-mini" title={badge}>
-                🏆
+              <div key={index} className="badge-mini" title="Badge earned!">
+                {badge}
               </div>
             ))}
           </div>
