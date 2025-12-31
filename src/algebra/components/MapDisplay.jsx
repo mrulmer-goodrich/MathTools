@@ -1,8 +1,8 @@
-// MapDisplay.jsx - COMPLETE FIX (with close button + cooler design)
+// MapDisplay.jsx - FIXED CSS IMPORT
 // Location: src/algebra/components/MapDisplay.jsx
 
 import React from 'react';
-import '../styles/algebra.css';
+import '../styles/map-display.css';
 
 const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
   // Define map regions
@@ -121,4 +121,3 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
 };
 
 export default MapDisplay;
-
