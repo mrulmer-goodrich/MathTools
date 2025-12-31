@@ -2,11 +2,11 @@
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
-import ProblemDisplay from '../ProblemDisplay';
-import ClickToSelect from '../InputMethods/ClickToSelect';
-import FeedbackModal from '../FeedbackModal';
-import SuccessOverlay from '../SuccessOverlay';
-import ProgressTracker from '../ProgressTracker';
+import ProblemDisplay from './ProblemDisplay';
+import ClickToSelect from './InputMethods/ClickToSelect';
+import FeedbackModal from './FeedbackModal';
+import SuccessOverlay from './SuccessOverlay';
+import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
 import { storyline } from '../../data/levelData';
