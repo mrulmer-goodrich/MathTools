@@ -1,5 +1,5 @@
-// Header.jsx - UPDATED: "Exit Game" instead of "Back to Home"
-// Location: src/algebra/components/Header.jsx 
+// Header.jsx - COMPLETE FIX
+// Location: src/algebra/components/Header.jsx
 
 import React from 'react';
 import BadgeCollection from './BadgeCollection';
@@ -9,7 +9,7 @@ const Header = ({
   onViewMap, 
   onViewStats, 
   onReturnToMenu,
-  onExitGame,  // NEW: exits to website landing
+  onExitGame,
   badges, 
   currentLevel 
 }) => {
@@ -26,27 +26,38 @@ const Header = ({
       <div className="header-center">
         <h1>Algebra Expedition</h1>
         {currentLevel && (
-          <div className="current-level">Level {currentLevel}</div>
+          <div className="current-level-display">
+            Level {typeof currentLevel === 'string' ? currentLevel.split('-')[1] : currentLevel}
+          </div>
         )}
       </div>
       
       <div className="header-right">
-        {badges && badges.length > 0 && (
-          <BadgeCollection 
-            completedLevels={[]} 
-            isCompact={true}
-            badges={badges}
-          />
-        )}
+        {/* Badge Collection - Always Visible */}
+        <BadgeCollection 
+          completedLevels={[]} 
+          isCompact={true}
+          badges={badges || []}
+        />
         
+        {/* Stats Button */}
         {onViewStats && (
-          <button className="btn-header-icon" onClick={onViewStats}>
+          <button 
+            className="btn-header-icon" 
+            onClick={onViewStats}
+            title="View Statistics"
+          >
             📊
           </button>
         )}
         
+        {/* Map Button */}
         {onViewMap && (
-          <button className="btn-header-icon" onClick={onViewMap}>
+          <button 
+            className="btn-header-icon" 
+            onClick={onViewMap}
+            title="View Map"
+          >
             🗺️
           </button>
         )}
