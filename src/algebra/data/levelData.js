@@ -1,4 +1,5 @@
-// Complete level data for all 31 levels across 3 modules
+// Complete level data for all 37 levels - FIXED VERSION
+// Keeps ALL storyline data, updates level IDs to match problemGenerators
 
 export const storyline = {
   modules: {
@@ -19,7 +20,6 @@ export const storyline = {
     }
   },
   levels: {
-    // MODULE 1 - Base Camp Preparations
     '1-1': {
       name: "Addition Supplies",
       intro: `"First supply calculation: water. The elevation changes require precise additions of positive and negative values." - Dr. Martinez's notes`
@@ -80,71 +80,94 @@ export const storyline = {
       name: "Ready to Trek",
       intro: `"Final preparations complete. Complex distributions with negatives. If we can solve this, we're ready for anything ahead." - Dr. Martinez. [Her next entry is from weeks later, much further into the mountains...]`
     },
-
-    // MODULE 2 - Charting the Territory
-    '2-1': {
+    // CONTINUING WITH RENUMBERED LEVELS (was 2-1, now 1-16)
+    '1-16': {
       name: "River Crossing",
       intro: `"First landmark: the river. The bridge stones are marked with equations. Solve for X to know which stones are safe." - Dr. Martinez`
     },
-    '2-2': {
+    '1-17': {
       name: "Mountain Climb",
       intro: `"The mountain path requires multiplication and division to determine safe holds. Each calculation reveals the next step." - Dr. Martinez`
     },
-    '2-3': {
+    '1-18': {
       name: "Shadow Valley",
       intro: `"This valley is dark. Negative coefficients everywhere. The shadows play tricks, but the mathematics doesn't lie." - Dr. Martinez`
     },
-    '2-4': {
+    '1-19': {
       name: "Hidden Canyon",
       intro: `"Found a hidden canyon not on any map! Two-step equations guard its passages. Ancients were clever." - Dr. Martinez`
     },
-    '2-5': {
+    '1-20': {
       name: "Storm Passage",
       intro: `"Caught in a storm. The wind howls with negative multipliers. Two-step solving in harsh conditions. We press on." - Dr. Martinez`
     },
-    '2-6': {
+    '1-21': {
       name: "Fraction Falls",
       intro: `"A waterfall reveals fractional patterns in its flow. The mist creates equations with fractions. Mesmerizing." - Dr. Martinez`
     },
-    '2-7': {
+    '1-22': {
       name: "Misty Decimals",
       intro: `"The mist thickens. Decimal values appear in the condensation on rocks. Nature's mathematics revealed." - Dr. Martinez`
     },
-    '2-8': {
+    '1-23': {
       name: "Ancient Ruins",
       intro: `"Found ruins! Equations carved in stone require distribution before solving. The ancients understood order of operations." - Dr. Martinez`
     },
-    '2-9': {
+    '1-24': {
       name: "Complex Caverns",
       intro: `"Deep in the caverns, equations grow more complex. Distribution, combination, then solution. Like a mathematical dance." - Dr. Martinez`
     },
-    '2-10': {
+    '1-25': {
       name: "The Divide",
       intro: `"We've reached The Divide. Variables on both sides of the equations. The boundary between known and unknown territory. Tomorrow... the frontier." - Dr. Martinez [Pages after this are water-damaged]`
     },
-
-    // MODULE 3 - The Frontier
-    '3-1': {
-      name: "Boundary Markers (Speed Challenge)",
+    // NEW LEVELS 26-31 (The Vault section - these need new story intros)
+    '1-26': {
+      name: "Outer Vault Approach",
+      intro: `[Damaged pages continue] "...vault entrance requires solving equations with constants and variables on both sides. The door responds only to perfect solutions." - Dr. Martinez`
+    },
+    '1-27': {
+      name: "Inner Chamber",
+      intro: `"Inside now. Distribution must be perfect. The walls shift with each calculation. One mistake and we start over." - Dr. Martinez`
+    },
+    '1-28': {
+      name: "Combination Lock",
+      intro: `"Multi-step combinations everywhere. Like terms must be gathered before solving. The ancients' final defense." - Dr. Martinez`
+    },
+    '1-29': {
+      name: "Puzzle Chamber",
+      intro: `"This room tests everything: distribution, combination, variables on both sides. My team is exhausted but determined." - Dr. Martinez`
+    },
+    '1-30': {
+      name: "Vault Antechamber",
+      intro: `"Almost there. Distribution on BOTH sides of equations. The complexity is staggering. Beautiful." - Dr. Martinez [Her handwriting shows excitement]`
+    },
+    '1-31': {
+      name: "THE VAULT",
+      intro: `"The final door. Every skill required. If I can solve this... the vault will open. Here goes everything." - Dr. Martinez [This is her last equation-focused entry]`
+    },
+    // FRONTIER LEVELS 32-37 (was 3-1 to 3-6)
+    '1-32': {
+      name: "Boundary Markers",
       intro: `[Water damage clears] "...boundary markers use inequalities, not equations. Open circles, closed circles. Directions matter. Must recognize them instantly to survive." - Dr. Martinez`
     },
-    '3-2': {
-      name: "Reverse Recognition (Speed Challenge)",
+    '1-33': {
+      name: "Reverse Recognition",
       intro: `"The markers can be read both ways. Symbol to image, image to symbol. The ancients test our understanding from all angles." - Dr. Martinez`
     },
-    '3-3': {
+    '1-34': {
       name: "Secure Perimeter",
       intro: `"Establishing safe zones requires solving inequalities. The boundary of safety is not a point but a range." - Dr. Martinez`
     },
-    '3-4': {
+    '1-35': {
       name: "Shifting Boundaries",
       intro: `"CRITICAL DISCOVERY: When dividing by negative, the inequality FLIPS. Two team members didn't realize this. They had to turn back. We're down to three." - Dr. Martinez [Her handwriting is shaky]`
     },
-    '3-5': {
+    '1-36': {
       name: "Twisted Paths",
       intro: `"The paths twist with multi-step inequalities. Sign flips are everywhere. One mistake and the path disappears. We move carefully." - Dr. Martinez`
     },
-    '3-6': {
+    '1-37': {
       name: "FINAL FRONTIER",
       intro: `"The vault is ahead. I can see it. But this final challenge... distribution, combination, solving, and sign flips all together. The ultimate test. If you're reading this and I haven't returned, know that I found it. I found—" [The page is torn. The rest is missing. You stand at the same spot she did, five years ago.]`
     }
@@ -152,7 +175,7 @@ export const storyline = {
 };
 
 export const levels = {
-  // MODULE 1 LEVELS
+  // LEVELS 1-4: Integer Operations
   '1-1': {
     id: '1-1',
     module: 1,
@@ -161,12 +184,7 @@ export const levels = {
     skill: "Adding positive and negative integers",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    phaseBadge: 'backpack', // Earned after 1-4
-    exampleProblem: {
-      easy: "-8 + 15 = ?",
-      notEasy: "12.5 + (-7.5) = ?"
-    }
+    badge: null
   },
   '1-2': {
     id: '1-2',
@@ -176,11 +194,7 @@ export const levels = {
     skill: "Subtracting integers (including subtracting negatives)",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "8 - (-5) = ?",
-      notEasy: "15.5 - (-7.25) = ?"
-    }
+    badge: null
   },
   '1-3': {
     id: '1-3',
@@ -190,11 +204,7 @@ export const levels = {
     skill: "Multiplying integers (positive and negative)",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "-6 × 8 = ?",
-      notEasy: "1.5 × (-4) = ?"
-    }
+    badge: null
   },
   '1-4': {
     id: '1-4',
@@ -204,12 +214,10 @@ export const levels = {
     skill: "Dividing integers (positive and negative)",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'backpack',
-    exampleProblem: {
-      easy: "-32 ÷ (-8) = ?",
-      notEasy: "15.6 ÷ (-4) = ?"
-    }
+    badge: '⚡ Operations Master'
   },
+
+  // LEVELS 5-8: Distributive Property
   '1-5': {
     id: '1-5',
     module: 1,
@@ -218,11 +226,7 @@ export const levels = {
     skill: "Basic distribution with positive numbers",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "3(x + 5)",
-      notEasy: "(1/2)(n + 8)"
-    }
+    badge: null
   },
   '1-6': {
     id: '1-6',
@@ -232,11 +236,7 @@ export const levels = {
     skill: "Distribution with subtraction in parentheses",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "4(x - 3)",
-      notEasy: "(2/3)(y - 9)"
-    }
+    badge: null
   },
   '1-7': {
     id: '1-7',
@@ -246,355 +246,319 @@ export const levels = {
     skill: "Negative coefficient outside parentheses",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "-2(x + 5)",
-      notEasy: "-(1/3)(z + 12)"
-    }
+    badge: null
   },
   '1-8': {
     id: '1-8',
     module: 1,
     number: 8,
     name: "Mixed Terrain",
-    skill: "Mixed negatives inside parentheses",
+    skill: "Mixed negatives inside and outside parentheses",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'compass',
-    exampleProblem: {
-      easy: "-4(x - 2)",
-      notEasy: "-(2/5)(n - 10)"
-    }
+    badge: '🧭 Distribution Expert'
   },
+
+  // LEVELS 9-12: Combining Like Terms
   '1-9': {
     id: '1-9',
     module: 1,
     number: 9,
     name: "Sort Supplies",
     skill: "Basic combining like terms",
-    inputMethod: "colorCoding",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "5x + 3x",
-      notEasy: "(1/2)y + (1/4)y"
-    }
+    badge: null
   },
   '1-10': {
     id: '1-10',
     module: 1,
     number: 10,
     name: "Organize Gear",
-    skill: "Combining with subtraction",
-    inputMethod: "colorCoding",
+    skill: "Identifying and ignoring unlike terms",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "8x - 3x",
-      notEasy: "(3/4)m - (1/4)m"
-    }
+    badge: null
   },
   '1-11': {
     id: '1-11',
     module: 1,
     number: 11,
     name: "Complex Packing",
-    skill: "Combining like terms AND constants",
-    inputMethod: "colorCoding",
+    skill: "Multiple like terms to combine",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "4x + 7 - 2x + 3",
-      notEasy: "(1/2)y + 6 + (1/4)y - 2"
-    }
+    badge: null
   },
   '1-12': {
     id: '1-12',
     module: 1,
     number: 12,
     name: "Final Inventory",
-    skill: "Combining with negative coefficients",
-    inputMethod: "colorCoding",
+    skill: "Subtracting like terms (including negatives)",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'campingGear',
-    exampleProblem: {
-      easy: "-3x + 5x - 4 + 2",
-      notEasy: "-(1/3)w + (2/3)w - 5 + 2"
-    }
+    badge: '⛺ Camping Expert'
   },
+
+  // LEVELS 13-15: Simplifying Expressions
   '1-13': {
     id: '1-13',
     module: 1,
     number: 13,
     name: "Pack It Up",
-    skill: "Distribute then combine (single distribution)",
-    inputMethod: "multiStep",
+    skill: "Distribute then combine",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "2(x + 4) + 3x",
-      notEasy: "(1/2)(y + 8) + 3y"
-    }
+    badge: null
   },
   '1-14': {
     id: '1-14',
     module: 1,
     number: 14,
     name: "Double Check",
-    skill: "Two distributions then combine",
-    inputMethod: "multiStep",
+    skill: "Distribute with subtraction then combine",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "3(x + 2) + 2(x - 1)",
-      notEasy: "(1/2)(m + 6) + (1/3)(m - 3)"
-    }
+    badge: null
   },
   '1-15': {
     id: '1-15',
     module: 1,
     number: 15,
     name: "Ready to Trek",
-    skill: "Complex simplification with negatives",
-    inputMethod: "multiStep",
+    skill: "Negative outside, distribute, combine",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'trailMap',
-    moduleBadge: 'baseCampMaster',
-    exampleProblem: {
-      easy: "-2(3x - 4) + 5x - 3",
-      notEasy: "-(1/2)(p - 8) + (3/4)(p + 4)"
-    }
+    badge: null
   },
 
-  // MODULE 2 LEVELS
-  '2-1': {
-    id: '2-1',
-    module: 2,
-    number: 1,
+  // LEVELS 16-20: One-Step & Two-Step Equations (Territory Begins)
+  '1-16': {
+    id: '1-16',
+    module: 1,
+    number: 16,
     name: "River Crossing",
-    skill: "One-step equations (addition/subtraction)",
-    inputMethod: "balanceScale",
+    skill: "One-step equations: x + a = b",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "x + 7 = 15",
-      notEasy: "y + (1/2) = (3/4)"
-    }
+    badge: '🏔️ Base Camp Complete'
   },
-  '2-2': {
-    id: '2-2',
-    module: 2,
-    number: 2,
+  '1-17': {
+    id: '1-17',
+    module: 1,
+    number: 17,
     name: "Mountain Climb",
-    skill: "One-step equations (multiplication/division)",
-    inputMethod: "balanceScale",
+    skill: "One-step equations: ax = b",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "4x = 20",
-      notEasy: "(1/2)y = 8"
-    }
+    badge: null
   },
-  '2-3': {
-    id: '2-3',
-    module: 2,
-    number: 3,
+  '1-18': {
+    id: '1-18',
+    module: 1,
+    number: 18,
     name: "Shadow Valley",
-    skill: "One-step with negatives",
-    inputMethod: "balanceScale",
+    skill: "One-step equations with negatives",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'binoculars',
-    exampleProblem: {
-      easy: "-x = 8",
-      notEasy: "-y = (3/4)"
-    }
+    badge: null
   },
-  '2-4': {
-    id: '2-4',
-    module: 2,
-    number: 4,
+  '1-19': {
+    id: '1-19',
+    module: 1,
+    number: 19,
     name: "Hidden Canyon",
-    skill: "Basic two-step equations",
-    inputMethod: "balanceScale",
+    skill: "Two-step equations: ax + b = c",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "2x + 5 = 13",
-      notEasy: "(1/2)y + 3 = 8"
-    }
+    badge: null
   },
-  '2-5': {
-    id: '2-5',
-    module: 2,
-    number: 5,
+  '1-20': {
+    id: '1-20',
+    module: 1,
+    number: 20,
     name: "Storm Passage",
     skill: "Two-step with negative coefficients",
-    inputMethod: "balanceScale",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "-2x + 9 = 3",
-      notEasy: "-(1/2)p + 6 = 4"
-    }
-  },
-  '2-6': {
-    id: '2-6',
-    module: 2,
-    number: 6,
-    name: "Fraction Falls",
-    skill: "Two-step with fractions",
-    inputMethod: "balanceScale",
-    problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "(1/2)x + 4 = 10",
-      notEasy: "(3/4)y - 6 = 3"
-    }
-  },
-  '2-7': {
-    id: '2-7',
-    module: 2,
-    number: 7,
-    name: "Misty Decimals",
-    skill: "Two-step with decimals",
-    inputMethod: "balanceScale",
-    problemsRequired: 6,
-    badge: 'climbingRope',
-    exampleProblem: {
-      easy: "1.5x + 3 = 9",
-      notEasy: "3.5y + 2.5 = 12"
-    }
-  },
-  '2-8': {
-    id: '2-8',
-    module: 2,
-    number: 8,
-    name: "Ancient Ruins",
-    skill: "Distribution needed before solving",
-    inputMethod: "multiStep",
-    problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "3(x + 4) = 21",
-      notEasy: "(1/2)(y + 8) = 10"
-    }
-  },
-  '2-9': {
-    id: '2-9',
-    module: 2,
-    number: 9,
-    name: "Complex Caverns",
-    skill: "Distribute AND combine before solving",
-    inputMethod: "multiStep",
-    problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "2(x + 3) + 4x = 24",
-      notEasy: "(1/2)(m + 6) + 2m = 13"
-    }
-  },
-  '2-10': {
-    id: '2-10',
-    module: 2,
-    number: 10,
-    name: "The Divide",
-    skill: "Variables on both sides",
-    inputMethod: "balanceScale",
-    problemsRequired: 6,
-    badge: 'pickaxe',
-    moduleBadge: 'territoryMapper',
-    exampleProblem: {
-      easy: "5x + 4 = 2x + 13",
-      notEasy: "(1/2)y + 6 = (1/4)y + 9"
-    }
+    badge: '🚣 Territory Navigator'
   },
 
-  // MODULE 3 LEVELS
-  '3-1': {
-    id: '3-1',
-    module: 3,
-    number: 1,
+  // LEVELS 21-25: Advanced Two-Step & Multi-Step
+  '1-21': {
+    id: '1-21',
+    module: 1,
+    number: 21,
+    name: "Fraction Falls",
+    skill: "Two-step with fractions",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-22': {
+    id: '1-22',
+    module: 1,
+    number: 22,
+    name: "Misty Decimals",
+    skill: "Two-step with decimals",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-23': {
+    id: '1-23',
+    module: 1,
+    number: 23,
+    name: "Ancient Ruins",
+    skill: "Distribution in equations",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-24': {
+    id: '1-24',
+    module: 1,
+    number: 24,
+    name: "Complex Caverns",
+    skill: "Distribute, combine, then solve",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: '🪂 Cave Explorer'
+  },
+  '1-25': {
+    id: '1-25',
+    module: 1,
+    number: 25,
+    name: "The Divide",
+    skill: "Variables on both sides",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+
+  // LEVELS 26-31: THE VAULT (Advanced Multi-Step)
+  '1-26': {
+    id: '1-26',
+    module: 1,
+    number: 26,
+    name: "Outer Vault Approach",
+    skill: "Constants and variables both sides",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-27': {
+    id: '1-27',
+    module: 1,
+    number: 27,
+    name: "Inner Chamber",
+    skill: "Distribution with variables both sides",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-28': {
+    id: '1-28',
+    module: 1,
+    number: 28,
+    name: "Combination Lock",
+    skill: "Combine like terms then solve",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: '🗺️ Vault Navigator'
+  },
+  '1-29': {
+    id: '1-29',
+    module: 1,
+    number: 29,
+    name: "Puzzle Chamber",
+    skill: "All skills: distribute, combine, solve",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-30': {
+    id: '1-30',
+    module: 1,
+    number: 30,
+    name: "Vault Antechamber",
+    skill: "Distribute both sides, then solve",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: null
+  },
+  '1-31': {
+    id: '1-31',
+    module: 1,
+    number: 31,
+    name: "THE VAULT",
+    skill: "Ultimate equation challenge",
+    inputMethod: "clickToSelect",
+    problemsRequired: 6,
+    badge: '🏆 Vault Master'
+  },
+
+  // LEVELS 32-37: THE FRONTIER (Inequalities)
+  '1-32': {
+    id: '1-32',
+    module: 1,
+    number: 32,
     name: "Boundary Markers",
-    skill: "Match inequality to number line (SPEED ROUND)",
+    skill: "Match inequality to number line",
     inputMethod: "clickToSelect",
-    problemsRequired: 15, // Speed round has more problems
-    badge: null,
-    exampleProblem: {
-      easy: "x ≥ 3 → select correct number line",
-      notEasy: "x ≥ 3 → select correct number line" // Same for both
-    }
+    problemsRequired: 6,
+    badge: null
   },
-  '3-2': {
-    id: '3-2',
-    module: 3,
-    number: 2,
+  '1-33': {
+    id: '1-33',
+    module: 1,
+    number: 33,
     name: "Reverse Recognition",
-    skill: "Match number line to inequality (SPEED ROUND)",
+    skill: "Match number line to inequality",
     inputMethod: "clickToSelect",
-    problemsRequired: 15, // Speed round
-    badge: null,
-    exampleProblem: {
-      easy: "Number line → select inequality",
-      notEasy: "Number line → select inequality" // Same for both
-    }
+    problemsRequired: 6,
+    badge: null
   },
-  '3-3': {
-    id: '3-3',
-    module: 3,
-    number: 3,
+  '1-34': {
+    id: '1-34',
+    module: 1,
+    number: 34,
     name: "Secure Perimeter",
-    skill: "Two-step inequalities (no sign flip)",
-    inputMethod: "balanceScalePlusNumberLine",
+    skill: "Two-step inequalities (no flip)",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'borderFlag',
-    exampleProblem: {
-      easy: "2x + 3 < 11",
-      notEasy: "(1/2)y + 5 > 9"
-    }
+    badge: null
   },
-  '3-4': {
-    id: '3-4',
-    module: 3,
-    number: 4,
+  '1-35': {
+    id: '1-35',
+    module: 1,
+    number: 35,
     name: "Shifting Boundaries",
-    skill: "Inequalities with sign flip (dividing by negative)",
-    inputMethod: "balanceScalePlusNumberLine",
+    skill: "Inequalities with sign flip",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "-2x < 8",
-      notEasy: "-(1/2)y > 4"
-    }
+    badge: null
   },
-  '3-5': {
-    id: '3-5',
-    module: 3,
-    number: 5,
+  '1-36': {
+    id: '1-36',
+    module: 1,
+    number: 36,
     name: "Twisted Paths",
     skill: "Multi-step with sign flip",
-    inputMethod: "balanceScalePlusNumberLine",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: null,
-    exampleProblem: {
-      easy: "-2x + 5 < 13",
-      notEasy: "-(1/2)m + 6 > 2"
-    }
+    badge: null
   },
-  '3-6': {
-    id: '3-6',
-    module: 3,
-    number: 6,
+  '1-37': {
+    id: '1-37',
+    module: 1,
+    number: 37,
     name: "FINAL FRONTIER",
-    skill: "Complex inequalities (distribution, combining, sign flip)",
-    inputMethod: "multiStep",
+    skill: "Complex inequalities (all skills + flip)",
+    inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: 'telescope',
-    moduleBadge: 'frontierExplorer',
-    finalModule: true,
-    exampleProblem: {
-      easy: "-2(x - 3) + 4 < 16",
-      notEasy: "-(1/2)(p - 8) + (3/4)p < 10"
-    }
+    badge: '🌟 Frontier Explorer'
   }
 };
 
