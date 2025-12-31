@@ -1,12 +1,12 @@
-// LevelPlayer.jsx - COMPLETE FIX
-// Location: src/algebra/components/LevelPlayer.jsx
+// LevelPlayer.jsx - FIXED: Story requires Continue button
+// Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
-import ProblemDisplay from './ProblemDisplay';
-import ClickToSelect from './InputMethods/ClickToSelect';
-import FeedbackModal from './FeedbackModal';
-import SuccessOverlay from './SuccessOverlay';
-import ProgressTracker from './ProgressTracker';
+import ProblemDisplay from '../ProblemDisplay';
+import ClickToSelect from '../InputMethods/ClickToSelect';
+import FeedbackModal from '../FeedbackModal';
+import SuccessOverlay from '../SuccessOverlay';
+import ProgressTracker from '../ProgressTracker';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
 import { storyline } from '../../data/levelData';
@@ -28,19 +28,16 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
-  const [showStoryIntro, setShowStoryIntro] = useState(true);
+  const [showStoryIntro, setShowStoryIntro] = useState(true); // CHANGED: Start true
 
   const level = levels[levelId];
   const levelStory = storyline.levels[levelId];
 
   useEffect(() => {
-    setShowStoryIntro(true);
+    setShowStoryIntro(true); // CHANGED: Show story on level change
     setCorrectStreak(0);
     setLevelComplete(false);
-    setTimeout(() => {
-      setShowStoryIntro(false);
-      generateNewProblem();
-    }, 3000); // Show story for 3 seconds
+    setCurrentProblem(null); // Don't generate until story dismissed
   }, [levelId]);
 
   useEffect(() => {
@@ -48,6 +45,12 @@ const LevelPlayer = ({
       onLevelChange(levelId);
     }
   }, [levelId, onLevelChange]);
+
+  // CHANGED: User must click to continue
+  const handleContinueFromStory = () => {
+    setShowStoryIntro(false);
+    generateNewProblem();
+  };
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
@@ -118,7 +121,6 @@ const LevelPlayer = ({
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
     
-    // Get next level
     const currentNum = parseInt(levelId.split('-')[1]);
     if (currentNum < 37) {
       const nextLevelId = `1-${currentNum + 1}`;
@@ -130,13 +132,16 @@ const LevelPlayer = ({
     }
   };
 
-  // Story intro screen
+  // CHANGED: Story intro requires button click
   if (showStoryIntro && levelStory) {
     return (
       <div className="story-intro-screen">
         <div className="story-intro-content">
           <h2>{level.name}</h2>
           <p className="story-intro-text">{levelStory.intro}</p>
+          <button className="btn-continue-story" onClick={handleContinueFromStory}>
+            Continue →
+          </button>
         </div>
       </div>
     );
