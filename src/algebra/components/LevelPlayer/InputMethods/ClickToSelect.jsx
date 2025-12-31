@@ -1,48 +1,35 @@
-import React, { useState, useEffect } from 'react';
+// ClickToSelect.jsx - UPDATED: Click = Instant Submit (No Button)
+// Location: src/algebra/components/LevelPlayer/InputMethods/ClickToSelect.jsx
 
-const ClickToSelect = ({ choices, onSubmit, disabled, selectedAnswer }) => {
-  const [selected, setSelected] = useState(null);
+import React, { useState } from 'react';
+import '../../../styles/algebra.css';
 
-  // Reset selection when choices change (new problem)
-  useEffect(() => {
-    setSelected(null);
-  }, [choices]);
+const ClickToSelect = ({ choices, onSubmit, disabled }) => {
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
 
-  const handleSelect = (choice) => {
+  const handleClick = (choice) => {
     if (disabled) return;
-    setSelected(choice);
-  };
-
-  const handleSubmit = () => {
-    if (selected !== null && !disabled) {
-      onSubmit(selected);
-    }
+    
+    // Instant submit - no button needed!
+    setSelectedAnswer(choice);
+    onSubmit(choice);
   };
 
   return (
-    <div className="click-to-select">
-      <div className="choices-grid">
+    <div className="click-to-select-container">
+      <div className="answer-choices">
         {choices.map((choice, index) => (
           <button
             key={index}
-            className={`choice-button ${selected === choice ? 'selected' : ''} ${
-              disabled && selectedAnswer === choice ? 'disabled-selected' : ''
-            }`}
-            onClick={() => handleSelect(choice)}
+            className={`answer-choice ${selectedAnswer === choice ? 'selected' : ''}`}
+            onClick={() => handleClick(choice)}
             disabled={disabled}
           >
             {choice}
           </button>
         ))}
       </div>
-      
-      <button 
-        className="btn-submit-answer"
-        onClick={handleSubmit}
-        disabled={selected === null || disabled}
-      >
-        Submit Answer
-      </button>
+      {/* NO SUBMIT BUTTON - clicking = submitting! */}
     </div>
   );
 };
