@@ -1,4 +1,4 @@
-// ModulePlayer.jsx - UPDATED: Practice Mode shows ALL levels (no completion required)
+// ModulePlayer.jsx - FIXED: Show ALL 37 levels + Continue to Play Mode
 // Location: src/algebra/components/ModulePlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -14,7 +14,7 @@ const ModulePlayer = ({
   setStats,
   onLevelComplete,
   onReturnToMenu,
-  onAdvanceToNextLevel
+  onSwitchToPlayMode  // NEW: Switch from practice to play
 }) => {
   const [selectedLevel, setSelectedLevel] = useState(null);
 
@@ -28,15 +28,18 @@ const ModulePlayer = ({
   }, [playMode, currentModule, progress.completedLevels]);
 
   const getNextUncompletedLevel = () => {
-    const moduleLevels = Object.keys(levels).filter(id => 
-      id.startsWith(`${currentModule}-`)
-    );
+    // Get ALL levels (1-37)
+    const allLevels = Object.keys(levels).sort((a, b) => {
+      const aNum = parseInt(a.split('-')[1]);
+      const bNum = parseInt(b.split('-')[1]);
+      return aNum - bNum;
+    });
     
-    const uncompleted = moduleLevels.find(id => 
+    const uncompleted = allLevels.find(id => 
       !progress.completedLevels.includes(id)
     );
     
-    return uncompleted || moduleLevels[0];
+    return uncompleted || allLevels[0];
   };
 
   const handleLevelCompleteInternal = (levelId, badge) => {
@@ -52,15 +55,12 @@ const ModulePlayer = ({
         onReturnToMenu();
       }
     } else {
-      // In practice mode, return to level selection
       setSelectedLevel(null);
     }
   };
 
   const getNextLevelAfter = (currentLevelId) => {
-    const allLevels = Object.keys(levels).filter(id => 
-      id.startsWith(`${currentModule}-`)
-    ).sort((a, b) => {
+    const allLevels = Object.keys(levels).sort((a, b) => {
       const aNum = parseInt(a.split('-')[1]);
       const bNum = parseInt(b.split('-')[1]);
       return aNum - bNum;
@@ -71,14 +71,12 @@ const ModulePlayer = ({
   };
 
   if (playMode === 'practice') {
-    // PRACTICE MODE: Show ALL levels (no completion requirement!)
-    const allLevelsInModule = Object.keys(levels)
-      .filter(id => id.startsWith(`${currentModule}-`))
-      .sort((a, b) => {
-        const aNum = parseInt(a.split('-')[1]);
-        const bNum = parseInt(b.split('-')[1]);
-        return aNum - bNum;
-      });
+    // PRACTICE MODE: Show ALL 37 levels
+    const allLevels = Object.keys(levels).sort((a, b) => {
+      const aNum = parseInt(a.split('-')[1]);
+      const bNum = parseInt(b.split('-')[1]);
+      return aNum - bNum;
+    });
 
     if (selectedLevel) {
       return (
@@ -100,10 +98,10 @@ const ModulePlayer = ({
       <div className="module-player">
         <div className="practice-selector">
           <h2>Practice Mode - Choose Any Level</h2>
-          <p>All levels available for practice (cheat code activated! 🎮)</p>
+          <p>All 37 levels available for practice (cheat code activated! 🎮)</p>
           
           <div className="practice-level-grid">
-            {allLevelsInModule.map(levelId => {
+            {allLevels.map(levelId => {
               const level = levels[levelId];
               const isCompleted = progress.completedLevels.includes(levelId);
               
@@ -125,9 +123,16 @@ const ModulePlayer = ({
             })}
           </div>
           
-          <button className="btn-secondary" onClick={onReturnToMenu}>
-            Back to Menu
-          </button>
+          <div className="practice-mode-actions">
+            {onSwitchToPlayMode && (
+              <button className="btn-primary btn-large" onClick={onSwitchToPlayMode}>
+                Continue Expedition →
+              </button>
+            )}
+            <button className="btn-secondary" onClick={onReturnToMenu}>
+              Back to Menu
+            </button>
+          </div>
         </div>
       </div>
     );
