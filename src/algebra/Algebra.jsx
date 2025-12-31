@@ -1,4 +1,4 @@
-// Algebra.jsx - COMPLETE FIX
+// Algebra.jsx - COMPLETE FIX (Stats/Map as overlays to prevent remounting)
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +15,9 @@ const Algebra = () => {
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
   const [currentModule, setCurrentModule] = useState(1);
-  const [currentLevel, setCurrentLevel] = useState(null); // Changed to null initially
+  const [currentLevel, setCurrentLevel] = useState(null);
+  const [showStats, setShowStats] = useState(false);  // CHANGED: Separate state
+  const [showMap, setShowMap] = useState(false);      // CHANGED: Separate state
   const [progress, setProgress] = useState({
     completedLevels: [],
     badges: [],
@@ -58,7 +60,6 @@ const Algebra = () => {
   const handleStartPlay = () => {
     setPlayMode('play');
     setGameState('playing');
-    // Set to first incomplete level or 1-1
     const firstIncomplete = getFirstIncompleteLevel();
     setCurrentLevel(firstIncomplete);
   };
@@ -66,15 +67,16 @@ const Algebra = () => {
   const handleStartPractice = () => {
     setPlayMode('practice');
     setGameState('playing');
-    setCurrentLevel(null); // No specific level in practice mode
+    setCurrentLevel(null);
   };
 
+  // CHANGED: Show overlays instead of changing gameState
   const handleViewMap = () => {
-    setGameState('map');
+    setShowMap(true);
   };
 
   const handleViewStats = () => {
-    setGameState('stats');
+    setShowStats(true);
   };
 
   const handleReturnToMenu = () => {
@@ -96,14 +98,13 @@ const Algebra = () => {
   };
 
   const getFirstIncompleteLevel = () => {
-    // All levels are 1-1 through 1-37
     for (let i = 1; i <= 37; i++) {
       const levelId = `1-${i}`;
       if (!progress.completedLevels.includes(levelId)) {
         return levelId;
       }
     }
-    return '1-1'; // Default to first level
+    return '1-1';
   };
 
   const handleLevelComplete = (levelId, badgeEarned) => {
@@ -114,8 +115,9 @@ const Algebra = () => {
     }));
   };
 
-  // Update current level when playing
+  // ADDED: Update current level when playing
   const handleLevelChange = (newLevelId) => {
+    console.log('Level changed to:', newLevelId);
     setCurrentLevel(newLevelId);
   };
 
@@ -155,26 +157,27 @@ const Algebra = () => {
           stats={stats}
           setStats={setStats}
           onLevelComplete={handleLevelComplete}
-          onLevelChange={handleLevelChange}
+          onLevelChange={handleLevelChange}  // PASS IT DOWN
           onReturnToMenu={handleReturnToMenu}
           onSwitchToPlayMode={handleSwitchToPlayMode}
         />
       )}
 
-      {gameState === 'map' && (
+      {/* CHANGED: Render as overlays, not route changes */}
+      {showMap && (
         <MapDisplay 
           progress={progress}
           completedLevels={progress.completedLevels}
           currentLevel={currentLevel}
-          onClose={handleReturnToMenu}
+          onClose={() => setShowMap(false)}
         />
       )}
 
-      {gameState === 'stats' && (
+      {showStats && (
         <StatsPanel 
           stats={stats}
           progress={progress}
-          onClose={() => setGameState(playMode ? 'playing' : 'menu')}
+          onClose={() => setShowStats(false)}
         />
       )}
     </div>
