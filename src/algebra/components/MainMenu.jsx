@@ -1,4 +1,4 @@
-// MainMenu.jsx - FIXED: Entire card clickable
+// MainMenu.jsx - FIXED: "Game Mode" + better styling
 // Location: src/algebra/components/MainMenu.jsx
 
 import React from 'react';
@@ -35,10 +35,10 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
         </div>
 
         <div className="menu-options">
-          {/* FIXED: Entire card is clickable */}
+          {/* CHANGED: "Game Mode" instead of "Play Mode" */}
           <div className="menu-card play-card" onClick={onStartPlay}>
             <div className="card-icon">📍</div>
-            <h3>Play Mode</h3>
+            <h3>Game Mode</h3>
             <div className="mode-badge sequential">Sequential</div>
             <p>
               Follow Dr. Martinez's path. Master each challenge to unlock the next. 
@@ -49,7 +49,6 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
             </button>
           </div>
 
-          {/* FIXED: Entire card is clickable */}
           <div className="menu-card practice-card" onClick={onStartPractice}>
             <div className="card-icon">🎯</div>
             <h3>Practice Mode</h3>
@@ -64,12 +63,13 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
           </div>
         </div>
 
+        {/* FIXED: Badges show actual emoji, same as header */}
         {progress.badges && progress.badges.length > 0 && (
           <div className="badges-preview">
             <h3>Your Badges ({progress.badges.length})</h3>
             <div className="badges-list">
               {progress.badges.map((badge, index) => (
-                <div key={index} className="badge-item">
+                <div key={index} className="badge-item" title="Badge earned!">
                   {badge}
                 </div>
               ))}
