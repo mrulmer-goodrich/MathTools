@@ -1,4 +1,4 @@
-// FeedbackModal.jsx - UPDATED with formatting + better spacing
+// FeedbackModal.jsx - UPDATED: Ensures problem always shows
 // Location: src/algebra/components/LevelPlayer/FeedbackModal.jsx
 
 import React from 'react';
@@ -22,7 +22,12 @@ const StackedEquation = ({ steps }) => {
   );
 };
 
-const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
+const FeedbackModal = ({ 
+  isCorrect, 
+  explanation, 
+  onContinue,
+  problem  // ADDED: Accept problem prop as fallback
+}) => {
   if (!explanation) return null;
 
   return (
@@ -38,11 +43,17 @@ const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
 
         {!isCorrect && (
           <div className="feedback-body">
-            {explanation.originalProblem && (
+            {/* IMPROVED: Show problem from explanation OR from problem prop */}
+            {(explanation.originalProblem || problem?.question || problem?.text) && (
               <div className="original-problem">
                 <div className="original-problem-label">Original Problem:</div>
                 <div className="original-problem-text">
-                  {formatMultiplication(explanation.originalProblem)}
+                  {formatMultiplication(
+                    explanation.originalProblem || 
+                    problem?.question || 
+                    problem?.text || 
+                    ''
+                  )}
                 </div>
               </div>
             )}
@@ -53,7 +64,7 @@ const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
 
             {explanation.rule && (
               <div className="rule-box">
-                <div className="rule-label">📐 KEY RULE:</div>
+                <div className="rule-label">📏 KEY RULE:</div>
                 <div className="rule-text">{explanation.rule}</div>
               </div>
             )}
