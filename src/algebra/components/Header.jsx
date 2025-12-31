@@ -1,8 +1,7 @@
-// Header.jsx - COMPLETE FIX
+// Header.jsx - FIXED: Badge collection always visible
 // Location: src/algebra/components/Header.jsx
 
 import React from 'react';
-import BadgeCollection from './BadgeCollection';
 import '../styles/algebra.css';
 
 const Header = ({ 
@@ -33,12 +32,19 @@ const Header = ({
       </div>
       
       <div className="header-right">
-        {/* Badge Collection - Always Visible */}
-        <BadgeCollection 
-          completedLevels={[]} 
-          isCompact={true}
-          badges={badges || []}
-        />
+        {/* Badge Collection - ALWAYS SHOW */}
+        {badges && badges.length > 0 && (
+          <div className="badge-collection-compact">
+            <span style={{fontSize: '12px', color: '#666', marginRight: '4px'}}>
+              Badges:
+            </span>
+            {badges.map((badge, index) => (
+              <div key={index} className="badge-mini" title={badge}>
+                🏆
+              </div>
+            ))}
+          </div>
+        )}
         
         {/* Stats Button */}
         {onViewStats && (
