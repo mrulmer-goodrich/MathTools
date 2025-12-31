@@ -382,25 +382,7 @@ export default function App() {
 
       {/* Algebra Expedition gets full screen (manages its own navigation) */}
       {route === 'algebra' && (
-        <>
-          {/* Add a small back button in top-left */}
-          <button 
-            onClick={goHome}
-            className="button secondary"
-            style={{
-              position: 'fixed',
-              top: '1rem',
-              left: '1rem',
-              zIndex: 10000,
-              padding: '0.75rem 1.5rem',
-              fontSize: '1.1rem'
-            }}
-          >
-            ← Back to Home
-          </button>
-          
-          <AlgebraExpedition />
-        </>
+        <AlgebraExpedition />
       )}
 
       {/* Multiplication Dojo gets full screen (no header, manages its own navigation) */}
