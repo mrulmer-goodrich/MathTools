@@ -1,8 +1,8 @@
-// StatsPanel.jsx - COMPLETE FIX (with close button)
+// StatsPanel.jsx - FIXED CSS IMPORT
 // Location: src/algebra/components/StatsPanel.jsx
 
 import React from 'react';
-import '../styles/algebra.css';
+import '../styles/stats-panel.css';
 
 const StatsPanel = ({ stats, progress, onClose }) => {
   const sessionTime = Math.floor((Date.now() - stats.sessionStart) / 1000 / 60); // minutes
