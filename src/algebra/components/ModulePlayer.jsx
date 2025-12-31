@@ -1,4 +1,4 @@
-// ModulePlayer.jsx - FIXED: Show ALL 37 levels + Continue to Play Mode
+// ModulePlayer.jsx - FIXED: Passes onLevelChange to LevelPlayer
 // Location: src/algebra/components/ModulePlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -14,7 +14,8 @@ const ModulePlayer = ({
   setStats,
   onLevelComplete,
   onReturnToMenu,
-  onSwitchToPlayMode  // NEW: Switch from practice to play
+  onSwitchToPlayMode,
+  onLevelChange  // ADDED: Pass this down to LevelPlayer
 }) => {
   const [selectedLevel, setSelectedLevel] = useState(null);
 
@@ -22,6 +23,10 @@ const ModulePlayer = ({
     if (playMode === 'play') {
       const nextLevel = getNextUncompletedLevel();
       setSelectedLevel(nextLevel);
+      // Update parent when level changes
+      if (onLevelChange && nextLevel) {
+        onLevelChange(nextLevel);
+      }
     } else {
       setSelectedLevel(null);
     }
@@ -50,6 +55,10 @@ const ModulePlayer = ({
       if (nextLevel) {
         setTimeout(() => {
           setSelectedLevel(nextLevel);
+          // Update parent when level advances
+          if (onLevelChange) {
+            onLevelChange(nextLevel);
+          }
         }, 500);
       } else {
         onReturnToMenu();
@@ -89,6 +98,7 @@ const ModulePlayer = ({
             setStats={setStats}
             onLevelComplete={handleLevelCompleteInternal}
             onReturnToMenu={() => setSelectedLevel(null)}
+            onLevelChange={onLevelChange}  // PASS IT DOWN
           />
         </div>
       );
@@ -109,7 +119,13 @@ const ModulePlayer = ({
                 <button
                   key={levelId}
                   className={`practice-level-card ${isCompleted ? 'completed' : 'not-completed'}`}
-                  onClick={() => setSelectedLevel(levelId)}
+                  onClick={() => {
+                    setSelectedLevel(levelId);
+                    // Update parent when selecting practice level
+                    if (onLevelChange) {
+                      onLevelChange(levelId);
+                    }
+                  }}
                 >
                   <div className="level-number">Level {levelId.split('-')[1]}</div>
                   <div className="level-name">{level.name}</div>
@@ -157,6 +173,7 @@ const ModulePlayer = ({
         setStats={setStats}
         onLevelComplete={handleLevelCompleteInternal}
         onReturnToMenu={onReturnToMenu}
+        onLevelChange={onLevelChange}  // PASS IT DOWN
       />
     </div>
   );
