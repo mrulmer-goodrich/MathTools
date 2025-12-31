@@ -1918,19 +1918,19 @@ body {
 }
 
 
-/* ============================================
-   APPEND TO algebra.css - Intro Screen Fix (No Scrolling)
+//* ============================================
+   REPLACE INTRO_SCREEN_FIX.css - ABSOLUTE NO SCROLLING
    ============================================ */
 
-/* Game Intro - Compact, No Scrolling */
 .game-intro-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
+  height: 100vh;
+  padding: 16px;
   box-sizing: border-box;
+  overflow: hidden; /* NO SCROLLING! */
 }
 
 .journal-container {
@@ -1939,77 +1939,88 @@ body {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   max-width: 700px;
   width: 100%;
-  max-height: calc(100vh - 180px); /* Leave room for button */
+  max-height: calc(100vh - 120px); /* Smaller to fit with button */
   overflow-y: auto;
-  padding: 30px;
-  margin-bottom: 20px;
+  padding: 24px 28px; /* Reduced padding */
+  margin-bottom: 16px;
+  flex-shrink: 1;
 }
 
 .journal-header {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .journal-header h2 {
   color: var(--color-primary);
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: 22px; /* Smaller */
+  margin: 0 0 6px 0;
 }
 
 .journal-subtitle {
   font-style: italic;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
+  margin: 0;
 }
 
 .journal-entry {
-  line-height: 1.6;
+  line-height: 1.5; /* Tighter */
   color: var(--color-text-primary);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  font-size: 15px; /* Smaller */
 }
 
 .journal-entry p {
-  margin-bottom: 12px;
+  margin: 0 0 10px 0;
 }
 
 .journal-signature {
   text-align: right;
   font-style: italic;
   color: var(--color-text-secondary);
-  margin-top: 16px;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
 .journal-divider {
   border: 0;
   border-top: 2px dashed #ccc;
-  margin: 20px 0;
+  margin: 16px 0;
 }
 
 .present-day-section {
   background: #f8f9fa;
-  padding: 20px;
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid var(--color-primary);
 }
 
 .present-day-section h3 {
   color: var(--color-primary);
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 14px;
+  margin: 0 0 10px 0;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.present-day-section p {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .begin-button {
   background: var(--color-primary);
   color: white;
   border: none;
-  padding: 16px 48px;
-  font-size: 18px;
+  padding: 14px 40px;
+  font-size: 17px;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  flex-shrink: 0;
 }
 
 .begin-button:hover {
@@ -2018,48 +2029,97 @@ body {
   box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
+/* Ensure it fits on small screens */
 @media (max-height: 700px) {
   .journal-container {
-    padding: 20px;
+    padding: 18px 22px;
     font-size: 14px;
+    max-height: calc(100vh - 100px);
   }
   
   .journal-header h2 {
     font-size: 20px;
   }
+  
+  .journal-entry {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .present-day-section {
+    padding: 14px;
+  }
+  
+  .begin-button {
+    padding: 12px 32px;
+    font-size: 16px;
+  }
+}
+
+@media (max-height: 600px) {
+  .journal-container {
+    padding: 16px;
+    font-size: 13px;
+    max-height: calc(100vh - 90px);
+  }
+  
+  .journal-header h2 {
+    font-size: 18px;
+  }
 }
 
 
 /* ============================================
-   REPLACE PREVIOUS UI_SIZING_FIXES.css
-   Much more compact containers, fixed button placement
+   REPLACE COMPACT_LEVEL_PLAYER.css - PROPER LAYOUT
+   All buttons visible, proper padding
    ============================================ */
 
-/* Level Player Container */
 .level-player {
   max-width: 900px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 20px; /* Add horizontal padding */
+  min-height: calc(100vh - 80px);
 }
 
-/* Level Header - Compact, Fixed Layout */
+/* Level Header - FIXED LAYOUT */
 .level-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
-  padding: 8px 0;
+  padding: 12px 0;
 }
 
 .level-header h2 {
+  flex: 1;
   margin: 0;
   font-size: 22px;
   text-align: center;
   color: var(--color-text-primary);
 }
 
-/* Back Buttons - FIXED: Exit Game separate, not overlapping */
+/* Back to Menu - LEFT SIDE, ALWAYS VISIBLE */
+.back-to-menu-button {
+  background: transparent;
+  border: 2px solid var(--color-secondary);
+  color: var(--color-secondary);
+  font-size: 13px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.back-to-menu-button:hover {
+  background: var(--color-secondary);
+  color: white;
+}
+
+/* Exit Game - TOP LEFT CORNER (if using Header component) */
 .btn-exit-game {
   background: transparent;
   border: 2px solid #e74c3c;
@@ -2078,37 +2138,19 @@ body {
   color: white;
 }
 
-.back-to-menu-button {
-  background: transparent;
-  border: 2px solid var(--color-secondary);
-  color: var(--color-secondary);
-  font-size: 13px;
-  padding: 6px 14px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.back-to-menu-button:hover {
-  background: var(--color-secondary);
-  color: white;
-}
-
-/* Problem Display - MUCH MORE COMPACT */
+/* Problem Display - COMPACT */
 .problem-display {
   background: white;
   border-radius: 10px;
-  padding: 16px 20px;  /* Reduced significantly */
-  margin-bottom: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .problem-display h3 {
   font-size: 14px;
   color: var(--color-text-secondary);
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   font-weight: 500;
 }
 
@@ -2122,17 +2164,17 @@ body {
   margin: 0;
 }
 
-/* Answer Choices - Keep good sizing */
+/* Answer Choices */
 .answer-choices {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 14px;
   max-width: 700px;
   margin: 0 auto;
 }
 
 .answer-choice {
-  padding: 20px 24px;
+  padding: 22px 26px;
   font-size: 24px;
   font-weight: 600;
   font-family: 'Courier New', monospace;
@@ -2142,7 +2184,7 @@ body {
   background: white;
   cursor: pointer;
   transition: all 0.2s;
-  min-height: 70px;
+  min-height: 75px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2163,12 +2205,13 @@ body {
   transform: scale(1.02);
 }
 
-/* Progress Tracker - Compact */
+/* Progress Tracker - RIGHT SIDE */
 .progress-tracker {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .progress-label {
@@ -2176,16 +2219,17 @@ body {
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .progress-circles {
   display: flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .progress-circle {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #e0e0e0;
   transition: background 0.3s;
@@ -2195,15 +2239,105 @@ body {
   background: var(--color-success);
 }
 
+/* Level Complete Screen */
+.level-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+  padding: 20px;
+}
+
+.completion-container {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.completion-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.completion-container h2 {
+  color: var(--color-success);
+  font-size: 32px;
+  margin: 0 0 8px 0;
+}
+
+.completion-container h3 {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  margin: 0 0 24px 0;
+}
+
+.badge-earned {
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 24px 0;
+  border: 2px solid #f39c12;
+}
+
+.badge-display {
+  font-size: 48px;
+  margin-top: 8px;
+}
+
+.completion-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.completion-stats > div {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.completion-stats strong {
+  font-size: 32px;
+  color: var(--color-primary);
+  display: block;
+}
+
+.btn-continue-expedition {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
 /* Mobile */
 @media (max-width: 768px) {
+  .level-player {
+    padding: 12px 16px;
+  }
+  
   .problem-text {
     font-size: 28px;
   }
   
   .answer-choice {
     font-size: 20px;
-    padding: 16px 20px;
+    padding: 18px 22px;
   }
   
   .level-header h2 {
@@ -2220,6 +2354,7 @@ body {
     font-size: 24px;
   }
 }
+
 
 
 /* ============================================
