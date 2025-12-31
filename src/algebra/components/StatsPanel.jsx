@@ -1,118 +1,100 @@
+// StatsPanel.jsx - COMPLETE FIX (with close button)
+// Location: src/algebra/components/StatsPanel.jsx
+
 import React from 'react';
-import '../styles/stats-panel.css';
+import '../styles/algebra.css';
 
-const StatsPanel = ({ isOpen, onClose, stats }) => {
-  if (!isOpen) return null;
-
-  const {
-    sessionStart,
-    totalAttempts,
-    totalCorrect,
-    currentStreak,
-    skillStats,
-    moduleProgress,
-    practiceStats
-  } = stats;
-
-  const sessionDuration = sessionStart ? 
-    Math.floor((Date.now() - new Date(sessionStart)) / 1000 / 60) : 0;
-  
-  const overallAccuracy = totalAttempts > 0 ? 
-    Math.round((totalCorrect / totalAttempts) * 100) : 0;
+const StatsPanel = ({ stats, progress, onClose }) => {
+  const sessionTime = Math.floor((Date.now() - stats.sessionStart) / 1000 / 60); // minutes
+  const accuracy = stats.problemsAttempted > 0 
+    ? Math.round((stats.problemsCorrect / stats.problemsAttempted) * 100) 
+    : 0;
 
   return (
-    <div className="stats-panel-overlay" onClick={onClose}>
-      <div className="stats-panel-content" onClick={(e) => e.stopPropagation()}>
+    <div className="stats-panel-overlay">
+      <div className="stats-panel-container">
         <div className="stats-header">
-          <h2>📊 Session Statistics</h2>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <h2>📊 Your Statistics</h2>
+          <button className="btn-close-panel" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
-        <div className="stats-grid">
-          {/* Current Session */}
-          <div className="stats-section">
-            <h3>Current Session</h3>
-            <div className="stat-row">
-              <span>Time:</span>
-              <strong>{sessionDuration} minutes</strong>
+        <div className="stats-content">
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">🎯</div>
+              <div className="stat-value">{stats.problemsAttempted}</div>
+              <div className="stat-label">Problems Attempted</div>
             </div>
-            <div className="stat-row">
-              <span>Attempted:</span>
-              <strong>{totalAttempts}</strong>
+
+            <div className="stat-card">
+              <div className="stat-icon">✅</div>
+              <div className="stat-value">{stats.problemsCorrect}</div>
+              <div className="stat-label">Problems Correct</div>
             </div>
-            <div className="stat-row">
-              <span>Correct:</span>
-              <strong>{totalCorrect}</strong>
+
+            <div className="stat-card">
+              <div className="stat-icon">📈</div>
+              <div className="stat-value">{accuracy}%</div>
+              <div className="stat-label">Accuracy</div>
             </div>
-            <div className="stat-row">
-              <span>Accuracy:</span>
-              <strong>{overallAccuracy}%</strong>
+
+            <div className="stat-card">
+              <div className="stat-icon">🔥</div>
+              <div className="stat-value">{stats.currentStreak}</div>
+              <div className="stat-label">Current Streak</div>
             </div>
-            <div className="stat-row">
-              <span>Current Streak:</span>
-              <strong>🔥 {currentStreak}</strong>
+
+            <div className="stat-card">
+              <div className="stat-icon">⏱️</div>
+              <div className="stat-value">{sessionTime}</div>
+              <div className="stat-label">Minutes Played</div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">🏆</div>
+              <div className="stat-value">{progress.badges.length}</div>
+              <div className="stat-label">Badges Earned</div>
             </div>
           </div>
 
-          {/* Module Progress */}
-          <div className="stats-section">
-            <h3>Module Progress</h3>
-            {Object.entries(moduleProgress || {}).map(([module, data]) => (
-              <div key={module} className="module-stat">
-                <div className="module-name">{module}</div>
-                <div className="module-bar">
-                  <div 
-                    className="module-bar-fill"
-                    style={{ width: `${data.percentage}%` }}
-                  ></div>
-                </div>
-                <div className="module-text">
-                  {data.completed} / {data.total} levels ({data.percentage}%)
-                </div>
+          <div className="progress-section">
+            <h3>Progress Overview</h3>
+            <div className="progress-details">
+              <div className="progress-item">
+                <span className="progress-label">Levels Completed:</span>
+                <span className="progress-value">{progress.completedLevels.length} / 37</span>
               </div>
-            ))}
-          </div>
-
-          {/* Skill Mastery */}
-          <div className="stats-section">
-            <h3>Skill Mastery (This Session)</h3>
-            {Object.entries(skillStats || {}).map(([skill, data]) => (
-              <div key={skill} className="skill-stat">
-                <span className="skill-name">{skill}:</span>
-                <span className="skill-data">
-                  {data.correct}/{data.total} ({data.accuracy}%)
-                </span>
+              <div className="progress-bar-container">
+                <div 
+                  className="progress-bar-fill" 
+                  style={{ 
+                    width: `${(progress.completedLevels.length / 37) * 100}%` 
+                  }}
+                />
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Practice Mode */}
-          <div className="stats-section">
-            <h3>Practice Mode (This Session)</h3>
-            <div className="stat-row">
-              <span>Levels Practiced:</span>
-              <strong>{practiceStats?.levelsPracticed || 0}</strong>
+          {progress.badges && progress.badges.length > 0 && (
+            <div className="badges-section">
+              <h3>Your Badges</h3>
+              <div className="badges-grid">
+                {progress.badges.map((badge, index) => (
+                  <div key={index} className="badge-display-item">
+                    {badge}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="stat-row">
-              <span>Attempted:</span>
-              <strong>{practiceStats?.attempted || 0}</strong>
-            </div>
-            <div className="stat-row">
-              <span>Correct:</span>
-              <strong>{practiceStats?.correct || 0}</strong>
-            </div>
-            <div className="stat-row">
-              <span>Accuracy:</span>
-              <strong>
-                {practiceStats?.attempted > 0 ? 
-                  Math.round((practiceStats.correct / practiceStats.attempted) * 100) : 0}%
-              </strong>
-            </div>
-          </div>
+          )}
         </div>
 
-        <div className="stats-note">
-          💡 <em>Stats reset each session. Screenshot to track progress over time!</em>
+        <div className="stats-footer">
+          <button className="btn-primary" onClick={onClose}>
+            Continue Playing
+          </button>
         </div>
       </div>
     </div>
