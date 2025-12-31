@@ -1,4 +1,4 @@
-// LevelPlayer.jsx - FIXED: Story requires Continue button
+// LevelPlayer.jsx - FIXED: Pass problem to FeedbackModal
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -28,16 +28,16 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
-  const [showStoryIntro, setShowStoryIntro] = useState(true); // CHANGED: Start true
+  const [showStoryIntro, setShowStoryIntro] = useState(true);
 
   const level = levels[levelId];
   const levelStory = storyline.levels[levelId];
 
   useEffect(() => {
-    setShowStoryIntro(true); // CHANGED: Show story on level change
+    setShowStoryIntro(true);
     setCorrectStreak(0);
     setLevelComplete(false);
-    setCurrentProblem(null); // Don't generate until story dismissed
+    setCurrentProblem(null);
   }, [levelId]);
 
   useEffect(() => {
@@ -46,7 +46,6 @@ const LevelPlayer = ({
     }
   }, [levelId, onLevelChange]);
 
-  // CHANGED: User must click to continue
   const handleContinueFromStory = () => {
     setShowStoryIntro(false);
     generateNewProblem();
@@ -132,7 +131,6 @@ const LevelPlayer = ({
     }
   };
 
-  // CHANGED: Story intro requires button click
   if (showStoryIntro && levelStory) {
     return (
       <div className="story-intro-screen">
@@ -216,8 +214,10 @@ const LevelPlayer = ({
         <SuccessOverlay message={getSuccessMessage()} />
       )}
 
+      {/* CHANGED: Pass currentProblem to FeedbackModal */}
       {showFeedback && (
         <FeedbackModal
+          problem={currentProblem}
           explanation={currentProblem.explanation}
           onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
