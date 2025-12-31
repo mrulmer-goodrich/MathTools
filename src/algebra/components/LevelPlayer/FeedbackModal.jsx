@@ -1,4 +1,8 @@
+// FeedbackModal.jsx - UPDATED with formatting + better spacing
+// Location: src/algebra/components/LevelPlayer/FeedbackModal.jsx
+
 import React from 'react';
+import { formatStepWork, formatMultiplication } from '../../utils/formatUtils';
 import '../../styles/algebra.css';
 
 const StackedEquation = ({ steps }) => {
@@ -10,7 +14,7 @@ const StackedEquation = ({ steps }) => {
             <div className="step-description">{step.description}</div>
           )}
           {step.work && (
-            <pre className="step-work">{step.work}</pre>
+            <pre className="step-work">{formatStepWork(step.work)}</pre>
           )}
         </div>
       ))}
@@ -37,7 +41,9 @@ const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
             {explanation.originalProblem && (
               <div className="original-problem">
                 <div className="original-problem-label">Original Problem:</div>
-                <div className="original-problem-text">{explanation.originalProblem}</div>
+                <div className="original-problem-text">
+                  {formatMultiplication(explanation.originalProblem)}
+                </div>
               </div>
             )}
 
@@ -47,20 +53,19 @@ const FeedbackModal = ({ isCorrect, explanation, onContinue }) => {
 
             {explanation.rule && (
               <div className="rule-box">
-                <div className="rule-label">📐 RULE:</div>
+                <div className="rule-label">📐 KEY RULE:</div>
                 <div className="rule-text">{explanation.rule}</div>
               </div>
             )}
 
             {explanation.finalAnswer && (
               <div className="final-answer">
-                <strong>Answer:</strong> {explanation.finalAnswer}
+                <strong>Answer:</strong> {formatMultiplication(String(explanation.finalAnswer))}
               </div>
             )}
           </div>
         )}
 
-        {/* FIXED: Proper footer for button */}
         <div className="feedback-modal-footer">
           <button className="continue-button" onClick={onContinue}>
             {isCorrect ? 'Continue' : 'Try Again'}
