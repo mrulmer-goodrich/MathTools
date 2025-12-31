@@ -3892,3 +3892,203 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
   }
 }
+
+/* ============================================
+   APPEND TO END OF algebra.css - LAYOUT FIXES
+   ============================================ */
+
+/* FIX #1: Level Player - Better spacing for header */
+.level-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  align-items: center !important;
+  gap: 24px !important;
+  padding: 16px 0 !important;
+  margin-bottom: 24px !important;
+}
+
+.level-header h2 {
+  text-align: center;
+  font-size: 24px !important;
+  margin: 0 !important;
+  color: #3d5a3d;
+}
+
+.back-to-menu-button {
+  justify-self: start;
+}
+
+.progress-tracker {
+  justify-self: end;
+}
+
+/* FIX #2: Practice Mode - Show Continue button at bottom */
+.practice-selector {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+}
+
+.practice-level-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+  margin-bottom: 24px !important;
+  overflow-y: auto !important;
+  flex: 1;
+  padding: 4px;
+}
+
+.practice-mode-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  padding: 16px 0 !important;
+  border-top: 2px solid rgba(139, 115, 85, 0.2);
+  flex-shrink: 0 !important;
+}
+
+/* FIX #3: Problem Display - More compact */
+.problem-display {
+  padding: 16px 24px !important;
+  margin-bottom: 20px !important;
+}
+
+.problem-display h3 {
+  font-size: 13px !important;
+  margin-bottom: 8px !important;
+}
+
+.problem-text {
+  font-size: 32px !important;
+}
+
+/* FIX #4: Main Menu Cards - Entire card clickable */
+.menu-card {
+  cursor: pointer !important;
+  transition: all 0.3s !important;
+  position: relative;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+}
+
+/* Make buttons inside cards not interfere */
+.menu-card button {
+  pointer-events: none !important;
+  cursor: pointer !important;
+}
+
+/* FIX #5: Badge Collection - Always visible in header */
+.header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.badge-collection-compact {
+  display: flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+.badge-mini {
+  font-size: 20px !important;
+  padding: 4px 8px !important;
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%) !important;
+  border: 2px solid #f39c12 !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* FIX #6: Story Intro - Show until user clicks */
+.story-intro-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 40px;
+  animation: fadeIn 0.5s;
+}
+
+.story-intro-content {
+  background: white;
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 700px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+.story-intro-content h2 {
+  color: #3d5a3d;
+  font-size: 32px;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.story-intro-text {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #2c2416;
+  font-style: italic;
+  margin-bottom: 32px;
+}
+
+.btn-continue-story {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-continue-story:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .level-header {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .back-to-menu-button,
+  .progress-tracker {
+    justify-self: center;
+  }
+  
+  .story-intro-content {
+    padding: 32px;
+  }
+  
+  .story-intro-content h2 {
+    font-size: 24px;
+  }
+  
+  .story-intro-text {
+    font-size: 16px;
+  }
+}
