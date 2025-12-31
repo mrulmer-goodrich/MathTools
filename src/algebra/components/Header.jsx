@@ -1,5 +1,5 @@
 // Header.jsx - UPDATED: "Exit Game" instead of "Back to Home"
-// Location: src/algebra/components/Header.jsx
+// Location: src/algebra/components/Header.jsx 
 
 import React from 'react';
 import BadgeCollection from './BadgeCollection';
