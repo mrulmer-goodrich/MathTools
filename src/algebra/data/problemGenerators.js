@@ -583,9 +583,8 @@ export const generateNegativeOutsideProblem = (difficulty) => {
 };
 
 // ============================================
-// LEVEL 1-8: MIXED TERRAIN (Negative Inside)
+// LEVEL 1-8: MIXED TERRAIN (Negative Inside) - FIXED
 // ============================================
-
 export const generateNegativeInsideProblem = (difficulty) => {
   if (difficulty === 'easy') {
     const outside = -randomInt(2, 8);
@@ -593,18 +592,68 @@ export const generateNegativeInsideProblem = (difficulty) => {
     
     const distributed1Coef = outside;
     const distributed2 = -(outside * term2); // Negative × Negative = Positive!
+    
+    // VALIDATE: Make sure we didn't create NaN
+    if (isNaN(distributed1Coef) || isNaN(distributed2)) {
+      console.error('NaN detected in Level 8 (easy):', { outside, term2, distributed1Coef, distributed2 });
+      // Return safe fallback
+      return {
+        problem: '-6(x - 1)',
+        displayProblem: '-6(x - 1)',
+        answer: '-6x + 6',
+        choices: ['-6x + 6', '-6x - 6', '6x + 6', '6x - 6'],
+        explanation: {
+          originalProblem: '-6(x - 1)',
+          steps: [
+            { description: 'Distribute -6 to BOTH terms', work: '' },
+            { description: '-6 × x = -6x', work: '' },
+            { description: '-6 × (-1) = +6', work: '' },
+            { description: 'NEGATIVE × NEGATIVE = POSITIVE!', work: '-6x + 6' }
+          ],
+          rule: "When distributing a NEGATIVE to a NEGATIVE, the result is POSITIVE!",
+          finalAnswer: '-6x + 6'
+        }
+      };
+    }
+    
     const answer = formatAnswer(distributed1Coef, 'x', distributed2);
     const problem = `${outside}(x - ${term2})`;
-
-    const choices = [
-      answer,
-      formatAnswer(distributed1Coef, 'x', -distributed2),
-      formatAnswer(-distributed1Coef, 'x', distributed2),
-      `${distributed1Coef}x - ${Math.abs(distributed2)}`
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
+    
+    // Create choices manually to avoid ensureFourChoices generating NaN
+    const choice1 = answer;
+    const choice2 = formatAnswer(distributed1Coef, 'x', -distributed2);
+    const choice3 = formatAnswer(-distributed1Coef, 'x', distributed2);
+    const choice4 = `${distributed1Coef}x - ${Math.abs(distributed2)}`;
+    
+    // Filter out any NaN choices
+    const validChoices = [choice1, choice2, choice3, choice4].filter(c => {
+      return c && !String(c).includes('NaN') && !String(c).includes('undefined');
+    });
+    
+    // If we don't have 4 valid choices, log error and use fallback
+    if (validChoices.length < 4) {
+      console.error('Invalid choices in Level 8:', { choices: [choice1, choice2, choice3, choice4] });
+      return {
+        problem: '-6(x - 1)',
+        displayProblem: '-6(x - 1)',
+        answer: '-6x + 6',
+        choices: ['-6x + 6', '-6x - 6', '6x + 6', '6x - 6'],
+        explanation: {
+          originalProblem: '-6(x - 1)',
+          steps: [
+            { description: 'Distribute -6 to BOTH terms', work: '' },
+            { description: '-6 × x = -6x', work: '' },
+            { description: '-6 × (-1) = +6', work: '' },
+            { description: 'NEGATIVE × NEGATIVE = POSITIVE!', work: '-6x + 6' }
+          ],
+          rule: "When distributing a NEGATIVE to a NEGATIVE, the result is POSITIVE!",
+          finalAnswer: '-6x + 6'
+        }
+      };
+    }
+    
+    const finalChoices = ensureFourChoices(validChoices, answer);
+    
     return {
       problem: problem,
       displayProblem: problem,
@@ -613,33 +662,78 @@ export const generateNegativeInsideProblem = (difficulty) => {
       explanation: {
         originalProblem: problem,
         steps: [
-          { description: `Distribute ${outside} to BOTH terms`, work: `` },
-          { description: `${outside} × x = ${outside}x`, work: `` },
-          { description: `${outside} × (-${term2}) = ${distributed2}`, work: `` },
-          { description: `NEGATIVE × NEGATIVE = POSITIVE!`, work: `${answer}` }
+          { description: `Distribute ${outside} to BOTH terms`, work: '' },
+          { description: `${outside} × x = ${outside}x`, work: '' },
+          { description: `${outside} × (-${term2}) = ${distributed2}`, work: '' },
+          { description: 'NEGATIVE × NEGATIVE = POSITIVE!', work: `${answer}` }
         ],
         rule: "When distributing a NEGATIVE to a NEGATIVE, the result is POSITIVE!",
         finalAnswer: answer
       }
     };
   } else {
+    // NOT EASY MODE
     const outside = -randomDecimal();
     const variable = randomFrom(['x', 'y', 'n', 'm']);
     const term2 = randomInt(2, 12);
     
     const distributed2 = -(Math.round(outside * term2 * 100) / 100);
+    
+    // VALIDATE
+    if (isNaN(outside) || isNaN(distributed2)) {
+      console.error('NaN detected in Level 8 (notEasy):', { outside, term2, distributed2 });
+      // Fallback
+      return {
+        problem: '-2.5(x - 4)',
+        displayProblem: '-2.5(x - 4)',
+        answer: '-2.5x + 10',
+        choices: ['-2.5x + 10', '-2.5x - 10', '2.5x + 10', '2.5x - 10'],
+        explanation: {
+          originalProblem: '-2.5(x - 4)',
+          steps: [
+            { description: 'Distribute -2.5', work: '' },
+            { description: 'Negative × Negative = Positive', work: '-2.5x + 10' }
+          ],
+          rule: "Double negative = positive",
+          finalAnswer: '-2.5x + 10'
+        }
+      };
+    }
+    
     const answer = `${outside}${variable} + ${distributed2}`;
     const problem = `${outside}(${variable} - ${term2})`;
-
-    const choices = [
-      answer,
-      `${outside}${variable} - ${distributed2}`,
-      `${Math.abs(outside)}${variable} + ${distributed2}`,
-      `${outside}${variable} - ${Math.abs(distributed2)}`
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
+    
+    const choice1 = answer;
+    const choice2 = `${outside}${variable} - ${distributed2}`;
+    const choice3 = `${Math.abs(outside)}${variable} + ${distributed2}`;
+    const choice4 = `${outside}${variable} - ${Math.abs(distributed2)}`;
+    
+    // Filter NaN
+    const validChoices = [choice1, choice2, choice3, choice4].filter(c => {
+      return c && !String(c).includes('NaN') && !String(c).includes('undefined');
+    });
+    
+    if (validChoices.length < 4) {
+      console.error('Invalid choices in Level 8 (notEasy):', { choices: [choice1, choice2, choice3, choice4] });
+      return {
+        problem: '-2.5(x - 4)',
+        displayProblem: '-2.5(x - 4)',
+        answer: '-2.5x + 10',
+        choices: ['-2.5x + 10', '-2.5x - 10', '2.5x + 10', '2.5x - 10'],
+        explanation: {
+          originalProblem: '-2.5(x - 4)',
+          steps: [
+            { description: 'Distribute -2.5', work: '' },
+            { description: 'Negative × Negative = Positive', work: '-2.5x + 10' }
+          ],
+          rule: "Double negative = positive",
+          finalAnswer: '-2.5x + 10'
+        }
+      };
+    }
+    
+    const finalChoices = ensureFourChoices(validChoices, answer);
+    
     return {
       problem: problem,
       displayProblem: problem,
@@ -648,8 +742,8 @@ export const generateNegativeInsideProblem = (difficulty) => {
       explanation: {
         originalProblem: problem,
         steps: [
-          { description: `Distribute ${outside}`, work: `` },
-          { description: `Negative × Negative = Positive`, work: `${answer}` }
+          { description: `Distribute ${outside}`, work: '' },
+          { description: 'Negative × Negative = Positive', work: `${answer}` }
         ],
         rule: "Double negative = positive",
         finalAnswer: answer
