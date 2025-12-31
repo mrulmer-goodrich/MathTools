@@ -1,5 +1,5 @@
-// LevelPlayer.jsx - COMPLETE FIXED VERSION
-// Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
+// LevelPlayer.jsx - COMPLETE FIX
+// Location: src/algebra/components/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
 import ProblemDisplay from './ProblemDisplay';
@@ -9,6 +9,7 @@ import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
+import { storyline } from '../../data/levelData';
 
 const LevelPlayer = ({ 
   levelId, 
@@ -17,7 +18,8 @@ const LevelPlayer = ({
   stats,
   setStats,
   onLevelComplete,
-  onReturnToMenu 
+  onReturnToMenu,
+  onLevelChange
 }) => {
   const [currentProblem, setCurrentProblem] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
@@ -26,14 +28,26 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
+  const [showStoryIntro, setShowStoryIntro] = useState(true);
 
   const level = levels[levelId];
+  const levelStory = storyline.levels[levelId];
 
   useEffect(() => {
-    generateNewProblem();
+    setShowStoryIntro(true);
     setCorrectStreak(0);
     setLevelComplete(false);
+    setTimeout(() => {
+      setShowStoryIntro(false);
+      generateNewProblem();
+    }, 3000); // Show story for 3 seconds
   }, [levelId]);
+
+  useEffect(() => {
+    if (onLevelChange) {
+      onLevelChange(levelId);
+    }
+  }, [levelId, onLevelChange]);
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
@@ -77,16 +91,18 @@ const LevelPlayer = ({
     if (correct) {
       const newStreak = correctStreak + 1;
       setCorrectStreak(newStreak);
+      
       setShowSuccess(true);
       
       setTimeout(() => {
         setShowSuccess(false);
+        
         if (newStreak >= level.problemsRequired) {
           setLevelComplete(true);
         } else {
           generateNewProblem();
         }
-      }, 1500);
+      }, 2000);
     } else {
       setCorrectStreak(0);
       setShowFeedback(true);
@@ -101,7 +117,30 @@ const LevelPlayer = ({
   const handleContinueFromComplete = () => {
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
+    
+    // Get next level
+    const currentNum = parseInt(levelId.split('-')[1]);
+    if (currentNum < 37) {
+      const nextLevelId = `1-${currentNum + 1}`;
+      if (onLevelChange) {
+        onLevelChange(nextLevelId);
+      }
+    } else {
+      onReturnToMenu();
+    }
   };
+
+  // Story intro screen
+  if (showStoryIntro && levelStory) {
+    return (
+      <div className="story-intro-screen">
+        <div className="story-intro-content">
+          <h2>{level.name}</h2>
+          <p className="story-intro-text">{levelStory.intro}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentProblem) {
     return <div className="loading">Generating problem...</div>;
@@ -137,7 +176,7 @@ const LevelPlayer = ({
             className="btn-continue-expedition"
             onClick={handleContinueFromComplete}
           >
-            Continue →
+            {parseInt(levelId.split('-')[1]) < 37 ? 'Next Level →' : 'Complete! 🎉'}
           </button>
         </div>
       </div>
@@ -159,12 +198,14 @@ const LevelPlayer = ({
 
       <ProblemDisplay problem={currentProblem} />
 
-      <ClickToSelect
-        choices={currentProblem.choices}
-        onSubmit={handleAnswerSubmit}
-        disabled={showFeedback || showSuccess}
-        selectedAnswer={selectedAnswer}
-      />
+      {level.inputMethod === 'clickToSelect' && (
+        <ClickToSelect
+          choices={currentProblem.choices}
+          onSubmit={handleAnswerSubmit}
+          disabled={showFeedback || showSuccess}
+          selectedAnswer={selectedAnswer}
+        />
+      )}
 
       {showSuccess && (
         <SuccessOverlay message={getSuccessMessage()} />
@@ -172,9 +213,10 @@ const LevelPlayer = ({
 
       {showFeedback && (
         <FeedbackModal
-          isCorrect={isCorrect}
           explanation={currentProblem.explanation}
           onContinue={handleContinueFromFeedback}
+          correctAnswer={currentProblem.answer}
+          selectedAnswer={selectedAnswer}
         />
       )}
     </div>
