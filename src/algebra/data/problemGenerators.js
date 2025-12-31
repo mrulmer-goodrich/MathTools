@@ -1,3 +1,54 @@
+// GLOBAL NaN FIX - Add to the TOP of problemGenerators.js
+// This protects ALL levels from NaN issues
+
+// Helper function to validate and filter choices
+export const validateAndFilterChoices = (choices, correctAnswer) => {
+  // Filter out NaN, undefined, null, and invalid strings
+  const validChoices = choices.filter(choice => {
+    if (choice === null || choice === undefined) return false;
+    const str = String(choice);
+    if (str.includes('NaN') || str.includes('undefined') || str.includes('null')) {
+      console.error('Invalid choice detected:', choice);
+      return false;
+    }
+    return true;
+  });
+  
+  // Make sure correct answer is included
+  if (!validChoices.includes(correctAnswer)) {
+    console.error('Correct answer not in valid choices!', { correctAnswer, validChoices });
+    validChoices.unshift(correctAnswer);
+  }
+  
+  // Remove duplicates
+  const uniqueChoices = [...new Set(validChoices)];
+  
+  // If we don't have 4 choices, log error but return what we have
+  if (uniqueChoices.length < 4) {
+    console.error(`Only ${uniqueChoices.length} valid choices:`, uniqueChoices);
+  }
+  
+  return uniqueChoices;
+};
+
+// Then in EVERY generator, replace the final return with:
+/*
+const validChoices = validateAndFilterChoices(
+  [answer, choice2, choice3, choice4],
+  answer
+);
+
+return {
+  problem: problem,
+  displayProblem: problem,
+  answer: answer,
+  choices: validChoices,  // Use validated choices
+  explanation: { ... }
+};
+*/
+
+
+
 // Problem generators for Levels 1-8 - ALL FIXES APPLIED
 
 // ============================================
