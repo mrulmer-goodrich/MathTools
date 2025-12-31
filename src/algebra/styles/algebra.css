@@ -1665,3 +1665,254 @@ body {
     font-size: 14px;
   }
 }
+/* ============================================
+   APPEND TO algebra.css - UI Sizing & Styling Fixes
+   ============================================ */
+
+/* Problem Display - Reduce container padding */
+.problem-display {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;  /* Reduced from probably 40px */
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.problem-display h3 {
+  font-size: 16px;  /* Smaller label */
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.problem-text {
+  font-size: 32px;  /* Keep problem large */
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  font-family: 'Courier New', monospace;  /* Math-friendly font */
+  letter-spacing: 2px;
+}
+
+/* Level Header - More compact */
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;  /* Reduced from 24px */
+  gap: 12px;
+  padding: 12px 0;  /* Add some vertical padding */
+}
+
+.level-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 24px;  /* Slightly smaller */
+}
+
+/* Answer Choices - Better sizing and styling */
+.answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.answer-choice {
+  padding: 20px 24px;  /* Good balance */
+  font-size: 24px;  /* MATCH PROBLEM SIZE */
+  font-weight: 600;
+  font-family: 'Courier New', monospace;  /* MATCH PROBLEM FONT */
+  letter-spacing: 1px;
+  border-radius: 12px;
+  border: 3px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2c3e50;  /* Dark text */
+}
+
+.answer-choice:hover {
+  border-color: var(--color-primary);
+  background: #f0f8f4;  /* Light green tint */
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.2);
+}
+
+.answer-choice.selected {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: scale(1.02);
+}
+
+/* Progress Tracker - More compact */
+.progress-tracker {
+  min-width: 180px;  /* Reduced from probably 200px+ */
+}
+
+.progress-circles {
+  display: flex;
+  gap: 6px;  /* Tighter spacing */
+}
+
+.progress-circle {
+  width: 12px;  /* Smaller circles */
+  height: 12px;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+
+.progress-circle.completed {
+  background: var(--color-success);
+}
+
+/* Back buttons - clearer styling */
+.back-to-home-button {
+  background: transparent;
+  border: 2px solid #e74c3c;  /* Red border for exit */
+  color: #e74c3c;
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.back-to-home-button:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+.back-to-menu-button {
+  background: transparent;
+  border: 2px solid var(--color-secondary);
+  color: var(--color-secondary);
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.back-to-menu-button:hover {
+  background: var(--color-secondary);
+  color: white;
+}
+
+/* Feedback Modal - Less Busy */
+.feedback-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  padding: 0;
+}
+
+.feedback-header {
+  padding: 24px;  /* More space */
+  border-bottom: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.feedback-body {
+  padding: 24px;  /* More space */
+  line-height: 1.8;  /* More breathing room */
+}
+
+.original-problem {
+  background: #f8f9fa;
+  padding: 20px;  /* More space */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.original-problem-text {
+  font-size: 24px;  /* Larger */
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+/* Step descriptions - more spacing */
+.step-description {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 12px;  /* More space */
+  font-size: 15px;
+}
+
+.step-work {
+  background: #f8f9fa;
+  padding: 16px;  /* More space */
+  border-radius: 6px;
+  margin-bottom: 20px;  /* More space between steps */
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  border-left: 3px solid #3498db;
+}
+
+.rule-box {
+  background: #fff8e6;  /* Lighter yellow */
+  border-left: 4px solid #f39c12;
+  padding: 20px;  /* More space */
+  margin: 20px 0;  /* More space around */
+  border-radius: 6px;
+}
+
+.rule-label {
+  font-weight: bold;
+  color: #856404;
+  margin-bottom: 10px;  /* More space */
+  font-size: 14px;
+}
+
+.rule-text {
+  color: #856404;
+  line-height: 1.7;  /* More breathing room */
+  font-size: 15px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .problem-text {
+    font-size: 28px;
+  }
+  
+  .answer-choice {
+    font-size: 20px;
+    padding: 16px 20px;
+  }
+  
+  .level-header h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .answer-choices {
+    grid-template-columns: 1fr;
+  }
+  
+  .problem-text {
+    font-size: 24px;
+  }
+  
+  .answer-choice {
+    font-size: 18px;
+  }
+}
