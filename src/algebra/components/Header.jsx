@@ -1,4 +1,4 @@
-// Header.jsx - FIXED: Shows actual badge emojis (not just trophy)
+// Header.jsx - FIXED: Icon-only badges (no text)
 // Location: src/algebra/components/Header.jsx
 
 import React from 'react';
@@ -32,14 +32,11 @@ const Header = ({
       </div>
       
       <div className="header-right">
-        {/* FIXED: Show actual badge emojis, same as menu */}
+        {/* FIXED: Just icons, no "Badges:" label or text */}
         {badges && badges.length > 0 && (
           <div className="badge-collection-compact">
-            <span style={{fontSize: '12px', color: '#666', marginRight: '4px'}}>
-              Badges:
-            </span>
             {badges.map((badge, index) => (
-              <div key={index} className="badge-mini" title="Badge earned!">
+              <div key={index} className="badge-mini" title={`Badge: ${badge}`}>
                 {badge}
               </div>
             ))}
