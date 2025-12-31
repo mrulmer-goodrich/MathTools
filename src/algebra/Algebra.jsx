@@ -1,4 +1,4 @@
-// Algebra.jsx - UPDATED: Add onSwitchToPlayMode handler
+// Algebra.jsx - COMPLETE FIX
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +15,7 @@ const Algebra = () => {
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
   const [currentModule, setCurrentModule] = useState(1);
-  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentLevel, setCurrentLevel] = useState(null); // Changed to null initially
   const [progress, setProgress] = useState({
     completedLevels: [],
     badges: [],
@@ -58,11 +58,15 @@ const Algebra = () => {
   const handleStartPlay = () => {
     setPlayMode('play');
     setGameState('playing');
+    // Set to first incomplete level or 1-1
+    const firstIncomplete = getFirstIncompleteLevel();
+    setCurrentLevel(firstIncomplete);
   };
 
   const handleStartPractice = () => {
     setPlayMode('practice');
     setGameState('playing');
+    setCurrentLevel(null); // No specific level in practice mode
   };
 
   const handleViewMap = () => {
@@ -76,17 +80,30 @@ const Algebra = () => {
   const handleReturnToMenu = () => {
     setGameState('menu');
     setPlayMode(null);
+    setCurrentLevel(null);
   };
 
-  // NEW: Switch from practice to play mode
   const handleSwitchToPlayMode = () => {
     setPlayMode('play');
-    // Stay in 'playing' state, just change mode
+    const firstIncomplete = getFirstIncompleteLevel();
+    setCurrentLevel(firstIncomplete);
   };
 
-  // NEW: Exit to website landing page
   const handleExitGame = () => {
-    window.location.href = '/';  // Or wherever your landing page is
+    if (window.confirm('Are you sure you want to exit the game?')) {
+      window.location.href = '/';
+    }
+  };
+
+  const getFirstIncompleteLevel = () => {
+    // All levels are 1-1 through 1-37
+    for (let i = 1; i <= 37; i++) {
+      const levelId = `1-${i}`;
+      if (!progress.completedLevels.includes(levelId)) {
+        return levelId;
+      }
+    }
+    return '1-1'; // Default to first level
   };
 
   const handleLevelComplete = (levelId, badgeEarned) => {
@@ -95,6 +112,11 @@ const Algebra = () => {
       completedLevels: [...new Set([...prev.completedLevels, levelId])],
       badges: badgeEarned ? [...new Set([...prev.badges, badgeEarned])] : prev.badges
     }));
+  };
+
+  // Update current level when playing
+  const handleLevelChange = (newLevelId) => {
+    setCurrentLevel(newLevelId);
   };
 
   return (
@@ -133,6 +155,7 @@ const Algebra = () => {
           stats={stats}
           setStats={setStats}
           onLevelComplete={handleLevelComplete}
+          onLevelChange={handleLevelChange}
           onReturnToMenu={handleReturnToMenu}
           onSwitchToPlayMode={handleSwitchToPlayMode}
         />
@@ -143,7 +166,7 @@ const Algebra = () => {
           progress={progress}
           completedLevels={progress.completedLevels}
           currentLevel={currentLevel}
-          onClose={() => setGameState('menu')}
+          onClose={handleReturnToMenu}
         />
       )}
 
