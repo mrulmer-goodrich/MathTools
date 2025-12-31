@@ -1,4 +1,4 @@
-// ModulePlayer.jsx - COMPLETE FIXED VERSION
+// ModulePlayer.jsx - UPDATED: Practice Mode shows ALL levels (no completion required)
 // Location: src/algebra/components/ModulePlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -52,6 +52,7 @@ const ModulePlayer = ({
         onReturnToMenu();
       }
     } else {
+      // In practice mode, return to level selection
       setSelectedLevel(null);
     }
   };
@@ -70,9 +71,14 @@ const ModulePlayer = ({
   };
 
   if (playMode === 'practice') {
-    const completedLevelsInModule = Object.keys(levels)
+    // PRACTICE MODE: Show ALL levels (no completion requirement!)
+    const allLevelsInModule = Object.keys(levels)
       .filter(id => id.startsWith(`${currentModule}-`))
-      .filter(id => progress.completedLevels.includes(id));
+      .sort((a, b) => {
+        const aNum = parseInt(a.split('-')[1]);
+        const bNum = parseInt(b.split('-')[1]);
+        return aNum - bNum;
+      });
 
     if (selectedLevel) {
       return (
@@ -93,45 +99,41 @@ const ModulePlayer = ({
     return (
       <div className="module-player">
         <div className="practice-selector">
-          <h2>Practice Mode</h2>
-          <p>Select a level you've completed:</p>
+          <h2>Practice Mode - Choose Any Level</h2>
+          <p>All levels available for practice (cheat code activated! 🎮)</p>
           
-          {completedLevelsInModule.length === 0 ? (
-            <div className="no-completed-levels">
-              <p>No levels completed yet!</p>
-              <p>Complete levels in Play Mode first.</p>
-              <button className="btn-primary" onClick={onReturnToMenu}>
-                Back to Menu
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="practice-level-grid">
-                {completedLevelsInModule.map(levelId => {
-                  const level = levels[levelId];
-                  return (
-                    <button
-                      key={levelId}
-                      className="practice-level-card"
-                      onClick={() => setSelectedLevel(levelId)}
-                    >
-                      <div className="level-number">Level {levelId.split('-')[1]}</div>
-                      <div className="level-name">{level.name}</div>
-                      <div className="level-skill">{level.skill}</div>
-                    </button>
-                  );
-                })}
-              </div>
-              <button className="btn-secondary" onClick={onReturnToMenu}>
-                Back to Menu
-              </button>
-            </>
-          )}
+          <div className="practice-level-grid">
+            {allLevelsInModule.map(levelId => {
+              const level = levels[levelId];
+              const isCompleted = progress.completedLevels.includes(levelId);
+              
+              return (
+                <button
+                  key={levelId}
+                  className={`practice-level-card ${isCompleted ? 'completed' : 'not-completed'}`}
+                  onClick={() => setSelectedLevel(levelId)}
+                >
+                  <div className="level-number">Level {levelId.split('-')[1]}</div>
+                  <div className="level-name">{level.name}</div>
+                  <div className="level-skill">{level.skill}</div>
+                  {isCompleted && <div className="completed-badge">✓</div>}
+                  {level.badge && (
+                    <div className="badge-indicator">{level.badge}</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button className="btn-secondary" onClick={onReturnToMenu}>
+            Back to Menu
+          </button>
         </div>
       </div>
     );
   }
 
+  // PLAY MODE
   if (!selectedLevel) {
     return (
       <div className="loading">
