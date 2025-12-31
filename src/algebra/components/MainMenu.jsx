@@ -1,11 +1,11 @@
-// MainMenu.jsx - COMPLETE FIX (37 levels)
+// MainMenu.jsx - FIXED: Entire card clickable
 // Location: src/algebra/components/MainMenu.jsx
 
 import React from 'react';
 import '../styles/algebra.css';
 
 const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
-  const totalLevels = 37; // FIXED: Was 31
+  const totalLevels = 37;
   const completedLevels = progress.completedLevels.length;
   const progressPercent = Math.round((completedLevels / totalLevels) * 100);
 
@@ -35,7 +35,8 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
         </div>
 
         <div className="menu-options">
-          <div className="menu-card play-card">
+          {/* FIXED: Entire card is clickable */}
+          <div className="menu-card play-card" onClick={onStartPlay}>
             <div className="card-icon">📍</div>
             <h3>Play Mode</h3>
             <div className="mode-badge sequential">Sequential</div>
@@ -43,12 +44,13 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
               Follow Dr. Martinez's path. Master each challenge to unlock the next. 
               Earn badges as you progress through the expedition.
             </p>
-            <button className="btn-start-play" onClick={onStartPlay}>
+            <button className="btn-start-play">
               Start Playing →
             </button>
           </div>
 
-          <div className="menu-card practice-card">
+          {/* FIXED: Entire card is clickable */}
+          <div className="menu-card practice-card" onClick={onStartPractice}>
             <div className="card-icon">🎯</div>
             <h3>Practice Mode</h3>
             <div className="mode-badge free-practice">Free Practice</div>
@@ -56,7 +58,7 @@ const MainMenu = ({ onStartPlay, onStartPractice, onViewMap, progress }) => {
               Review any level you've encountered. Practice without pressure. 
               Perfect for reinforcement and skill building.
             </p>
-            <button className="btn-start-practice" onClick={onStartPractice}>
+            <button className="btn-start-practice">
               Practice Skills →
             </button>
           </div>
