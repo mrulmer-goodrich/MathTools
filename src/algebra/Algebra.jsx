@@ -1,3 +1,6 @@
+// Algebra.jsx - UPDATED: Add onSwitchToPlayMode handler
+// Location: src/algebra/Algebra.jsx
+
 import React, { useState, useEffect } from 'react';
 import DifficultySelector from './components/DifficultySelector';
 import MainMenu from './components/MainMenu';
@@ -8,9 +11,9 @@ import MapDisplay from './components/MapDisplay';
 import './styles/algebra.css';
 
 const Algebra = () => {
-  const [gameState, setGameState] = useState('difficulty'); // difficulty, menu, playing, map, stats
-  const [difficulty, setDifficulty] = useState(null); // 'easy' or 'notEasy'
-  const [playMode, setPlayMode] = useState(null); // 'play' or 'practice'
+  const [gameState, setGameState] = useState('difficulty');
+  const [difficulty, setDifficulty] = useState(null);
+  const [playMode, setPlayMode] = useState(null);
   const [currentModule, setCurrentModule] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [progress, setProgress] = useState({
@@ -26,7 +29,6 @@ const Algebra = () => {
     skillBreakdown: {}
   });
 
-  // Load saved data from localStorage on mount
   useEffect(() => {
     const savedDifficulty = localStorage.getItem('algebra_difficulty');
     const savedProgress = localStorage.getItem('algebra_progress');
@@ -41,14 +43,12 @@ const Algebra = () => {
     }
   }, []);
 
-  // Save difficulty when set
   const handleDifficultySelect = (selectedDifficulty) => {
     setDifficulty(selectedDifficulty);
     localStorage.setItem('algebra_difficulty', selectedDifficulty);
     setGameState('menu');
   };
 
-  // Save progress whenever it changes
   useEffect(() => {
     if (progress.completedLevels.length > 0) {
       localStorage.setItem('algebra_progress', JSON.stringify(progress));
@@ -78,33 +78,23 @@ const Algebra = () => {
     setPlayMode(null);
   };
 
+  // NEW: Switch from practice to play mode
+  const handleSwitchToPlayMode = () => {
+    setPlayMode('play');
+    // Stay in 'playing' state, just change mode
+  };
+
+  // NEW: Exit to website landing page
+  const handleExitGame = () => {
+    window.location.href = '/';  // Or wherever your landing page is
+  };
+
   const handleLevelComplete = (levelId, badgeEarned) => {
-    // Update progress
     setProgress(prev => ({
       ...prev,
       completedLevels: [...new Set([...prev.completedLevels, levelId])],
-      badges: badgeEarned ? [...prev.badges, badgeEarned] : prev.badges
+      badges: badgeEarned ? [...new Set([...prev.badges, badgeEarned])] : prev.badges
     }));
-
-    // Check if module complete, unlock next
-    const currentModuleLevels = getLevelsForModule(currentModule);
-    const allComplete = currentModuleLevels.every(level => 
-      [...progress.completedLevels, levelId].includes(level)
-    );
-
-    if (allComplete && currentModule < 3) {
-      setProgress(prev => ({
-        ...prev,
-        unlockedModules: [...prev.unlockedModules, currentModule + 1]
-      }));
-    }
-  };
-
-  const getLevelsForModule = (moduleNum) => {
-    if (moduleNum === 1) return Array.from({length: 15}, (_, i) => `1-${i + 1}`);
-    if (moduleNum === 2) return Array.from({length: 10}, (_, i) => `2-${i + 1}`);
-    if (moduleNum === 3) return Array.from({length: 6}, (_, i) => `3-${i + 1}`);
-    return [];
   };
 
   return (
@@ -114,8 +104,9 @@ const Algebra = () => {
           onViewMap={handleViewMap}
           onViewStats={handleViewStats}
           onReturnToMenu={handleReturnToMenu}
+          onExitGame={handleExitGame}
           badges={progress.badges}
-          currentLevel={`${currentModule}-${currentLevel}`}
+          currentLevel={currentLevel}
         />
       )}
 
@@ -143,12 +134,15 @@ const Algebra = () => {
           setStats={setStats}
           onLevelComplete={handleLevelComplete}
           onReturnToMenu={handleReturnToMenu}
+          onSwitchToPlayMode={handleSwitchToPlayMode}
         />
       )}
 
       {gameState === 'map' && (
         <MapDisplay 
           progress={progress}
+          completedLevels={progress.completedLevels}
+          currentLevel={currentLevel}
           onClose={() => setGameState('menu')}
         />
       )}
