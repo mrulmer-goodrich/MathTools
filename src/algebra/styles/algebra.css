@@ -1,7 +1,4 @@
-/* ============================================
-   ALGEBRA EXPEDITION - COMPLETE FIXED CSS
-   Replace your ENTIRE algebra.css with this
-   ============================================ */
+/* Algebra Expedition - All Fixes Applied */
 
 * {
   box-sizing: border-box;
@@ -9,56 +6,1944 @@
   padding: 0;
 }
 
-:root {
-  --color-primary: #27ae60;
-  --color-secondary: #8b7355;
-  --color-success: #27ae60;
-  --color-error: #e74c3c;
-  --color-text-primary: #2c2416;
-  --color-text-secondary: #666;
+.algebra-app {
+  font-family: 'Poppins', sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5e6d3 0%, #d4c4a8 100%);
+  color: #2c2416;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
-.algebra-app {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5e6d3 0%, #d4c4a8 100%);
-  color: var(--color-text-primary);
+/* Hide any unwanted headers/badges */
+.header-badges,
+.badge-mini,
+.algebra-header {
+  display: none !important;
 }
 
 /* ========================================
-   INTRO SCREEN - NO SCROLLING
+   STORY INTRO - PROPERLY SIZED
    ======================================== */
 
-.game-intro-container,
-.story-intro,
-.difficulty-selector {
+.difficulty-selector,
+.story-intro {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
+
+.story-container {
+  max-width: 800px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.journal-entry {
+  background: linear-gradient(145deg, #f9f6f0 0%, #ede8dc 100%);
+  border: 3px solid #8b7355;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+  position: relative;
+  flex-shrink: 1;
+  overflow-y: auto;
+  max-height: calc(85vh - 100px);
+}
+
+.journal-entry::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(139, 115, 85, 0.03) 2px,
+    rgba(139, 115, 85, 0.03) 4px
+  );
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.journal-header {
+  border-bottom: 3px double #8b7355;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.journal-header h2 {
+  margin: 0;
+  color: #3d5a3d;
+  font-weight: 700;
+  font-size: 1.6rem;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+.date {
+  font-style: italic;
+  color: #666;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.journal-content p {
+  line-height: 1.7;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
+  color: #2c2416;
+}
+
+.signature {
+  text-align: right;
+  font-style: italic;
+  margin-top: 1rem;
+  color: #3d5a3d;
+  font-weight: 600;
+}
+
+.present-day {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 2px dashed #8b7355;
+  background: rgba(211, 84, 0, 0.05);
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.present-label {
+  font-weight: 700;
+  color: #d35400;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.present-day p {
+  line-height: 1.6;
+  color: #2c2416;
+  font-size: 0.9rem;
+}
+
+.present-day p:last-child {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.btn-continue {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #3d5a3d 0%, #2d4a2d 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(61, 90, 61, 0.3);
+  flex-shrink: 0;
+}
+
+.btn-continue:hover {
+  background: linear-gradient(135deg, #2d4a2d 0%, #1d3a1d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(61, 90, 61, 0.4);
+}
+
+/* ========================================
+   DIFFICULTY SELECTOR
+   ======================================== */
+
+.selector-container {
+  max-width: 1000px;
+  width: 100%;
+}
+
+.selector-container h1 {
+  text-align: center;
+  font-size: 2rem;
+  color: #3d5a3d;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.selector-subtitle {
+  text-align: center;
+  font-size: 1rem;
+  color: #5a5a5a;
+  margin-bottom: 1.5rem;
+}
+
+.difficulty-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.difficulty-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.difficulty-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.difficulty-card.easy {
+  border-top: 4px solid #4CAF50;
+}
+
+.difficulty-card.challenging {
+  border-top: 4px solid #FF9800;
+}
+
+.card-icon {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.difficulty-card h2 {
+  text-align: center;
+  margin-bottom: 0.75rem;
+  color: #3d5a3d;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.card-description p {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.card-description ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+
+.card-description li {
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
+}
+
+.card-description li::before {
+  content: "✓ ";
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.card-example {
+  background: #f5f5f5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+}
+
+.example-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.card-example code {
+  display: block;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  margin: 0.25rem 0;
+  color: #3d5a3d;
+}
+
+.btn-select {
+  width: 100%;
+  padding: 0.75rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-select:hover {
+  background: #45a049;
+}
+
+.btn-select-challenging {
+  background: #FF9800;
+}
+
+.btn-select-challenging:hover {
+  background: #e68900;
+}
+
+.selector-note {
+  background: #fff3cd;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+  font-size: 0.85rem;
+}
+
+/* ========================================
+   MAIN MENU
+   ======================================== */
+
+.main-menu {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.menu-container {
+  max-width: 900px;
+  width: 100%;
+}
+
+.menu-header h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  color: #3d5a3d;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.progress-summary {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 20px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+  margin: 0.75rem auto;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  transition: width 0.5s ease;
+}
+
+.menu-story {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border-left: 4px solid #3d5a3d;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.menu-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.menu-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.menu-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.menu-card h2 {
+  margin: 0;
+  color: #3d5a3d;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.mode-badge {
+  background: #4CAF50;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.practice-badge {
+  background: #2196F3;
+}
+
+.menu-card p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.btn-primary,
+.btn-secondary {
+  width: 100%;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 1rem;
+}
+
+.btn-primary {
+  background: #3d5a3d;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2d4a2d;
+}
+
+.btn-secondary {
+  background: #2196F3;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #1976D2;
+}
+
+/* ========================================
+   LEVEL PLAYER
+   ======================================== */
+
+.level-player {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.level-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.level-header h2 {
+  margin: 0;
+  color: #3d5a3d;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.problem-display {
+  flex-shrink: 0;
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.problem-container {
+  text-align: center;
+}
+
+.problem-label {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.problem-text {
+  font-size: 2.5rem;
+  font-family: 'Courier New', monospace;
+  color: #3d5a3d;
+  font-weight: bold;
+}
+
+.progress-tracker {
+  text-align: center;
+}
+
+.progress-label {
+  font-size: 1rem;
+  color: #3d5a3d;
+  font-weight: 600;
+}
+
+.progress-dots {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.progress-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  transition: background 0.3s;
+}
+
+.progress-dot.filled {
+  background: #4CAF50;
+}
+
+.click-to-select {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.choice-button {
+  padding: 1.75rem 1rem;
+  font-size: 1.8rem;
+  font-family: 'Courier New', monospace;
+  background: white;
+  border: 3px solid #ddd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  min-height: 85px;
+}
+
+.choice-button:hover:not(:disabled) {
+  border-color: #3d5a3d;
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.choice-button.selected {
+  border-color: #4CAF50;
+  background: #e8f5e9;
+  border-width: 4px;
+}
+
+.choice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-submit-answer {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  padding: 1.1rem 2rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-submit-answer:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.btn-submit-answer:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   SUCCESS OVERLAY
+   ======================================== */
+
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(61, 90, 61, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.success-content {
+  text-align: center;
+  color: white;
+}
+
+.success-icon {
+  font-size: 6rem;
+  margin-bottom: 1rem;
+  animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.success-message {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.success-submessage {
+  font-size: 1.3rem;
+  opacity: 0.9;
+}
+
+/* ========================================
+   WRONG ANSWER MODAL - NO SCROLL
+   ======================================== */
+
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.feedback-modal {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  animation: slideUp 0.4s ease;
+  border-top: 6px solid #f44336;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.feedback-header {
+  flex-shrink: 0;
+  background: #f44336;
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 12px 12px 0 0;
+}
+
+.feedback-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.feedback-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.feedback-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.original-problem {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.original-problem-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.original-problem-text {
+  font-size: 1.8rem;
+  font-family: 'Courier New', monospace;
+  color: #3d5a3d;
+  font-weight: bold;
+}
+
+.explanation-steps {
+  margin: 1rem 0;
+}
+
+.explanation-step {
+  margin-bottom: 1.25rem;
+}
+
+.step-description {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.step-work {
+  font-family: 'Courier New', monospace;
+  background: #f5f5f5;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.rule-box {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 0.85rem;
+  margin: 1.25rem 0;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.correct-answer-display {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #ddd;
+  font-size: 0.95rem;
+}
+
+.btn-try-again {
+  flex-shrink: 0;
+  display: block;
+  width: calc(100% - 3rem);
+  max-width: 280px;
+  margin: 1.25rem auto;
+  padding: 0.9rem 1.5rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-try-again:hover {
+  background: #1976D2;
+}
+
+/* LEVEL COMPLETE */
+
+.level-complete {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.completion-container {
+  max-width: 600px;
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.completion-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
+.completion-container h2 {
+  color: #4CAF50;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.completion-container h3 {
+  color: #3d5a3d;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+
+.badge-earned {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.badge-display {
+  font-size: 3rem;
+  margin-top: 1rem;
+}
+
+.completion-stats {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 1.25rem;
+  background: #e8f5e9;
+  border-radius: 8px;
+}
+
+.btn-continue-expedition {
+  width: 100%;
+  padding: 1.1rem 2rem;
+  background: #3d5a3d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #2d4a2d;
+}
+
+.loading {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #3d5a3d;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 1200px) {
+  .problem-text {
+    font-size: 2.2rem;
+  }
+  
+  .choice-button {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .difficulty-cards,
+  .menu-options {
+    grid-template-columns: 1fr;
+  }
+
+  .choices-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .problem-text {
+    font-size: 2rem;
+  }
+
+  .choice-button {
+    font-size: 1.5rem;
+  }
+}
+
+/* stacked-equations.css - Professional equation formatting */
+
+.stacked-equations-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+  font-family: 'Courier New', 'Courier', monospace;
+}
+
+.equation-step {
+  margin-bottom: 20px;
+}
+
+.equation-step:last-child {
+  margin-bottom: 0;
+}
+
+.step-description {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.step-work {
+  font-family: 'Courier New', 'Courier', monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 4px;
+  border-left: 4px solid #3498db;
+  margin: 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Highlighting for special steps */
+.equation-step.check .step-work {
+  border-left-color: #27ae60;
+  background: #f0fff4;
+}
+
+.equation-step.warning .step-work {
+  border-left-color: #e74c3c;
+  background: #fff5f5;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .stacked-equations-container {
+    padding: 15px;
+  }
+  
+  .step-work {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+  
+  .step-description {
+    font-size: 13px;
+  }
+}
+
+:root {
+  /* Primary Theme Colors */
+  --color-background: #f5f1e8;  /* Light tan/cream */
+  --color-primary: #27ae60;      /* Earth green */
+  --color-secondary: #8b4513;    /* Brown */
+  --color-accent: #f39c12;       /* Gold */
+  
+  /* Status Colors */
+  --color-success: #2ecc71;      /* Muted green */
+  --color-error: #e74c3c;        /* Muted red */
+  --color-warning: #f39c12;      /* Gold/orange */
+  
+  /* Text Colors */
+  --color-text-primary: #2c3e50; /* Dark gray/black */
+  --color-text-secondary: #7f8c8d; /* Medium gray */
+  
+  /* Module/Region Colors */
+  --color-module-1: #27ae60;     /* Green - Base Camp */
+  --color-module-2: #8b4513;     /* Brown - Territory */
+  --color-module-3: #f39c12;     /* Gold - Frontier */
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.button-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.button-secondary {
+  background: var(--color-secondary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-secondary:hover {
+  background: #6d3710;
+  transform: translateY(-2px);
+}
+
+
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.feedback-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  padding: 0;  /* Remove padding, add to sections */
+}
+
+.feedback-header {
+  padding: 20px;
+  border-bottom: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.feedback-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.feedback-correct {
+  color: #27ae60;
+}
+
+.feedback-incorrect {
+  color: #e74c3c;
+}
+
+.feedback-body {
+  padding: 20px;
+}
+
+.original-problem {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.original-problem-label {
+  font-weight: 600;
+  color: #7f8c8d;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.original-problem-text {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.rule-box {
+  background: #fff3cd;
+  border-left: 4px solid #f39c12;
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 4px;
+}
+
+.rule-label {
+  font-weight: bold;
+  color: #856404;
+  margin-bottom: 8px;
+}
+
+.rule-text {
+  color: #856404;
+  line-height: 1.5;
+}
+
+.final-answer {
+  background: #d4edda;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  color: #155724;
+}
+
+/* Button Container - FIXED */
+.feedback-modal-footer {
+  padding: 20px;
+  border-top: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.continue-button {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 150px;
+}
+
+.continue-button:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+/* Answer choice buttons - more compact */
+.answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.answer-choice {
+  padding: 16px 20px;  /* Was probably bigger */
+  font-size: 18px;      /* Reduced from probably 24px+ */
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 60px;     /* Consistent height */
+}
+
+.answer-choice:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.answer-choice.selected {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Submit button - more reasonable */
+.submit-button {
+  padding: 14px 32px;   /* Reduced from probably 20px 40px */
+  font-size: 18px;      /* Reduced */
+  margin-top: 20px;
+}
+
+/* Modal buttons */
+.continue-button {
+  padding: 12px 28px;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+/* Back to Home button */
+.back-button {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+/* ============================================
+   APPEND TO algebra.css - Final UI Fixes
+   ============================================ */
+
+/* Practice Mode Styling */
+.practice-selector {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px;
+}
+
+.practice-selector h2 {
+  text-align: center;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.practice-selector > p {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin-bottom: 30px;
+}
+
+.practice-level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.practice-level-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.practice-level-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.level-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.level-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.level-skill {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.no-completed-levels {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.no-completed-levels p {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Back to Menu Button in Level Player */
+.back-to-menu-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-to-menu-button:hover {
+  color: var(--color-primary);
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.level-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
+/* Better button spacing */
+.btn-primary, .btn-secondary {
+  display: block;
+  margin: 20px auto 0;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #6d3710;
+  transform: translateY(-2px);
+}
+
+/* Completion Screen Button */
+.btn-continue-expedition {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   APPEND TO algebra.css - Final UI Fixes
+   ============================================ */
+
+/* Practice Mode Styling */
+.practice-selector {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px;
+}
+
+.practice-selector h2 {
+  text-align: center;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.practice-selector > p {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin-bottom: 30px;
+}
+
+.practice-level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.practice-level-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.practice-level-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.level-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.level-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.level-skill {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.no-completed-levels {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.no-completed-levels p {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Back to Menu Button in Level Player */
+.back-to-menu-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-to-menu-button:hover {
+  color: var(--color-primary);
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.level-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
+/* Better button spacing */
+.btn-primary, .btn-secondary {
+  display: block;
+  margin: 20px auto 0;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #6d3710;
+  transform: translateY(-2px);
+}
+
+/* Completion Screen Button */
+.btn-continue-expedition {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================
+   APPEND TO algebra.css - Practice Mode All Levels
+   ============================================ */
+
+/* Practice Mode - Enhanced with completion indicators */
+.practice-level-card {
+  position: relative;
+}
+
+.practice-level-card.completed {
+  background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+  border-color: #4caf50;
+}
+
+.practice-level-card.not-completed {
+  background: white;
+  border-color: #e0e0e0;
+}
+
+.completed-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.badge-indicator {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #f39c12;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #fff8e1;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.practice-selector > p {
+  text-align: center;
+  color: var(--color-text-secondary);
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .practice-level-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .completed-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+}
+/* ============================================
+   APPEND TO algebra.css - UI Sizing & Styling Fixes
+   ============================================ */
+
+/* Problem Display - Reduce container padding */
+.problem-display {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;  /* Reduced from probably 40px */
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.problem-display h3 {
+  font-size: 16px;  /* Smaller label */
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.problem-text {
+  font-size: 32px;  /* Keep problem large */
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  font-family: 'Courier New', monospace;  /* Math-friendly font */
+  letter-spacing: 2px;
+}
+
+/* Level Header - More compact */
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;  /* Reduced from 24px */
+  gap: 12px;
+  padding: 12px 0;  /* Add some vertical padding */
+}
+
+.level-header h2 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 24px;  /* Slightly smaller */
+}
+
+/* Answer Choices - Better sizing and styling */
+.answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.answer-choice {
+  padding: 20px 24px;  /* Good balance */
+  font-size: 24px;  /* MATCH PROBLEM SIZE */
+  font-weight: 600;
+  font-family: 'Courier New', monospace;  /* MATCH PROBLEM FONT */
+  letter-spacing: 1px;
+  border-radius: 12px;
+  border: 3px solid #ddd;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2c3e50;  /* Dark text */
+}
+
+.answer-choice:hover {
+  border-color: var(--color-primary);
+  background: #f0f8f4;  /* Light green tint */
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.2);
+}
+
+.answer-choice.selected {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: scale(1.02);
+}
+
+/* Progress Tracker - More compact */
+.progress-tracker {
+  min-width: 180px;  /* Reduced from probably 200px+ */
+}
+
+.progress-circles {
+  display: flex;
+  gap: 6px;  /* Tighter spacing */
+}
+
+.progress-circle {
+  width: 12px;  /* Smaller circles */
+  height: 12px;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+
+.progress-circle.completed {
+  background: var(--color-success);
+}
+
+/* Back buttons - clearer styling */
+.back-to-home-button {
+  background: transparent;
+  border: 2px solid #e74c3c;  /* Red border for exit */
+  color: #e74c3c;
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.back-to-home-button:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+.back-to-menu-button {
+  background: transparent;
+  border: 2px solid var(--color-secondary);
+  color: var(--color-secondary);
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.back-to-menu-button:hover {
+  background: var(--color-secondary);
+  color: white;
+}
+
+/* Feedback Modal - Less Busy */
+.feedback-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  padding: 0;
+}
+
+.feedback-header {
+  padding: 24px;  /* More space */
+  border-bottom: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.feedback-body {
+  padding: 24px;  /* More space */
+  line-height: 1.8;  /* More breathing room */
+}
+
+.original-problem {
+  background: #f8f9fa;
+  padding: 20px;  /* More space */
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.original-problem-text {
+  font-size: 24px;  /* Larger */
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+/* Step descriptions - more spacing */
+.step-description {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 12px;  /* More space */
+  font-size: 15px;
+}
+
+.step-work {
+  background: #f8f9fa;
+  padding: 16px;  /* More space */
+  border-radius: 6px;
+  margin-bottom: 20px;  /* More space between steps */
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  border-left: 3px solid #3498db;
+}
+
+.rule-box {
+  background: #fff8e6;  /* Lighter yellow */
+  border-left: 4px solid #f39c12;
+  padding: 20px;  /* More space */
+  margin: 20px 0;  /* More space around */
+  border-radius: 6px;
+}
+
+.rule-label {
+  font-weight: bold;
+  color: #856404;
+  margin-bottom: 10px;  /* More space */
+  font-size: 14px;
+}
+
+.rule-text {
+  color: #856404;
+  line-height: 1.7;  /* More breathing room */
+  font-size: 15px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .problem-text {
+    font-size: 28px;
+  }
+  
+  .answer-choice {
+    font-size: 20px;
+    padding: 16px 20px;
+  }
+  
+  .level-header h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .answer-choices {
+    grid-template-columns: 1fr;
+  }
+  
+  .problem-text {
+    font-size: 24px;
+  }
+  
+  .answer-choice {
+    font-size: 18px;
+  }
+}
+
+
+//* ============================================
+   REPLACE INTRO_SCREEN_FIX.css - ABSOLUTE NO SCROLLING
+   ============================================ */
+
+.game-intro-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh;
   padding: 16px;
-  overflow: hidden;
+  box-sizing: border-box;
+  overflow: hidden; /* NO SCROLLING! */
 }
 
-.story-container {
-  max-width: 700px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-height: calc(100vh - 100px);
-}
-
-.journal-entry,
 .journal-container {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-  padding: 20px 24px;
+  max-width: 700px;
+  width: 100%;
+  max-height: calc(100vh - 120px); /* Smaller to fit with button */
   overflow-y: auto;
-  flex: 1;
-  max-height: calc(100vh - 140px);
+  padding: 24px 28px; /* Reduced padding */
+  margin-bottom: 16px;
+  flex-shrink: 1;
 }
 
 .journal-header {
@@ -67,31 +1952,34 @@
 
 .journal-header h2 {
   color: var(--color-primary);
-  font-size: 20px;
+  font-size: 22px; /* Smaller */
   margin: 0 0 6px 0;
 }
 
-.journal-subtitle,
-.date {
+.journal-subtitle {
   font-style: italic;
   color: var(--color-text-secondary);
   font-size: 13px;
   margin: 0;
 }
 
-.journal-entry p,
-.journal-text {
-  line-height: 1.5;
-  margin-bottom: 10px;
-  font-size: 14px;
+.journal-entry {
+  line-height: 1.5; /* Tighter */
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  font-size: 15px; /* Smaller */
+}
+
+.journal-entry p {
+  margin: 0 0 10px 0;
 }
 
 .journal-signature {
   text-align: right;
   font-style: italic;
   color: var(--color-text-secondary);
-  margin-top: 10px;
-  font-size: 13px;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
 .journal-divider {
@@ -102,17 +1990,17 @@
 
 .present-day-section {
   background: #f8f9fa;
-  padding: 14px;
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid var(--color-primary);
 }
 
 .present-day-section h3 {
   color: var(--color-primary);
-  font-size: 13px;
-  margin: 0 0 8px 0;
+  font-size: 14px;
+  margin: 0 0 10px 0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .present-day-section p {
@@ -141,24 +2029,66 @@
   box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
 
-/* ========================================
-   LEVEL PLAYER - PROPER LAYOUT
-   ======================================== */
+/* Ensure it fits on small screens */
+@media (max-height: 700px) {
+  .journal-container {
+    padding: 18px 22px;
+    font-size: 14px;
+    max-height: calc(100vh - 100px);
+  }
+  
+  .journal-header h2 {
+    font-size: 20px;
+  }
+  
+  .journal-entry {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .present-day-section {
+    padding: 14px;
+  }
+  
+  .begin-button {
+    padding: 12px 32px;
+    font-size: 16px;
+  }
+}
+
+@media (max-height: 600px) {
+  .journal-container {
+    padding: 16px;
+    font-size: 13px;
+    max-height: calc(100vh - 90px);
+  }
+  
+  .journal-header h2 {
+    font-size: 18px;
+  }
+}
+
+
+/* ============================================
+   REPLACE COMPACT_LEVEL_PLAYER.css - PROPER LAYOUT
+   All buttons visible, proper padding
+   ============================================ */
 
 .level-player {
   max-width: 900px;
   margin: 0 auto;
-  padding: 16px 20px;
-  min-height: calc(100vh - 60px);
+  padding: 16px 20px; /* Add horizontal padding */
+  min-height: calc(100vh - 80px);
 }
 
+/* Level Header - FIXED LAYOUT */
 .level-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
-  padding: 10px 0;
+  padding: 12px 0;
 }
 
 .level-header h2 {
@@ -169,30 +2099,7 @@
   color: var(--color-text-primary);
 }
 
-/* Exit Game Button (replaces Back to Home) */
-.exit-game-button,
-.btn-exit-game,
-button:contains("Back to Home") {
-  background: transparent !important;
-  border: 2px solid #e74c3c !important;
-  color: #e74c3c !important;
-  font-size: 13px !important;
-  padding: 8px 16px !important;
-  cursor: pointer;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.exit-game-button:hover,
-.btn-exit-game:hover {
-  background: #e74c3c !important;
-  color: white !important;
-}
-
-/* Back to Menu Button */
+/* Back to Menu - LEFT SIDE, ALWAYS VISIBLE */
 .back-to-menu-button {
   background: transparent;
   border: 2px solid var(--color-secondary);
@@ -212,7 +2119,26 @@ button:contains("Back to Home") {
   color: white;
 }
 
-/* Problem Display */
+/* Exit Game - TOP LEFT CORNER (if using Header component) */
+.btn-exit-game {
+  background: transparent;
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
+  font-size: 13px;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-exit-game:hover {
+  background: #e74c3c;
+  color: white;
+}
+
+/* Problem Display - COMPACT */
 .problem-display {
   background: white;
   border-radius: 10px;
@@ -239,8 +2165,7 @@ button:contains("Back to Home") {
 }
 
 /* Answer Choices */
-.answer-choices,
-.click-to-select-container .answer-choices {
+.answer-choices {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
@@ -280,7 +2205,7 @@ button:contains("Back to Home") {
   transform: scale(1.02);
 }
 
-/* Progress Tracker */
+/* Progress Tracker - RIGHT SIDE */
 .progress-tracker {
   display: flex;
   flex-direction: column;
@@ -314,10 +2239,298 @@ button:contains("Back to Home") {
   background: var(--color-success);
 }
 
-/* ========================================
-   PRACTICE MODE - ALL 37 LEVELS
-   ======================================== */
+/* Level Complete Screen */
+.level-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+  padding: 20px;
+}
 
+.completion-container {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.completion-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.completion-container h2 {
+  color: var(--color-success);
+  font-size: 32px;
+  margin: 0 0 8px 0;
+}
+
+.completion-container h3 {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  margin: 0 0 24px 0;
+}
+
+.badge-earned {
+  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 24px 0;
+  border: 2px solid #f39c12;
+}
+
+.badge-display {
+  font-size: 48px;
+  margin-top: 8px;
+}
+
+.completion-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.completion-stats > div {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.completion-stats strong {
+  font-size: 32px;
+  color: var(--color-primary);
+  display: block;
+}
+
+.btn-continue-expedition {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.3s;
+}
+
+.btn-continue-expedition:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .level-player {
+    padding: 12px 16px;
+  }
+  
+  .problem-text {
+    font-size: 28px;
+  }
+  
+  .answer-choice {
+    font-size: 20px;
+    padding: 18px 22px;
+  }
+  
+  .level-header h2 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .answer-choices {
+    grid-template-columns: 1fr;
+  }
+  
+  .problem-text {
+    font-size: 24px;
+  }
+}
+
+
+
+/* ============================================
+   APPEND TO algebra.css - Compact Feedback Modal (No Scrolling)
+   ============================================ */
+
+/* Feedback Modal - Compact, No Scrolling, Less Repetition */
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.feedback-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 550px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+/* Header - Compact */
+.feedback-header {
+  padding: 16px 20px;
+  border-bottom: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+
+.feedback-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.feedback-correct {
+  color: #27ae60;
+}
+
+.feedback-incorrect {
+  color: #e74c3c;
+}
+
+/* Body - Scrollable if needed, compact */
+.feedback-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* NO original problem display - it's already shown above! */
+.original-problem {
+  display: none;  /* HIDE - no need to repeat! */
+}
+
+/* Steps - Compact */
+.equation-step {
+  margin-bottom: 16px;
+}
+
+.step-description {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.step-work {
+  background: #f8f9fa;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  border-left: 3px solid #3498db;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Rule Box - Compact, Eye-catching */
+.rule-box {
+  background: linear-gradient(135deg, #fff8e6 0%, #fffcf2 100%);
+  border-left: 4px solid #f39c12;
+  padding: 14px 16px;
+  margin: 16px 0;
+  border-radius: 6px;
+}
+
+.rule-label {
+  font-weight: bold;
+  color: #856404;
+  margin-bottom: 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rule-text {
+  color: #856404;
+  line-height: 1.5;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Final Answer - Compact */
+.final-answer {
+  background: #d4edda;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* Footer - Fixed at bottom */
+.feedback-modal-footer {
+  padding: 16px 20px;
+  border-top: 2px solid #ecf0f1;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.continue-button {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 140px;
+}
+
+.continue-button:hover {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-height: 700px) {
+  .feedback-modal-content {
+    max-height: 95vh;
+  }
+  
+  .feedback-body {
+    padding: 16px;
+  }
+  
+  .step-work {
+    font-size: 13px;
+  }
+}
+
+/* ============================================
+   APPEND TO algebra.css - Practice Mode All 37 Levels + Continue Button
+   ============================================ */
+
+/* Practice Mode */
 .practice-selector {
   max-width: 1100px;
   margin: 20px auto;
@@ -338,6 +2551,7 @@ button:contains("Back to Home") {
   font-size: 15px;
 }
 
+/* Level Grid - 4 columns to fit 37 levels */
 .practice-level-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -372,6 +2586,11 @@ button:contains("Back to Home") {
 .practice-level-card.completed {
   background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
   border-color: #4caf50;
+}
+
+.practice-level-card.not-completed {
+  background: white;
+  border-color: #e0e0e0;
 }
 
 .level-number {
@@ -424,6 +2643,7 @@ button:contains("Back to Home") {
   display: inline-block;
 }
 
+/* Practice Mode Actions - Continue + Back */
 .practice-mode-actions {
   display: flex;
   gap: 12px;
@@ -431,17 +2651,17 @@ button:contains("Back to Home") {
   flex-wrap: wrap;
 }
 
-/* ========================================
-   BUTTONS
-   ======================================== */
-
-.btn-primary,
 .btn-large {
+  padding: 14px 40px;
+  font-size: 17px;
+}
+
+.btn-primary {
   background: var(--color-primary);
   color: white;
   border: none;
-  padding: 14px 40px;
-  font-size: 17px;
+  padding: 12px 32px;
+  font-size: 16px;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
@@ -472,346 +2692,181 @@ button:contains("Back to Home") {
   transform: translateY(-2px);
 }
 
-/* ========================================
-   FEEDBACK MODAL - COMPACT
-   ======================================== */
-
-.feedback-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
-
-.feedback-modal-content {
-  background: white;
-  border-radius: 12px;
-  max-width: 550px;
-  width: 100%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-
-.feedback-header {
-  padding: 16px 20px;
-  border-bottom: 2px solid #ecf0f1;
-  background: #f8f9fa;
-  border-radius: 12px 12px 0 0;
-  flex-shrink: 0;
-}
-
-.feedback-header h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.feedback-correct {
-  color: #27ae60;
-}
-
-.feedback-incorrect {
-  color: #e74c3c;
-}
-
-.feedback-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-  line-height: 1.6;
-}
-
-.original-problem {
-  display: none; /* Don't repeat the problem */
-}
-
-.equation-step {
-  margin-bottom: 16px;
-}
-
-.step-description {
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.step-work {
-  background: #f8f9fa;
-  padding: 12px 14px;
-  border-radius: 6px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  border-left: 3px solid #3498db;
-  margin: 0;
-  white-space: pre-wrap;
-}
-
-.rule-box {
-  background: linear-gradient(135deg, #fff8e6 0%, #fffcf2 100%);
-  border-left: 4px solid #f39c12;
-  padding: 14px 16px;
-  margin: 16px 0;
-  border-radius: 6px;
-}
-
-.rule-label {
-  font-weight: bold;
-  color: #856404;
-  margin-bottom: 6px;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.rule-text {
-  color: #856404;
-  line-height: 1.5;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.feedback-modal-footer {
-  padding: 16px 20px;
-  border-top: 2px solid #ecf0f1;
-  background: #f8f9fa;
-  border-radius: 0 0 12px 12px;
-  display: flex;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.continue-button {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 12px 36px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  min-width: 140px;
-}
-
-.continue-button:hover {
-  background: #229954;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-}
-
-/* ========================================
-   LEVEL COMPLETE
-   ======================================== */
-
-.level-complete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 100px);
-  padding: 20px;
-}
-
-.completion-container {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 450px;
-  text-align: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
-.completion-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.completion-container h2 {
-  color: var(--color-success);
-  font-size: 28px;
-  margin: 0 0 8px 0;
-}
-
-.completion-container h3 {
-  color: var(--color-text-primary);
-  font-size: 20px;
-  margin: 0 0 20px 0;
-}
-
-.badge-earned {
-  background: linear-gradient(135deg, #fff8e1 0%, #fffcf2 100%);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 20px 0;
-  border: 2px solid #f39c12;
-}
-
-.badge-display {
-  font-size: 36px;
-  margin-top: 8px;
-}
-
-.completion-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin: 20px 0;
-}
-
-.completion-stats > div {
-  background: #f8f9fa;
-  padding: 14px;
-  border-radius: 8px;
-}
-
-.completion-stats strong {
-  font-size: 28px;
-  color: var(--color-primary);
-  display: block;
-}
-
-.btn-continue-expedition {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 14px 36px;
-  font-size: 17px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: all 0.3s;
-}
-
-.btn-continue-expedition:hover {
-  background: #229954;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
-}
-
-/* ========================================
-   SUCCESS OVERLAY
-   ======================================== */
-
-.success-overlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-  z-index: 999;
-  animation: popIn 0.3s ease-out;
-}
-
-@keyframes popIn {
-  from {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-}
-
-.success-icon {
-  font-size: 64px;
-  margin-bottom: 12px;
-}
-
-.success-message {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-success);
-  margin-bottom: 6px;
-}
-
-.success-submessage {
-  font-size: 16px;
-  color: var(--color-text-secondary);
-}
-
-/* ========================================
-   MOBILE RESPONSIVE
-   ======================================== */
-
+/* Mobile - 2 columns */
 @media (max-width: 768px) {
-  .level-player {
-    padding: 12px 16px;
-  }
-  
-  .problem-text {
-    font-size: 28px;
-  }
-  
-  .answer-choice {
-    font-size: 20px;
-    padding: 18px 22px;
-  }
-  
-  .level-header h2 {
-    font-size: 18px;
-  }
-  
   .practice-level-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* Small mobile - 1 column */
 @media (max-width: 480px) {
-  .answer-choices {
-    grid-template-columns: 1fr;
-  }
-  
-  .problem-text {
-    font-size: 24px;
-  }
-  
   .practice-level-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* ============================================
+   APPEND THESE FIXES TO THE END OF YOUR algebra.css
+   DO NOT DELETE ANYTHING - JUST ADD THIS TO THE END!
+   ============================================ */
+
+/* FIX #1: Intro Page - No Scrolling */
+.story-intro,
+.difficulty-selector {
+  overflow: hidden !important;
+  padding: 1.5rem 2rem !important;
+}
+
+.story-container {
+  max-height: calc(100vh - 120px) !important;
+}
+
+.journal-entry {
+  padding: 1.2rem !important;
+  max-height: calc(100vh - 180px) !important;
+  font-size: 0.9rem !important;
+}
+
+.journal-header h2 {
+  font-size: 1.4rem !important;
+}
+
+.journal-content p {
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 0.7rem !important;
+}
+
+.present-day {
+  padding: 1rem !important;
+  margin-top: 1rem !important;
+}
+
+.present-day p {
+  font-size: 0.85rem !important;
+}
+
+/* FIX #2: Level Player - Add Padding */
+.level-player {
+  padding: 16px 20px !important;
+}
+
+/* FIX #3: Level Header - Better Layout */
+.level-header {
+  padding: 10px 0 !important;
+  margin-bottom: 16px !important;
+}
+
+/* FIX #4: Problem Display - More Compact */
+.problem-container,
+.problem-display {
+  padding: 20px 24px !important;
+  margin-bottom: 20px !important;
+}
+
+/* FIX #5: Exit Game Button Styling */
+.back-to-home-button,
+button:contains("Back to Home"),
+a:contains("Back to Home") {
+  background: transparent !important;
+  border: 2px solid #e74c3c !important;
+  color: #e74c3c !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+}
+
+.back-to-home-button:hover {
+  background: #e74c3c !important;
+  color: white !important;
+}
+
+/* FIX #6: Back to Menu Button */
+.back-to-menu-button {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* FIX #7: Progress Tracker - More Compact */
+.progress-tracker {
+  flex-shrink: 0 !important;
+}
+
+.progress-circles {
+  gap: 6px !important;
+}
+
+.progress-circle {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+/* FIX #8: Practice Mode Grid - Show All 37 Levels */
+.practice-level-grid {
+  max-height: calc(100vh - 280px) !important;
+  overflow-y: auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+/* FIX #9: Level Complete - Better Sizing */
+.completion-container {
+  padding: 32px !important;
+  max-width: 450px !important;
+}
+
+.completion-icon {
+  font-size: 48px !important;
+}
+
+.completion-container h2 {
+  font-size: 28px !important;
+}
+
+.completion-container h3 {
+  font-size: 20px !important;
+}
+
+.badge-display {
+  font-size: 36px !important;
+}
+
+.completion-stats strong {
+  font-size: 28px !important;
+}
+
+/* FIX #10: Feedback Modal - Hide Repeated Problem */
+.feedback-modal .original-problem {
+  display: none !important;
+}
+
+/* FIX #11: Mobile Adjustments */
 @media (max-height: 700px) {
-  .journal-entry,
-  .journal-container {
-    padding: 16px 20px;
-    font-size: 13px;
-    max-height: calc(100vh - 120px);
+  .journal-entry {
+    padding: 1rem !important;
+    font-size: 0.85rem !important;
+    max-height: calc(100vh - 160px) !important;
   }
   
   .journal-header h2 {
-    font-size: 18px;
+    font-size: 1.2rem !important;
   }
   
-  .begin-button {
-    padding: 12px 32px;
-    font-size: 16px;
+  .journal-content p,
+  .present-day p {
+    font-size: 0.8rem !important;
   }
 }
 
-/* ========================================
-   UTILITY CLASSES
-   ======================================== */
-
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 50vh;
-  font-size: 18px;
-  color: var(--color-text-secondary);
+@media (max-height: 600px) {
+  .journal-entry {
+    padding: 0.8rem !important;
+    font-size: 0.8rem !important;
+    max-height: calc(100vh - 140px) !important;
+  }
+  
+  .journal-header h2 {
+    font-size: 1.1rem !important;
+  }
 }
