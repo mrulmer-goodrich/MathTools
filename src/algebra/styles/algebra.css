@@ -4343,3 +4343,77 @@ body {
     font-size: 36px;
   }
 }
+/* =============================================================================
+   BACKGROUND IMAGES FOR LEVEL PLAYER
+   Append this to the end of your algebra.css file
+   
+   Location: All images in /public/assets/algebra/
+   Format: PNG files with correct naming
+   Fallback: Gradient backgrounds if images are missing
+   ============================================================================= */
+
+/* Base Camp Region - Levels 1-16 (Green Theme) */
+.level-player[data-region="base-camp"] {
+  background-image: url('/assets/algebra/map-base-camp.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Territory Region - Levels 17-31 (Brown Theme) */
+.level-player[data-region="territory"] {
+  background-image: url('/assets/algebra/map-river.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Frontier Region - Levels 32-37 (Gold Theme) */
+.level-player[data-region="frontier"] {
+  background-image: url('/assets/algebra/map-frontier.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* White overlay to keep content readable over background images */
+.level-player::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: -1;
+}
+
+/* Ensure level-player content appears above the overlay */
+.level-player {
+  position: relative;
+  z-index: 1;
+}
+
+/* =============================================================================
+   GRADIENT FALLBACKS (if you want to use gradients instead of images)
+   
+   To use gradients instead: Comment out the background-image lines above
+   and uncomment these gradient versions below
+   ============================================================================= */
+
+/*
+.level-player[data-region="base-camp"] {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+}
+
+.level-player[data-region="territory"] {
+  background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+}
+
+.level-player[data-region="frontier"] {
+  background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+}
+*/
