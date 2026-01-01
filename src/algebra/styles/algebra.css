@@ -4497,3 +4497,194 @@ body {
   z-index: 9999 !important;
 }
 
+/* STAGED WORKFLOW STYLING - Add this to your algebra.css */
+
+/* Container for the two-row staged workflow */
+.staged-workflow {
+  margin: 2rem auto;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Individual row styling */
+.staged-row {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.staged-row.active {
+  border: 3px solid #4CAF50;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+}
+
+.staged-row.completed {
+  background: #f0f8f0;
+  border: 2px solid #81C784;
+}
+
+.staged-row.locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Row prompt */
+.row-prompt {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.row-workspace {
+  margin-top: 1rem;
+}
+
+/* TERM BANK STYLING (Row 1) */
+.term-bank-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.selected-terms-area {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 80px;
+}
+
+.term-blanks {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.term-blank {
+  background: white;
+  border: 2px dashed #bbb;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  min-width: 100px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.term-blank .selected-term {
+  color: #2196F3;
+  font-weight: 600;
+}
+
+.term-blank .blank-placeholder {
+  color: #999;
+  font-size: 1.5rem;
+}
+
+/* Term bank chips */
+.term-bank {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.bank-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.term-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.term-chip {
+  background: white;
+  border: 2px solid #2196F3;
+  color: #2196F3;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.term-chip:hover:not(:disabled) {
+  background: #2196F3;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.term-chip:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.term-chip.used {
+  background: #e0e0e0;
+  border-color: #999;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.term-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Completed row display */
+.completed-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem;
+  background: #e8f5e9;
+  border-radius: 8px;
+}
+
+.completed-term {
+  background: white;
+  border: 2px solid #4CAF50;
+  color: #2e7d32;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .staged-workflow {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .term-blanks {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .term-blank {
+    min-width: auto;
+  }
+  
+  .term-chips {
+    justify-content: flex-start;
+  }
+}
