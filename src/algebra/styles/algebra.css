@@ -4417,3 +4417,67 @@ body {
   background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
 }
 */
+
+/* =============================================================================
+   BACKGROUND IMAGES FOR LEVEL PLAYER
+   Append this to the end of your algebra.css file
+   
+   Location: Your images in /public/algebra/
+   Format: PNG files
+   ============================================================================= */
+
+/* Make level-player and level-complete fill the viewport */
+.level-player,
+.level-complete {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Base Camp Region - Levels 1-16 (Green Theme) */
+.level-player[data-region="base-camp"],
+.level-complete[data-region="base-camp"] {
+  background-image: url('/algebra/map-base-camp.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Territory Region - Levels 17-31 (Brown Theme) */
+.level-player[data-region="territory"],
+.level-complete[data-region="territory"] {
+  background-image: url('/algebra/map-river.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Frontier Region - Levels 32-37 (Gold Theme) */
+.level-player[data-region="frontier"],
+.level-complete[data-region="frontier"] {
+  background-image: url('/algebra/map-frontier.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* White overlay to keep content readable over background images */
+.level-player::before,
+.level-complete::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Ensure content appears above the overlay */
+.level-player > *,
+.level-complete > * {
+  position: relative;
+  z-index: 1;
+}
+
