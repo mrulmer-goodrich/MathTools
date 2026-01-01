@@ -115,19 +115,93 @@ const canonicalizeExpression = (coefficient, variable, constant, constantFirst =
   }
 };
 
-// Check if two expressions are equivalent
-const areEquivalent = (expr1, expr2) => {
-  return expr1 === expr2;
+// ENHANCED: Parse expression into components for algebraic equivalence
+const parseExpression = (expr) => {
+  if (!expr || typeof expr !== 'string') return null;
+  
+  const trimmed = expr.trim();
+  
+  // Try to parse format: "ax + b" or "b + ax" or just "ax" or just "b"
+  // Handle: x, -x, 2x, -2x, x + 3, 2x - 5, 5 + 2x, etc.
+  
+  // Match patterns like: (coef)(var) + (const) or (const) + (coef)(var)
+  const patterns = [
+    /^([+-]?\d*\.?\d*)\s*([a-z])\s*([+-])\s*(\d+\.?\d*)$/i,  // ax ± c
+    /^(\d+\.?\d*)\s*([+-])\s*([+-]?\d*\.?\d*)\s*([a-z])$/i,   // c ± ax
+    /^([+-]?\d*\.?\d*)\s*([a-z])$/i,                          // ax only
+    /^(\d+\.?\d*)$/,                                           // constant only
+  ];
+  
+  // Try pattern 1: ax ± c
+  let match = trimmed.match(patterns[0]);
+  if (match) {
+    const coef = match[1] === '' ? 1 : match[1] === '-' ? -1 : parseFloat(match[1]);
+    const variable = match[2];
+    const sign = match[3];
+    const constant = sign === '+' ? parseFloat(match[4]) : -parseFloat(match[4]);
+    return { coefficient: coef, variable, constant };
+  }
+  
+  // Try pattern 2: c ± ax
+  match = trimmed.match(patterns[1]);
+  if (match) {
+    const constant = parseFloat(match[1]);
+    const sign = match[2];
+    const coef = match[3] === '' ? 1 : match[3] === '-' ? -1 : parseFloat(match[3]);
+    const variable = match[4];
+    const actualCoef = sign === '+' ? coef : -coef;
+    return { coefficient: actualCoef, variable, constant };
+  }
+  
+  // Try pattern 3: ax only
+  match = trimmed.match(patterns[2]);
+  if (match) {
+    const coef = match[1] === '' ? 1 : match[1] === '-' ? -1 : parseFloat(match[1]);
+    const variable = match[2];
+    return { coefficient: coef, variable, constant: 0 };
+  }
+  
+  // Try pattern 4: constant only
+  match = trimmed.match(patterns[3]);
+  if (match) {
+    return { coefficient: 0, variable: '', constant: parseFloat(match[1]) };
+  }
+  
+  return null;
 };
 
-// Remove duplicates by equivalence
+// Check if two expressions are algebraically equivalent (not just string equal)
+const areEquivalent = (expr1, expr2) => {
+  // String equality first (fastest check)
+  if (expr1 === expr2) return true;
+  
+  // Parse both expressions
+  const parsed1 = parseExpression(expr1);
+  const parsed2 = parseExpression(expr2);
+  
+  // If either couldn't parse, fall back to string comparison
+  if (!parsed1 || !parsed2) return expr1 === expr2;
+  
+  // Check algebraic equivalence
+  // Must have same coefficient, same variable, same constant
+  return (
+    Math.abs(parsed1.coefficient - parsed2.coefficient) < 0.0001 &&
+    parsed1.variable === parsed2.variable &&
+    Math.abs(parsed1.constant - parsed2.constant) < 0.0001
+  );
+};
+
+// Remove duplicates by equivalence (ENHANCED to catch rearrangements)
 const uniqueChoices = (choices) => {
-  const seen = new Set();
-  return choices.filter(choice => {
-    if (seen.has(choice)) return false;
-    seen.add(choice);
-    return true;
-  });
+  const unique = [];
+  for (const choice of choices) {
+    // Check if this choice is equivalent to any already in unique array
+    const isDuplicate = unique.some(existing => areEquivalent(choice, existing));
+    if (!isDuplicate) {
+      unique.push(choice);
+    }
+  }
+  return unique;
 };
 
 // Helper to format expressions consistently (used by Levels 9+)
