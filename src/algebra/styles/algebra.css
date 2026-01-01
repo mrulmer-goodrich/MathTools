@@ -2075,10 +2075,17 @@ body {
    ============================================ */
 
 .level-player {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  /* NO max-width here - backgrounds need full width! */
+}
+
+/* Content container - this gets the max-width instead */
+.level-player > * {
   max-width: 900px;
   margin: 0 auto;
-  padding: 16px 20px; /* Add horizontal padding */
-  min-height: calc(100vh - 80px);
+  padding: 0 20px;
 }
 
 /* Level Header - FIXED LAYOUT */
