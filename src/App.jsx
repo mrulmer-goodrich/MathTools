@@ -1,4 +1,4 @@
-// src/App.jsx — v12.2.0 (Added Multiplication Dojo) 
+// src/App.jsx — v12.2.1 (FIXED: Algebra gets full screen outside container)
 import React, { useState, useRef } from 'react' 
 import BigButton from './components/BigButton.jsx'
 import ScaleFactorModule from './modules/scale/ScaleFactor.jsx'
@@ -214,181 +214,18 @@ export default function App() {
   }
 
   return (
-    <div className="container">
-      {/* Home page */}
-      {route === 'home' && (
-        <>
-          <div className="header landing-header">
-            <div className="brand landing-title">UG Math Tools</div>
-          </div>
+    <>
+      {/* ============================================
+          FULL-SCREEN MODULES (OUTSIDE CONTAINER)
+          These modules need full viewport access
+          ============================================ */}
+      
+      {/* Algebra Expedition - FULL SCREEN */}
+      {route === 'algebra' && <AlgebraExpedition />}
 
-          <div className="row home-buttons">
-            <BigButton className="tile-btn" onClick={() => setRoute('algebra')}>
-              Algebra Expedition
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('zombie')}>
-              Zombie Apocalypse
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
-              Scale Factor
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
-              H-Table
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('battle-royale')}>
-              H-Table Battle Royale
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('ptables')}>
-              Proportional Tables
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('pgraphs')}>
-              Proportional Graphs
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
-              Mixed Numbers
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('circles')}>
-              Circles
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('vault-heist')}>
-              Vault Heist
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
-              Multiplication
-            </BigButton>
-            <BigButton className="tile-btn" onClick={() => setRoute('multiply-dojo')}>
-              Multiplication Dojo
-            </BigButton>
-          </div>
-        </>
-      )}
-
-      {/* Unified header for all modules EXCEPT battle royale and multiply-dojo */}
-      {route !== 'home' && route !== 'battle-royale' && route !== 'multiply-dojo' && (
-        <>
-          <div className="module-header">
-            <button 
-              className="header-button gradient-button"
-              onClick={goHome}
-            >
-              Home
-            </button>
-            <button 
-              className="header-button gradient-button"
-              onClick={() => setShowStatsReport(true)}
-              style={{ position: 'relative' }}
-            >
-              📊 Report
-              {stats.currentStreak > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  borderRadius: '12px',
-                  padding: '2px 8px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {stats.currentStreak}🔥
-                </span>
-              )}
-            </button>
-            <button 
-              className={`header-button gradient-button ${isProblemComplete ? 'pulse-animation' : ''}`}
-              onClick={handleNewProblem}
-            >
-              New Problem
-            </button>
-          </div>
-
-          {/* Module content */}
-          <div className="module-content">
-            {route === 'zombie' && (
-              <ZombieApocalypseModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('zombie', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'scale' && (
-              <ScaleFactorModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('scale', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'htable' && (
-              <HTableModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('htable', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'ptables' && (
-              <ProportionalTablesModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('ptables', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'pgraphs' && (
-              <ProportionalGraphsModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('pgraphs', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'mixed' && (
-              <MixedNumbersModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('mixed', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'circles' && (
-              <CirclesModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('circles', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'vault-heist' && (
-              <VaultHeistModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('vault-heist', fn)}
-                updateStats={updateStats}
-              />
-            )}
-
-            {route === 'multiply' && (
-              <MultiplicationModule 
-                onProblemComplete={handleProblemComplete}
-                registerReset={(fn) => registerReset('multiply', fn)}
-                updateStats={updateStats}
-              />
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Algebra Expedition gets full screen (manages its own navigation) */}
-      {route === 'algebra' && (
-        <AlgebraExpedition />
-      )}
-
-      {/* Multiplication Dojo gets full screen (no header, manages its own navigation) */}
+      {/* Multiplication Dojo - FULL SCREEN */}
       {route === 'multiply-dojo' && (
         <>
-          {/* Add a small back button in top-left */}
           <button 
             onClick={goHome}
             className="button secondary"
@@ -403,15 +240,13 @@ export default function App() {
           >
             ← Back to Home
           </button>
-          
           <MultiplicationDojo />
         </>
       )}
 
-      {/* Battle Royale gets full screen (no header) */}
+      {/* Battle Royale - FULL SCREEN */}
       {route === 'battle-royale' && (
         <>
-          {/* Add a small back button in top-left */}
           <button 
             onClick={goHome}
             className="button secondary"
@@ -426,7 +261,6 @@ export default function App() {
           >
             ← Back to Home
           </button>
-          
           <HTableBattleRoyaleModule 
             onProblemComplete={handleProblemComplete}
             registerReset={(fn) => registerReset('battle-royale', fn)}
@@ -435,49 +269,219 @@ export default function App() {
         </>
       )}
 
-      {/* Stats Report Modal */}
-      {showStatsReport && (
-        <StatsReport
-          stats={stats}
-          onClose={() => setShowStatsReport(false)}
-          moduleName={getModuleName()}
+      {/* ============================================
+          REGULAR MODULES (INSIDE CONTAINER)
+          ============================================ */}
+      <div className="container">
+        {/* Home page */}
+        {route === 'home' && (
+          <>
+            <div className="header landing-header">
+              <div className="brand landing-title">UG Math Tools</div>
+            </div>
+
+            <div className="row home-buttons">
+              <BigButton className="tile-btn" onClick={() => setRoute('algebra')}>
+                Algebra Expedition
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('zombie')}>
+                Zombie Apocalypse
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('scale')}>
+                Scale Factor
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('htable')}>
+                H-Table
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('battle-royale')}>
+                H-Table Battle Royale
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('ptables')}>
+                Proportional Tables
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('pgraphs')}>
+                Proportional Graphs
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('mixed')}>
+                Mixed Numbers
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('circles')}>
+                Circles
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('vault-heist')}>
+                Vault Heist
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('multiply')}>
+                Multiplication
+              </BigButton>
+              <BigButton className="tile-btn" onClick={() => setRoute('multiply-dojo')}>
+                Multiplication Dojo
+              </BigButton>
+            </div>
+          </>
+        )}
+
+        {/* Unified header for all CONTAINERIZED modules */}
+        {route !== 'home' && route !== 'algebra' && route !== 'battle-royale' && route !== 'multiply-dojo' && (
+          <>
+            <div className="module-header">
+              <button 
+                className="header-button gradient-button"
+                onClick={goHome}
+              >
+                Home
+              </button>
+              <button 
+                className="header-button gradient-button"
+                onClick={() => setShowStatsReport(true)}
+                style={{ position: 'relative' }}
+              >
+                📊 Report
+                {stats.currentStreak > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    borderRadius: '12px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {stats.currentStreak}🔥
+                  </span>
+                )}
+              </button>
+              <button 
+                className={`header-button gradient-button ${isProblemComplete ? 'pulse-animation' : ''}`}
+                onClick={handleNewProblem}
+              >
+                New Problem
+              </button>
+            </div>
+
+            {/* Module content */}
+            <div className="module-content">
+              {route === 'zombie' && (
+                <ZombieApocalypseModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('zombie', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'scale' && (
+                <ScaleFactorModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('scale', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'htable' && (
+                <HTableModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('htable', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'ptables' && (
+                <ProportionalTablesModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('ptables', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'pgraphs' && (
+                <ProportionalGraphsModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('pgraphs', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'mixed' && (
+                <MixedNumbersModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('mixed', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'circles' && (
+                <CirclesModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('circles', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'vault-heist' && (
+                <VaultHeistModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('vault-heist', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+
+              {route === 'multiply' && (
+                <MultiplicationModule 
+                  onProblemComplete={handleProblemComplete}
+                  registerReset={(fn) => registerReset('multiply', fn)}
+                  updateStats={updateStats}
+                />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Stats Report Modal */}
+        {showStatsReport && (
+          <StatsReport
+            stats={stats}
+            onClose={() => setShowStatsReport(false)}
+            moduleName={getModuleName()}
+          />
+        )}
+
+        {/* Enhanced Turkey Celebration - shows every 3, golden at 9! */}
+        <TurkeyOverlay 
+          show={showTurkey} 
+          streak={turkeyStreak}
+          isGolden={isGoldenTurkey}
         />
-      )}
 
-      {/* Enhanced Turkey Celebration - shows every 3, golden at 9! */}
-      <TurkeyOverlay 
-        show={showTurkey} 
-        streak={turkeyStreak}
-        isGolden={isGoldenTurkey}
-      />
-
-      {/* Confirmation Modal */}
-      {showConfirmNew && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-title">
-              Start a new problem?
-            </div>
-            <div className="modal-message">
-              You'll lose your progress on the current problem.
-            </div>
-            <div className="modal-buttons">
-              <button 
-                className="button primary gradient-button"
-                onClick={resetCurrentModule}
-              >
-                Yes, New Problem
-              </button>
-              <button 
-                className="button secondary"
-                onClick={() => setShowConfirmNew(false)}
-              >
-                Cancel
-              </button>
+        {/* Confirmation Modal */}
+        {showConfirmNew && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-title">
+                Start a new problem?
+              </div>
+              <div className="modal-message">
+                You'll lose your progress on the current problem.
+              </div>
+              <div className="modal-buttons">
+                <button 
+                  className="button primary gradient-button"
+                  onClick={resetCurrentModule}
+                >
+                  Yes, New Problem
+                </button>
+                <button 
+                  className="button secondary"
+                  onClick={() => setShowConfirmNew(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   )
 }
