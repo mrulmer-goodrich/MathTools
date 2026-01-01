@@ -4481,10 +4481,15 @@ body {
   pointer-events: none;
 }
 
-/* Ensure content appears above the overlay */
-.level-player > *,
+/* Ensure content appears above the background overlay */
+.level-player > *:not(.success-overlay):not(.feedback-modal-overlay),
 .level-complete > * {
   position: relative;
   z-index: 1;
 }
 
+/* Keep overlays on TOP of everything */
+.success-overlay,
+.feedback-modal-overlay {
+  z-index: 9999 !important;
+}
