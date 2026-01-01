@@ -1,6 +1,3 @@
-// LevelPlayer.jsx - FIXED: Pass problem to FeedbackModal
-// Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
-
 import React, { useState, useEffect } from 'react';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
@@ -9,7 +6,6 @@ import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
-import { storyline } from '../../data/levelData';
 
 const LevelPlayer = ({ 
   levelId, 
@@ -18,8 +14,7 @@ const LevelPlayer = ({
   stats,
   setStats,
   onLevelComplete,
-  onReturnToMenu,
-  onLevelChange
+  onReturnToMenu 
 }) => {
   const [currentProblem, setCurrentProblem] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
@@ -28,28 +23,20 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
-  const [showStoryIntro, setShowStoryIntro] = useState(true);
 
   const level = levels[levelId];
-  const levelStory = storyline.levels[levelId];
 
-  useEffect(() => {
-    setShowStoryIntro(true);
-    setCorrectStreak(0);
-    setLevelComplete(false);
-    setCurrentProblem(null);
-  }, [levelId]);
-
-  useEffect(() => {
-    if (onLevelChange) {
-      onLevelChange(levelId);
-    }
-  }, [levelId, onLevelChange]);
-
-  const handleContinueFromStory = () => {
-    setShowStoryIntro(false);
-    generateNewProblem();
+  // Helper function to determine region based on level number
+  const getRegion = (levelId) => {
+    const num = parseInt(levelId.split('-')[1]);
+    if (num <= 16) return 'base-camp';
+    if (num <= 31) return 'territory';
+    return 'frontier';
   };
+
+  useEffect(() => {
+    generateNewProblem();
+  }, [levelId]);
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
@@ -83,6 +70,7 @@ const LevelPlayer = ({
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
 
+    // Update stats
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
@@ -94,18 +82,22 @@ const LevelPlayer = ({
       const newStreak = correctStreak + 1;
       setCorrectStreak(newStreak);
       
+      // Show success overlay for 2 seconds
       setShowSuccess(true);
       
       setTimeout(() => {
         setShowSuccess(false);
         
+        // Check if level complete
         if (newStreak >= level.problemsRequired) {
           setLevelComplete(true);
         } else {
+          // Auto-generate next problem
           generateNewProblem();
         }
       }, 2000);
     } else {
+      // Show wrong answer modal
       setCorrectStreak(0);
       setShowFeedback(true);
     }
@@ -117,33 +109,18 @@ const LevelPlayer = ({
   };
 
   const handleContinueFromComplete = () => {
+    // Award badges if applicable
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
     
-    const currentNum = parseInt(levelId.split('-')[1]);
-    if (currentNum < 37) {
-      const nextLevelId = `1-${currentNum + 1}`;
-      if (onLevelChange) {
-        onLevelChange(nextLevelId);
-      }
+    if (level.moduleBadge || level.finalModule) {
+      // Return to menu for module completion
+      onReturnToMenu();
     } else {
+      // Would advance to next level in full implementation
       onReturnToMenu();
     }
   };
-
-  if (showStoryIntro && levelStory) {
-    return (
-      <div className="story-intro-screen">
-        <div className="story-intro-content">
-          <h2>{level.name}</h2>
-          <p className="story-intro-text">{levelStory.intro}</p>
-          <button className="btn-continue-story" onClick={handleContinueFromStory}>
-            Continue →
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (!currentProblem) {
     return <div className="loading">Generating problem...</div>;
@@ -160,7 +137,7 @@ const LevelPlayer = ({
           {level.badge && (
             <div className="badge-earned">
               <p><strong>Badge Earned!</strong></p>
-              <div className="badge-display">{level.badge}</div>
+              <div className="badge-display">🏆 {level.badge}</div>
             </div>
           )}
 
@@ -179,7 +156,7 @@ const LevelPlayer = ({
             className="btn-continue-expedition"
             onClick={handleContinueFromComplete}
           >
-            {parseInt(levelId.split('-')[1]) < 37 ? 'Next Level →' : 'Complete! 🎉'}
+            {level.moduleBadge ? 'Continue Expedition' : 'Next Level'} →
           </button>
         </div>
       </div>
@@ -187,11 +164,8 @@ const LevelPlayer = ({
   }
 
   return (
-    <div className="level-player">
+    <div className="level-player" data-region={getRegion(levelId)}>
       <div className="level-header">
-        <button className="back-to-menu-button" onClick={onReturnToMenu}>
-          ← Back to Menu
-        </button>
         <h2>{level.name}</h2>
         <ProgressTracker 
           current={correctStreak} 
@@ -201,6 +175,7 @@ const LevelPlayer = ({
 
       <ProblemDisplay problem={currentProblem} />
 
+      {/* Render appropriate input method based on level */}
       {level.inputMethod === 'clickToSelect' && (
         <ClickToSelect
           choices={currentProblem.choices}
@@ -210,14 +185,14 @@ const LevelPlayer = ({
         />
       )}
 
+      {/* Success Overlay */}
       {showSuccess && (
         <SuccessOverlay message={getSuccessMessage()} />
       )}
 
-      {/* CHANGED: Pass currentProblem to FeedbackModal */}
+      {/* Wrong Answer Modal */}
       {showFeedback && (
         <FeedbackModal
-          problem={currentProblem}
           explanation={currentProblem.explanation}
           onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
