@@ -23,6 +23,11 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
+  
+  // NEW: State for staged workflow
+  const [currentRow, setCurrentRow] = useState(0);
+  const [row1Answers, setRow1Answers] = useState([]);
+  const [row2Answer, setRow2Answer] = useState(null);
 
   const level = levels[levelId];
 
@@ -46,6 +51,11 @@ const LevelPlayer = ({
       setShowFeedback(false);
       setShowSuccess(false);
       setSelectedAnswer(null);
+      
+      // Reset staged workflow state
+      setCurrentRow(0);
+      setRow1Answers([]);
+      setRow2Answer(null);
     } else {
       console.error(`No generator found for level ${levelId}`);
     }
@@ -65,7 +75,58 @@ const LevelPlayer = ({
     return messages[Math.floor(Math.random() * messages.length)];
   };
 
+  // NEW: Handle staged row submissions
+  const handleStagedRowSubmit = (answer) => {
+    const staged = currentProblem.staged;
+    const currentRowData = staged.rows[currentRow];
+    
+    if (currentRow === 0) {
+      // Row 1: collecting terms
+      const newAnswers = [...row1Answers, answer];
+      setRow1Answers(newAnswers);
+      
+      // Check if row 1 is complete
+      if (newAnswers.length >= currentRowData.blanks) {
+        // Validate row 1
+        const allCorrect = newAnswers.every((ans, idx) => 
+          ans === currentRowData.expected[idx]
+        );
+        
+        if (allCorrect) {
+          // Move to row 2
+          setCurrentRow(1);
+        } else {
+          // Row 1 incorrect - show feedback
+          setIsCorrect(false);
+          setShowFeedback(true);
+          setCorrectStreak(0);
+          setStats(prev => ({
+            ...prev,
+            problemsAttempted: prev.problemsAttempted + 1,
+            currentStreak: 0
+          }));
+        }
+      }
+    } else {
+      // Row 2: final answer
+      setRow2Answer(answer);
+      handleFinalAnswer(answer);
+    }
+  };
+
+  // Regular answer submit (for non-staged problems)
   const handleAnswerSubmit = (answer) => {
+    // Check if this is a staged problem
+    if (currentProblem.staged) {
+      handleStagedRowSubmit(answer);
+      return;
+    }
+    
+    // Regular single-step problem
+    handleFinalAnswer(answer);
+  };
+
+  const handleFinalAnswer = (answer) => {
     setSelectedAnswer(answer);
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
@@ -163,6 +224,10 @@ const LevelPlayer = ({
     );
   }
 
+  // Determine what to render based on staged or regular problem
+  const isStaged = currentProblem.staged && currentProblem.staged.rows;
+  const currentRowData = isStaged ? currentProblem.staged.rows[currentRow] : null;
+
   return (
     <div className="level-player" data-region={getRegion(levelId)}>
       <div className="level-header">
@@ -181,8 +246,52 @@ const LevelPlayer = ({
 
       <ProblemDisplay problem={currentProblem} />
 
-      {/* Render appropriate input method based on level */}
-      {level.inputMethod === 'clickToSelect' && (
+      {/* STAGED WORKFLOW - Two rows */}
+      {isStaged && (
+        <div className="staged-workflow">
+          {/* Row 1: Distribute */}
+          <div className={`staged-row ${currentRow === 0 ? 'active' : currentRow > 0 ? 'completed' : 'locked'}`}>
+            <div className="row-prompt">{currentProblem.staged.rows[0].prompt}</div>
+            <div className="row-workspace">
+              {currentRow === 0 && (
+                <ClickToSelect
+                  choices={currentProblem.staged.rows[0].bank}
+                  onSubmit={handleAnswerSubmit}
+                  disabled={showFeedback || showSuccess}
+                  isTermBank={true}
+                  blanksNeeded={currentProblem.staged.rows[0].blanks}
+                  selectedTerms={row1Answers}
+                />
+              )}
+              {currentRow > 0 && (
+                <div className="completed-row">
+                  {row1Answers.map((term, idx) => (
+                    <span key={idx} className="completed-term">{term}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Combine */}
+          {currentRow >= 1 && (
+            <div className={`staged-row ${currentRow === 1 ? 'active' : 'locked'}`}>
+              <div className="row-prompt">{currentProblem.staged.rows[1].prompt}</div>
+              <div className="row-workspace">
+                <ClickToSelect
+                  choices={currentProblem.staged.rows[1].choices}
+                  onSubmit={handleAnswerSubmit}
+                  disabled={showFeedback || showSuccess}
+                  isTermBank={false}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* REGULAR WORKFLOW - Single multiple choice */}
+      {!isStaged && level.inputMethod === 'clickToSelect' && (
         <ClickToSelect
           choices={currentProblem.choices}
           onSubmit={handleAnswerSubmit}
