@@ -1,12 +1,20 @@
-// ClickToSelect.jsx - UPDATED: Format display + filter NaN
+// ClickToSelect.jsx - UPDATED: Handles both regular multiple choice AND term banks for staged workflow
 // Location: src/algebra/components/LevelPlayer/InputMethods/ClickToSelect.jsx
 
 import React, { useState } from 'react';
 import { formatAnswerChoice, validateChoices } from '../../../utils/formatUtils';
 import '../../../styles/algebra.css';
 
-const ClickToSelect = ({ choices, onSubmit, disabled }) => {
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+const ClickToSelect = ({ 
+  choices, 
+  onSubmit, 
+  disabled,
+  selectedAnswer,
+  isTermBank = false,        // NEW: Is this a term bank (for Row 1) or multiple choice (for Row 2)?
+  blanksNeeded = 1,           // NEW: How many terms need to be selected?
+  selectedTerms = []          // NEW: Currently selected terms for term bank
+}) => {
+  const [localSelected, setLocalSelected] = useState(selectedAnswer || null);
 
   // Filter out NaN and invalid choices
   const validChoices = validateChoices(choices);
@@ -20,21 +28,69 @@ const ClickToSelect = ({ choices, onSubmit, disabled }) => {
   const handleClick = (choice) => {
     if (disabled) return;
     
-    setSelectedAnswer(choice);
-    onSubmit(choice);
+    if (isTermBank) {
+      // Term bank mode: just submit the choice immediately
+      onSubmit(choice);
+    } else {
+      // Regular multiple choice mode
+      setLocalSelected(choice);
+      onSubmit(choice);
+    }
   };
 
+  // TERM BANK MODE (for Row 1 - distributing)
+  if (isTermBank) {
+    return (
+      <div className="term-bank-container">
+        <div className="selected-terms-area">
+          <div className="term-blanks">
+            {Array.from({ length: blanksNeeded }).map((_, idx) => (
+              <div key={idx} className="term-blank">
+                {selectedTerms[idx] ? (
+                  <span className="selected-term">{formatAnswerChoice(selectedTerms[idx])}</span>
+                ) : (
+                  <span className="blank-placeholder">___</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="term-bank">
+          <div className="bank-label">Available Terms:</div>
+          <div className="term-chips">
+            {validChoices.map((choice, index) => {
+              const isUsed = selectedTerms.includes(choice);
+              const displayChoice = formatAnswerChoice(choice);
+              
+              return (
+                <button
+                  key={index}
+                  className={`term-chip ${isUsed ? 'used' : ''}`}
+                  onClick={() => handleClick(choice)}
+                  disabled={disabled || isUsed}
+                >
+                  {displayChoice}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MULTIPLE CHOICE MODE (for Row 2 or regular problems)
   return (
     <div className="click-to-select-container">
       <div className="answer-choices">
         {validChoices.map((choice, index) => {
-          // Format the choice for display
           const displayChoice = formatAnswerChoice(choice);
           
           return (
             <button
               key={index}
-              className={`answer-choice ${selectedAnswer === choice ? 'selected' : ''}`}
+              className={`answer-choice ${localSelected === choice || selectedAnswer === choice ? 'selected' : ''}`}
               onClick={() => handleClick(choice)}
               disabled={disabled}
             >
