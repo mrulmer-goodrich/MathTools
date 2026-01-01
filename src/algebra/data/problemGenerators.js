@@ -1379,96 +1379,6 @@ export const generateSubtractLikeTermsProblem = (difficulty) => {
 };
 
 // ============================================
-// STAGED WORKFLOW HELPERS (for Levels 13-16)
-// ============================================
-
-// Build Row 1 terms for distribute-then-combine workflow
-// Returns terms in the order students should see them (distributed, not yet combined)
-const buildRow1Terms = ({
-  outside,
-  variable,
-  insideConst,
-  insideOp = '+',
-  standaloneCoef = 0,
-  trailingConst = 0
-}) => {
-  const terms = [];
-  
-  // Distribute to variable term (coefficient assumed 1 inside parentheses for L13-16)
-  const distVarCoef = outside * 1;
-  terms.push(formatCoefficient(distVarCoef, variable));
-  
-  // Distribute to constant inside parentheses
-  const distConst = insideOp === '-' ? outside * (-insideConst) : outside * insideConst;
-  terms.push(String(distConst));
-  
-  // Standalone variable term after parentheses
-  if (standaloneCoef !== 0) {
-    terms.push(formatCoefficient(standaloneCoef, variable));
-  }
-  
-  // Trailing constant
-  if (trailingConst !== 0) {
-    terms.push(String(trailingConst));
-  }
-  
-  return terms;
-};
-
-// Build term bank with correct terms + misconception distractors
-// IMPORTANT: No equivalents of correct terms (Option B from requirements)
-const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
-  const bank = [];
-  const seen = new Set();
-  
-  const add = (term) => {
-    if (!term) return;
-    const s = String(term).trim();
-    if (!s) return;
-    // Use enhanced equivalence to prevent duplicates
-    const isDuplicate = bank.some(existing => areEquivalent(s, existing));
-    if (isDuplicate) return;
-    seen.add(s);
-    bank.push(s);
-  };
-  
-  // Add correct terms first
-  correctTerms.forEach(add);
-  
-  // Add distractors
-  (distractorTerms || []).forEach(add);
-  
-  // Pad with random integers (checking for equivalents)
-  while (bank.length < padTo) {
-    const v = randomInt(1, 60) * (Math.random() < 0.5 ? -1 : 1);
-    add(String(v));
-  }
-  
-  return bank;
-};
-
-// Create two-row staged specification
-const makeStagedSpec = ({ row1Terms, row2Answer, row1Bank, row2Choices }) => ({
-  mode: 'distribute_then_combine',
-  rows: [
-    {
-      id: 'row1_distribute',
-      prompt: 'Distribute (expand) first.',
-      blanks: row1Terms.length,
-      expected: row1Terms,
-      bank: row1Bank
-    },
-    {
-      id: 'row2_combine',
-      prompt: 'Now combine like terms to finish.',
-      blanks: 1,
-      expected: [row2Answer],
-      choices: row2Choices
-    }
-  ]
-});
-
-// ============================================
 // PHASE 5: SIMPLIFYING EXPRESSIONS (Levels 13-16)
 // Copy these 4 functions and paste them BEFORE the EXPORTS section
 // ============================================
@@ -1513,26 +1423,6 @@ export const generateDistributeCombineProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(insideTerm), formatCoefficient(standaloneTerm + outside, 'x'), String(distributedConstant + insideTerm)],
-          padTo: 12
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return {
-          problem, displayProblem: problem, answer, choices, staged,
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: `Distribute ${outside}`, work: `${formatCoefficient(distributedCoef, 'x')} + ${distributedConstant}` },
-              { description: `Combine like terms`, work: answer }
-            ],
-            rule: "Distribute → Combine",
-            finalAnswer: answer
-          }
-        };
       }
     } else {
       const skeletons = ['a(v+b)+cv', 'cv+a(v+b)', 'a(v+b)+cv-d', 'a(v+b)-cv'];
@@ -1577,15 +1467,6 @@ export const generateDistributeCombineProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp: '+', standaloneCoef, trailingConst });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, variable), String(insideTerm), String(distributedConstant + (trailingConst || 0))],
-          padTo: 14
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
       }
     }
   }
@@ -1594,10 +1475,6 @@ export const generateDistributeCombineProblem = (difficulty) => {
   const answer = canonicalizeExpression(outside + standaloneTerm, 'x', outside * insideTerm, false);
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
-  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
 // ============================================
@@ -1649,26 +1526,6 @@ export const generateDistributeSubtractProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(insideTerm), String(-distributedConstant), formatCoefficient(totalXCoef, 'x')],
-          padTo: 12
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return {
-          problem, displayProblem: problem, answer, choices, staged,
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: `Distribute ${outside}`, work: `` },
-              { description: `Combine like terms`, work: answer }
-            ],
-            rule: "Watch signs when distributing with subtraction",
-            finalAnswer: answer
-          }
-        };
       }
     } else {
       const skeletons = ['a(v-b)+cv', 'a(v+b)-cv', 'cv-a(v-b)', 'a(v-b)-cv'];
@@ -1716,15 +1573,6 @@ export const generateDistributeSubtractProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, variable), String(insideTerm), String(-distributedConstant)],
-          padTo: 14
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
       }
     }
   }
@@ -1733,10 +1581,6 @@ export const generateDistributeSubtractProblem = (difficulty) => {
   const answer = formatAnswer(outside + standaloneTerm, 'x', -(outside * insideTerm));
   const problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
-  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '-', standaloneCoef: standaloneTerm });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
 // ============================================
@@ -1794,26 +1638,6 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(-outside, 'x'), String(-distributedConstant), formatCoefficient(standaloneTerm - outside, 'x')],
-          padTo: 12
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return {
-          problem, displayProblem: problem, answer, choices, staged,
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: `Distribute ${outside}`, work: `` },
-              { description: `Combine like terms`, work: answer }
-            ],
-            rule: "Negative outside affects ALL terms inside",
-            finalAnswer: answer
-          }
-        };
       }
     } else {
       const skeletons = ['-a(v+b)+cv', '-a(v-b)+cv', 'cv-a(v+b)', '-a(v+b)-cv'];
@@ -1862,15 +1686,6 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(-outside, variable), String(-distributedConstant), formatCoefficient(standaloneMag, variable)],
-          padTo: 14
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
       }
     }
   }
@@ -1879,10 +1694,6 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
   const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm);
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
-  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
 // ============================================
@@ -1941,26 +1752,6 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(insideTerm), String(distributedConstant + constantMag), formatCoefficient(totalXCoef, 'x')],
-          padTo: 14
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return {
-          problem, displayProblem: problem, answer, choices, staged,
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: `Distribute`, work: `` },
-              { description: `Combine like terms`, work: answer }
-            ],
-            rule: "Distribute → Combine x terms → Combine constants",
-            finalAnswer: answer
-          }
-        };
       }
     } else {
       const skeletons = ['±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d'];
@@ -1998,15 +1789,6 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         recordProblem(levelId, difficulty, signature);
         
         const choices = ensureFourChoices(misconceptions, answer);
-        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef, trailingConst });
-        const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outsideMag, variable), String(insideTerm), String(-distributedConstant), String(trailingConst * -1)],
-          padTo: 16
-        });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
       }
     }
   }
@@ -2015,10 +1797,6 @@ export const generateComplexSimplifyProblem = (difficulty) => {
   const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm - constant);
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constant}`;
   const choices = ensureFourChoices([answer], answer);
-  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm, trailingConst: -constant });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 12 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
 
