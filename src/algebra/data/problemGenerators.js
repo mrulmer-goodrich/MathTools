@@ -74,20 +74,20 @@ const getVariable = (difficulty) => {
 // CANONICALIZATION SYSTEM
 // ============================================
 
-// Canonical form: ax + b (never ax + -b, always ax - b)
-// Coefficient 1 and -1 are hidden: x not 1x, -x not -1x
-const canonicalizeExpression = (coefficient, variable, constant) => {
+// GLOBAL RULE: Hide coefficient 1 and -1 everywhere
+const formatCoefficient = (coefficient, variable) => {
+  if (coefficient === 0) return '';
+  if (coefficient === 1) return variable;
+  if (coefficient === -1) return `-${variable}`;
+  return `${coefficient}${variable}`;
+};
+
+// Format expressions preserving ORIGINAL TERM ORDER
+// If problem was a(b + x), answer is ab + ax (NOT ax + ab)
+// constantFirst = true means constant came first in original problem
+const canonicalizeExpression = (coefficient, variable, constant, constantFirst = false) => {
   // Handle coefficient display
-  let varPart;
-  if (coefficient === 0) {
-    varPart = '';
-  } else if (coefficient === 1) {
-    varPart = variable;
-  } else if (coefficient === -1) {
-    varPart = `-${variable}`;
-  } else {
-    varPart = `${coefficient}${variable}`;
-  }
+  let varPart = formatCoefficient(coefficient, variable);
   
   // Handle constant
   if (coefficient === 0 && constant === 0) {
@@ -96,10 +96,22 @@ const canonicalizeExpression = (coefficient, variable, constant) => {
     return String(constant);
   } else if (constant === 0) {
     return varPart;
-  } else if (constant > 0) {
-    return `${varPart} + ${constant}`;
+  } else if (constantFirst) {
+    // Constant came first: return "c ± ax" format
+    if (coefficient > 0) {
+      return `${constant} + ${varPart}`;
+    } else if (coefficient < 0) {
+      return `${constant} - ${varPart.replace('-', '')}`;
+    } else {
+      return String(constant);
+    }
   } else {
-    return `${varPart} - ${Math.abs(constant)}`;
+    // Variable came first: return "ax ± c" format
+    if (constant > 0) {
+      return `${varPart} + ${constant}`;
+    } else {
+      return `${varPart} - ${Math.abs(constant)}`;
+    }
   }
 };
 
@@ -435,45 +447,41 @@ export const generateBasicDistributionProblem = (difficulty) => {
     const maxCoef = difficulty === 'easy' ? 3 : 12;
     
     const skeletons = difficulty === 'easy' 
-      ? ['a(bx + c)', 'a(cx + b)']
-      : ['a(bx + c)', 'a(cx + b)', 'a(b + cx)', 'a(c + bx)'];
+      ? ['a(bx + c)', 'a(c + bx)']
+      : ['a(bx + c)', 'a(c + bx)', 'a(bx + c)', 'a(c + bx)'];
     
     const skeleton = randomFrom(skeletons);
     const outside = randomInt(2, 12);
     const varCoef = randomInt(1, maxCoef);
     const constant = randomInt(1, 12);
     
-    let problem, answerCoef, answerConst;
+    let problem, answerCoef, answerConst, constantFirst;
     
     if (skeleton === 'a(bx + c)') {
-      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+      // Variable first: a(2x + 3) → 6x + 9
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
       answerCoef = outside * varCoef;
       answerConst = outside * constant;
-    } else if (skeleton === 'a(cx + b)') {
-      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
-      answerCoef = outside * varCoef;
-      answerConst = outside * constant;
-    } else if (skeleton === 'a(b + cx)') {
-      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
-      answerCoef = outside * varCoef;
-      answerConst = outside * constant;
+      constantFirst = false;
     } else {
-      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      // Constant first: a(3 + 2x) → 9 + 6x
+      problem = `${outside}(${constant} + ${formatCoefficient(varCoef, variable)})`;
       answerCoef = outside * varCoef;
       answerConst = outside * constant;
+      constantFirst = true;
     }
     
     const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
     if (!isRecentDuplicate(levelId, difficulty, signature)) {
       recordProblem(levelId, difficulty, signature);
       
-      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
       const misconceptions = [
         answer,
-        canonicalizeExpression(varCoef, variable, outside * constant),
-        canonicalizeExpression(outside * varCoef, variable, constant),
-        canonicalizeExpression(outside + varCoef, variable, outside + constant),
-        canonicalizeExpression(answerCoef, variable, constant),
+        canonicalizeExpression(varCoef, variable, outside * constant, constantFirst),
+        canonicalizeExpression(outside * varCoef, variable, constant, constantFirst),
+        canonicalizeExpression(outside + varCoef, variable, outside + constant, constantFirst),
+        canonicalizeExpression(answerCoef, variable, constant, constantFirst),
       ];
       const choices = ensureFourChoices(misconceptions, answer);
       
@@ -483,7 +491,7 @@ export const generateBasicDistributionProblem = (difficulty) => {
           originalProblem: problem,
           steps: [
             { description: `Problem: ${problem}`, work: `` },
-            { description: `Distribute ${outside} to each term`, work: `${outside} × ${varCoef === 1 ? '' : varCoef}${variable} = ${answerCoef === 1 ? '' : answerCoef}${variable}` },
+            { description: `Distribute ${outside} to each term`, work: `${outside} × ${formatCoefficient(varCoef, variable)} = ${formatCoefficient(answerCoef, variable)}` },
             { description: ``, work: `${outside} × ${constant} = ${answerConst}` },
             { description: `Combine`, work: answer }
           ],
@@ -500,9 +508,9 @@ export const generateBasicDistributionProblem = (difficulty) => {
   const constant = randomInt(1, 12);
   const answerCoef = outside * varCoef;
   const answerConst = outside * constant;
-  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
-  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
-  const choices = ensureFourChoices([answer, canonicalizeExpression(varCoef, variable, outside * constant), canonicalizeExpression(outside * varCoef, variable, constant)], answer);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(varCoef, variable, outside * constant, false), canonicalizeExpression(outside * varCoef, variable, constant, false)], answer);
   return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution", finalAnswer: answer }};
 };
 
@@ -522,29 +530,33 @@ export const generateDistributionSubtractionProblem = (difficulty) => {
     const varCoef = randomInt(1, maxCoef);
     const constant = randomInt(1, 12);
     
-    let problem, answerCoef, answerConst;
+    let problem, answerCoef, answerConst, constantFirst;
     
     if (skeleton === 'a(bx - c)') {
-      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
+      // Variable first: a(2x - 3) → 6x - 9
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
       answerCoef = outside * varCoef;
       answerConst = -(outside * constant);
+      constantFirst = false;
     } else {
-      problem = `${outside}(${constant} - ${varCoef === 1 ? '' : varCoef}${variable})`;
+      // Constant first: a(3 - 2x) → 9 - 6x
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
       answerCoef = -(outside * varCoef);
       answerConst = outside * constant;
+      constantFirst = true;
     }
     
     const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
     if (!isRecentDuplicate(levelId, difficulty, signature)) {
       recordProblem(levelId, difficulty, signature);
       
-      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
       const misconceptions = [
         answer,
-        canonicalizeExpression(answerCoef, variable, Math.abs(answerConst)),
-        canonicalizeExpression(Math.abs(answerCoef), variable, answerConst),
-        canonicalizeExpression(outside * varCoef, variable, outside * constant),
-        canonicalizeExpression(varCoef, variable, -(outside * constant)),
+        canonicalizeExpression(answerCoef, variable, Math.abs(answerConst), constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, answerConst, constantFirst),
+        canonicalizeExpression(outside * varCoef, variable, outside * constant, constantFirst),
+        canonicalizeExpression(varCoef, variable, -(outside * constant), constantFirst),
       ];
       const choices = ensureFourChoices(misconceptions, answer);
       
@@ -554,7 +566,7 @@ export const generateDistributionSubtractionProblem = (difficulty) => {
           originalProblem: problem,
           steps: [
             { description: `Problem: ${problem}`, work: `` },
-            { description: `Distribute ${outside}`, work: skeleton === 'a(bx - c)' ? `${answerCoef === 1 ? '' : answerCoef === -1 ? '-' : answerCoef}${variable} and ${answerConst}` : `${answerConst} and ${answerCoef === 1 ? '' : answerCoef === -1 ? '-' : answerCoef}${variable}` },
+            { description: `Distribute ${outside}`, work: `` },
             { description: `Result`, work: answer }
           ],
           rule: "Distribute and watch your signs!",
@@ -570,9 +582,9 @@ export const generateDistributionSubtractionProblem = (difficulty) => {
   const constant = randomInt(1, 12);
   const answerCoef = outside * varCoef;
   const answerConst = -(outside * constant);
-  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
-  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
-  const choices = ensureFourChoices([answer, canonicalizeExpression(answerCoef, variable, Math.abs(answerConst))], answer);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(answerCoef, variable, Math.abs(answerConst), false)], answer);
   return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution with subtraction", finalAnswer: answer }};
 };
 
@@ -594,37 +606,45 @@ export const generateNegativeOutsideProblem = (difficulty) => {
     const varCoef = randomInt(1, maxCoef);
     const constant = randomInt(1, 12);
     
-    let problem, answerCoef, answerConst;
+    let problem, answerCoef, answerConst, constantFirst;
     
     if (skeleton === '-a(bx + c)') {
-      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+      // Variable first: -2(3x + 4) → -6x - 8
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
       answerCoef = outside * varCoef;
       answerConst = outside * constant;
+      constantFirst = false;
     } else if (skeleton === '-a(bx - c)') {
-      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
+      // Variable first: -2(3x - 4) → -6x + 8
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
       answerCoef = outside * varCoef;
       answerConst = -(outside * constant);
+      constantFirst = false;
     } else if (skeleton === '-a(c + bx)') {
-      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      // Constant first: -2(4 + 3x) → -8 - 6x
+      problem = `${outside}(${constant} + ${formatCoefficient(varCoef, variable)})`;
       answerCoef = outside * varCoef;
       answerConst = outside * constant;
+      constantFirst = true;
     } else {
-      problem = `${outside}(${constant} - ${varCoef === 1 ? '' : varCoef}${variable})`;
+      // Constant first: -2(4 - 3x) → -8 + 6x
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
       answerCoef = -(outside * varCoef);
       answerConst = outside * constant;
+      constantFirst = true;
     }
     
     const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
     if (!isRecentDuplicate(levelId, difficulty, signature)) {
       recordProblem(levelId, difficulty, signature);
       
-      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
       const misconceptions = [
         answer,
-        canonicalizeExpression(-answerCoef, variable, answerConst),
-        canonicalizeExpression(answerCoef, variable, -answerConst),
-        canonicalizeExpression(-answerCoef, variable, -answerConst),
-        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst)),
+        canonicalizeExpression(-answerCoef, variable, answerConst, constantFirst),
+        canonicalizeExpression(answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst), constantFirst),
       ];
       const choices = ensureFourChoices(misconceptions, answer);
       
@@ -650,9 +670,9 @@ export const generateNegativeOutsideProblem = (difficulty) => {
   const constant = randomInt(1, 12);
   const answerCoef = outside * varCoef;
   const answerConst = outside * constant;
-  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
-  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
-  const choices = ensureFourChoices([answer, canonicalizeExpression(-answerCoef, variable, answerConst)], answer);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(-answerCoef, variable, answerConst, false)], answer);
   return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Negative distribution", finalAnswer: answer }};
 };
 
@@ -667,13 +687,16 @@ export const generateNegativeInsideProblem = (difficulty) => {
     const variable = getVariable(difficulty);
     const maxCoef = difficulty === 'easy' ? 3 : 12;
     
-    // MANY skeletons for Level 8
     const skeletons = difficulty === 'easy'
       ? ['-(x + c)', '-(bx + c)', 'a(-x + c)', '-a(bx - c)']
       : ['-(x + c)', '-(x - c)', '-(bx + c)', '-(bx - c)', '-(c + bx)', '-(c - bx)', 'a(-x + c)', 'a(-x - c)', 'a(c - bx)', '-a(-x + c)', '-a(-x - c)', '-a(bx - c)', 'a(-bx + c)', 'a(-bx - c)'];
     
     const skeleton = randomFrom(skeletons);
-    let outside, varCoef, constant, problem, answerCoef, answerConst;
+    let outside, varCoef, constant, problem, answerCoef, answerConst, constantFirst;
+    
+    // Determine constantFirst based on skeleton
+    const constantFirstSkeletons = ['-(c + bx)', '-(c - bx)', 'a(c - bx)'];
+    constantFirst = constantFirstSkeletons.includes(skeleton);
     
     if (skeleton === '-(x + c)') {
       outside = -1; varCoef = 1; constant = randomInt(1, 12);
@@ -685,19 +708,19 @@ export const generateNegativeInsideProblem = (difficulty) => {
       answerCoef = -1; answerConst = constant;
     } else if (skeleton === '-(bx + c)') {
       outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `-(${varCoef}${variable} + ${constant})`;
+      problem = `-(${formatCoefficient(varCoef, variable)} + ${constant})`;
       answerCoef = -varCoef; answerConst = -constant;
     } else if (skeleton === '-(bx - c)') {
       outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `-(${varCoef}${variable} - ${constant})`;
+      problem = `-(${formatCoefficient(varCoef, variable)} - ${constant})`;
       answerCoef = -varCoef; answerConst = constant;
     } else if (skeleton === '-(c + bx)') {
       outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `-(${constant} + ${varCoef}${variable})`;
+      problem = `-(${constant} + ${formatCoefficient(varCoef, variable)})`;
       answerCoef = -varCoef; answerConst = -constant;
     } else if (skeleton === '-(c - bx)') {
       outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `-(${constant} - ${varCoef}${variable})`;
+      problem = `-(${constant} - ${formatCoefficient(varCoef, variable)})`;
       answerCoef = varCoef; answerConst = -constant;
     } else if (skeleton === 'a(-x + c)') {
       outside = randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
@@ -709,7 +732,7 @@ export const generateNegativeInsideProblem = (difficulty) => {
       answerCoef = -outside; answerConst = -outside * constant;
     } else if (skeleton === 'a(c - bx)') {
       outside = randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `${outside}(${constant} - ${varCoef}${variable})`;
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
       answerCoef = -outside * varCoef; answerConst = outside * constant;
     } else if (skeleton === '-a(-x + c)') {
       outside = -randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
@@ -721,15 +744,15 @@ export const generateNegativeInsideProblem = (difficulty) => {
       answerCoef = -outside; answerConst = -outside * constant;
     } else if (skeleton === '-a(bx - c)') {
       outside = -randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `${outside}(${varCoef}${variable} - ${constant})`;
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
       answerCoef = outside * varCoef; answerConst = -outside * constant;
     } else if (skeleton === 'a(-bx + c)') {
       outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `${outside}(${varCoef}${variable} + ${constant})`;
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
       answerCoef = outside * varCoef; answerConst = outside * constant;
     } else {
       outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
-      problem = `${outside}(${varCoef}${variable} - ${constant})`;
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
       answerCoef = outside * varCoef; answerConst = -outside * constant;
     }
     
@@ -737,15 +760,15 @@ export const generateNegativeInsideProblem = (difficulty) => {
     if (!isRecentDuplicate(levelId, difficulty, signature)) {
       recordProblem(levelId, difficulty, signature);
       
-      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
       const misconceptions = [
         answer,
-        canonicalizeExpression(-answerCoef, variable, answerConst),
-        canonicalizeExpression(answerCoef, variable, -answerConst),
-        canonicalizeExpression(-answerCoef, variable, -answerConst),
-        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst)),
-        canonicalizeExpression(answerCoef, variable, 0),
-        canonicalizeExpression(0, variable, answerConst),
+        canonicalizeExpression(-answerCoef, variable, answerConst, constantFirst),
+        canonicalizeExpression(answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst), constantFirst),
+        canonicalizeExpression(answerCoef, variable, 0, constantFirst),
+        canonicalizeExpression(0, variable, answerConst, constantFirst),
       ];
       const choices = ensureFourChoices(misconceptions, answer);
       
@@ -771,81 +794,121 @@ export const generateNegativeInsideProblem = (difficulty) => {
   const constant = randomInt(1, 12);
   const answerCoef = -1;
   const answerConst = -constant;
-  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
   const problem = `-(${variable} + ${constant})`;
-  const choices = ensureFourChoices([answer, canonicalizeExpression(1, variable, constant), canonicalizeExpression(-1, variable, constant)], answer);
+  const choices = ensureFourChoices([answer, canonicalizeExpression(1, variable, constant, false), canonicalizeExpression(-1, variable, constant, false)], answer);
   return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Complex distribution", finalAnswer: answer }};
 };
 
 export const generateBasicLikeTermsProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const coef1 = randomInt(2, 8);
-    const coef2 = randomInt(2, 8);
-    const combined = coef1 + coef2;
-    
-    const answer = `${combined}x`;
-    const problem = `${coef1}x + ${coef2}x`;
+  const levelId = '1-9';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax + bx OR bx + ax
+      const skeletons = ['ax + bx', 'bx + ax'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = randomInt(1, 20);
+      const coef2 = randomInt(1, 20);
+      const combined = coef1 + coef2;
+      
+      const problem = skeleton === 'ax + bx' 
+        ? `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`
+        : `${formatCoefficient(coef2, 'x')} + ${formatCoefficient(coef1, 'x')}`;
+      const answer = formatCoefficient(combined, 'x');
 
-    const choices = [
-      answer,
-      `${coef1 + coef2}x²`, // Common error: added exponent
-      `${coef1}x + ${coef2}x`, // Didn't combine
-      `${coef1 * coef2}x` // Multiplied instead of added
-    ];
+      const choices = [
+        answer,
+        `${coef1 + coef2}x²`, // Common error: added exponent
+        problem, // Didn't combine
+        formatCoefficient(coef1 * coef2, 'x') // Multiplied instead of added
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          { description: `These are LIKE TERMS (same variable, same exponent)`, work: `` },
-          { description: `Add the coefficients: ${coef1} + ${coef2} = ${combined}`, work: `` },
-          { description: `Keep the variable`, work: `${answer}` }
-        ],
-        rule: "LIKE TERMS: Same variable with same exponent. Add/subtract the coefficients, keep the variable.",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `These are LIKE TERMS (same variable, same exponent)`, work: `` },
+              { description: `Add the coefficients: ${coef1} + ${coef2} = ${combined}`, work: `` },
+              { description: `Keep the variable`, work: `${answer}` }
+            ],
+            rule: "LIKE TERMS: Same variable with same exponent. Add/subtract the coefficients, keep the variable.",
+            finalAnswer: answer
+          }
+        };
       }
-    };
-  } else {
-    const coef1 = randomDecimal();
-    const coef2 = randomDecimal();
-    const combined = Math.round((coef1 + coef2) * 100) / 100;
-    const variable = randomFrom(['x', 'y', 'n', 'm']);
-    
-    const answer = `${combined}${variable}`;
-    const problem = `${coef1}${variable} + ${coef2}${variable}`;
+    } else {
+      // Hard mode: MIX of decimals and integers
+      const useDecimal = Math.random() < 0.5; // 50% chance of decimals
+      const coef1 = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const coef2 = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const combined = Math.round((coef1 + coef2) * 100) / 100;
+      const variable = randomFrom(['x', 'y', 'n', 'm']);
+      
+      // Skeleton variety
+      const skeletons = ['av + bv', 'bv + av'];
+      const skeleton = randomFrom(skeletons);
+      
+      const problem = skeleton === 'av + bv'
+        ? `${formatCoefficient(coef1, variable)} + ${formatCoefficient(coef2, variable)}`
+        : `${formatCoefficient(coef2, variable)} + ${formatCoefficient(coef1, variable)}`;
+      const answer = formatCoefficient(combined, variable);
 
-    const choices = [
-      answer,
-      `${coef1}${variable} + ${coef2}${variable}`,
-      `${Math.round((coef1 * coef2) * 100) / 100}${variable}`,
-      `${combined}${variable}²`
-    ];
+      const choices = [
+        answer,
+        problem, // Didn't combine
+        formatCoefficient(Math.round((coef1 * coef2) * 100) / 100, variable), // Multiplied
+        `${combined}${variable}²` // Added exponent
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Like terms: add coefficients`, work: `${coef1} + ${coef2} = ${combined}` },
-          { description: `Result`, work: `${answer}` }
-        ],
-        rule: "Add coefficients, keep variable",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Like terms: add coefficients`, work: `${coef1} + ${coef2} = ${combined}` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Add coefficients, keep variable",
+            finalAnswer: answer
+          }
+        };
       }
-    };
+    }
   }
+  
+  // Fallback after max retries
+  const coef1 = randomInt(1, 20);
+  const coef2 = randomInt(1, 20);
+  const combined = coef1 + coef2;
+  const answer = formatCoefficient(combined, 'x');
+  const problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`;
+  const choices = ensureFourChoices([answer, `${coef1 + coef2}x²`, problem, formatCoefficient(coef1 * coef2, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [{ description: `Combine like terms`, work: answer }], rule: "Like terms", finalAnswer: answer }
+  };
 };
 
 // ============================================
@@ -853,73 +916,111 @@ export const generateBasicLikeTermsProblem = (difficulty) => {
 // ============================================
 
 export const generateUnlikeTermsProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const coefX = randomInt(2, 8);
-    const constant = randomInt(1, 10);
-    
-    const answer = `${coefX}x + ${constant}`;
-    const problem = `${coefX}x + ${constant}`;
+  const levelId = '1-10';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax + c OR c + ax (constant-first)
+      const skeletons = ['ax + c', 'c + ax'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coefX = randomInt(1, 20);
+      const constant = randomInt(1, 20);
+      
+      const problem = skeleton === 'ax + c'
+        ? `${formatCoefficient(coefX, 'x')} + ${constant}`
+        : `${constant} + ${formatCoefficient(coefX, 'x')}`;
+      const answer = problem; // Cannot combine - leave as is
 
-    const choices = [
-      answer,
-      `${coefX + constant}x`, // Tried to combine unlike terms
-      `${coefX}x${constant}`, // Multiplied
-      `${coefX + constant}` // Lost variable
-    ];
+      const choices = [
+        answer,
+        formatCoefficient(coefX + constant, 'x'), // Tried to combine unlike terms
+        `${formatCoefficient(coefX, 'x')} × ${constant}`, // Multiplied (readable form)
+        `${coefX + constant}` // Lost variable
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX, constant });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          { description: `${coefX}x and ${constant} are NOT like terms`, work: `` },
-          { description: `One has a variable (x), one doesn't`, work: `` },
-          { description: `CANNOT combine - leave as is`, work: `${answer}` }
-        ],
-        rule: "UNLIKE TERMS: Different variables OR one has variable and one doesn't. CANNOT be combined!",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `${formatCoefficient(coefX, 'x')} and ${constant} are NOT like terms`, work: `` },
+              { description: `One has a variable (x), one doesn't`, work: `` },
+              { description: `CANNOT combine - leave as is`, work: `${answer}` }
+            ],
+            rule: "UNLIKE TERMS: Different variables OR one has variable and one doesn't. CANNOT be combined!",
+            finalAnswer: answer
+          }
+        };
       }
-    };
-  } else {
-    const coefX = randomDecimal();
-    const coefY = randomDecimal();
-    const varX = randomFrom(['x', 'a', 'n']);
-    const varY = randomFrom(['y', 'b', 'm']);
-    
-    const answer = `${coefX}${varX} + ${coefY}${varY}`;
-    const problem = `${coefX}${varX} + ${coefY}${varY}`;
+    } else {
+      // Hard mode: MIX of decimals and integers
+      const useDecimal = Math.random() < 0.5;
+      const coefX = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const coefY = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const varX = randomFrom(['x', 'a', 'n']);
+      const varY = randomFrom(['y', 'b', 'm']);
+      
+      // Skeleton variety
+      const skeletons = ['xvar + yvar', 'yvar + xvar'];
+      const skeleton = randomFrom(skeletons);
+      
+      const problem = skeleton === 'xvar + yvar'
+        ? `${formatCoefficient(coefX, varX)} + ${formatCoefficient(coefY, varY)}`
+        : `${formatCoefficient(coefY, varY)} + ${formatCoefficient(coefX, varX)}`;
+      const answer = problem; // Cannot combine
 
-    const choices = [
-      answer,
-      `${Math.round((coefX + coefY) * 100) / 100}${varX}`,
-      `${Math.round((coefX + coefY) * 100) / 100}${varX}${varY}`,
-      `${coefX}${varX}${coefY}${varY}`
-    ];
+      const choices = [
+        answer,
+        formatCoefficient(Math.round((coefX + coefY) * 100) / 100, varX), // Combined to one var
+        `${Math.round((coefX + coefY) * 100) / 100}${varX}${varY}`, // Combined with both vars
+        `${formatCoefficient(coefX, varX)} × ${formatCoefficient(coefY, varY)}` // Multiplied (readable)
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX, coefY, varX, varY });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Different variables: ${varX} and ${varY}`, work: `` },
-          { description: `Cannot combine`, work: `${answer}` }
-        ],
-        rule: "Different variables = unlike terms",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Different variables: ${varX} and ${varY}`, work: `` },
+              { description: `Cannot combine`, work: `${answer}` }
+            ],
+            rule: "Different variables = unlike terms",
+            finalAnswer: answer
+          }
+        };
       }
-    };
+    }
   }
+  
+  // Fallback
+  const coefX = randomInt(1, 20);
+  const constant = randomInt(1, 20);
+  const answer = `${formatCoefficient(coefX, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coefX + constant, 'x'), `${coefX + constant}`], answer);
+  return {
+    problem: answer, displayProblem: answer, answer, choices,
+    explanation: { originalProblem: answer, steps: [], rule: "Unlike terms", finalAnswer: answer }
+  };
 };
 
 // ============================================
@@ -927,82 +1028,140 @@ export const generateUnlikeTermsProblem = (difficulty) => {
 // ============================================
 
 export const generateMultipleLikeTermsProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const coef1 = randomInt(2, 6);
-    const coef2 = randomInt(2, 6);
-    const coef3 = randomInt(1, 5);
-    
-    const xTerms = coef1 + coef2;
-    const constant = coef3;
-    
-    const answer = `${xTerms}x + ${constant}`;
-    const problem = `${coef1}x + ${coef2}x + ${constant}`;
-
-    const choices = [
-      answer,
-      `${coef1 + coef2 + coef3}x`, // Combined all
-      `${coef1}x + ${coef2 + coef3}`, // Combined wrong terms
-      `${xTerms}x${constant}` // Concatenated
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          { description: `Identify like terms: ${coef1}x and ${coef2}x are LIKE`, work: `` },
-          { description: `${constant} is UNLIKE (no variable)`, work: `` },
-          { description: `Combine like terms: ${coef1}x + ${coef2}x = ${xTerms}x`, work: `` },
-          { description: `Keep unlike term separate`, work: `${answer}` }
-        ],
-        rule: "Only combine LIKE terms. Leave unlike terms separate.",
-        finalAnswer: answer
+  const levelId = '1-11';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: different orderings of ax + bx + c
+      const skeletons = ['ax + bx + c', 'c + ax + bx', 'ax + c + bx'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = randomInt(1, 20);
+      const coef2 = randomInt(1, 20);
+      const coef3 = randomInt(1, 20);
+      
+      const xTerms = coef1 + coef2;
+      const constant = coef3;
+      
+      // Build problem based on skeleton (different orderings)
+      let problem;
+      if (skeleton === 'ax + bx + c') {
+        problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')} + ${constant}`;
+      } else if (skeleton === 'c + ax + bx') {
+        problem = `${constant} + ${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`;
+      } else {
+        problem = `${formatCoefficient(coef1, 'x')} + ${constant} + ${formatCoefficient(coef2, 'x')}`;
       }
-    };
-  } else {
-    const coefX1 = randomInt(2, 6);
-    const coefX2 = randomInt(2, 6);
-    const coefY = randomDecimal();
-    const constant = randomInt(1, 10);
-    
-    const xTerms = coefX1 + coefX2;
-    
-    const answer = `${xTerms}x + ${coefY}y + ${constant}`;
-    const problem = `${coefX1}x + ${coefX2}x + ${coefY}y + ${constant}`;
+      
+      // Answer always canonical: xTerms x + constant
+      const answer = `${formatCoefficient(xTerms, 'x')} + ${constant}`;
 
-    const choices = [
-      answer,
-      `${xTerms + coefY + constant}xy`,
-      `${xTerms}x + ${coefY + constant}y`,
-      `${coefX1 + coefX2 + constant}x + ${coefY}y`
-    ];
+      const choices = [
+        answer,
+        formatCoefficient(coef1 + coef2 + coef3, 'x'), // Combined all
+        `${formatCoefficient(coef1, 'x')} + ${coef2 + coef3}`, // Combined wrong terms
+        `${formatCoefficient(xTerms, 'x')} × ${constant}` // Multiplied (readable)
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, coef3 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Combine x terms: ${coefX1}x + ${coefX2}x = ${xTerms}x`, work: `` },
-          { description: `y term stays: ${coefY}y`, work: `` },
-          { description: `Constant stays: ${constant}`, work: `` },
-          { description: `Result`, work: `${answer}` }
-        ],
-        rule: "Combine all like terms separately",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `Identify like terms: ${formatCoefficient(coef1, 'x')} and ${formatCoefficient(coef2, 'x')} are LIKE`, work: `` },
+              { description: `${constant} is UNLIKE (no variable)`, work: `` },
+              { description: `Combine like terms: ${coef1} + ${coef2} = ${xTerms}`, work: `` },
+              { description: `Keep unlike term separate`, work: `${answer}` }
+            ],
+            rule: "Only combine LIKE terms. Leave unlike terms separate.",
+            finalAnswer: answer
+          }
+        };
       }
-    };
+    } else {
+      // Hard mode: MIX decimals and integers
+      const useDecimalX = Math.random() < 0.5;
+      const useDecimalY = Math.random() < 0.5;
+      
+      const coefX1 = useDecimalX ? randomDecimal() : randomInt(1, 20);
+      const coefX2 = useDecimalX ? randomDecimal() : randomInt(1, 20);
+      const coefY = useDecimalY ? randomDecimal() : randomInt(1, 20);
+      const constant = randomInt(1, 20);
+      
+      const xTerms = Math.round((coefX1 + coefX2) * 100) / 100;
+      
+      // Skeleton variety: different orderings
+      const skeletons = ['ax + bx + cy + d', 'd + ax + bx + cy', 'ax + cy + bx + d'];
+      const skeleton = randomFrom(skeletons);
+      
+      let problem;
+      if (skeleton === 'ax + bx + cy + d') {
+        problem = `${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefX2, 'x')} + ${formatCoefficient(coefY, 'y')} + ${constant}`;
+      } else if (skeleton === 'd + ax + bx + cy') {
+        problem = `${constant} + ${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefX2, 'x')} + ${formatCoefficient(coefY, 'y')}`;
+      } else {
+        problem = `${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefY, 'y')} + ${formatCoefficient(coefX2, 'x')} + ${constant}`;
+      }
+      
+      // Answer always canonical: x terms, then y, then constant
+      const answer = `${formatCoefficient(xTerms, 'x')} + ${formatCoefficient(coefY, 'y')} + ${constant}`;
+
+      const choices = [
+        answer,
+        `${xTerms + coefY + constant}xy`, // Combined all into xy
+        `${formatCoefficient(xTerms, 'x')} + ${coefY + constant}y`, // Combined y and constant
+        `${formatCoefficient(Math.round((coefX1 + coefX2 + constant) * 100) / 100, 'x')} + ${formatCoefficient(coefY, 'y')}` // Combined x and constant
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX1, coefX2, coefY, constant });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Combine x terms: ${coefX1} + ${coefX2} = ${xTerms}`, work: `` },
+              { description: `y term stays: ${formatCoefficient(coefY, 'y')}`, work: `` },
+              { description: `Constant stays: ${constant}`, work: `` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Combine all like terms separately",
+            finalAnswer: answer
+          }
+        };
+      }
+    }
   }
+  
+  // Fallback
+  const coef1 = randomInt(1, 20);
+  const coef2 = randomInt(1, 20);
+  const constant = randomInt(1, 20);
+  const xTerms = coef1 + coef2;
+  const answer = `${formatCoefficient(xTerms, 'x')} + ${constant}`;
+  const problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coef1 + coef2 + constant, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [], rule: "Combine like terms", finalAnswer: answer }
+  };
 };
 
 // ============================================
@@ -1010,75 +1169,139 @@ export const generateMultipleLikeTermsProblem = (difficulty) => {
 // ============================================
 
 export const generateSubtractLikeTermsProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const coef1 = randomInt(5, 12);
-    const coef2 = randomInt(2, coef1 - 1);
-    const combined = coef1 - coef2;
-    
-    const answer = `${combined}x`;
-    const problem = `${coef1}x - ${coef2}x`;
-
-    const choices = [
-      answer,
-      `${coef1 + coef2}x`, // Added instead of subtracted
-      `${coef1}x - ${coef2}x`, // Didn't combine
-      `-${combined}x` // Wrong sign
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          { description: `Like terms with subtraction`, work: `` },
-          { description: `Subtract coefficients: ${coef1} - ${coef2} = ${combined}`, work: `` },
-          { description: `Keep the variable`, work: `${answer}` }
-        ],
-        rule: "Subtracting like terms: subtract coefficients, keep variable",
-        finalAnswer: answer
+  const levelId = '1-12';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax - bx, bx - ax, ax + (-bx), (-bx) + ax
+      const skeletons = ['ax - bx', 'bx - ax', 'ax + (-bx)'];
+      const skeleton = randomFrom(skeletons);
+      
+      let coef1, coef2, combined, problem;
+      
+      if (skeleton === 'ax - bx') {
+        coef1 = randomInt(2, 20);  // Ensure coef1 > coef2 for positive result
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef1 - coef2;
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+      } else if (skeleton === 'bx - ax') {
+        coef1 = randomInt(2, 20);
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef2 - coef1;  // Negative result
+        problem = `${formatCoefficient(coef2, 'x')} - ${formatCoefficient(coef1, 'x')}`;
+      } else { // ax + (-bx)
+        coef1 = randomInt(2, 20);
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef1 - coef2;
+        problem = `${formatCoefficient(coef1, 'x')} + (${formatCoefficient(-coef2, 'x')})`;
       }
-    };
-  } else {
-    const coef1 = randomInt(5, 12);
-    const coef2 = randomInt(2, coef1 - 1);
-    const coef3 = randomInt(1, 5);
-    const combined = coef1 - coef2;
-    
-    const answer = `${combined}x - ${coef3}`;
-    const problem = `${coef1}x - ${coef2}x - ${coef3}`;
+      
+      const answer = formatCoefficient(combined, 'x');
 
-    const choices = [
-      answer,
-      `${combined}x + ${coef3}`,
-      `${coef1 - coef2 - coef3}x`,
-      `${combined - coef3}x`
-    ];
+      const choices = [
+        answer,
+        formatCoefficient(Math.abs(coef1) + Math.abs(coef2), 'x'), // Added instead of subtracted
+        problem, // Didn't combine
+        formatCoefficient(-combined, 'x') // Wrong sign
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
 
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Combine x terms: ${coef1}x - ${coef2}x = ${combined}x`, work: `` },
-          { description: `Constant stays separate: -${coef3}`, work: `` },
-          { description: `Result`, work: `${answer}` }
-        ],
-        rule: "Combine like terms, keep unlike terms separate",
-        finalAnswer: answer
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `Like terms with subtraction`, work: `` },
+              { description: `Subtract coefficients: ${Math.abs(coef1)} - ${Math.abs(coef2)} = ${Math.abs(combined)}`, work: `` },
+              { description: `Keep the variable and sign`, work: `${answer}` }
+            ],
+            rule: "Subtracting like terms: subtract coefficients, keep variable",
+            finalAnswer: answer
+          }
+        };
       }
-    };
+    } else {
+      // Hard mode: MIX decimals, multiple skeletons, include subtraction with constants
+      const useDecimal = Math.random() < 0.5;
+      const skeletons = ['ax - bx - c', 'ax - bx + c', 'c + ax - bx', 'ax - c - bx'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = useDecimal ? randomDecimal() : randomInt(2, 20);
+      const coef2 = useDecimal ? randomDecimal() : randomInt(1, Math.floor(coef1));
+      const coef3 = randomInt(1, 20);
+      const combined = Math.round((coef1 - coef2) * 100) / 100;
+      
+      let problem, answer;
+      
+      if (skeleton === 'ax - bx - c') {
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')} - ${coef3}`;
+        answer = `${formatCoefficient(combined, 'x')} - ${coef3}`;
+      } else if (skeleton === 'ax - bx + c') {
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')} + ${coef3}`;
+        answer = `${formatCoefficient(combined, 'x')} + ${coef3}`;
+      } else if (skeleton === 'c + ax - bx') {
+        problem = `${coef3} + ${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+        answer = `${formatCoefficient(combined, 'x')} + ${coef3}`;  // Canonical: x terms first
+      } else { // ax - c - bx
+        problem = `${formatCoefficient(coef1, 'x')} - ${coef3} - ${formatCoefficient(coef2, 'x')}`;
+        answer = `${formatCoefficient(combined, 'x')} - ${coef3}`;  // Canonical: x terms first
+      }
+
+      const choices = [
+        answer,
+        skeleton.includes('- c') 
+          ? `${formatCoefficient(combined, 'x')} + ${coef3}` 
+          : `${formatCoefficient(combined, 'x')} - ${coef3}`, // Wrong sign on constant
+        formatCoefficient(Math.round((coef1 - coef2 - coef3) * 100) / 100, 'x'), // Combined all
+        formatCoefficient(Math.round((combined + coef3) * 100) / 100, 'x') // Combined x and constant
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, coef3 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Combine x terms: ${coef1} - ${coef2} = ${combined}`, work: `` },
+              { description: `Constant stays separate`, work: `` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Combine like terms, keep unlike terms separate",
+            finalAnswer: answer
+          }
+        };
+      }
+    }
   }
+  
+  // Fallback
+  const coef1 = randomInt(2, 20);
+  const coef2 = randomInt(1, coef1 - 1);
+  const combined = coef1 - coef2;
+  const answer = formatCoefficient(combined, 'x');
+  const problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coef1 + coef2, 'x'), formatCoefficient(-combined, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [], rule: "Subtract like terms", finalAnswer: answer }
+  };
 };
 
 // ============================================
@@ -1101,14 +1324,14 @@ export const generateDistributeCombineProblem = (difficulty) => {
     const distributedConstant = outside * insideTerm;
     const totalXCoef = distributedCoef + standaloneTerm;
     
-    const answer = `${totalXCoef}x + ${distributedConstant}`;
+    const answer = `${formatCoefficient(totalXCoef, 'x')} + ${distributedConstant}`;
     const problem = `${outside}(x + ${insideTerm}) + ${standaloneTerm}x`;
 
     const choices = [
       answer,
-      `${distributedCoef}x + ${distributedConstant + standaloneTerm}`, // Combined wrong terms
-      `${totalXCoef}x + ${insideTerm}`, // Forgot to distribute constant
-      `${outside + standaloneTerm}x + ${distributedConstant}` // Didn't distribute first
+      `${formatCoefficient(distributedCoef, 'x')} + ${distributedConstant + standaloneTerm}`, // Combined wrong terms
+      `${formatCoefficient(totalXCoef, 'x')} + ${insideTerm}`, // Forgot to distribute constant
+      `${formatCoefficient(outside + standaloneTerm, 'x')} + ${distributedConstant}` // Didn't distribute first
     ];
 
     const finalChoices = ensureFourChoices(choices, answer);
