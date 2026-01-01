@@ -1,4 +1,7 @@
-// Global NaN Protection - Add at TOP of file
+// ============================================
+// GLOBAL NaN PROTECTION
+// ============================================
+
 export const validateAndFilterChoices = (choices, correctAnswer) => {
   const validChoices = choices.filter(choice => {
     if (choice === null || choice === undefined) return false;
@@ -17,8 +20,39 @@ export const validateAndFilterChoices = (choices, correctAnswer) => {
   return [...new Set(validChoices)];
 };
 
+// ============================================
+// ANTI-REPEAT SYSTEM (Levels 1-8 only)
+// ============================================
 
-// Problem generators for Levels 1-8 - ALL FIXES APPLIED
+const problemHistory = {
+  // Format: { '1-1-easy': [sig1, sig2, ...], '1-2-hard': [...] }
+};
+
+const MAX_HISTORY = 20;
+const MAX_RETRIES = 8;
+
+export const clearProblemHistory = () => {
+  Object.keys(problemHistory).forEach(key => delete problemHistory[key]);
+};
+
+const generateSignature = (levelId, difficulty, params) => {
+  return JSON.stringify({ levelId, difficulty, ...params });
+};
+
+const isRecentDuplicate = (levelId, difficulty, signature) => {
+  const key = `${levelId}-${difficulty}`;
+  if (!problemHistory[key]) return false;
+  return problemHistory[key].includes(signature);
+};
+
+const recordProblem = (levelId, difficulty, signature) => {
+  const key = `${levelId}-${difficulty}`;
+  if (!problemHistory[key]) problemHistory[key] = [];
+  problemHistory[key].push(signature);
+  if (problemHistory[key].length > MAX_HISTORY) {
+    problemHistory[key].shift();
+  }
+};
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -28,7 +62,63 @@ const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + mi
 const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randomDecimal = () => randomFrom([0.5, 0.25, 0.75, 1.5, 2.5, 0.2, 0.4, 0.6, 0.8]);
 
-// Helper to format expressions consistently (NO duplicates like -2x+-6)
+// Variable pools
+const EASY_VARIABLE = 'x';
+const HARD_VARIABLES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'];
+
+const getVariable = (difficulty) => {
+  return difficulty === 'easy' ? EASY_VARIABLE : randomFrom(HARD_VARIABLES);
+};
+
+// ============================================
+// CANONICALIZATION SYSTEM
+// ============================================
+
+// Canonical form: ax + b (never ax + -b, always ax - b)
+// Coefficient 1 and -1 are hidden: x not 1x, -x not -1x
+const canonicalizeExpression = (coefficient, variable, constant) => {
+  // Handle coefficient display
+  let varPart;
+  if (coefficient === 0) {
+    varPart = '';
+  } else if (coefficient === 1) {
+    varPart = variable;
+  } else if (coefficient === -1) {
+    varPart = `-${variable}`;
+  } else {
+    varPart = `${coefficient}${variable}`;
+  }
+  
+  // Handle constant
+  if (coefficient === 0 && constant === 0) {
+    return '0';
+  } else if (coefficient === 0) {
+    return String(constant);
+  } else if (constant === 0) {
+    return varPart;
+  } else if (constant > 0) {
+    return `${varPart} + ${constant}`;
+  } else {
+    return `${varPart} - ${Math.abs(constant)}`;
+  }
+};
+
+// Check if two expressions are equivalent
+const areEquivalent = (expr1, expr2) => {
+  return expr1 === expr2;
+};
+
+// Remove duplicates by equivalence
+const uniqueChoices = (choices) => {
+  const seen = new Set();
+  return choices.filter(choice => {
+    if (seen.has(choice)) return false;
+    seen.add(choice);
+    return true;
+  });
+};
+
+// Helper to format expressions consistently (used by Levels 9+)
 const formatAnswer = (coefficient, variable, constant) => {
   const varPart = coefficient === -1 ? `-${variable}` : 
                   coefficient === 1 ? variable :
@@ -57,431 +147,643 @@ const ensureFourChoices = (choices, answer) => {
 };
 
 // ============================================
-// LEVEL 1-1: ADDITION
+// LEVEL 1-1: ADDITION (REBUILT)
 // ============================================
 
 export const generateAdditionProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const type = randomFrom(['posPos', 'posNeg', 'negPos', 'negNeg']);
+  const levelId = '1-1';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // Sign patterns: posNeg, negPos, negNeg (NO posPos per spec)
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
     let num1, num2, answer;
-
-    switch (type) {
-      case 'posPos':
-        num1 = randomInt(1, 20);
-        num2 = randomInt(1, 20);
-        answer = num1 + num2;
-        break;
-      case 'posNeg':
-        num1 = randomInt(1, 20);
-        num2 = -randomInt(1, 20);
-        answer = num1 + num2;
-        break;
-      case 'negPos':
-        num1 = -randomInt(1, 20);
-        num2 = randomInt(1, 20);
-        answer = num1 + num2;
-        break;
-      case 'negNeg':
-        num1 = -randomInt(1, 20);
-        num2 = -randomInt(1, 20);
-        answer = num1 + num2;
-        break;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 20);
+      num2 = -randomInt(1, 20);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 20);
+      num2 = randomInt(1, 20);
+    } else { // negNeg
+      num1 = -randomInt(1, 20);
+      num2 = -randomInt(1, 20);
     }
-
-    const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
     
-    const choices = [
-      answer,
-      -answer,
-      Math.abs(num1) + Math.abs(num2),
-      -(Math.abs(num1) + Math.abs(num2))
-    ];
+    answer = num1 + num2;
     
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          { description: num2 >= 0 ? `Start at ${num1}, move ${num2} right` : `Start at ${num1}, move ${Math.abs(num2)} left`, work: `Result: ${answer}` }
-        ],
-        rule: num1 >= 0 && num2 >= 0 ? "Adding positives: add normally" : "Different signs: subtract smaller from larger, use sign of larger",
-        finalAnswer: answer
-      }
-    };
-  } else {
-    const num1 = randomDecimal();
-    const num2 = Math.random() < 0.5 ? randomDecimal() : -randomDecimal();
-    const answer = Math.round((num1 + num2) * 100) / 100;
-    const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [
-      answer,
-      -answer,
-      Math.round((Math.abs(num1) + Math.abs(num2)) * 100) / 100,
-      Math.round((-(Math.abs(num1) + Math.abs(num2))) * 100) / 100
-    ];
-    
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [{ description: `${problem} = ${answer}`, work: `` }],
-        rule: "Same rules apply with decimals",
-        finalAnswer: answer
-      }
-    };
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
+      
+      // Misconception-based distractors
+      const misconceptions = [
+        answer,                              // Correct
+        -answer,                            // Wrong sign on result
+        Math.abs(num1) + Math.abs(num2),    // Added absolute values (ignored signs)
+        -(Math.abs(num1) + Math.abs(num2)), // Added absolute values then negated
+        Math.abs(num1 - num2),              // Subtracted instead of added
+      ];
+      
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem: problem,
+        displayProblem: `${problem} = ?`,
+        answer: answer,
+        choices: choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: num2 >= 0 ? `Start at ${num1}, move ${num2} right` : `Start at ${num1}, move ${Math.abs(num2)} left`, work: `Result: ${answer}` }
+          ],
+          rule: num1 >= 0 && num2 >= 0 ? "Adding positives: add normally" : 
+                num1 < 0 && num2 < 0 ? "Adding negatives: add and keep negative sign" :
+                "Different signs: subtract and take sign of larger magnitude",
+          finalAnswer: answer
+        }
+      };
+    }
   }
+  
+  // If we hit max retries, generate one more without checking
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') {
+    num1 = randomInt(1, 20);
+    num2 = -randomInt(1, 20);
+  } else if (skeleton === 'negPos') {
+    num1 = -randomInt(1, 20);
+    num2 = randomInt(1, 20);
+  } else {
+    num1 = -randomInt(1, 20);
+    num2 = -randomInt(1, 20);
+  }
+  const answer = num1 + num2;
+  const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
+  const misconceptions = [answer, -answer, Math.abs(num1) + Math.abs(num2), -(Math.abs(num1) + Math.abs(num2))];
+  const choices = ensureFourChoices(misconceptions, answer);
+  return {
+    problem, displayProblem: `${problem} = ?`, answer, choices,
+    explanation: { originalProblem: problem, steps: [{ description: `Problem: ${problem}`, work: `` }], rule: "Integer addition", finalAnswer: answer }
+  };
 };
 
 // ============================================
-// LEVEL 1-2: SUBTRACTION
+// LEVEL 1-2: SUBTRACTION (REBUILT)
 // ============================================
 
 export const generateSubtractionProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const type = randomFrom(['posPos', 'posNeg', 'negPos', 'negNeg']);
+  const levelId = '1-2';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
     let num1, num2, answer;
-
-    switch (type) {
-      case 'posPos':
-        num1 = randomInt(1, 20);
-        num2 = randomInt(1, 20);
-        answer = num1 - num2;
-        break;
-      case 'posNeg':
-        num1 = randomInt(1, 20);
-        num2 = -randomInt(1, 20);
-        answer = num1 - num2;
-        break;
-      case 'negPos':
-        num1 = -randomInt(1, 20);
-        num2 = randomInt(1, 20);
-        answer = num1 - num2;
-        break;
-      case 'negNeg':
-        num1 = -randomInt(1, 20);
-        num2 = -randomInt(1, 20);
-        answer = num1 - num2;
-        break;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 20);
+      num2 = -randomInt(1, 20);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 20);
+      num2 = randomInt(1, 20);
+    } else {
+      num1 = -randomInt(1, 20);
+      num2 = -randomInt(1, 20);
     }
-
-    const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
-    const isSubtractingNegative = num2 < 0;
     
-    const choices = [
-      answer,
-      -answer,
-      num1 + num2,
-      num2 - num1
-    ];
+    answer = num1 - num2;
     
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Problem: ${problem}`, work: `` },
-          ...(isSubtractingNegative ? [{ description: "Subtracting negative = adding positive", work: `${num1} - (${num2}) = ${num1} + ${-num2}` }] : []),
-          { description: "Calculate", work: `Result: ${answer}` }
-        ],
-        rule: isSubtractingNegative ? "Subtracting a negative = adding a positive" : "Subtract normally",
-        finalAnswer: answer
-      }
-    };
-  } else {
-    const num1 = randomDecimal();
-    const num2 = Math.random() < 0.5 ? randomDecimal() : -randomDecimal();
-    const answer = Math.round((num1 - num2) * 100) / 100;
-    const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [answer, -answer, Math.round((num1 + num2) * 100) / 100, Math.round((num2 - num1) * 100) / 100];
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [{ description: `${problem} = ${answer}`, work: `` }],
-        rule: "Same rules with decimals",
-        finalAnswer: answer
-      }
-    };
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
+      const isSubtractingNegative = num2 < 0;
+      
+      const misconceptions = [answer, -answer, num1 + num2, num2 - num1, Math.abs(num1) - Math.abs(num2)];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            ...(isSubtractingNegative ? [{ description: "Subtracting negative = adding positive", work: `${num1} - (${num2}) = ${num1} + ${-num2}` }] : []),
+            { description: "Calculate", work: `Result: ${answer}` }
+          ],
+          rule: isSubtractingNegative ? "Subtracting a negative = adding a positive" : "Subtract normally",
+          finalAnswer: answer
+        }
+      };
+    }
   }
+  
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') { num1 = randomInt(1, 20); num2 = -randomInt(1, 20); }
+  else if (skeleton === 'negPos') { num1 = -randomInt(1, 20); num2 = randomInt(1, 20); }
+  else { num1 = -randomInt(1, 20); num2 = -randomInt(1, 20); }
+  const answer = num1 - num2;
+  const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
+  const choices = ensureFourChoices([answer, -answer, num1 + num2, num2 - num1], answer);
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Subtraction", finalAnswer: answer }};
 };
 
 // ============================================
-// LEVEL 1-3: MULTIPLICATION
+// LEVEL 1-3: MULTIPLICATION (REBUILT)
 // ============================================
 
 export const generateMultiplicationProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const type = randomFrom(['posPos', 'posNeg', 'negPos', 'negNeg']);
+  const levelId = '1-3';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
     let num1, num2, answer;
-
-    switch (type) {
-      case 'posPos':
-        num1 = randomInt(2, 12);
-        num2 = randomInt(2, 12);
-        break;
-      case 'posNeg':
-        num1 = randomInt(2, 12);
-        num2 = -randomInt(2, 12);
-        break;
-      case 'negPos':
-        num1 = -randomInt(2, 12);
-        num2 = randomInt(2, 12);
-        break;
-      case 'negNeg':
-        num1 = -randomInt(2, 12);
-        num2 = -randomInt(2, 12);
-        break;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 12);
+      num2 = -randomInt(1, 12);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 12);
+      num2 = randomInt(1, 12);
+    } else {
+      num1 = -randomInt(1, 12);
+      num2 = -randomInt(1, 12);
     }
     
     answer = num1 * num2;
-    const problem = `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [answer, -answer, Math.abs(num1) * Math.abs(num2), -(Math.abs(num1) * Math.abs(num2))];
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Multiply absolute values: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
-          { description: `Apply sign rule`, work: `Result: ${answer}` }
-        ],
-        rule: "Same signs → Positive; Different signs → Negative",
-        finalAnswer: answer
-      }
-    };
-  } else {
-    const num1 = Math.random() < 0.5 ? randomDecimal() : randomInt(2, 12);
-    const num2 = Math.random() < 0.5 ? -randomDecimal() : -randomInt(2, 12);
-    const answer = Math.round((num1 * num2) * 100) / 100;
-    const problem = `${num1} × ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [answer, -answer, Math.round((Math.abs(num1) * Math.abs(num2)) * 100) / 100, 0];
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [{ description: `${problem} = ${answer}`, work: `` }],
-        rule: "Same sign rules apply",
-        finalAnswer: answer
-      }
-    };
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${num1} × ${num2}`;
+      const misconceptions = [answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2, Math.abs(num1 * num2) * -1];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Multiply absolute values: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
+            { description: skeleton === 'negNeg' ? "Negative × Negative = Positive" : "Positive × Negative = Negative", work: `Result: ${answer}` }
+          ],
+          rule: skeleton === 'negNeg' ? "Neg × Neg = Pos" : "Pos × Neg = Neg",
+          finalAnswer: answer
+        }
+      };
+    }
   }
+  
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') { num1 = randomInt(1, 12); num2 = -randomInt(1, 12); }
+  else if (skeleton === 'negPos') { num1 = -randomInt(1, 12); num2 = randomInt(1, 12); }
+  else { num1 = -randomInt(1, 12); num2 = -randomInt(1, 12); }
+  const answer = num1 * num2;
+  const problem = `${num1} × ${num2}`;
+  const choices = ensureFourChoices([answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2], answer);
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Multiplication", finalAnswer: answer }};
 };
 
 // ============================================
-// LEVEL 1-4: DIVISION
+// LEVEL 1-4: DIVISION (REBUILT)
 // ============================================
 
 export const generateDivisionProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const type = randomFrom(['posPos', 'posNeg', 'negPos', 'negNeg']);
-    let num2, answer;
-
-    switch (type) {
-      case 'posPos':
-        num2 = randomInt(2, 12);
-        answer = randomInt(2, 12);
-        break;
-      case 'posNeg':
-        num2 = -randomInt(2, 12);
-        answer = randomInt(2, 12);
-        break;
-      case 'negPos':
-        num2 = randomInt(2, 12);
-        answer = -randomInt(2, 12);
-        break;
-      case 'negNeg':
-        num2 = -randomInt(2, 12);
-        answer = -randomInt(2, 12);
-        break;
+  const levelId = '1-4';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
+    let dividend, divisor, answer;
+    
+    if (skeleton === 'posNeg') {
+      divisor = -randomInt(1, 12);
+      answer = randomInt(1, 12);
+      dividend = answer * divisor;
+    } else if (skeleton === 'negPos') {
+      divisor = randomInt(1, 12);
+      answer = -randomInt(1, 12);
+      dividend = answer * divisor;
+    } else {
+      divisor = -randomInt(1, 12);
+      answer = randomInt(1, 12);
+      dividend = answer * divisor;
     }
     
-    const num1 = num2 * answer;
-    const problem = `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [answer, -answer, Math.abs(answer), num1];
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Divide absolute values: ${Math.abs(num1)} ÷ ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
-          { description: `Apply sign rule`, work: `Result: ${answer}` }
-        ],
-        rule: "Same signs → Positive; Different signs → Negative",
-        finalAnswer: answer
-      }
-    };
-  } else {
-    const num2 = Math.random() < 0.5 ? randomInt(2, 10) : -randomInt(2, 10);
-    const answer = Math.random() < 0.5 ? randomDecimal() : randomInt(2, 10);
-    const num1 = Math.round((num2 * answer) * 100) / 100;
-    const problem = `${num1} ÷ ${num2 >= 0 ? num2 : `(${num2})`}`;
-
-    const choices = [answer, -answer, Math.abs(answer), 1];
-    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
-
-    return {
-      problem: problem,
-      displayProblem: `${problem} = ?`,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [{ description: `${problem} = ${answer}`, work: `` }],
-        rule: "Same sign rules apply",
-        finalAnswer: answer
-      }
-    };
+    const signature = generateSignature(levelId, difficulty, { skeleton, dividend, divisor });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${dividend} ÷ ${divisor >= 0 ? divisor : `(${divisor})`}`;
+      const misconceptions = [answer, -answer, Math.abs(dividend) / Math.abs(divisor), divisor, Math.floor(dividend / divisor)];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Divide absolute values: ${Math.abs(dividend)} ÷ ${Math.abs(divisor)} = ${Math.abs(answer)}`, work: `` },
+            { description: skeleton === 'negNeg' ? "Negative ÷ Negative = Positive" : "Positive ÷ Negative = Negative", work: `Result: ${answer}` }
+          ],
+          rule: skeleton === 'negNeg' ? "Neg ÷ Neg = Pos" : "Pos ÷ Neg = Neg",
+          finalAnswer: answer
+        }
+      };
+    }
   }
+  
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let dividend, divisor, answer;
+  if (skeleton === 'posNeg') { divisor = -randomInt(1, 12); answer = randomInt(1, 12); dividend = answer * divisor; }
+  else if (skeleton === 'negPos') { divisor = randomInt(1, 12); answer = -randomInt(1, 12); dividend = answer * divisor; }
+  else { divisor = -randomInt(1, 12); answer = randomInt(1, 12); dividend = answer * divisor; }
+  const problem = `${dividend} ÷ ${divisor >= 0 ? divisor : `(${divisor})`}`;
+  const choices = ensureFourChoices([answer, -answer, Math.abs(dividend) / Math.abs(divisor), divisor], answer);
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Division", finalAnswer: answer }};
 };
 
-// This continues from PART 1 - combine both files into one problemGenerators.js
 
 // ============================================
-// LEVEL 1-5: BASIC DISTRIBUTION
+// LEVEL 1-5: BASIC DISTRIBUTION (REBUILT)
 // ============================================
 
 export const generateBasicDistributionProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const outside = randomInt(2, 8);
-    const term2 = randomInt(1, 10);
+  const levelId = '1-5';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
     
-    const distributed1Coef = outside;
-    const distributed2 = outside * term2;
-    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
-    const problem = `${outside}(x + ${term2})`;
-
-    const choices = [
-      answer,
-      `${outside}x + ${term2}`,
-      `x + ${distributed2}`,
-      formatAnswer(distributed1Coef, 'x', -distributed2)
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Distribute ${outside} to BOTH terms inside`, work: `` },
-          { description: `${outside} × x = ${outside}x`, work: `` },
-          { description: `${outside} × ${term2} = ${distributed2}`, work: `` },
-          { description: `Combine with +`, work: `${answer}` }
-        ],
-        rule: "DISTRIBUTIVE PROPERTY: Multiply the outside number by EVERY term inside the parentheses",
-        finalAnswer: answer
-      }
-    };
-  } else {
-    const outside = randomDecimal();
-    const variable = randomFrom(['x', 'y', 'n', 'm']);
-    const term2 = randomInt(2, 12);
+    const skeletons = difficulty === 'easy' 
+      ? ['a(bx + c)', 'a(cx + b)']
+      : ['a(bx + c)', 'a(cx + b)', 'a(b + cx)', 'a(c + bx)'];
     
-    const distributed2 = Math.round(outside * term2 * 100) / 100;
-    const answer = `${outside}${variable} + ${distributed2}`;
-    const problem = `${outside}(${variable} + ${term2})`;
-
-    const choices = [
-      answer,
-      `${outside}${variable} + ${term2}`,
-      `${variable} + ${distributed2}`,
-      `${outside}${variable} - ${distributed2}`
-    ];
-
-    const finalChoices = ensureFourChoices(choices, answer);
-
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
-        steps: [
-          { description: `Distribute ${outside} to both terms`, work: `` },
-          { description: `Result: ${answer}`, work: `` }
-        ],
-        rule: "Distribute to ALL terms",
-        finalAnswer: answer
-      }
-    };
+    const skeleton = randomFrom(skeletons);
+    const outside = randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
+    
+    let problem, answerCoef, answerConst;
+    
+    if (skeleton === 'a(bx + c)') {
+      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    } else if (skeleton === 'a(cx + b)') {
+      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    } else if (skeleton === 'a(b + cx)') {
+      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    } else {
+      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(varCoef, variable, outside * constant),
+        canonicalizeExpression(outside * varCoef, variable, constant),
+        canonicalizeExpression(outside + varCoef, variable, outside + constant),
+        canonicalizeExpression(answerCoef, variable, constant),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside} to each term`, work: `${outside} × ${varCoef === 1 ? '' : varCoef}${variable} = ${answerCoef === 1 ? '' : answerCoef}${variable}` },
+            { description: ``, work: `${outside} × ${constant} = ${answerConst}` },
+            { description: `Combine`, work: answer }
+          ],
+          rule: "Distribute: multiply outside number by EACH term inside",
+          finalAnswer: answer
+        }
+      };
+    }
   }
+  
+  const variable = getVariable(difficulty);
+  const outside = randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = outside * constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(varCoef, variable, outside * constant), canonicalizeExpression(outside * varCoef, variable, constant)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution", finalAnswer: answer }};
 };
 
 // ============================================
-// LEVEL 1-6: DISTRIBUTION WITH SUBTRACTION
+// LEVEL 1-6: DISTRIBUTION WITH SUBTRACTION (REBUILT)
 // ============================================
 
 export const generateDistributionSubtractionProblem = (difficulty) => {
-  if (difficulty === 'easy') {
-    const outside = randomInt(2, 8);
-    const term2 = randomInt(1, 10);
+  const levelId = '1-6';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    const skeletons = difficulty === 'easy' ? ['a(bx - c)', 'a(c - bx)'] : ['a(bx - c)', 'a(c - bx)', 'a(bx - c)', 'a(c - bx)'];
+    const skeleton = randomFrom(skeletons);
+    const outside = randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
     
-    const distributed1Coef = outside;
-    const distributed2 = -(outside * term2);
-    const answer = formatAnswer(distributed1Coef, 'x', distributed2);
-    const problem = `${outside}(x - ${term2})`;
+    let problem, answerCoef, answerConst;
+    
+    if (skeleton === 'a(bx - c)') {
+      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = -(outside * constant);
+    } else {
+      problem = `${outside}(${constant} - ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = -(outside * varCoef);
+      answerConst = outside * constant;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(answerCoef, variable, Math.abs(answerConst)),
+        canonicalizeExpression(Math.abs(answerCoef), variable, answerConst),
+        canonicalizeExpression(outside * varCoef, variable, outside * constant),
+        canonicalizeExpression(varCoef, variable, -(outside * constant)),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside}`, work: skeleton === 'a(bx - c)' ? `${answerCoef === 1 ? '' : answerCoef === -1 ? '-' : answerCoef}${variable} and ${answerConst}` : `${answerConst} and ${answerCoef === 1 ? '' : answerCoef === -1 ? '-' : answerCoef}${variable}` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Distribute and watch your signs!",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = -(outside * constant);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(answerCoef, variable, Math.abs(answerConst))], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution with subtraction", finalAnswer: answer }};
+};
 
-    const choices = [
-      answer,
-      formatAnswer(distributed1Coef, 'x', -distributed2),
-      `${outside}x - ${term2}`,
-      `x - ${Math.abs(distributed2)}`
-    ];
+// ============================================
+// LEVEL 1-7: NEGATIVE OUTSIDE (REBUILT)
+// ============================================
 
-    const finalChoices = ensureFourChoices(choices, answer);
+export const generateNegativeOutsideProblem = (difficulty) => {
+  const levelId = '1-7';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    const skeletons = difficulty === 'easy'
+      ? ['-a(bx + c)', '-a(bx - c)']
+      : ['-a(bx + c)', '-a(bx - c)', '-a(c + bx)', '-a(c - bx)', '-a(bx + c)', '-a(c - bx)'];
+    const skeleton = randomFrom(skeletons);
+    const outside = -randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
+    
+    let problem, answerCoef, answerConst;
+    
+    if (skeleton === '-a(bx + c)') {
+      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    } else if (skeleton === '-a(bx - c)') {
+      problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} - ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = -(outside * constant);
+    } else if (skeleton === '-a(c + bx)') {
+      problem = `${outside}(${constant} + ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+    } else {
+      problem = `${outside}(${constant} - ${varCoef === 1 ? '' : varCoef}${variable})`;
+      answerCoef = -(outside * varCoef);
+      answerConst = outside * constant;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(-answerCoef, variable, answerConst),
+        canonicalizeExpression(answerCoef, variable, -answerConst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst)),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside} to BOTH terms`, work: `Watch the signs!` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Negative outside: distribute the negative to EVERY term",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = -randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = outside * constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+  const problem = `${outside}(${varCoef === 1 ? '' : varCoef}${variable} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(-answerCoef, variable, answerConst)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Negative distribution", finalAnswer: answer }};
+};
 
-    return {
-      problem: problem,
-      displayProblem: problem,
-      answer: answer,
-      choices: finalChoices,
-      explanation: {
-        originalProblem: problem,
+// ============================================
+// LEVEL 1-8: COMPLEX DISTRIBUTION (REBUILT - MUST BE HIGHLY VARIED)
+// ============================================
+
+export const generateNegativeInsideProblem = (difficulty) => {
+  const levelId = '1-8';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    
+    // MANY skeletons for Level 8
+    const skeletons = difficulty === 'easy'
+      ? ['-(x + c)', '-(bx + c)', 'a(-x + c)', '-a(bx - c)']
+      : ['-(x + c)', '-(x - c)', '-(bx + c)', '-(bx - c)', '-(c + bx)', '-(c - bx)', 'a(-x + c)', 'a(-x - c)', 'a(c - bx)', '-a(-x + c)', '-a(-x - c)', '-a(bx - c)', 'a(-bx + c)', 'a(-bx - c)'];
+    
+    const skeleton = randomFrom(skeletons);
+    let outside, varCoef, constant, problem, answerCoef, answerConst;
+    
+    if (skeleton === '-(x + c)') {
+      outside = -1; varCoef = 1; constant = randomInt(1, 12);
+      problem = `-(${variable} + ${constant})`;
+      answerCoef = -1; answerConst = -constant;
+    } else if (skeleton === '-(x - c)') {
+      outside = -1; varCoef = 1; constant = randomInt(1, 12);
+      problem = `-(${variable} - ${constant})`;
+      answerCoef = -1; answerConst = constant;
+    } else if (skeleton === '-(bx + c)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${varCoef}${variable} + ${constant})`;
+      answerCoef = -varCoef; answerConst = -constant;
+    } else if (skeleton === '-(bx - c)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${varCoef}${variable} - ${constant})`;
+      answerCoef = -varCoef; answerConst = constant;
+    } else if (skeleton === '-(c + bx)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${constant} + ${varCoef}${variable})`;
+      answerCoef = -varCoef; answerConst = -constant;
+    } else if (skeleton === '-(c - bx)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${constant} - ${varCoef}${variable})`;
+      answerCoef = varCoef; answerConst = -constant;
+    } else if (skeleton === 'a(-x + c)') {
+      outside = randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} + ${constant})`;
+      answerCoef = -outside; answerConst = outside * constant;
+    } else if (skeleton === 'a(-x - c)') {
+      outside = randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} - ${constant})`;
+      answerCoef = -outside; answerConst = -outside * constant;
+    } else if (skeleton === 'a(c - bx)') {
+      outside = randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${constant} - ${varCoef}${variable})`;
+      answerCoef = -outside * varCoef; answerConst = outside * constant;
+    } else if (skeleton === '-a(-x + c)') {
+      outside = -randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} + ${constant})`;
+      answerCoef = -outside; answerConst = outside * constant;
+    } else if (skeleton === '-a(-x - c)') {
+      outside = -randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} - ${constant})`;
+      answerCoef = -outside; answerConst = -outside * constant;
+    } else if (skeleton === '-a(bx - c)') {
+      outside = -randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${varCoef}${variable} - ${constant})`;
+      answerCoef = outside * varCoef; answerConst = -outside * constant;
+    } else if (skeleton === 'a(-bx + c)') {
+      outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${varCoef}${variable} + ${constant})`;
+      answerCoef = outside * varCoef; answerConst = outside * constant;
+    } else {
+      outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${varCoef}${variable} - ${constant})`;
+      answerCoef = outside * varCoef; answerConst = -outside * constant;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(-answerCoef, variable, answerConst),
+        canonicalizeExpression(answerCoef, variable, -answerConst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst)),
+        canonicalizeExpression(answerCoef, variable, 0),
+        canonicalizeExpression(0, variable, answerConst),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute carefully - watch ALL signs`, work: `` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Complex distribution: track every negative carefully!",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = -1;
+  const varCoef = 1;
+  const constant = randomInt(1, 12);
+  const answerCoef = -1;
+  const answerConst = -constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst);
+  const problem = `-(${variable} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(1, variable, constant), canonicalizeExpression(-1, variable, constant)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Complex distribution", finalAnswer: answer }};
+};
+
+
+// ============================================
+// LEVELS 9-37: ORIGINAL CODE (UNCHANGED)
+// ============================================
+// The following generators (Levels 9-37) are preserved exactly as-is
+// from the original file to maintain compatibility and avoid breaking changes.
+
         steps: [
           { description: `Distribute ${outside} to BOTH terms`, work: `` },
           { description: `${outside} × x = ${outside}x`, work: `` },
