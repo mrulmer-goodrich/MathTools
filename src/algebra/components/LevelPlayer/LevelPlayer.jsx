@@ -166,6 +166,12 @@ const LevelPlayer = ({
   return (
     <div className="level-player" data-region={getRegion(levelId)}>
       <div className="level-header">
+        <button 
+          className="back-to-menu-button"
+          onClick={onReturnToMenu}
+        >
+          ← Return to Home
+        </button>
         <h2>{level.name}</h2>
         <ProgressTracker 
           current={correctStreak} 
