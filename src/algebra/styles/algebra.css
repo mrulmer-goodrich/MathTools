@@ -2082,7 +2082,8 @@ body {
 }
 
 /* Content container - this gets the max-width instead */
-.level-player > * {
+/* EXCLUDE overlays and modals from these constraints! */
+.level-player > *:not(.success-overlay):not(.feedback-modal-overlay) {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
@@ -4492,4 +4493,9 @@ body {
 .success-overlay,
 .feedback-modal-overlay {
   z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
 }
