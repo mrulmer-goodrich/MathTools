@@ -4354,7 +4354,7 @@ body {
 
 /* Base Camp Region - Levels 1-16 (Green Theme) */
 .level-player[data-region="base-camp"] {
-  background-image: url('/assets/algebra/map-base-camp.png');
+  background-image: url('/algebra/map-base-camp.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -4363,7 +4363,7 @@ body {
 
 /* Territory Region - Levels 17-31 (Brown Theme) */
 .level-player[data-region="territory"] {
-  background-image: url('/assets/algebra/map-river.png');
+  background-image: url('/algebra/map-river.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -4372,7 +4372,7 @@ body {
 
 /* Frontier Region - Levels 32-37 (Gold Theme) */
 .level-player[data-region="frontier"] {
-  background-image: url('/assets/algebra/map-frontier.png');
+  background-image: url('/algebra/map-frontier.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
