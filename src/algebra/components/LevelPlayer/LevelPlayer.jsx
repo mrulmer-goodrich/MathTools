@@ -128,7 +128,7 @@ const LevelPlayer = ({
 
   if (levelComplete) {
     return (
-      <div className="level-complete">
+      <div className="level-complete" data-region={getRegion(levelId)}>
         <div className="completion-container">
           <div className="completion-icon">🎉</div>
           <h2>Level Complete!</h2>
