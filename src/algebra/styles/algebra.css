@@ -4999,7 +4999,7 @@ body {
 /* Background layers based on region */
 .level-player[data-region="base-camp"],
 .main-menu[data-region="base-camp"] {
-  background-image: url('/map-base-camp.png');
+  background-image: url('/algebra/map-base-camp.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -5007,7 +5007,7 @@ body {
 }
 
 .level-player[data-region="territory"] {
-  background-image: url('/map-river.png');
+  background-image: url('/algebra/map-river.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -5015,7 +5015,7 @@ body {
 }
 
 .level-player[data-region="frontier"] {
-  background-image: url('/map-frontier.png');
+  background-image: url('/algebra/map-frontier.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
