@@ -1748,7 +1748,7 @@ export const generateDistributeSubtractProblem = (difficulty) => {
 // LEVEL 1-15: ROCKY LEDGE (Negative Outside)
 // ============================================
 
-export const generateNegativeDistributeCombineProblem = (difficulty) => {
+export const generateNegative = (difficulty) => {
   const levelId = '1-15';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -3824,7 +3824,7 @@ const formatWithSign = (value) => {
 // Skill: Basic distribution + combine like terms
 // ============================================
 
-export const generateDistributeCombineProblem = (difficulty) => {
+export const generateDistributeCombineProblemNEW = (difficulty) => {
   const levelId = '1-13';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -4118,7 +4118,7 @@ export const generateDistributeCombineProblem = (difficulty) => {
 // Skill: Distribution with subtraction
 // ============================================
 
-export const generateDistributeSubtractProblem = (difficulty) => {
+export const generateDistributeSubtractProblemNEW = (difficulty) => {
   const levelId = '1-14';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -4290,8 +4290,8 @@ export const problemGenerators = {
   '1-10': generateUnlikeTermsProblem,
   '1-11': generateMultipleLikeTermsProblem,
 '1-12': generateSubtractLikeTermsProblem,
-'1-13': generateDistributeCombineProblem,
-'1-14': generateDistributeSubtractProblem,
+'1-13': generateDistributeCombineProblemNEW,
+'1-14': generateDistributeSubtractProblemNEW,
 '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
   
