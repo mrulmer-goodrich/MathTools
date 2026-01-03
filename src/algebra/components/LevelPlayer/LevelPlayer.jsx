@@ -7,7 +7,7 @@ import Header from '../Header';
 import FloatingUI from '../FloatingUI';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
-import MathWorksheet from './LevelPlayer/MathWorksheet';
+import MathWorksheet from './MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
