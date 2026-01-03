@@ -3817,29 +3817,7 @@ const formatWithSign = (value) => {
   return `+${value}`;
 };
 
-// Anti-repeat system
-const problemHistory = {};
-const MAX_HISTORY = 20;
-const MAX_RETRIES = 8;
 
-const generateSignature = (levelId, difficulty, params) => {
-  return JSON.stringify({ levelId, difficulty, ...params });
-};
-
-const isRecentDuplicate = (levelId, difficulty, signature) => {
-  const key = `${levelId}-${difficulty}`;
-  if (!problemHistory[key]) return false;
-  return problemHistory[key].includes(signature);
-};
-
-const recordProblem = (levelId, difficulty, signature) => {
-  const key = `${levelId}-${difficulty}`;
-  if (!problemHistory[key]) problemHistory[key] = [];
-  problemHistory[key].push(signature);
-  if (problemHistory[key].length > MAX_HISTORY) {
-    problemHistory[key].shift();
-  }
-};
 
 // ============================================
 // LEVEL 1-13: MOUNTAIN BASE
