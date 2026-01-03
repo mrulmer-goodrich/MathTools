@@ -1,11 +1,15 @@
+// LevelPlayer.jsx - UPDATED to handle staged workflow
+// Location: src/algebra/components/LevelPlayer.jsx
+
 import React, { useState, useEffect } from 'react';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
+import MathWorksheet from './MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import levels from '../../data/levelData';
-import { problemGenerators } from '../../data/problemGenerators';
+import levels from '../data/levelData';
+import { problemGenerators } from '../data/problemGenerators';
 
 const LevelPlayer = ({ 
   levelId, 
@@ -23,15 +27,9 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
-  
-  // NEW: State for staged workflow
-  const [currentRow, setCurrentRow] = useState(0);
-  const [row1Answers, setRow1Answers] = useState([]);
-  const [row2Answer, setRow2Answer] = useState(null);
 
   const level = levels[levelId];
 
-  // Helper function to determine region based on level number
   const getRegion = (levelId) => {
     const num = parseInt(levelId.split('-')[1]);
     if (num <= 16) return 'base-camp';
@@ -51,11 +49,6 @@ const LevelPlayer = ({
       setShowFeedback(false);
       setShowSuccess(false);
       setSelectedAnswer(null);
-      
-      // Reset staged workflow state
-      setCurrentRow(0);
-      setRow1Answers([]);
-      setRow2Answer(null);
     } else {
       console.error(`No generator found for level ${levelId}`);
     }
@@ -75,63 +68,46 @@ const LevelPlayer = ({
     return messages[Math.floor(Math.random() * messages.length)];
   };
 
-  // NEW: Handle staged row submissions
-  const handleStagedRowSubmit = (answer) => {
-    const staged = currentProblem.staged;
-    const currentRowData = staged.rows[currentRow];
+  const handleProblemComplete = () => {
+    setStats(prev => ({
+      ...prev,
+      problemsAttempted: prev.problemsAttempted + 1,
+      problemsCorrect: prev.problemsCorrect + 1,
+      currentStreak: prev.currentStreak + 1
+    }));
+
+    const newStreak = correctStreak + 1;
+    setCorrectStreak(newStreak);
     
-    if (currentRow === 0) {
-      // Row 1: collecting terms
-      const newAnswers = [...row1Answers, answer];
-      setRow1Answers(newAnswers);
+    setShowSuccess(true);
+    
+    setTimeout(() => {
+      setShowSuccess(false);
       
-      // Check if row 1 is complete
-      if (newAnswers.length >= currentRowData.blanks) {
-        // Validate row 1
-        const allCorrect = newAnswers.every((ans, idx) => 
-          ans === currentRowData.expected[idx]
-        );
-        
-        if (allCorrect) {
-          // Move to row 2
-          setCurrentRow(1);
-        } else {
-          // Row 1 incorrect - show feedback
-          setIsCorrect(false);
-          setShowFeedback(true);
-          setCorrectStreak(0);
-          setStats(prev => ({
-            ...prev,
-            problemsAttempted: prev.problemsAttempted + 1,
-            currentStreak: 0
-          }));
-        }
+      if (newStreak >= level.problemsRequired) {
+        setLevelComplete(true);
+      } else {
+        generateNewProblem();
       }
-    } else {
-      // Row 2: final answer
-      setRow2Answer(answer);
-      handleFinalAnswer(answer);
-    }
+    }, 1000); // 1 second
   };
 
-  // Regular answer submit (for non-staged problems)
+  const handleProblemWrong = () => {
+    setStats(prev => ({
+      ...prev,
+      problemsAttempted: prev.problemsAttempted + 1,
+      currentStreak: 0
+    }));
+
+    setCorrectStreak(0);
+    setShowFeedback(true);
+  };
+
   const handleAnswerSubmit = (answer) => {
-    // Check if this is a staged problem
-    if (currentProblem.staged) {
-      handleStagedRowSubmit(answer);
-      return;
-    }
-    
-    // Regular single-step problem
-    handleFinalAnswer(answer);
-  };
-
-  const handleFinalAnswer = (answer) => {
     setSelectedAnswer(answer);
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
 
-    // Update stats
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
@@ -143,22 +119,18 @@ const LevelPlayer = ({
       const newStreak = correctStreak + 1;
       setCorrectStreak(newStreak);
       
-      // Show success overlay for 2 seconds
       setShowSuccess(true);
       
       setTimeout(() => {
         setShowSuccess(false);
         
-        // Check if level complete
         if (newStreak >= level.problemsRequired) {
           setLevelComplete(true);
         } else {
-          // Auto-generate next problem
           generateNewProblem();
         }
-      }, 2000);
+      }, 1000);
     } else {
-      // Show wrong answer modal
       setCorrectStreak(0);
       setShowFeedback(true);
     }
@@ -170,15 +142,12 @@ const LevelPlayer = ({
   };
 
   const handleContinueFromComplete = () => {
-    // Award badges if applicable
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
     
     if (level.moduleBadge || level.finalModule) {
-      // Return to menu for module completion
       onReturnToMenu();
     } else {
-      // Would advance to next level in full implementation
       onReturnToMenu();
     }
   };
@@ -224,9 +193,8 @@ const LevelPlayer = ({
     );
   }
 
-  // Determine what to render based on staged or regular problem
+  // Check if this is a staged problem
   const isStaged = currentProblem.staged && currentProblem.staged.rows;
-  const currentRowData = isStaged ? currentProblem.staged.rows[currentRow] : null;
 
   return (
     <div className="level-player" data-region={getRegion(levelId)}>
@@ -244,68 +212,34 @@ const LevelPlayer = ({
         />
       </div>
 
-      <ProblemDisplay problem={currentProblem} />
-
-      {/* STAGED WORKFLOW - Two rows */}
+      {/* STAGED WORKFLOW (Levels 13+) */}
       {isStaged && (
-        <div className="staged-workflow">
-          {/* Row 1: Distribute */}
-          <div className={`staged-row ${currentRow === 0 ? 'active' : currentRow > 0 ? 'completed' : 'locked'}`}>
-            <div className="row-prompt">{currentProblem.staged.rows[0].prompt}</div>
-            <div className="row-workspace">
-              {currentRow === 0 && (
-                <ClickToSelect
-                  choices={currentProblem.staged.rows[0].bank}
-                  onSubmit={handleAnswerSubmit}
-                  disabled={showFeedback || showSuccess}
-                  isTermBank={true}
-                  blanksNeeded={currentProblem.staged.rows[0].blanks}
-                  selectedTerms={row1Answers}
-                />
-              )}
-              {currentRow > 0 && (
-                <div className="completed-row">
-                  {row1Answers.map((term, idx) => (
-                    <span key={idx} className="completed-term">{term}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Row 2: Combine */}
-          {currentRow >= 1 && (
-            <div className={`staged-row ${currentRow === 1 ? 'active' : 'locked'}`}>
-              <div className="row-prompt">{currentProblem.staged.rows[1].prompt}</div>
-              <div className="row-workspace">
-                <ClickToSelect
-                  choices={currentProblem.staged.rows[1].choices}
-                  onSubmit={handleAnswerSubmit}
-                  disabled={showFeedback || showSuccess}
-                  isTermBank={false}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* REGULAR WORKFLOW - Single multiple choice */}
-      {!isStaged && level.inputMethod === 'clickToSelect' && (
-        <ClickToSelect
-          choices={currentProblem.choices}
-          onSubmit={handleAnswerSubmit}
-          disabled={showFeedback || showSuccess}
-          selectedAnswer={selectedAnswer}
+        <MathWorksheet
+          problem={currentProblem}
+          onComplete={handleProblemComplete}
+          onWrongAnswer={handleProblemWrong}
         />
       )}
 
-      {/* Success Overlay */}
+      {/* REGULAR WORKFLOW (Levels 1-12) */}
+      {!isStaged && (
+        <>
+          <ProblemDisplay problem={currentProblem} />
+          {level.inputMethod === 'clickToSelect' && (
+            <ClickToSelect
+              choices={currentProblem.choices}
+              onSubmit={handleAnswerSubmit}
+              disabled={showFeedback || showSuccess}
+              selectedAnswer={selectedAnswer}
+            />
+          )}
+        </>
+      )}
+
       {showSuccess && (
         <SuccessOverlay message={getSuccessMessage()} />
       )}
 
-      {/* Wrong Answer Modal */}
       {showFeedback && (
         <FeedbackModal
           explanation={currentProblem.explanation}
