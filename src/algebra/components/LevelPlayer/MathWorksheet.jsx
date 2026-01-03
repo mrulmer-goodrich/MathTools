@@ -1,4 +1,4 @@
-// MathWorksheet.jsx - Handles staged workflow for levels 13+
+// MathWorksheet.jsx - FIXED VERSION
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
 import React, { useState } from 'react';
@@ -50,10 +50,12 @@ const MathWorksheet = ({
 
   return (
     <div className="math-worksheet">
-      <div className="problem-header">
-        <h3>Solve:</h3>
-        <div className="original-problem">{problem.displayProblem}</div>
+      {/* PROMINENT PROBLEM DISPLAY */}
+      <div className="worksheet-problem-display">
+        {problem.displayProblem || problem.problem}
       </div>
+
+      <div className="worksheet-divider"></div>
 
       <div className="worksheet-rows">
         {rows.map((row, index) => {
