@@ -3799,14 +3799,11 @@ export const generateFinalFrontierProblem = (difficulty) => {
     };
   }
 };
-//***************************************************************************************************************************
+//***********************************************************************************************************************************************
 // ============================================
-// LEVELS 13-14 GENERATORS - STAGED WORKFLOW
-// Proof of Concept Implementation
+// LEVELS 13-14 GENERATORS - FIXED VERSION
+// No prompts, sorted terms, proper problem display
 // ============================================
-
-// Import from existing problemGenerators.js utilities
-
 
 const formatWithSign = (value) => {
   if (typeof value === 'number') {
@@ -3817,26 +3814,47 @@ const formatWithSign = (value) => {
   return `+${value}`;
 };
 
-
+const sortTermBank = (terms) => {
+  // Sort: variables first (alphabetically), then constants (numerically)
+  return terms.sort((a, b) => {
+    const aHasVar = /[a-z]/i.test(a);
+    const bHasVar = /[a-z]/i.test(b);
+    
+    if (aHasVar && !bHasVar) return -1;
+    if (!aHasVar && bHasVar) return 1;
+    
+    // Both have vars or both are constants
+    if (aHasVar && bHasVar) {
+      // Sort variables alphabetically by the variable letter
+      const aVar = a.match(/[a-z]/i)[0];
+      const bVar = b.match(/[a-z]/i)[0];
+      if (aVar !== bVar) return aVar.localeCompare(bVar);
+      // Same variable, sort by coefficient
+      const aCoef = parseInt(a.replace(/[a-z]/i, '')) || 1;
+      const bCoef = parseInt(b.replace(/[a-z]/i, '')) || 1;
+      return aCoef - bCoef;
+    }
+    
+    // Both constants, sort numerically
+    return parseInt(a) - parseInt(b);
+  });
+};
 
 // ============================================
 // LEVEL 1-13: MOUNTAIN BASE
-// Skill: Basic distribution + combine like terms
 // ============================================
 
 export const generateDistributeCombineProblemNEW = (difficulty) => {
   const levelId = '1-13';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    // Range: -12 to 12, excluding 0
     const outside = randomInt(-12, 12);
-    const inside = randomInt(1, 12); // Keep inside positive for easy
+    const inside = randomInt(1, 12);
     const standalone = randomInt(-12, 12);
     
     let skeleton, problem, insideOp;
     
     if (difficulty === 'easy') {
-      // Easy: positive outside, positive inside
       const outsidePos = Math.abs(outside);
       const standaloneAbs = Math.abs(standalone);
       
@@ -3848,16 +3866,14 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       } else if (skeleton === 'cx+a(x+b)') {
         problem = `${formatCoefficient(standaloneAbs, 'x')} + ${outsidePos}(x + ${inside})`;
         insideOp = '+';
-      } else { // 'a(x+b)+c'
+      } else {
         problem = `${outsidePos}(x + ${inside}) + ${standaloneAbs}`;
         insideOp = '+';
       }
       
-      // Calculate distributed terms
       const distVarCoef = outsidePos;
       const distConst = outsidePos * inside;
       
-      // Build Row 1 expected terms (with signs)
       const row1Expected = [];
       row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, 'x')));
       row1Expected.push(formatWithSign(distConst));
@@ -3868,29 +3884,24 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         row1Expected.push(formatWithSign(standaloneAbs));
       }
       
-      // Build Row 1 term bank (12 terms, all with signs)
       const termBank = new Set();
-      
-      // Add correct terms
       row1Expected.forEach(term => termBank.add(term));
       
-      // Add distractors
-      termBank.add(formatWithSign(inside)); // undistributed inside
-      termBank.add(formatWithSign(outsidePos)); // wrong coefficient
-      termBank.add(formatWithSign(-distConst)); // sign error on constant
-      termBank.add(formatWithSign(formatCoefficient(-distVarCoef, 'x'))); // sign error on variable
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneAbs, 'x'))); // premature combine
-      termBank.add(formatWithSign(distConst + inside)); // wrong addition
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef - 1, 'x'))); // off by one
-      termBank.add(formatWithSign(distConst + 1)); // off by one
+      // Distractors
+      termBank.add(formatWithSign(inside));
+      termBank.add(formatWithSign(outsidePos));
+      termBank.add(formatWithSign(-distConst));
+      termBank.add(formatWithSign(formatCoefficient(-distVarCoef, 'x')));
+      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneAbs, 'x')));
+      termBank.add(formatWithSign(distConst + inside));
+      termBank.add(formatWithSign(formatCoefficient(distVarCoef - 1, 'x')));
+      termBank.add(formatWithSign(distConst + 1));
       
-      // Pad to 12 terms
       while (termBank.size < 12) {
         const randomVal = randomInt(-12, 12);
         termBank.add(formatWithSign(randomVal));
       }
       
-      // Calculate Row 2 answer
       let finalCoef, finalConst;
       if (skeleton === 'a(x+b)+cx' || skeleton === 'cx+a(x+b)') {
         finalCoef = distVarCoef + standaloneAbs;
@@ -3902,12 +3913,11 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       
       const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
       
-      // Build Row 2 choices
       const row2Choices = [
         answer,
-        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // didn't combine variables
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // didn't distribute
-        formatCoefficient(outsidePos + standaloneAbs, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst) // wrong combine
+        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst),
+        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside),
+        formatCoefficient(outsidePos + standaloneAbs, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst)
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
@@ -3925,14 +3935,12 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
             rows: [
               {
                 id: 'row1_distribute',
-                prompt: 'Distribute (expand) first.',
                 blanks: row1Expected.length,
                 expected: row1Expected,
-                bank: Array.from(termBank).sort(() => Math.random() - 0.5)
+                bank: sortTermBank(Array.from(termBank))
               },
               {
                 id: 'row2_combine',
-                prompt: 'Now combine like terms.',
                 blanks: 1,
                 expected: [answer],
                 choices: row2Choices
@@ -3951,7 +3959,7 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         };
       }
     } else {
-      // Hard mode: allow negatives, mixed variables
+      // Hard mode
       const variables = ['x', 'y', 'n', 'm', 'p', 'q', 'r', 's', 't', 'w'];
       const variable = randomFrom(variables);
       
@@ -3978,11 +3986,9 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         insideOp = '+';
       }
       
-      // Calculate distributed terms
       const distVarCoef = outside;
       const distConst = outside * inside;
       
-      // Build Row 1 expected terms
       const row1Expected = [];
       
       if (skeleton === 'cv+a(v+b)') {
@@ -3999,11 +4005,9 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         row1Expected.push(formatWithSign(trailingConst));
       }
       
-      // Build term bank
       const termBank = new Set();
       row1Expected.forEach(term => termBank.add(term));
       
-      // Distractors
       termBank.add(formatWithSign(inside));
       termBank.add(formatWithSign(outside));
       termBank.add(formatWithSign(-distConst));
@@ -4020,7 +4024,6 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         }
       }
       
-      // Calculate final answer
       const finalCoef = distVarCoef + standaloneTerm;
       const finalConst = distConst + trailingConst;
       
@@ -4053,14 +4056,12 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
             rows: [
               {
                 id: 'row1_distribute',
-                prompt: 'Distribute (expand) first.',
                 blanks: row1Expected.length,
                 expected: row1Expected,
-                bank: Array.from(termBank).sort(() => Math.random() - 0.5)
+                bank: sortTermBank(Array.from(termBank))
               },
               {
                 id: 'row2_combine',
-                prompt: 'Now combine like terms.',
                 blanks: 1,
                 expected: [answer],
                 choices: row2Choices
@@ -4090,14 +4091,12 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       rows: [
         {
           id: 'row1_distribute',
-          prompt: 'Distribute (expand) first.',
           blanks: 2,
           expected: ['+3x', '+6'],
-          bank: ['+3x', '+6', '+2', '+3', '-3x', '-6', '+5x', '+9', '+4', '-2']
+          bank: sortTermBank(['+3x', '+6', '+2', '+3', '-3x', '-6', '+5x', '+9', '+4', '-2'])
         },
         {
           id: 'row2_combine',
-          prompt: 'Now combine like terms.',
           blanks: 1,
           expected: [fallbackAnswer],
           choices: [fallbackAnswer, '3x + 2', 'x + 6', '5x']
@@ -4115,7 +4114,6 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
 
 // ============================================
 // LEVEL 1-14: STEEP CLIMB
-// Skill: Distribution with subtraction
 // ============================================
 
 export const generateDistributeSubtractProblemNEW = (difficulty) => {
@@ -4150,11 +4148,9 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
         problem = `${formatCoefficient(standaloneCoef, 'x')} + ${outsidePos}(x - ${inside})`;
       }
       
-      // Calculate distributed terms
       const distVarCoef = outsidePos;
       const distConst = insideOp === '-' ? -(outsidePos * inside) : (outsidePos * inside);
       
-      // Build Row 1 expected
       const row1Expected = [];
       
       if (skeleton === 'cx+a(x-b)') {
@@ -4167,14 +4163,12 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
         row1Expected.push(formatWithSign(formatCoefficient(standaloneCoef, 'x')));
       }
       
-      // Build term bank
       const termBank = new Set();
       row1Expected.forEach(term => termBank.add(term));
       
-      // Distractors
-      termBank.add(formatWithSign(inside)); // undistributed
-      termBank.add(formatWithSign(outsidePos)); // wrong coef
-      termBank.add(formatWithSign(-distConst)); // sign error
+      termBank.add(formatWithSign(inside));
+      termBank.add(formatWithSign(outsidePos));
+      termBank.add(formatWithSign(-distConst));
       termBank.add(formatWithSign(formatCoefficient(-distVarCoef, 'x')));
       termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneCoef, 'x')));
       
@@ -4182,15 +4176,14 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
         termBank.add(formatWithSign(randomInt(-12, 12)));
       }
       
-      // Calculate final answer
       const finalCoef = distVarCoef + standaloneCoef;
       const answer = formatCoefficient(finalCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst);
       
       const row2Choices = [
         answer,
-        formatCoefficient(finalCoef, 'x') + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst), // sign error
-        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // didn't combine
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside) // used wrong constant
+        formatCoefficient(finalCoef, 'x') + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst),
+        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst),
+        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside)
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
@@ -4208,14 +4201,12 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
             rows: [
               {
                 id: 'row1_distribute',
-                prompt: 'Distribute (expand) first.',
                 blanks: row1Expected.length,
                 expected: row1Expected,
-                bank: Array.from(termBank).sort(() => Math.random() - 0.5)
+                bank: sortTermBank(Array.from(termBank))
               },
               {
                 id: 'row2_combine',
-                prompt: 'Now combine like terms.',
                 blanks: 1,
                 expected: [answer],
                 choices: row2Choices
@@ -4230,9 +4221,6 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
           }
         };
       }
-    } else {
-      // Hard mode implementation similar structure
-      // ... (abbreviated for space, follows same pattern)
     }
   }
   
@@ -4247,14 +4235,12 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
       rows: [
         {
           id: 'row1_distribute',
-          prompt: 'Distribute (expand) first.',
           blanks: 3,
           expected: ['+4x', '-8', '+3x'],
-          bank: ['+4x', '-8', '+3x', '-2', '+8', '+7x', '-4x', '+2', '-3x', '+5', '+11', '-5']
+          bank: sortTermBank(['+4x', '-8', '+3x', '-2', '+8', '+7x', '-4x', '+2', '-3x', '+5', '+11', '-5'])
         },
         {
           id: 'row2_combine',
-          prompt: 'Now combine like terms.',
           blanks: 1,
           expected: ['7x - 8'],
           choices: ['7x - 8', '7x + 8', '4x - 5', '7x - 2']
@@ -4269,6 +4255,7 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
     }
   };
 };
+
 
 
 
