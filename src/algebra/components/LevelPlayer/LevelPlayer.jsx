@@ -206,11 +206,12 @@ const LevelPlayer = ({
         levelName={level.name}
       />
 
+
       <FloatingUI
-        onViewStats={() => setShowStats(true)}
-        onViewMap={null} 
-        badges={progress.badges}
-      />
+  onViewStats={() => setShowStats(true)}
+  onViewMap={null} 
+  badges={progress?.badges || []}
+/>
 
       <div className="level-content-container">
         <ProgressTracker 
