@@ -3806,22 +3806,7 @@ export const generateFinalFrontierProblem = (difficulty) => {
 // ============================================
 
 // Import from existing problemGenerators.js utilities
-const randomInt = (min, max) => {
-  let val;
-  do {
-    val = Math.floor(Math.random() * (max - min + 1)) + min;
-  } while (val === 0); // Exclude 0
-  return val;
-};
 
-const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-const formatCoefficient = (coefficient, variable) => {
-  if (coefficient === 0) return '';
-  if (coefficient === 1) return variable;
-  if (coefficient === -1) return `-${variable}`;
-  return `${coefficient}${variable}`;
-};
 
 const formatWithSign = (value) => {
   if (typeof value === 'number') {
