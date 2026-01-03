@@ -1,5 +1,5 @@
-// MathWorksheet.jsx - COMPLETE REDESIGN
-// Matches levels 1-12 style, single container, chips on right
+// MathWorksheet.jsx - FINAL DESIGN
+// Chips below work area, tight spacing, no scroll
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
 import React, { useState } from 'react';
@@ -23,7 +23,6 @@ const MathWorksheet = ({
   const currentRow = rows[currentRowIndex];
   const isFinalRow = currentRowIndex === rows.length - 1;
 
-  // Get all available chips from current row
   const availableChips = currentRow.bank || [];
   const isBankRow = availableChips.length > 0;
   const isChoiceRow = currentRow.choices && currentRow.choices.length > 0;
@@ -52,29 +51,27 @@ const MathWorksheet = ({
     const rowId = currentRow.id;
     const current = selectedTerms[rowId] || [];
 
-    if (isBankRow) {
-      // Validate as SET
-      const selectedSet = new Set(current);
-      const expectedSet = new Set(currentRow.expected);
-      
-      const isCorrect = 
-        selectedSet.size === expectedSet.size &&
-        current.length === currentRow.expected.length &&
-        [...selectedSet].every(term => expectedSet.has(term));
+    // Validate as SET
+    const selectedSet = new Set(current);
+    const expectedSet = new Set(currentRow.expected);
+    
+    const isCorrect = 
+      selectedSet.size === expectedSet.size &&
+      current.length === currentRow.expected.length &&
+      [...selectedSet].every(term => expectedSet.has(term));
 
-      if (isCorrect) {
-        setRowAnswers(prev => ({ ...prev, [rowId]: current }));
-        setCompletedRows(prev => [...prev, rowId]);
-        
-        if (isFinalRow) {
-          onComplete();
-        } else {
-          setCurrentRowIndex(prev => prev + 1);
-        }
-      } else {
-        alert('Not quite! Check your work.');
-        setSelectedTerms(prev => ({ ...prev, [rowId]: [] }));
+    if (isCorrect) {
+      setRowAnswers(prev => ({ ...prev, [rowId]: current }));
+      setCompletedRows(prev => [...prev, rowId]);
+      
+      if (isFinalRow && !isChoiceRow) {
+        onComplete();
+      } else if (!isFinalRow) {
+        setCurrentRowIndex(prev => prev + 1);
       }
+    } else {
+      alert('Not quite! Check your work.');
+      setSelectedTerms(prev => ({ ...prev, [rowId]: [] }));
     }
   };
 
@@ -96,7 +93,7 @@ const MathWorksheet = ({
     return term;
   };
 
-  // Count chip usage across all rows
+  // Count chip usage
   const getChipUsageCount = (chip) => {
     let count = 0;
     Object.values(selectedTerms).forEach(terms => {
@@ -107,98 +104,97 @@ const MathWorksheet = ({
 
   return (
     <div className="staged-problem-container">
-      {/* LEFT: Problem and Work Area */}
-      <div className="staged-left-panel">
-        {/* Problem Display */}
-        <div className="staged-problem-display">
-          {problem.displayProblem || problem.problem}
-        </div>
-
-        {/* Work Area - All Rows */}
-        <div className="staged-work-area">
-          {rows.map((row, index) => {
-            const isCompleted = completedRows.includes(row.id);
-            const isActive = index === currentRowIndex;
-            const isLocked = index > currentRowIndex;
-            const rowTerms = selectedTerms[row.id] || [];
-            const rowAnswer = rowAnswers[row.id];
-
-            return (
-              <div 
-                key={row.id}
-                className={`staged-row ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}
-              >
-                {/* Completed Row */}
-                {isCompleted && !isChoiceRow && (
-                  <div className="staged-row-completed">
-                    {rowAnswer.map((term, i) => (
-                      <span key={i} className="staged-term-display">
-                        {i === 0 ? cleanDisplay(term) : term}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Active Bank Row */}
-                {isActive && isBankRow && !isCompleted && (
-                  <div className="staged-row-active">
-                    <div className="staged-blanks">
-                      {Array.from({ length: row.blanks }).map((_, i) => (
-                        <div 
-                          key={i}
-                          className="staged-blank"
-                          onClick={() => handleBlankClick(row.id, i)}
-                        >
-                          {rowTerms[i] ? (i === 0 ? cleanDisplay(rowTerms[i]) : rowTerms[i]) : '___'}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {rowTerms.length === row.blanks && (
-                      <button 
-                        className="staged-check-btn"
-                        onClick={handleCheckStep}
-                      >
-                        Check
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Active Choice Row */}
-                {isActive && isChoiceRow && !isCompleted && (
-                  <div className="staged-choices">
-                    {row.choices.map((choice, i) => (
-                      <button
-                        key={i}
-                        className="staged-choice-btn"
-                        onClick={() => handleChoiceClick(choice)}
-                      >
-                        {choice}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Locked Row */}
-                {isLocked && (
-                  <div className="staged-row-locked">
-                    {Array.from({ length: row.blanks }).map((_, i) => (
-                      <div key={i} className="staged-blank-locked">___</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {/* Problem Display - Always Visible */}
+      <div className="staged-problem-display">
+        {problem.displayProblem || problem.problem}
       </div>
 
-      {/* RIGHT: Chips Panel */}
+      {/* Work Area - All Rows */}
+      <div className="staged-work-area">
+        {rows.map((row, index) => {
+          const isCompleted = completedRows.includes(row.id);
+          const isActive = index === currentRowIndex;
+          const isLocked = index > currentRowIndex;
+          const rowTerms = selectedTerms[row.id] || [];
+          const rowAnswer = rowAnswers[row.id];
+          const isRowBankType = row.bank && row.bank.length > 0;
+          const isRowChoiceType = row.choices && row.choices.length > 0;
+
+          return (
+            <div 
+              key={row.id}
+              className={`staged-row ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}
+            >
+              {/* Completed Row - Show Answer */}
+              {isCompleted && isRowBankType && (
+                <div className="staged-row-completed">
+                  {rowAnswer.map((term, i) => (
+                    <span key={i}>
+                      {i === 0 ? cleanDisplay(term) : term}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Active Bank Row - Show Blanks */}
+              {isActive && isRowBankType && !isCompleted && (
+                <div className="staged-row-active">
+                  <div className="staged-blanks">
+                    {Array.from({ length: row.blanks }).map((_, i) => (
+                      <div 
+                        key={i}
+                        className="staged-blank"
+                        onClick={() => handleBlankClick(row.id, i)}
+                      >
+                        {rowTerms[i] ? (i === 0 ? cleanDisplay(rowTerms[i]) : rowTerms[i]) : '___'}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {rowTerms.length === row.blanks && (
+                    <button 
+                      className="staged-check-btn"
+                      onClick={handleCheckStep}
+                    >
+                      Check
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Active Choice Row - Show Choices */}
+              {isActive && isRowChoiceType && !isCompleted && (
+                <div className="staged-choices">
+                  {row.choices.map((choice, i) => (
+                    <button
+                      key={i}
+                      className="staged-choice-btn"
+                      onClick={() => handleChoiceClick(choice)}
+                    >
+                      {choice}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Locked Row - Show Empty Blanks */}
+              {isLocked && isRowBankType && (
+                <div className="staged-row-locked">
+                  {Array.from({ length: row.blanks }).map((_, i) => (
+                    <div key={i} className="staged-blank-locked">___</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Chips Area - Below Work */}
       {isBankRow && !completedRows.includes(currentRow.id) && (
-        <div className="staged-right-panel">
+        <div className="staged-chips-area">
           <div className="staged-chips-label">Available Terms:</div>
-          <div className="staged-chips-container">
+          <div className="staged-chips-grid">
             {availableChips.map((chip, index) => {
               const useCount = getChipUsageCount(chip);
               
