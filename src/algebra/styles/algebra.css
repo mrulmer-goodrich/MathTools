@@ -4691,279 +4691,293 @@ body {
 
 /* THIS IS THE COPY POINT FROM 01-03-26!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-/* STAGED WORKFLOW CSS - FIXED VERSION (SMALLER & TIGHTER) */
+/* STAGED WORKFLOW - REDESIGNED CSS */
+/* Matches levels 1-12 style, single container layout */
 /* APPEND TO: src/algebra/styles/algebra.css */
 
-/* Math Worksheet Container */
-.math-worksheet {
-  max-width: 800px;
-  margin: 1rem auto;
-  padding: 1rem;
+/* Main Container - Like levels 1-12 */
+.staged-problem-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
 }
 
-/* PROMINENT PROBLEM DISPLAY */
-.worksheet-problem-display {
+/* LEFT PANEL: Problem + Work */
+.staged-left-panel {
+  flex: 1;
+  background: white;
+  border: 3px solid #4CAF50;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Problem Display - Matches level 1-12 style */
+.staged-problem-display {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #1a1a1a;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 12px;
-  border: 3px solid #4CAF50;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 2px solid #e0e0e0;
 }
 
-.worksheet-divider {
-  height: 2px;
-  background: linear-gradient(to right, transparent, #4CAF50, transparent);
-  margin: 1.5rem 0;
+/* Work Area */
+.staged-work-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Worksheet Rows */
-.worksheet-rows {
+/* Individual Row */
+.staged-row {
+  min-height: 60px;
+  transition: all 0.3s ease;
+}
+
+.staged-row.completed {
+  opacity: 0.7;
+}
+
+.staged-row.locked {
+  opacity: 0.3;
+}
+
+/* Completed Row Display */
+.staged-row-completed {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2e7d32;
+  padding: 1rem;
+  background: #e8f5e9;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.staged-term-display {
+  padding: 0.25rem;
+}
+
+/* Active Row */
+.staged-row-active {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Blanks */
+.staged-blanks {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.staged-blank {
+  background: white;
+  border: 2px dashed #2196F3;
+  border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  min-width: 80px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.staged-blank:hover {
+  border-color: #1976D2;
+  background: #f0f8ff;
+}
+
+/* Check Button - Inline */
+.staged-check-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.staged-check-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.staged-check-btn:active {
+  transform: translateY(0);
+}
+
+/* Choice Buttons */
+.staged-choices {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* Individual Step Row */
-.step-row {
+.staged-choice-btn {
   background: white;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #2196F3;
+  color: #2196F3;
+  padding: 1rem 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
   border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.3s ease;
-}
-
-.step-row.active {
-  border-color: #4CAF50;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
-}
-
-.step-row.completed {
-  background: #f0f8f0;
-  border-color: #81C784;
-  opacity: 0.8;
-}
-
-.step-row.locked {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.row-workspace {
-  min-height: 60px;
-}
-
-/* Blanks Container */
-.blanks-container {
-  display: flex;
-  gap: 0.4rem;
-  justify-content: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.blank {
-  background: white;
-  border: 2px dashed #bbb;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  min-width: 65px;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: left;
 }
 
-.blank:hover {
-  border-color: #4CAF50;
-  background: #f9fff9;
-}
-
-/* Term Bank */
-.term-bank {
-  background: #fafafa;
-  border-radius: 6px;
-  padding: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.bank-label {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.term-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.term-chip {
-  position: relative;
-  background: white;
-  border: 2px solid #2196F3;
-  color: #2196F3;
-  padding: 0.4rem 0.9rem;
-  border-radius: 16px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 50px;
-  text-align: center;
-}
-
-.term-chip:hover:not(:disabled) {
-  background: #2196F3;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(33, 150, 243, 0.3);
-}
-
-.term-chip:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.term-chip.used {
-  background: #e3f2fd;
-  border-color: #64B5F6;
-}
-
-.term-chip:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.use-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #FF5722;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 0.65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-/* Check Step Button */
-.check-step-button {
-  background: #4CAF50;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  display: block;
-  margin: 0.75rem auto 0;
-  transition: all 0.2s ease;
-}
-
-.check-step-button:hover {
-  background: #45a049;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
-}
-
-.check-step-button:active {
-  transform: translateY(0);
-}
-
-/* Choice Container */
-.choice-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 450px;
-  margin: 0 auto;
-}
-
-.choice-button {
-  background: white;
-  border: 2px solid #2196F3;
-  color: #2196F3;
-  padding: 0.75rem 1.25rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.choice-button:hover {
+.staged-choice-btn:hover {
   background: #2196F3;
   color: white;
   transform: translateX(5px);
 }
 
-.choice-button.selected {
-  background: #4CAF50;
-  border-color: #4CAF50;
-  color: white;
+/* Locked Row */
+.staged-row-locked {
+  display: flex;
+  gap: 0.5rem;
 }
 
-/* Completed Answer */
-.completed-answer {
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #2e7d32;
-  padding: 0.75rem;
-  background: #e8f5e9;
+.staged-blank-locked {
+  border: 2px dashed #ccc;
   border-radius: 6px;
+  padding: 0.75rem 1.25rem;
+  min-width: 80px;
+  font-size: 1.3rem;
+  color: #999;
+  text-align: center;
 }
 
-/* Locked Message */
-.locked-message {
-  text-align: center;
-  font-size: 1rem;
-  color: #999;
+/* RIGHT PANEL: Chips */
+.staged-right-panel {
+  width: 280px;
+  background: #fafafa;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
   padding: 1.5rem;
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+.staged-chips-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.staged-chips-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Chips - Always Clickable */
+.staged-chip {
+  position: relative;
+  background: white;
+  border: 2px solid #2196F3;
+  color: #2196F3;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.staged-chip:hover {
+  background: #2196F3;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.staged-chip:active {
+  transform: scale(0.98);
+}
+
+.staged-chip.used {
+  background: #e3f2fd;
+  border-color: #64B5F6;
+}
+
+/* Use Count Badge */
+.staged-chip-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #FF5722;
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
-  .math-worksheet {
-    padding: 0.75rem;
+@media (max-width: 900px) {
+  .staged-problem-container {
+    flex-direction: column;
   }
 
-  .worksheet-problem-display {
-    font-size: 1.8rem;
+  .staged-right-panel {
+    width: 100%;
+    position: static;
+    max-height: none;
+  }
+
+  .staged-chips-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .staged-chip {
+    flex: 0 0 calc(50% - 0.5rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .staged-problem-display {
+    font-size: 1.5rem;
     padding: 1rem;
   }
 
-  .blanks-container {
-    flex-direction: column;
-    align-items: stretch;
+  .staged-blank {
+    font-size: 1.1rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 60px;
   }
 
-  .blank {
-    min-width: auto;
-  }
-
-  .term-chips {
-    justify-content: flex-start;
-  }
-
-  .term-chip {
-    font-size: 0.85rem;
-    padding: 0.35rem 0.75rem;
+  .staged-chip {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
   }
 }
