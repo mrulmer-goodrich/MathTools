@@ -1,15 +1,19 @@
-// LevelPlayer.jsx - UPDATED to handle staged workflow
+// LevelPlayer.jsx - FINAL VERSION
+// Full-width backgrounds, new header, floating UI
 // Location: src/algebra/components/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
+import Header from './Header';
+import FloatingUI from './FloatingUI';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
-import MathWorksheet from './MathWorksheet';
+import MathWorksheet from './LevelPlayer/MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import levels from '../../data/levelData';
-import { problemGenerators } from '../../data/problemGenerators';
+import StatsPanel from './StatsPanel';
+import levels from '../data/levelData';
+import { problemGenerators } from '../data/problemGenerators';
 
 const LevelPlayer = ({ 
   levelId, 
@@ -17,6 +21,7 @@ const LevelPlayer = ({
   playMode,
   stats,
   setStats,
+  progress,
   onLevelComplete,
   onReturnToMenu 
 }) => {
@@ -24,6 +29,7 @@ const LevelPlayer = ({
   const [correctStreak, setCorrectStreak] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
@@ -36,6 +42,8 @@ const LevelPlayer = ({
     if (num <= 31) return 'territory';
     return 'frontier';
   };
+
+  const region = getRegion(levelId);
 
   useEffect(() => {
     generateNewProblem();
@@ -89,7 +97,7 @@ const LevelPlayer = ({
       } else {
         generateNewProblem();
       }
-    }, 1000); // 1 second
+    }, 1000);
   };
 
   const handleProblemWrong = () => {
@@ -144,12 +152,7 @@ const LevelPlayer = ({
   const handleContinueFromComplete = () => {
     const badge = level.badge || level.moduleBadge;
     onLevelComplete(levelId, badge);
-    
-    if (level.moduleBadge || level.finalModule) {
-      onReturnToMenu();
-    } else {
-      onReturnToMenu();
-    }
+    onReturnToMenu();
   };
 
   if (!currentProblem) {
@@ -158,7 +161,7 @@ const LevelPlayer = ({
 
   if (levelComplete) {
     return (
-      <div className="level-complete" data-region={getRegion(levelId)}>
+      <div className="level-complete" data-region={region}>
         <div className="completion-container">
           <div className="completion-icon">🎉</div>
           <h2>Level Complete!</h2>
@@ -193,48 +196,48 @@ const LevelPlayer = ({
     );
   }
 
-  // Check if this is a staged problem
   const isStaged = currentProblem.staged && currentProblem.staged.rows;
 
   return (
-    <div className="level-player" data-region={getRegion(levelId)}>
-      <div className="level-header">
-        <button 
-          className="back-to-menu-button"
-          onClick={onReturnToMenu}
-        >
-          ← Return to Home
-        </button>
-        <h2>{level.name}</h2>
+    <div className="level-player" data-region={region}>
+      <Header 
+        onReturnToMenu={onReturnToMenu}
+        currentLevel={levelId}
+        levelName={level.name}
+      />
+
+      <FloatingUI
+        onViewStats={() => setShowStats(true)}
+        onViewMap={null} 
+        badges={progress.badges}
+      />
+
+      <div className="level-content-container">
         <ProgressTracker 
           current={correctStreak} 
           required={level.problemsRequired} 
         />
+
+        {isStaged ? (
+          <MathWorksheet
+            problem={currentProblem}
+            onComplete={handleProblemComplete}
+            onWrongAnswer={handleProblemWrong}
+          />
+        ) : (
+          <>
+            <ProblemDisplay problem={currentProblem} />
+            {level.inputMethod === 'clickToSelect' && (
+              <ClickToSelect
+                choices={currentProblem.choices}
+                onSubmit={handleAnswerSubmit}
+                disabled={showFeedback || showSuccess}
+                selectedAnswer={selectedAnswer}
+              />
+            )}
+          </>
+        )}
       </div>
-
-      {/* STAGED WORKFLOW (Levels 13+) */}
-      {isStaged && (
-        <MathWorksheet
-          problem={currentProblem}
-          onComplete={handleProblemComplete}
-          onWrongAnswer={handleProblemWrong}
-        />
-      )}
-
-      {/* REGULAR WORKFLOW (Levels 1-12) */}
-      {!isStaged && (
-        <>
-          <ProblemDisplay problem={currentProblem} />
-          {level.inputMethod === 'clickToSelect' && (
-            <ClickToSelect
-              choices={currentProblem.choices}
-              onSubmit={handleAnswerSubmit}
-              disabled={showFeedback || showSuccess}
-              selectedAnswer={selectedAnswer}
-            />
-          )}
-        </>
-      )}
 
       {showSuccess && (
         <SuccessOverlay message={getSuccessMessage()} />
@@ -246,6 +249,14 @@ const LevelPlayer = ({
           onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
           selectedAnswer={selectedAnswer}
+        />
+      )}
+
+      {showStats && (
+        <StatsPanel
+          stats={stats}
+          progress={progress}
+          onClose={() => setShowStats(false)}
         />
       )}
     </div>
