@@ -1,68 +1,33 @@
-// Header.jsx - FIXED: Icon-only badges (no text)
+// Header.jsx - FINAL REDESIGN
+// Transparent, minimal, with level info on right
 // Location: src/algebra/components/Header.jsx
 
 import React from 'react';
 import '../styles/algebra.css';
 
 const Header = ({ 
-  onViewMap, 
-  onViewStats, 
   onReturnToMenu,
-  onExitGame,
-  badges, 
-  currentLevel 
+  currentLevel,
+  levelName
 }) => {
   return (
     <div className="algebra-header">
       <div className="header-left">
-        {onExitGame && (
-          <button className="btn-exit-game" onClick={onExitGame}>
-            ← Exit Game
-          </button>
-        )}
-      </div>
-      
-      <div className="header-center">
-        <h1>Algebra Expedition</h1>
-        {currentLevel && (
-          <div className="current-level-display">
-            Level {typeof currentLevel === 'string' ? currentLevel.split('-')[1] : currentLevel}
-          </div>
-        )}
+        <button className="btn-return-base" onClick={onReturnToMenu}>
+          ← Return to Base Camp
+        </button>
       </div>
       
       <div className="header-right">
-        {/* FIXED: Just icons, no "Badges:" label or text */}
-        {badges && badges.length > 0 && (
-          <div className="badge-collection-compact">
-            {badges.map((badge, index) => (
-              <div key={index} className="badge-mini" title={`Badge: ${badge}`}>
-                {badge}
-              </div>
-            ))}
+        {currentLevel && levelName && (
+          <div className="level-info-display">
+            <div className="level-number">
+              Level {typeof currentLevel === 'string' ? currentLevel.split('-')[1] : currentLevel}
+            </div>
+            <div className="level-name">
+              {levelName}
+            </div>
           </div>
-        )}
-        
-        {/* Stats Button */}
-        {onViewStats && (
-          <button 
-            className="btn-header-icon" 
-            onClick={onViewStats}
-            title="View Statistics"
-          >
-            📊
-          </button>
-        )}
-        
-        {/* Map Button */}
-        {onViewMap && (
-          <button 
-            className="btn-header-icon" 
-            onClick={onViewMap}
-            title="View Map"
-          >
-            🗺️
-          </button>
         )}
       </div>
     </div>
