@@ -3,17 +3,17 @@
 // Location: src/algebra/components/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
-import Header from './Header';
-import FloatingUI from './FloatingUI';
+import Header from '../Header';
+import FloatingUI from '../FloatingUI';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
 import MathWorksheet from './LevelPlayer/MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import StatsPanel from './StatsPanel';
-import levels from '../data/levelData';
-import { problemGenerators } from '../data/problemGenerators';
+import StatsPanel from '../StatsPanel';
+import levels from '../../data/levelData';
+import { problemGenerators } from '../../data/problemGenerators';
 
 const LevelPlayer = ({ 
   levelId, 
