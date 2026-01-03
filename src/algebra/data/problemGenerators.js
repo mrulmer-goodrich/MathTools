@@ -1748,7 +1748,7 @@ export const generateDistributeSubtractProblem = (difficulty) => {
 // LEVEL 1-15: ROCKY LEDGE (Negative Outside)
 // ============================================
 
-export const generateNegative = (difficulty) => {
+export const generateNegativeDistributeCombineProblem = (difficulty) => {
   const levelId = '1-15';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
