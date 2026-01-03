@@ -8,8 +8,8 @@ import MathWorksheet from './MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import levels from '../data/levelData';
-import { problemGenerators } from '../data/problemGenerators';
+import levels from '../../data/levelData';
+import { problemGenerators } from '../../data/problemGenerators';
 
 const LevelPlayer = ({ 
   levelId, 
