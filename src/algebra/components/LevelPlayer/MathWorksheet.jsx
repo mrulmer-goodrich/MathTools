@@ -1,7 +1,7 @@
 // MathWorksheet.jsx - FINAL FIX: Row 2 choices rendering properly
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/algebra.css';
 
 const MathWorksheet = ({ 
@@ -12,6 +12,13 @@ const MathWorksheet = ({
   const [currentRowIndex, setCurrentRowIndex] = useState(0);
   const [completedRows, setCompletedRows] = useState([]);
   const [selectedTerms, setSelectedTerms] = useState({});
+
+  // Reset state when problem changes
+  useEffect(() => {
+    setCurrentRowIndex(0);
+    setCompletedRows([]);
+    setSelectedTerms({});
+  }, [problem]);
 
   // SAFETY: Validate problem structure
   if (!problem.staged || !problem.staged.rows) {
@@ -88,13 +95,16 @@ const MathWorksheet = ({
       // Mark row as completed
       setCompletedRows(prev => [...prev, rowId]);
       
-      // If this is the final row, level complete
-      if (isFinalRow) {
-        onComplete();
-      } else {
-        // Move to next row
-        setCurrentRowIndex(prev => prev + 1);
-      }
+      // Visual feedback: Brief highlight before moving forward
+      setTimeout(() => {
+        // If this is the final row, level complete
+        if (isFinalRow) {
+          onComplete();
+        } else {
+          // Move to next row
+          setCurrentRowIndex(prev => prev + 1);
+        }
+      }, 300);
     } else {
       // Wrong answer - trigger feedback modal
       onWrongAnswer();
@@ -185,7 +195,7 @@ const MathWorksheet = ({
           {/* TERM BANK (for rows with bank property) */}
           {currentRow.bank && currentRow.bank.length > 0 && (
             <div className="worksheet-term-bank">
-              <div className="term-bank-label">Available Terms:</div>
+              <div className="term-bank-label">Select term to place:</div>
               <div className="term-bank-chips">
                 {currentRow.bank.map((chip, index) => {
                   const isSelected = currentSelections.includes(chip);
