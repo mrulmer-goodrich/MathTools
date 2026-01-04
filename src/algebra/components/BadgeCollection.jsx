@@ -94,7 +94,7 @@ const BadgeCollection = ({ completedLevels, progress, onClose }) => {
           {/* Knowledge Crystals Display */}
           <div className="crystals-banner">
             <img 
-              src="/assets/algebra/KnowledgeCrystal.png" 
+              src="/algebra/KnowledgeCrystal.png" 
               alt="Knowledge Crystal" 
               className="crystal-icon-large"
             />
