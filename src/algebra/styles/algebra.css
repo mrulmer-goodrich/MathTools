@@ -1452,3 +1452,58 @@ h6 { font-size: var(--text-base); }
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* CRITICAL: LevelPlayer Container Width Fix */
+.level-player .level-content {
+  max-width: 900px !important;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Click-to-Select Choices - PROPER STYLING */
+.click-to-select-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.click-to-select-container button {
+  background: white;
+  border: 3px solid #E5E7EB;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  color: #1F2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.click-to-select-container button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.click-to-select-container button.selected {
+  background: #10B981;
+  color: white;
+  border-color: #059669;
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+.click-to-select-container button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
