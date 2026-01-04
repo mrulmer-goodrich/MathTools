@@ -132,7 +132,7 @@ const Algebra = () => {
       )}
 
       {gameState === 'difficulty' && (
-        <DifficultySelection onSelectDifficulty={handleDifficultySelect} />
+        <DifficultySelector onSelectDifficulty={handleDifficultySelect} />
       )}
 
       {gameState === 'menu' && (
