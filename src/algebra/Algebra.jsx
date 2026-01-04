@@ -257,7 +257,7 @@ const Algebra = () => {
     onClose={() => setShowBadges(false)}
   />
 )}
-            </div>
+         
             <button 
               onClick={() => setShowBadges(false)}
               className="base-camp-tile-button"
