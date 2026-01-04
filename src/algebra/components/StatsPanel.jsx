@@ -1,4 +1,6 @@
-// StatsPanel.jsx - Fixed props reading
+// StatsPanel.jsx - REDESIGNED: Comprehensive stats, polished UI, unified modal styling
+// Location: src/algebra/components/StatsPanel.jsx
+
 import React from 'react';
 import '../styles/stats-panel.css';
 
@@ -8,176 +10,156 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
     ? Math.round((stats.problemsCorrect / stats.problemsAttempted) * 100) 
     : 0;
 
+  // Calculate practice vs game stats
+  const practiceProblems = stats?.practiceProblems || 0;
+  const gameProblems = stats?.gameProblems || 0;
+  const totalProblems = stats?.problemsAttempted || 0;
+
+  // Get level-by-level stats
+  const levelStats = stats?.levelStats || {};
+  const recentLevels = Object.entries(levelStats)
+    .sort((a, b) => (b[1].lastPlayed || 0) - (a[1].lastPlayed || 0))
+    .slice(0, 5);
+
+  const formatTime = (seconds) => {
+    if (!seconds) return '0s';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.8)',
-      zIndex: 100,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }} onClick={onClose}>
-      <div style={{
-        background: 'white',
-        borderRadius: '1rem',
-        padding: '2rem',
-        maxWidth: '600px',
-        width: '90%',
-        maxHeight: '80vh',
-        overflowY: 'auto'
-      }} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ 
-          fontFamily: 'Poppins, sans-serif', 
-          marginBottom: '1.5rem',
-          fontSize: '1.75rem',
-          fontWeight: 700
-        }}>
-          {playerName}'s Statistics
-        </h2>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            background: '#F0FDF4',
-            border: '2px solid #10B981',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 700, 
-              color: '#10B981',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {stats?.problemsCorrect || 0}
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#6B7280',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Problems Correct
-            </div>
-          </div>
-
-          <div style={{
-            background: '#FEF3C7',
-            border: '2px solid #F59E0B',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 700, 
-              color: '#F59E0B',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {accuracy}%
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#6B7280',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Accuracy
-            </div>
-          </div>
-
-          <div style={{
-            background: '#EFF6FF',
-            border: '2px solid #3B82F6',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 700, 
-              color: '#3B82F6',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {stats?.currentStreak || 0}
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#6B7280',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Current Streak
-            </div>
-          </div>
-
-          <div style={{
-            background: '#F5F3FF',
-            border: '2px solid #8B5CF6',
-            borderRadius: '0.5rem',
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 700, 
-              color: '#8B5CF6',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {sessionTime}
-            </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#6B7280',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Minutes Played
-            </div>
-          </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="modal-header">
+          <h2>📊 {playerName}'s Statistics</h2>
+          <button className="btn-close-modal" onClick={onClose}>✕</button>
         </div>
 
-        <div style={{
-          background: 'rgba(245, 158, 11, 0.1)',
-          border: '2px solid #F59E0B',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem'
-        }}>
-          <div style={{ fontSize: '2.5rem' }}>💎</div>
-          <div>
-            <div style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 700,
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {progress?.crystals || 0} Knowledge Crystals
+        {/* Content */}
+        <div className="modal-content">
+          
+          {/* Top Stats Grid */}
+          <div className="stats-grid-top">
+            <div className="stat-card green">
+              <div className="stat-icon">✓</div>
+              <div className="stat-value">{stats?.problemsCorrect || 0}</div>
+              <div className="stat-label">Problems Solved</div>
             </div>
-            <div style={{ 
-              fontSize: '0.875rem', 
-              color: '#6B7280',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Collected this session
+
+            <div className="stat-card orange">
+              <div className="stat-icon">🎯</div>
+              <div className="stat-value">{accuracy}%</div>
+              <div className="stat-label">Accuracy</div>
+            </div>
+
+            <div className="stat-card blue">
+              <div className="stat-icon">🔥</div>
+              <div className="stat-value">{stats?.currentStreak || 0}</div>
+              <div className="stat-label">Current Streak</div>
+            </div>
+
+            <div className="stat-card purple">
+              <div className="stat-icon">⏱️</div>
+              <div className="stat-value">{sessionTime}</div>
+              <div className="stat-label">Minutes Played</div>
             </div>
           </div>
+
+          {/* Practice vs Game Mode */}
+          <div className="stats-section">
+            <h3>Mode Breakdown</h3>
+            <div className="mode-stats">
+              <div className="mode-item">
+                <div className="mode-label">🎮 Game Mode</div>
+                <div className="mode-bar-container">
+                  <div 
+                    className="mode-bar game" 
+                    style={{ width: totalProblems > 0 ? `${(gameProblems / totalProblems) * 100}%` : '0%' }}
+                  >
+                    <span className="mode-count">{gameProblems}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mode-item">
+                <div className="mode-label">📝 Practice Mode</div>
+                <div className="mode-bar-container">
+                  <div 
+                    className="mode-bar practice" 
+                    style={{ width: totalProblems > 0 ? `${(practiceProblems / totalProblems) * 100}%` : '0%' }}
+                  >
+                    <span className="mode-count">{practiceProblems}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Levels Performance */}
+          <div className="stats-section">
+            <h3>Recent Level Performance</h3>
+            {recentLevels.length > 0 ? (
+              <div className="level-stats-list">
+                {recentLevels.map(([levelId, data]) => {
+                  const levelNum = levelId.split('-')[1];
+                  const levelAccuracy = data.attempted > 0 
+                    ? Math.round((data.correct / data.attempted) * 100) 
+                    : 0;
+                  
+                  return (
+                    <div key={levelId} className="level-stat-row">
+                      <div className="level-info">
+                        <span className="level-number">Level {levelNum}</span>
+                        <span className="level-attempts">{data.attempted} attempts</span>
+                      </div>
+                      <div className="level-metrics">
+                        <span className="metric-item">
+                          <span className="metric-icon">✓</span>
+                          {data.correct}/{data.attempted}
+                        </span>
+                        <span className="metric-item">
+                          <span className="metric-icon">🎯</span>
+                          {levelAccuracy}%
+                        </span>
+                        <span className="metric-item">
+                          <span className="metric-icon">⏱️</span>
+                          {formatTime(data.timeSpent)}
+                        </span>
+                        <span className="metric-item">
+                          <span className="metric-icon">💎</span>
+                          {data.crystalsEarned || 0}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="no-data">No level data yet. Start playing to see stats!</div>
+            )}
+          </div>
+
+          {/* Knowledge Crystals */}
+          <div className="crystals-display">
+            <div className="crystal-icon">💎</div>
+            <div className="crystal-info">
+              <div className="crystal-count">{progress?.crystals || 0} Knowledge Crystals</div>
+              <div className="crystal-subtext">Earned by solving problems correctly</div>
+            </div>
+          </div>
+
         </div>
 
-        <button 
-          onClick={onClose}
-          className="base-camp-tile-button"
-          style={{ width: '100%' }}
-        >
-          Close
-        </button>
+        {/* Footer */}
+        <div className="modal-footer">
+          <button className="btn-modal-primary" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
