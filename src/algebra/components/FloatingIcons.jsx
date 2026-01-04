@@ -1,4 +1,4 @@
-// FloatingIcons.jsx - Fixed: only open on click, not on drag release
+// FloatingIcons.jsx - With crystal counter badge
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
@@ -7,7 +7,8 @@ const FloatingIcons = ({
   onOpenBadges, 
   onOpenStats, 
   onOpenMap,
-  playerName 
+  playerName,
+  crystalCount = 0
 }) => {
   
   const defaultPositions = {
@@ -72,7 +73,7 @@ const FloatingIcons = ({
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
     { id: 'badges', emoji: '🏆', label: 'Badges', onClick: onOpenBadges },
-    { id: 'stats', emoji: '📊', label: 'Stats', onClick: onOpenStats },
+    { id: 'stats', emoji: '📊', label: 'Stats', onClick: onOpenStats, badge: crystalCount },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
@@ -119,6 +120,29 @@ const FloatingIcons = ({
           <span style={{ fontSize: '35px' }}>
             {icon.emoji}
           </span>
+          
+          {icon.badge > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '-5px',
+              right: '-5px',
+              background: '#EF4444',
+              color: 'white',
+              borderRadius: '50%',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              fontFamily: 'Poppins, sans-serif',
+              border: '2px solid white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}>
+              {icon.badge}
+            </div>
+          )}
         </div>
       ))}
     </>
