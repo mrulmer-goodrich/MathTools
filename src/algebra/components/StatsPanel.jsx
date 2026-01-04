@@ -32,16 +32,16 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className="algebra-modal-overlay" onClick={onClose}>
+      <div className="algebra-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header">
+        <div className="algebra-modal-header">
           <h2>📊 {playerName}'s Statistics</h2>
           <button className="btn-close-modal" onClick={onClose}>✕</button>
         </div>
 
         {/* Content */}
-        <div className="modal-content">
+        <div className="algebra-modal-content">
           
           {/* Top Stats Grid */}
           <div className="stats-grid-top">
@@ -159,7 +159,7 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="modal-footer">
+        <div className="algebra-modal-footer">
           <button className="btn-modal-primary" onClick={onClose}>
             Close
           </button>
