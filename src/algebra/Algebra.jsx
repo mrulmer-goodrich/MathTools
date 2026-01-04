@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import DifficultySelector from './components/DifficultySelector';
-import MainMenu from './components/MainMenu';
+import BaseCamp from './components/BaseCamp';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
 import StatsPanel from './components/StatsPanel';
@@ -138,14 +138,20 @@ const Algebra = () => {
         <DifficultySelector onSelect={handleDifficultySelect} />
       )}
 
-      {gameState === 'menu' && (
-        <MainMenu 
-          onStartPlay={handleStartPlay}
-          onStartPractice={handleStartPractice}
-          onViewMap={handleViewMap}
-          progress={progress}
-        />
-      )}
+     {gameState === 'menu' && (
+  <BaseCamp
+    onStartGame={handleStartPlay}
+    onContinueGame={handleStartPlay}
+    onPracticeMode={handleStartPractice}
+    onExitGame={handleExitGame}
+    sessionData={{
+      hasSession: progress.completedLevels.length > 0,
+      currentLevel: getFirstIncompleteLevel(),
+      difficulty: difficulty,
+      levelsCompleted: progress.completedLevels.length
+    }}
+  />
+)}
 
       {gameState === 'playing' && (
         <ModulePlayer
