@@ -1,184 +1,144 @@
-// PracticeMode.jsx - FIXED: Readable headers, spacing, completion indicator
+// PracticeMode.jsx - WITH DIFFICULTY SELECTION
 // Location: src/algebra/components/PracticeMode.jsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/algebra.css';
 
-const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, playerName }) => {
-  
-  const levelGroups = [
+const PracticeMode = ({ onStartLevel, onBack, levelsCompleted = [] }) => {
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+
+  // Skill groups for practice
+  const skillGroups = [
     {
-      name: 'Operations with Integers',
-      badge: '🔢',
-      levels: [
-        { id: '1-1', name: 'Addition Supplies', skill: 'Adding positive and negative integers' },
-        { id: '1-2', name: 'Subtraction Supplies', skill: 'Subtracting integers (including subtracting negatives)' },
-        { id: '1-3', name: 'Multiplication Supplies', skill: 'Multiplying integers (positive and negative)' },
-        { id: '1-4', name: 'Division Supplies', skill: 'Dividing integers (positive and negative)' }
-      ]
+      name: '🔢 Operations with Integers',
+      levels: ['1-1', '1-2', '1-3', '1-4']
     },
     {
-      name: 'Distribution',
-      badge: '📦',
-      levels: [
-        { id: '1-5', name: 'Clear Path', skill: 'Basic distribution with positive numbers' },
-        { id: '1-6', name: 'Rocky Trail', skill: 'Distribution with subtraction in parentheses' },
-        { id: '1-7', name: 'Dark Forest', skill: 'Negative coefficient outside parentheses' },
-        { id: '1-8', name: 'Mixed Terrain', skill: 'Mixed negatives inside and outside parentheses' }
-      ]
+      name: '📦 Distribution',
+      levels: ['1-5', '1-6', '1-7', '1-8']
     },
     {
-      name: 'Combining Like Terms',
-      badge: '🧮',
-      levels: [
-        { id: '1-9', name: 'Soil Supplies', skill: 'Basic combining like terms' },
-        { id: '1-10', name: 'Organic Gear', skill: 'Identifying and ignoring unlike terms' },
-        { id: '1-11', name: 'Complex Packing', skill: 'Multiple like terms to combine' },
-        { id: '1-12', name: 'Final Inventory', skill: 'Subtracting like terms (including negatives)' }
-      ]
+      name: '🧮 Combining Like Terms',
+      levels: ['1-9', '1-10', '1-11', '1-12']
     },
     {
-      name: 'Distribute Then Combine',
-      badge: '⛺',
-      levels: [
-        { id: '1-13', name: 'Pack It Up', skill: 'Distribute then combine' },
-        { id: '1-14', name: 'Double Check', skill: 'Distribute with subtraction then combine' },
-        { id: '1-15', name: 'Rocky Ledge', skill: 'Negative distribution then combine' },
-        { id: '1-16', name: 'Summit', skill: 'Complex with trailing constants' }
-      ]
+      name: '⛺ Distribute Then Combine',
+      levels: ['1-13', '1-14', '1-15', '1-16']
     },
     {
-      name: 'One-Step Equations',
-      badge: '🌊',
-      levels: [
-        { id: '1-17', name: 'River Crossing', skill: 'Addition equations: x + a = b' },
-        { id: '1-18', name: 'Bridge Building', skill: 'Multiplication equations: ax = b' },
-        { id: '1-19', name: 'Canyon Leap', skill: 'Variable on right: b = x + a' },
-        { id: '1-20', name: 'Waterfall', skill: 'Negative variable: -x + a = b' }
-      ]
+      name: '🌊 One-Step Equations',
+      levels: ['1-17', '1-18', '1-19', '1-20']
     },
     {
-      name: 'Two-Step Equations',
-      badge: '⛰️',
-      levels: [
-        { id: '1-21', name: 'Storm Passage', skill: 'Two-step with negative coefficients' },
-        { id: '1-22', name: 'Fraction Falls', skill: 'Two-step with fractions' },
-        { id: '1-23', name: 'Misty Decimals', skill: 'Two-step with decimals' }
-      ]
+      name: '⛰️ Two-Step Equations',
+      levels: ['1-21', '1-22', '1-23', '1-24']
     },
     {
-      name: 'Multi-Step Equations',
-      badge: '🏔️',
-      levels: [
-        { id: '1-24', name: 'Ancient Ruins', skill: 'Distribution in equations' },
-        { id: '1-25', name: 'Complex Caverns', skill: 'Distribute, combine, then solve' }
-      ]
+      name: '🏔️ Multi-Step Equations',
+      levels: ['1-25', '1-26', '1-27', '1-28']
     },
     {
-      name: 'Variables on Both Sides',
-      badge: '🗝️',
-      levels: [
-        { id: '1-26', name: 'The Divide', skill: 'Variables on both sides' },
-        { id: '1-27', name: 'Outer Vault Approach', skill: 'Constants and variables both sides' },
-        { id: '1-28', name: 'Inner Chamber', skill: 'Distribution with variables both sides' },
-        { id: '1-29', name: 'Combination Lock', skill: 'Combine like terms then solve' },
-        { id: '1-30', name: 'Puzzle Chamber', skill: 'All skills: distribute, combine, solve' }
-      ]
+      name: '🗝️ Variables on Both Sides',
+      levels: ['1-29', '1-30', '1-31']
     },
     {
-      name: 'Ultimate Challenges',
-      badge: '🏆',
-      levels: [
-        { id: '1-31', name: 'Vault Antechamber', skill: 'Distribute both sides, then solve' },
-        { id: '1-32', name: 'THE VAULT', skill: 'Ultimate equation challenge' }
-      ]
+      name: '🏆 Ultimate Challenges',
+      levels: ['1-32', '1-33']
     },
     {
-      name: 'Inequalities',
-      badge: '⚖️',
-      levels: [
-        { id: '1-33', name: 'Boundary Markers', skill: 'Match inequality to number line' },
-        { id: '1-34', name: 'Reverse Recognition', skill: 'Match number line to inequality' },
-        { id: '1-35', name: 'Secure Perimeter', skill: 'Two-step inequalities (no flip)' },
-        { id: '1-36', name: 'Shifting Boundaries', skill: 'Inequalities with sign flip' },
-        { id: '1-37', name: 'FINAL FRONTIER', skill: 'Complex inequalities (all skills + flip)' }
-      ]
+      name: '⚖️ Inequalities',
+      levels: ['1-34', '1-35', '1-36', '1-37']
     }
   ];
 
+  const handleLevelClick = (levelId) => {
+    setSelectedLevel(levelId);
+    setShowDifficultyModal(true);
+  };
+
+  const handleDifficultySelect = (difficulty) => {
+    setShowDifficultyModal(false);
+    onStartLevel(selectedLevel, difficulty, 'practice');
+  };
+
+  const handleCancel = () => {
+    setShowDifficultyModal(false);
+    setSelectedLevel(null);
+  };
+
   return (
-    <div className="base-camp-screen" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflowY: 'auto',
-      overflowX: 'hidden'
-    }}>
-      <button className="btn-back-base" onClick={onBackToBaseCamp}>
+    <div className="practice-mode-container">
+      <button className="btn-back-base" onClick={onBack}>
         ← Back to Base Camp
       </button>
 
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '6rem 2rem 2rem'
-      }}>
-        <div className="practice-mode-header">
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: 700,
-            color: '#1F2937',
-            marginBottom: 0,
-            fontFamily: 'Poppins, sans-serif',
-            textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
-          }}>
-            Practice Mode
-          </h1>
+      <div className="practice-content">
+        <h2 className="practice-title">Practice Mode</h2>
+        <p className="practice-subtitle">Choose any skill to practice</p>
+
+        <div className="skill-groups">
+          {skillGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="skill-group">
+              <h3 className="skill-group-name">{group.name}</h3>
+              <div className="skill-group-levels">
+                {group.levels.map((levelId) => {
+                  const levelNum = levelId.split('-')[1];
+                  const isCompleted = levelsCompleted.includes(levelId);
+                  
+                  return (
+                    <button
+                      key={levelId}
+                      className={`practice-level-card ${isCompleted ? 'completed' : ''}`}
+                      onClick={() => handleLevelClick(levelId)}
+                    >
+                      <span className="level-number">Level {levelNum}</span>
+                      {isCompleted && <span className="completed-check">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-
-        {levelGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="practice-section">
-            <div className="practice-section-header">
-              <span className="badge-emoji">{group.badge}</span>
-              <span>{group.name}</span>
-            </div>
-
-            <div className="practice-tiles-grid">
-              {group.levels.map((level) => {
-                const isCompleted = completedLevels.includes(level.id);
-                
-                return (
-                  <div
-                    key={level.id}
-                    onClick={() => onSelectLevel(level.id)}
-                    className={`practice-tile ${isCompleted ? 'completed' : ''}`}
-                  >
-                    {isCompleted && (
-                      <div className="practice-tile-completion">
-                        ✓
-                      </div>
-                    )}
-
-                    <div className="practice-tile-level-num">
-                      Level {level.id.split('-')[1]}
-                    </div>
-
-                    <div className="practice-tile-name">
-                      {level.name}
-                    </div>
-
-                    <div className="practice-tile-skill">
-                      {level.skill}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
       </div>
+
+      {/* Difficulty Selection Modal */}
+      {showDifficultyModal && (
+        <div className="modal-overlay" onClick={handleCancel}>
+          <div className="modal-content difficulty-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">Select Difficulty</h2>
+            <p className="modal-subtitle">Choose your route for this practice session:</p>
+            
+            <div className="difficulty-options">
+              <button 
+                className="difficulty-option standard"
+                onClick={() => handleDifficultySelect('easy')}
+              >
+                <div className="difficulty-icon">📍</div>
+                <div className="difficulty-name">Standard Route</div>
+                <div className="difficulty-desc">Whole numbers, clear problems, variable always x</div>
+              </button>
+              
+              <button 
+                className="difficulty-option advanced"
+                onClick={() => handleDifficultySelect('notEasy')}
+              >
+                <div className="difficulty-icon">⚡</div>
+                <div className="difficulty-name">Advanced Route</div>
+                <div className="difficulty-desc">Fractions, decimals, multiple variables, grade-level rigor</div>
+              </button>
+            </div>
+            
+            <button 
+              className="btn-cancel"
+              onClick={handleCancel}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
