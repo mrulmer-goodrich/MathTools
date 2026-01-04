@@ -1,4 +1,4 @@
-// FloatingIcons.jsx - FIXED: Stats icon shows player avatar
+// FloatingIcons.jsx - FIXED: Crystal icon (💎), top-right row positioning
 // Location: src/algebra/components/FloatingIcons.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -15,11 +15,12 @@ const FloatingIcons = ({
   
   const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
+  // FIXED: Default positions - single row, top-right
   const defaultPositions = {
-    story: { x: 20, y: 120 },
-    badges: { x: 20, y: 210 },
-    stats: { x: window.innerWidth - 110, y: 20 },
-    map: { x: window.innerWidth - 110, y: 110 }
+    story: { x: window.innerWidth - 400, y: 20 },
+    badges: { x: window.innerWidth - 310, y: 20 },
+    stats: { x: window.innerWidth - 200, y: 20 },
+    map: { x: window.innerWidth - 90, y: 20 }
   };
 
   const [positions, setPositions] = useState(() => {
@@ -76,7 +77,7 @@ const FloatingIcons = ({
 
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'badges', emoji: '🏆', label: 'Badges', onClick: onOpenBadges, badge: crystalCount },
+    { id: 'badges', emoji: '💎', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
     { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
@@ -140,7 +141,7 @@ const FloatingIcons = ({
             </span>
           )}
           
-          {icon.badge > 0 && (
+          {icon.badge !== undefined && icon.badge > 0 && (
             <div style={{
               position: 'absolute',
               top: '-5px',
