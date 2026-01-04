@@ -110,12 +110,6 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="algebra-modal-footer">
-          <button className="btn-modal-primary" onClick={onClose}>
-            Continue Expedition
-          </button>
-        </div>
       </div>
     </div>
   );
