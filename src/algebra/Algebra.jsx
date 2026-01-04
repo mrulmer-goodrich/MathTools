@@ -10,7 +10,9 @@ import StatsPanel from './components/StatsPanel';
 import MapDisplay from './components/MapDisplay';
 import './styles/algebra.css';
 
+
 const Algebra = () => {
+  const [showAvatarSelection, setShowAvatarSelection] = useState(!localStorage.getItem('algebra_player_name'));
   const [gameState, setGameState] = useState('difficulty');
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
@@ -166,6 +168,10 @@ const Algebra = () => {
         />
       )}
 
+      {showAvatarSelection && (
+     <AvatarSelection onComplete={() => setShowAvatarSelection(false)} />
+       )}
+      
       {showMap && (
         <MapDisplay 
           progress={progress}
