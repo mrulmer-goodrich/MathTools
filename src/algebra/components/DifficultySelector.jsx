@@ -78,7 +78,7 @@ const DifficultySelection = ({ onSelectDifficulty }) => {
           {/* Advanced Route */}
           <div 
             className="base-camp-tile"
-            onClick={() => onSelectDifficulty('hard')}
+            onClick={() => onSelectDifficulty('notEasy')}
             style={{ padding: '2rem', minHeight: '220px', cursor: 'pointer' }}
           >
             <div className="base-camp-tile-icon">⚡</div>
