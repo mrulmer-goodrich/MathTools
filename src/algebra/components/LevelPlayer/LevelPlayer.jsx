@@ -1,4 +1,6 @@
-// LevelPlayer.jsx - Fixed and cleaned
+// LevelPlayer.jsx - FIXED: Proper stats, Poppins font, no scroll
+// Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
+
 import React, { useState, useEffect } from 'react';
 import LevelIntro from '../LevelIntro';
 import ProblemDisplay from './ProblemDisplay';
@@ -29,6 +31,11 @@ const LevelPlayer = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
+  const [levelStartTime, setLevelStartTime] = useState(null);
+  const [levelStats, setLevelStats] = useState({
+    attempted: 0,
+    correct: 0
+  });
 
   const level = levels[levelId];
 
@@ -45,6 +52,8 @@ const LevelPlayer = ({
     setShowIntro(true);
     setCorrectStreak(0);
     setLevelComplete(false);
+    setLevelStats({ attempted: 0, correct: 0 });
+    setLevelStartTime(Date.now());
   }, [levelId]);
 
   useEffect(() => {
@@ -72,6 +81,11 @@ const LevelPlayer = ({
       problemsAttempted: prev.problemsAttempted + 1,
       problemsCorrect: prev.problemsCorrect + 1,
       currentStreak: prev.currentStreak + 1
+    }));
+
+    setLevelStats(prev => ({
+      attempted: prev.attempted + 1,
+      correct: prev.correct + 1
     }));
 
     const newStreak = correctStreak + 1;
@@ -102,6 +116,11 @@ const LevelPlayer = ({
       currentStreak: 0
     }));
 
+    setLevelStats(prev => ({
+      ...prev,
+      attempted: prev.attempted + 1
+    }));
+
     setCorrectStreak(0);
     setShowFeedback(true);
   };
@@ -111,36 +130,10 @@ const LevelPlayer = ({
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
 
-    setStats(prev => ({
-      ...prev,
-      problemsAttempted: prev.problemsAttempted + 1,
-      problemsCorrect: correct ? prev.problemsCorrect + 1 : prev.problemsCorrect,
-      currentStreak: correct ? prev.currentStreak + 1 : 0
-    }));
-
     if (correct) {
-      const newStreak = correctStreak + 1;
-      setCorrectStreak(newStreak);
-      
-      setShowSuccess(true);
-
-      // Award crystal for correct answer
-      if (onProblemSolved) {
-        onProblemSolved(1);
-      }
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-        
-        if (newStreak >= level.problemsRequired) {
-          setLevelComplete(true);
-        } else {
-          generateNewProblem();
-        }
-      }, 1500);
+      handleProblemComplete();
     } else {
-      setCorrectStreak(0);
-      setShowFeedback(true);
+      handleProblemWrong();
     }
   };
 
@@ -152,6 +145,22 @@ const LevelPlayer = ({
   const handleContinueFromComplete = () => {
     const artifact = level.artifact || level.moduleArtifact;
     onLevelComplete(levelId, artifact);
+  };
+
+  // Calculate time spent
+  const getTimeSpent = () => {
+    if (!levelStartTime) return 0;
+    const seconds = Math.floor((Date.now() - levelStartTime) / 1000);
+    return seconds;
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
   };
 
   // Show intro first
@@ -169,118 +178,81 @@ const LevelPlayer = ({
   }
 
   if (levelComplete) {
-    return (
-      <div className="level-player" data-region={region}>
-        <div className="level-content">
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.98)',
-            borderRadius: '1rem',
-            padding: '3rem',
-            maxWidth: '600px',
-            margin: '0 auto',
-            textAlign: 'center',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-            border: '3px solid #10B981'
-          }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-            <h2 style={{ 
-              fontSize: '2rem', 
-              fontWeight: 700, 
-              marginBottom: '0.5rem',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Level Complete!
-            </h2>
-            <h3 style={{ 
-              fontSize: '1.5rem', 
-              color: '#6B7280', 
-              marginBottom: '2rem',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {level.name}
-            </h3>
-            
-            {level.artifact && (
-              <div style={{
-                background: 'rgba(245, 158, 11, 0.1)',
-                border: '2px solid #F59E0B',
-                borderRadius: '0.75rem',
-                padding: '1.5rem',
-                marginBottom: '2rem'
-              }}>
-                <p style={{ 
-                  fontWeight: 700, 
-                  marginBottom: '0.5rem',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  Artifact Discovered!
-                </p>
-                <div style={{ fontSize: '3rem' }}>🔮</div>
-              </div>
-            )}
+    const timeSpent = getTimeSpent();
+    const percentage = levelStats.attempted > 0 
+      ? Math.round((levelStats.correct / levelStats.attempted) * 100)
+      : 0;
 
+    return (
+      <div className="level-player" data-region={region} style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div className="level-complete-container">
+          <div className="level-complete-icon">🎉</div>
+          <h2 className="level-complete-title">
+            Level Complete!
+          </h2>
+          <h3 className="level-complete-subtitle">
+            {level.name}
+          </h3>
+          
+          {level.artifact && (
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1.5rem',
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '2px solid #F59E0B',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
               marginBottom: '2rem'
             }}>
-              <div style={{
-                background: '#F9FAFB',
-                borderRadius: '0.5rem',
-                padding: '1rem'
-              }}>
-                <div style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: 700, 
-                  color: '#10B981',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  {level.problemsRequired}
-                </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: '#6B7280',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  Problems Solved
-                </div>
-              </div>
-              <div style={{
-                background: '#F9FAFB',
-                borderRadius: '0.5rem',
-                padding: '1rem'
-              }}>
-                <div style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: 700, 
-                  color: '#10B981',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  {correctStreak}
-                </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: '#6B7280',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  Final Streak
-                </div>
-              </div>
-            </div>
-
-            <button 
-              className="base-camp-tile-button"
-              onClick={handleContinueFromComplete}
-              style={{ 
-                width: '100%', 
-                padding: '1rem',
+              <p style={{ 
+                fontWeight: 700, 
+                marginBottom: '0.5rem',
                 fontFamily: 'Poppins, sans-serif'
-              }}
-            >
-              {playMode === 'practice' ? 'Back to Practice →' : 'Continue Expedition →'}
-            </button>
+              }}>
+                Artifact Discovered!
+              </p>
+              <div style={{ fontSize: '3rem' }}>🔮</div>
+            </div>
+          )}
+
+          <div className="level-complete-stats">
+            <div className="stat-box">
+              <div className="stat-value">{levelStats.attempted}</div>
+              <div className="stat-label">Attempted</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-value">{levelStats.correct}</div>
+              <div className="stat-label">Correct</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-value">{percentage}%</div>
+              <div className="stat-label">Accuracy</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-value">{formatTime(timeSpent)}</div>
+              <div className="stat-label">Time</div>
+            </div>
           </div>
+
+          <button 
+            className="base-camp-tile-button"
+            onClick={handleContinueFromComplete}
+            style={{ 
+              width: '100%', 
+              padding: '1rem',
+              fontFamily: 'Poppins, sans-serif'
+            }}
+          >
+            {playMode === 'practice' ? 'Back to Practice →' : 'Continue Expedition →'}
+          </button>
         </div>
       </div>
     );

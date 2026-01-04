@@ -1,3 +1,6 @@
+// ProgressTracker.jsx - FIXED: Dots now render and fill correctly
+// Location: src/algebra/components/ProgressTracker.jsx
+
 import React from 'react';
 
 const ProgressTracker = ({ current, required }) => {
