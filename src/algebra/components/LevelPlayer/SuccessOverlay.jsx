@@ -59,7 +59,7 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
       {gems.map((gem) => (
         <img
           key={gem.id}
-          src="/assets/algebra/KnowledgeCrystal.png"
+          src="/algebra/KnowledgeCrystal.png"
           alt="Crystal"
           style={{
             position: 'absolute',
@@ -126,7 +126,7 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
 
         {/* Main gem */}
         <img
-          src="/assets/algebra/KnowledgeCrystal.png"
+          src="/algebra/KnowledgeCrystal.png"
           alt="Knowledge Crystal"
           style={{
             width: '120px',
