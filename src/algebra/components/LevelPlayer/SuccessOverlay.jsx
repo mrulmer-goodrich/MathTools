@@ -1,6 +1,6 @@
 // SuccessOverlay.jsx - Animated gem collection
 import React, { useEffect, useState } from 'react';
-import '../styles/algebra.css';
+import '../../styles/algebra.css';
 
 const SuccessOverlay = ({ crystalsEarned = 1 }) => {
   const [animate, setAnimate] = useState(false);
