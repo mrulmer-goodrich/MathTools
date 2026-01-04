@@ -1,4 +1,4 @@
-// MathWorksheet.jsx - REVISED: Proper Row 2 choices handling, better layout
+// MathWorksheet.jsx - FINAL FIX: Row 2 choices rendering properly
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
 import React, { useState } from 'react';
@@ -26,10 +26,6 @@ const MathWorksheet = ({
   // Get current selections for this row
   const currentSelections = selectedTerms[currentRow.id] || [];
 
-  // Determine if current row uses term bank or choices
-  const hasBank = currentRow.bank && currentRow.bank.length > 0;
-  const hasChoices = currentRow.choices && currentRow.choices.length > 0;
-
   // Clean display helper - removes leading + for first term
   const cleanDisplay = (term, isFirst = false) => {
     if (!term) return '___';
@@ -40,7 +36,7 @@ const MathWorksheet = ({
     return str;
   };
 
-  // Handle chip click - add term to current row (for bank rows)
+  // Handle chip click for BANK rows (Row 1)
   const handleBankChipClick = (chip) => {
     const rowId = currentRow.id;
     const current = selectedTerms[rowId] || [];
@@ -54,7 +50,7 @@ const MathWorksheet = ({
     }
   };
 
-  // Handle choice click - select answer for current row (for choice rows)
+  // Handle choice click for CHOICE rows (Row 2)
   const handleChoiceClick = (choice) => {
     const rowId = currentRow.id;
     setSelectedTerms(prev => ({
@@ -124,8 +120,6 @@ const MathWorksheet = ({
           const isActive = index === currentRowIndex;
           const isLocked = index > currentRowIndex;
           const rowSelections = selectedTerms[row.id] || [];
-          const rowHasBank = row.bank && row.bank.length > 0;
-          const rowHasChoices = row.choices && row.choices.length > 0;
 
           return (
             <div 
@@ -185,11 +179,11 @@ const MathWorksheet = ({
         })}
       </div>
 
-      {/* Term Bank OR Choices - Only show for active row */}
+      {/* Term Bank OR Choices - Only show for active row if not completed */}
       {!completedRows.includes(currentRow.id) && (
         <>
-          {/* TERM BANK (Row 1 style) */}
-          {hasBank && (
+          {/* TERM BANK (for rows with bank property) */}
+          {currentRow.bank && currentRow.bank.length > 0 && (
             <div className="worksheet-term-bank">
               <div className="term-bank-label">Available Terms:</div>
               <div className="term-bank-chips">
@@ -211,8 +205,8 @@ const MathWorksheet = ({
             </div>
           )}
 
-          {/* CHOICES (Row 2 style) */}
-          {hasChoices && !hasBank && (
+          {/* CHOICES (for rows with choices property - Row 2) */}
+          {currentRow.choices && currentRow.choices.length > 0 && (
             <div className="worksheet-choices">
               <div className="term-bank-label">Select Final Answer:</div>
               <div className="term-bank-chips">
