@@ -1,22 +1,21 @@
-// ProblemDisplay.jsx - UPDATED with proper formatting
-// Location: src/algebra/components/LevelPlayer/ProblemDisplay.jsx
-
+// ProblemDisplay.jsx - Safe rendering
 import React from 'react';
-import { formatMultiplication } from '../../utils/formatUtils';
-import '../../styles/algebra.css';
+import '../styles/algebra.css';
 
 const ProblemDisplay = ({ problem }) => {
-  if (!problem) return null;
-
-  // Format the problem text to use proper notation
-  const formattedProblem = formatMultiplication(problem.problem);
+  // SAFETY: Don't render if problem is missing
+  if (!problem || !problem.problem) {
+    return (
+      <div className="problem-container">
+        <div className="problem-display">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="problem-display">
-      <h3>Solve:</h3>
-      <div className="problem-text">
-        {formattedProblem}
-      </div>
+    <div className="problem-container">
+      <div className="problem-label">Solve:</div>
+      <div className="problem-display">{problem.problem}</div>
     </div>
   );
 };
