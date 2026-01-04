@@ -268,9 +268,13 @@ const LevelPlayer = ({
 
       <div className="level-content">
         <ProgressTracker 
-          current={correctStreak} 
-          required={level.problemsRequired} 
-        />
+  current={correctStreak} 
+  required={level.problemsRequired}
+  levelId={levelId}
+  levelName={level.name}
+  difficulty={difficulty}
+/>
+
 
         {isStaged ? (
           <MathWorksheet
