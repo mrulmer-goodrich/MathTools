@@ -1656,3 +1656,54 @@ h6 { font-size: var(--text-base); }
   background: #10B981;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
+
+/* ========================================
+   ANSWER CHOICES - PROPER STYLING
+   ======================================== */
+.answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  max-width: 700px;
+  margin: 2rem auto 0;
+  padding: 0 1rem;
+}
+
+.answer-choice {
+  background: white;
+  border: 4px solid #D1D5DB;
+  border-radius: 1rem;
+  padding: 1.75rem 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  color: #1F2937;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.answer-choice:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
+  border-color: #10B981;
+  background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%);
+}
+
+.answer-choice.selected {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border-color: #047857;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  transform: scale(1.05);
+}
+
+.answer-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
