@@ -192,9 +192,11 @@ const Algebra = () => {
 
       {gameState === 'practice' && (
         <PracticeMode
-          onSelectLevel={(levelId) => {
+          onSelectLevel={(levelId, selectedDifficulty) => {
+            console.log('Algebra: Received level', levelId, 'with difficulty', selectedDifficulty);
             setPlayMode('practice');
             setCurrentLevel(levelId);
+            setDifficulty(selectedDifficulty); // Use the selected difficulty
             setGameState('playing');
           }}
           onBackToBaseCamp={() => setGameState('baseCamp')}
