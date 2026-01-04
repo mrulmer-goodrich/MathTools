@@ -1,34 +1,58 @@
 // SuccessOverlay.jsx - EPIC: Gem rain + particles + sparkles + glow
 // Location: src/algebra/components/SuccessOverlay.jsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../../styles/algebra.css';
 
 const SuccessOverlay = ({ crystalsEarned = 1 }) => {
   const [animate, setAnimate] = useState(false);
   const [particles, setParticles] = useState([]);
   const [gems, setGems] = useState([]);
+  const gemIdRef = useRef(0);
 
   useEffect(() => {
     // Trigger main animation
     setTimeout(() => setAnimate(true), 50);
+// Generate falling gems (flood the screen)
+const MAX_GEMS_ON_SCREEN = 140;
+const SPAWN_INTERVAL_MS = 80;      // ~25 gems/sec when spawning 2 per tick
+const GEMS_PER_TICK = 2;
+const SPAWN_DURATION_MS = 3000;    // how long to keep spawning on each success
 
-    // Generate falling gems
-    const gemArray = [];
-    for (let i = 0; i < 12; i++) {
-      gemArray.push({
-        id: i,
-        left: Math.random() * 100,
-        delay: Math.random() * 0.8,
-        duration: 1.5 + Math.random() * 1,
-        rotation: Math.random() * 360
-      });
-    }
-    setGems(gemArray);
+const spawnGems = (count) => {
+  const createdAt = Date.now();
+  const next = [];
+  for (let i = 0; i < count; i++) {
+    const id = gemIdRef.current++;
+    const size = 34 + Math.random() * 34; // 34px - 68px
+    next.push({
+      id,
+      left: Math.random() * 100,
+      delay: Math.random() * 0.25,
+      duration: 2.8 + Math.random() * 2.2, // 2.8s - 5.0s
+      rotation: Math.random() * 360,
+      drift: (Math.random() - 0.5) * 18,   // -9vw to +9vw
+      size,
+      createdAt
+    });
+  }
+
+  setGems((prev) => {
+    const merged = prev.concat(next);
+    // Keep the most recent gems so the overlay stays performant
+    return merged.slice(Math.max(0, merged.length - MAX_GEMS_ON_SCREEN));
+  });
+};
+
+// Start with an instant burst, then keep raining for a few seconds
+spawnGems(50);
+
+const gemInterval = setInterval(() => spawnGems(GEMS_PER_TICK), SPAWN_INTERVAL_MS);
+const stopTimer = setTimeout(() => clearInterval(gemInterval), SPAWN_DURATION_MS);
 
     // Generate sparkle particles
     const particleArray = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       particleArray.push({
         id: i,
         x: 50 + (Math.random() - 0.5) * 40,
@@ -38,6 +62,12 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
       });
     }
     setParticles(particleArray);
+
+// Cleanup timers if unmounted early
+return () => {
+  clearInterval(gemInterval);
+  clearTimeout(stopTimer);
+};
   }, []);
 
   return (
@@ -64,13 +94,14 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
           style={{
             position: 'absolute',
             left: `${gem.left}%`,
-            top: '-10%',
-            width: '50px',
-            height: '50px',
+            top: '-15%',
+            width: `${gem.size}px`,
+            height: `${gem.size}px`,
             objectFit: 'contain',
-            animation: `gemFall ${gem.duration}s ease-in ${gem.delay}s forwards`,
+            animation: `gemFall ${gem.duration}s linear ${gem.delay}s forwards`,
             transform: `rotate(${gem.rotation}deg)`,
-            filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.8))',
+            '--drift': `${gem.drift}vw`,
+            filter: 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.9))',
             pointerEvents: 'none'
           }}
         />
@@ -229,14 +260,14 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
 
         @keyframes gemFall {
           0% {
-            transform: translateY(0) rotate(0deg);
+            transform: translate3d(0, 0, 0) rotate(0deg);
             opacity: 1;
           }
           70% {
             opacity: 1;
           }
           100% {
-            transform: translateY(110vh) rotate(720deg);
+            transform: translate3d(var(--drift, 0vw), 115vh, 0) rotate(720deg);
             opacity: 0;
           }
         }
