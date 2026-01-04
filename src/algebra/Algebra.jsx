@@ -8,6 +8,7 @@ import FloatingIcons from './components/FloatingIcons';
 import LevelPlayer from './components/LevelPlayer/LevelPlayer';
 import StatsPanel from './components/StatsPanel';
 import MapDisplay from './components/MapDisplay';
+import BadgeCollection from './components/BadgeCollection';
 import './styles/algebra.css';
 
 const Algebra = () => {
@@ -250,119 +251,12 @@ const Algebra = () => {
       )}
 
       {showBadges && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }} onClick={() => setShowBadges(false)}>
-          <div style={{
-            background: 'white',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '700px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflowY: 'auto'
-          }} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ 
-              fontFamily: 'Poppins, sans-serif', 
-              marginBottom: '0.5rem',
-              fontSize: '1.75rem',
-              fontWeight: 700
-            }}>
-              {playerData.name}'s Collection
-            </h2>
-            
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.1)',
-              padding: '1rem',
-              borderRadius: '0.5rem',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1rem'
-            }}>
-              <div style={{ fontSize: '2rem' }}>💎</div>
-              <div>
-                <div style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: 700,
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  {progress.crystals} Knowledge Crystals
-                </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: '#6B7280',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  Earned by solving problems
-                </div>
-              </div>
-            </div>
-
-            <h3 style={{ 
-              fontFamily: 'Poppins, sans-serif', 
-              marginBottom: '1rem',
-              fontSize: '1.25rem',
-              fontWeight: 700
-            }}>
-              Math Artifacts
-            </h3>
-            <p style={{ 
-              fontFamily: 'Poppins, sans-serif', 
-              marginBottom: '1.5rem',
-              color: '#6B7280',
-              fontSize: '0.875rem'
-            }}>
-              Ancient relics discovered by completing skill groups
-            </p>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '1rem',
-              marginBottom: '1.5rem'
-            }}>
-              {[
-                { id: 'artifact-1', emoji: '🔢', name: 'Integer Compass' },
-                { id: 'artifact-2', emoji: '📦', name: 'Distribution Lens' },
-                { id: 'artifact-3', emoji: '🧮', name: 'Combining Crystal' },
-                { id: 'artifact-4', emoji: '⛺', name: 'Summit Stone' },
-                { id: 'artifact-5', emoji: '🌊', name: 'River Tablet' },
-                { id: 'artifact-6', emoji: '⛰️', name: 'Mountain Seal' },
-                { id: 'artifact-7', emoji: '🏔️', name: 'Peak Marker' },
-                { id: 'artifact-8', emoji: '🗝️', name: 'Vault Key' },
-                { id: 'artifact-9', emoji: '🏆', name: 'Ultimate Relic' },
-                { id: 'artifact-10', emoji: '⚖️', name: 'Balance Scale' }
-              ].map((artifact) => (
-                <div key={artifact.id} style={{
-                  background: progress.artifacts?.includes(artifact.id) ? '#F0FDF4' : '#F9FAFB',
-                  border: `2px solid ${progress.artifacts?.includes(artifact.id) ? '#10B981' : '#E5E7EB'}`,
-                  borderRadius: '0.5rem',
-                  padding: '1rem',
-                  textAlign: 'center',
-                  opacity: progress.artifacts?.includes(artifact.id) ? 1 : 0.4
-                }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                    {artifact.emoji}
-                  </div>
-                  <div style={{ 
-                    fontSize: '0.75rem', 
-                    fontWeight: 600,
-                    fontFamily: 'Poppins, sans-serif',
-                    color: '#1F2937'
-                  }}>
-                    {artifact.name}
-                  </div>
-                </div>
-              ))}
+  <BadgeCollection 
+    completedLevels={progress.completedLevels}
+    progress={progress}
+    onClose={() => setShowBadges(false)}
+  />
+)}
             </div>
             <button 
               onClick={() => setShowBadges(false)}
