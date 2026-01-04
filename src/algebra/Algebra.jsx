@@ -218,14 +218,15 @@ const Algebra = () => {
       )}
 
       {!showAvatarSelection && !showStory && (
-        <FloatingIcons
-          onOpenStory={() => setShowStoryModal(true)}
-          onOpenBadges={() => setShowBadges(true)}
-          onOpenStats={handleViewStats}
-          onOpenMap={handleViewMap}
-          playerName={playerData.name}
-        />
-      )}
+  <FloatingIcons
+    onOpenStory={() => setShowStoryModal(true)}
+    onOpenBadges={() => setShowBadges(true)}
+    onOpenStats={handleViewStats}
+    onOpenMap={handleViewMap}
+    playerName={playerData.name}
+    crystalCount={progress.crystals}
+  />
+)}
 
       {showStoryModal && (
         <div style={{
