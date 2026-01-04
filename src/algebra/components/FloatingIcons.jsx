@@ -77,7 +77,7 @@ const FloatingIcons = ({
 
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'badges', emoji: '💎', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
+    { id: 'badges', image: '/algebra/KnowledgeCrystal.png', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
     { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
