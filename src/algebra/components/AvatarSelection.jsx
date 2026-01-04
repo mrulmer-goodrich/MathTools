@@ -1,6 +1,4 @@
-// AvatarSelection.jsx - Avatar and Name Selection
-// Location: src/algebra/components/AvatarSelection.jsx
-
+// AvatarSelection.jsx - Fixed height and spacing
 import React, { useState } from 'react';
 import '../styles/algebra.css';
 
@@ -28,34 +26,40 @@ const AvatarSelection = ({ onComplete }) => {
 
   return (
     <div className="base-camp-screen">
-      <div className="avatar-selection-container">
+      <div style={{
+        maxWidth: '700px',
+        margin: '0 auto',
+        padding: '2rem 1rem',
+        textAlign: 'center'
+      }}>
         <h1 style={{ 
-          textAlign: 'center', 
           fontSize: '2.5rem', 
           fontWeight: 700, 
           color: '#1F2937',
           marginBottom: '0.5rem',
-          textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
+          textShadow: '2px 2px 4px rgba(255,255,255,0.8)',
+          fontFamily: 'Inter, sans-serif'
         }}>
           Welcome, Explorer!
         </h1>
         
         <p style={{ 
-          textAlign: 'center', 
           fontSize: '1rem', 
           color: '#4B5563',
-          marginBottom: '2rem'
+          marginBottom: '1.5rem',
+          fontFamily: 'Inter, sans-serif'
         }}>
           Before you begin your expedition, tell us about yourself.
         </p>
 
-        <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ 
             display: 'block', 
             fontSize: '1rem', 
             fontWeight: 600, 
             color: '#1F2937',
-            marginBottom: '0.5rem'
+            marginBottom: '0.5rem',
+            fontFamily: 'Inter, sans-serif'
           }}>
             Your Name:
           </label>
@@ -72,77 +76,76 @@ const AvatarSelection = ({ onComplete }) => {
               borderRadius: '0.5rem',
               width: '300px',
               textAlign: 'center',
-              fontWeight: 600
+              fontWeight: 600,
+              fontFamily: 'Inter, sans-serif'
             }}
           />
         </div>
 
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ 
-            textAlign: 'center', 
-            fontSize: '1.25rem', 
-            fontWeight: 600, 
-            color: '#1F2937',
-            marginBottom: '1rem'
-          }}>
-            Choose Your Avatar:
-          </h2>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: '1rem',
-            maxWidth: '650px',
-            margin: '0 auto'
-          }}>
-            {avatars.map((num) => (
-              <div
-                key={num}
-                onClick={() => setSelectedAvatar(num)}
+        <h2 style={{ 
+          fontSize: '1.125rem', 
+          fontWeight: 600, 
+          color: '#1F2937',
+          marginBottom: '1rem',
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          Choose Your Avatar:
+        </h2>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '0.75rem',
+          marginBottom: '1.5rem',
+          maxWidth: '550px',
+          margin: '0 auto 1.5rem'
+        }}>
+          {avatars.map((num) => (
+            <div
+              key={num}
+              onClick={() => setSelectedAvatar(num)}
+              style={{
+                width: '90px',
+                height: '90px',
+                borderRadius: '50%',
+                border: selectedAvatar === num ? '4px solid #10B981' : '3px solid #E5E7EB',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                transform: selectedAvatar === num ? 'scale(1.1)' : 'scale(1)',
+                boxShadow: selectedAvatar === num ? '0 4px 12px rgba(16, 185, 129, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
+                overflow: 'hidden',
+                background: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <img 
+                src={`/algebra/avatar-${num}.png`} 
+                alt={`Avatar ${num}`}
                 style={{
-                  width: '110px',
-                  height: '110px',
-                  borderRadius: '50%',
-                  border: selectedAvatar === num ? '4px solid #10B981' : '3px solid #E5E7EB',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  transform: selectedAvatar === num ? 'scale(1.1)' : 'scale(1)',
-                  boxShadow: selectedAvatar === num ? '0 4px 12px rgba(16, 185, 129, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
-                  overflow: 'hidden',
-                  background: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
                 }}
-              >
-                <img 
-                  src={`/algebra/avatar-${num}.png`} 
-                  alt={`Avatar ${num}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+              />
+            </div>
+          ))}
         </div>
 
-        <div style={{ textAlign: 'center' }}>
-          <button
-            onClick={handleSubmit}
-            className="base-camp-tile-button"
-            style={{ 
-              padding: '1rem 3rem',
-              fontSize: '1.25rem',
-              cursor: name && selectedAvatar ? 'pointer' : 'not-allowed',
-              opacity: name && selectedAvatar ? 1 : 0.5
-            }}
-          >
-            Begin Your Journey →
-          </button>
-        </div>
+        <button
+          onClick={handleSubmit}
+          className="base-camp-tile-button"
+          style={{ 
+            padding: '1rem 3rem',
+            fontSize: '1.25rem',
+            cursor: name && selectedAvatar ? 'pointer' : 'not-allowed',
+            opacity: name && selectedAvatar ? 1 : 0.5,
+            fontFamily: 'Inter, sans-serif'
+          }}
+        >
+          Begin Your Journey →
+        </button>
       </div>
     </div>
   );
