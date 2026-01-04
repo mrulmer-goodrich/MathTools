@@ -93,7 +93,11 @@ const BadgeCollection = ({ completedLevels, progress, onClose }) => {
           
           {/* Knowledge Crystals Display */}
           <div className="crystals-banner">
-            <div className="crystal-icon-large">💎</div>
+            <img 
+              src="/assets/algebra/KnowledgeCrystal.png" 
+              alt="Knowledge Crystal" 
+              className="crystal-icon-large"
+            />
             <div className="crystal-details">
               <div className="crystal-amount">{progress?.crystals || 0} Knowledge Crystals</div>
               <div className="crystal-subtitle">Earned by solving problems correctly</div>
