@@ -18,7 +18,8 @@ const LevelPlayer = ({
   setStats,
   progress,
   onLevelComplete,
-  onReturnToMenu 
+  onReturnToMenu,
+  onProblemSolved
 }) => {
   const [showIntro, setShowIntro] = useState(true);
   const [currentProblem, setCurrentProblem] = useState(null);
@@ -65,20 +66,6 @@ const LevelPlayer = ({
     }
   };
 
-  const getSuccessMessage = () => {
-    const messages = [
-      { icon: "🎯", text: "Perfect Shot!", sub: "You're navigating well!" },
-      { icon: "⛰️", text: "Summit Reached!", sub: "Onward to the next peak!" },
-      { icon: "🧭", text: "True North!", sub: "Your calculations are precise!" },
-      { icon: "🏕️", text: "Camp Secured!", sub: "Another challenge conquered!" },
-      { icon: "🗺️", text: "Territory Mapped!", sub: "The path is clear!" },
-      { icon: "⭐", text: "Stellar Work!", sub: "Dr. Martinez would be proud!" },
-      { icon: "🔥", text: "On Fire!", sub: "Keep blazing this trail!" },
-      { icon: "💎", text: "Gem Found!", sub: "Mathematical excellence!" }
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
-  };
-
   const handleProblemComplete = () => {
     setStats(prev => ({
       ...prev,
@@ -91,6 +78,11 @@ const LevelPlayer = ({
     setCorrectStreak(newStreak);
     
     setShowSuccess(true);
+
+    // Award crystal for correct answer
+    if (onProblemSolved) {
+      onProblemSolved(1);
+    }
     
     setTimeout(() => {
       setShowSuccess(false);
@@ -100,7 +92,7 @@ const LevelPlayer = ({
       } else {
         generateNewProblem();
       }
-    }, 1000);
+    }, 1500);
   };
 
   const handleProblemWrong = () => {
@@ -131,6 +123,11 @@ const LevelPlayer = ({
       setCorrectStreak(newStreak);
       
       setShowSuccess(true);
+
+      // Award crystal for correct answer
+      if (onProblemSolved) {
+        onProblemSolved(1);
+      }
       
       setTimeout(() => {
         setShowSuccess(false);
@@ -140,7 +137,7 @@ const LevelPlayer = ({
         } else {
           generateNewProblem();
         }
-      }, 1000);
+      }, 1500);
     } else {
       setCorrectStreak(0);
       setShowFeedback(true);
@@ -153,9 +150,8 @@ const LevelPlayer = ({
   };
 
   const handleContinueFromComplete = () => {
-    const badge = level.badge || level.moduleBadge;
-    onLevelComplete(levelId, badge);
-    onReturnToMenu();
+    const artifact = level.artifact || level.moduleArtifact;
+    onLevelComplete(levelId, artifact);
   };
 
   // Show intro first
@@ -204,7 +200,7 @@ const LevelPlayer = ({
               {level.name}
             </h3>
             
-            {level.badge && (
+            {level.artifact && (
               <div style={{
                 background: 'rgba(245, 158, 11, 0.1)',
                 border: '2px solid #F59E0B',
@@ -217,9 +213,9 @@ const LevelPlayer = ({
                   marginBottom: '0.5rem',
                   fontFamily: 'Poppins, sans-serif'
                 }}>
-                  Badge Earned!
+                  Artifact Discovered!
                 </p>
-                <div style={{ fontSize: '3rem' }}>🏆</div>
+                <div style={{ fontSize: '3rem' }}>🔮</div>
               </div>
             )}
 
@@ -326,7 +322,7 @@ const LevelPlayer = ({
       </div>
 
       {showSuccess && (
-        <SuccessOverlay message={getSuccessMessage()} />
+        <SuccessOverlay crystalsEarned={1} />
       )}
 
       {showFeedback && (
