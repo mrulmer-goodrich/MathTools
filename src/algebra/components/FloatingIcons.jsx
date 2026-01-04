@@ -1,5 +1,5 @@
-// FloatingIcons.jsx - 4 persistent draggable/resizable icons
-import React, { useState, useEffect } from 'react';
+// FloatingIcons.jsx - Fixed: only open on click, not on drag release
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
 const FloatingIcons = ({ 
@@ -11,10 +11,10 @@ const FloatingIcons = ({
 }) => {
   
   const defaultPositions = {
-    story: { x: 20, y: 120, size: 70 },
-    badges: { x: 20, y: 210, size: 70 },
-    stats: { x: window.innerWidth - 110, y: 20, size: 70 },
-    map: { x: window.innerWidth - 110, y: 110, size: 70 }
+    story: { x: 20, y: 120 },
+    badges: { x: 20, y: 210 },
+    stats: { x: window.innerWidth - 110, y: 20 },
+    map: { x: window.innerWidth - 110, y: 110 }
   };
 
   const [positions, setPositions] = useState(() => {
@@ -24,6 +24,7 @@ const FloatingIcons = ({
 
   const [dragging, setDragging] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const draggedRef = useRef(false);
 
   useEffect(() => {
     localStorage.setItem('algebra_icon_positions', JSON.stringify(positions));
@@ -32,6 +33,7 @@ const FloatingIcons = ({
   const handleMouseDown = (icon, e) => {
     e.preventDefault();
     setDragging(icon);
+    draggedRef.current = false;
     setDragOffset({
       x: e.clientX - positions[icon].x,
       y: e.clientY - positions[icon].y
@@ -41,10 +43,11 @@ const FloatingIcons = ({
   const handleMouseMove = (e) => {
     if (!dragging) return;
     
+    draggedRef.current = true;
+    
     setPositions(prev => ({
       ...prev,
       [dragging]: {
-        ...prev[dragging],
         x: e.clientX - dragOffset.x,
         y: e.clientY - dragOffset.y
       }
@@ -82,8 +85,8 @@ const FloatingIcons = ({
             position: 'fixed',
             left: `${positions[icon.id].x}px`,
             top: `${positions[icon.id].y}px`,
-            width: `${positions[icon.id].size}px`,
-            height: `${positions[icon.id].size}px`,
+            width: '70px',
+            height: '70px',
             background: 'rgba(255, 255, 255, 0.95)',
             borderRadius: '50%',
             border: '3px solid #10B981',
@@ -97,12 +100,10 @@ const FloatingIcons = ({
             userSelect: 'none'
           }}
           onMouseDown={(e) => {
-            if (e.button === 0) { // Left click to drag
-              handleMouseDown(icon.id, e);
-            }
+            handleMouseDown(icon.id, e);
           }}
           onClick={(e) => {
-            if (!dragging) {
+            if (!draggedRef.current) {
               icon.onClick();
             }
           }}
@@ -115,7 +116,7 @@ const FloatingIcons = ({
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
-          <span style={{ fontSize: `${positions[icon.id].size * 0.5}px` }}>
+          <span style={{ fontSize: '35px' }}>
             {icon.emoji}
           </span>
         </div>
