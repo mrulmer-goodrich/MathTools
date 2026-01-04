@@ -57,21 +57,23 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
     }}>
       {/* Falling Gems */}
       {gems.map((gem) => (
-        <div
+        <img
           key={gem.id}
+          src="/assets/algebra/KnowledgeCrystal.png"
+          alt="Crystal"
           style={{
             position: 'absolute',
             left: `${gem.left}%`,
             top: '-10%',
-            fontSize: '2.5rem',
+            width: '50px',
+            height: '50px',
+            objectFit: 'contain',
             animation: `gemFall ${gem.duration}s ease-in ${gem.delay}s forwards`,
             transform: `rotate(${gem.rotation}deg)`,
             filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.8))',
             pointerEvents: 'none'
           }}
-        >
-          💎
-        </div>
+        />
       ))}
 
       {/* Sparkle Particles */}
@@ -123,17 +125,21 @@ const SuccessOverlay = ({ crystalsEarned = 1 }) => {
         }} />
 
         {/* Main gem */}
-        <div style={{
-          fontSize: '5rem',
-          marginBottom: '1rem',
-          animation: 'bounce 0.6s ease-in-out, glow 2s ease-in-out infinite',
-          display: 'inline-block',
-          filter: 'drop-shadow(0 0 20px rgba(16, 185, 129, 0.8))',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          💎
-        </div>
+        <img
+          src="/assets/algebra/KnowledgeCrystal.png"
+          alt="Knowledge Crystal"
+          style={{
+            width: '120px',
+            height: '120px',
+            objectFit: 'contain',
+            marginBottom: '1rem',
+            animation: 'bounce 0.6s ease-in-out, glow 2s ease-in-out infinite',
+            display: 'inline-block',
+            filter: 'drop-shadow(0 0 20px rgba(16, 185, 129, 0.8))',
+            position: 'relative',
+            zIndex: 1
+          }}
+        />
 
         {/* Success text */}
         <div style={{
