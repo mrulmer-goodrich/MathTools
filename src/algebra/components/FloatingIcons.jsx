@@ -1,4 +1,4 @@
-// FloatingIcons.jsx - With crystal counter badge
+// FloatingIcons.jsx - Badge counter on badges icon
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
@@ -72,8 +72,8 @@ const FloatingIcons = ({
 
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'badges', emoji: '🏆', label: 'Badges', onClick: onOpenBadges },
-    { id: 'stats', emoji: '📊', label: 'Stats', onClick: onOpenStats, badge: crystalCount },
+    { id: 'badges', emoji: '🏆', label: 'Badges', onClick: onOpenBadges, badge: crystalCount },
+    { id: 'stats', emoji: '📊', label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
