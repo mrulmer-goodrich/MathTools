@@ -1,4 +1,6 @@
 // AvatarSelection.jsx - Avatar and Name Selection
+// Location: src/algebra/components/AvatarSelection.jsx
+
 import React, { useState } from 'react';
 import '../styles/algebra.css';
 
@@ -6,13 +8,7 @@ const AvatarSelection = ({ onComplete }) => {
   const [name, setName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(null);
 
-  // Avatar grid - 20 avatars from your image
-  const avatars = [
-    'avatar-1', 'avatar-2', 'avatar-3', 'avatar-4', 'avatar-5',
-    'avatar-6', 'avatar-7', 'avatar-8', 'avatar-9', 'avatar-10',
-    'avatar-11', 'avatar-12', 'avatar-13', 'avatar-14', 'avatar-15',
-    'avatar-16', 'avatar-17', 'avatar-18', 'avatar-19', 'avatar-20'
-  ];
+  const avatars = Array.from({ length: 20 }, (_, i) => i + 1);
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -24,7 +20,6 @@ const AvatarSelection = ({ onComplete }) => {
       return;
     }
     
-    // Save to localStorage
     localStorage.setItem('algebra_player_name', name);
     localStorage.setItem('algebra_player_avatar', selectedAvatar);
     
@@ -39,7 +34,7 @@ const AvatarSelection = ({ onComplete }) => {
           fontSize: '2.5rem', 
           fontWeight: 700, 
           color: '#1F2937',
-          marginBottom: '1rem',
+          marginBottom: '0.5rem',
           textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
         }}>
           Welcome, Explorer!
@@ -54,7 +49,6 @@ const AvatarSelection = ({ onComplete }) => {
           Before you begin your expedition, tell us about yourself.
         </p>
 
-        {/* Name Input */}
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <label style={{ 
             display: 'block', 
@@ -83,7 +77,6 @@ const AvatarSelection = ({ onComplete }) => {
           />
         </div>
 
-        {/* Avatar Selection */}
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ 
             textAlign: 'center', 
@@ -99,38 +92,36 @@ const AvatarSelection = ({ onComplete }) => {
             display: 'grid',
             gridTemplateColumns: 'repeat(5, 1fr)',
             gap: '1rem',
-            maxWidth: '600px',
+            maxWidth: '650px',
             margin: '0 auto'
           }}>
-            {avatars.map((avatar, index) => (
+            {avatars.map((num) => (
               <div
-                key={avatar}
-                onClick={() => setSelectedAvatar(avatar)}
+                key={num}
+                onClick={() => setSelectedAvatar(num)}
                 style={{
-                  width: '100px',
-                  height: '100px',
+                  width: '110px',
+                  height: '110px',
                   borderRadius: '50%',
-                  border: selectedAvatar === avatar ? '4px solid #10B981' : '2px solid #D1D5DB',
+                  border: selectedAvatar === num ? '4px solid #10B981' : '3px solid #E5E7EB',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  transform: selectedAvatar === avatar ? 'scale(1.1)' : 'scale(1)',
-                  boxShadow: selectedAvatar === avatar ? '0 4px 12px rgba(16, 185, 129, 0.4)' : 'none',
+                  transform: selectedAvatar === num ? 'scale(1.1)' : 'scale(1)',
+                  boxShadow: selectedAvatar === num ? '0 4px 12px rgba(16, 185, 129, 0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
-                  background: '#F9FAFB',
+                  background: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
+                  justifyContent: 'center'
                 }}
               >
-                {/* Avatar image - we'll use CSS sprites or individual images */}
-                <div
+                <img 
+                  src={`/algebra/avatar-${num}.png`} 
+                  alt={`Avatar ${num}`}
                   style={{
                     width: '100%',
                     height: '100%',
-                    background: `url('/algebra/avatars.png')`,
-                    backgroundSize: '500% 400%',
-                    backgroundPosition: `${(index % 5) * 25}% ${Math.floor(index / 5) * 33.33}%`
+                    objectFit: 'cover'
                   }}
                 />
               </div>
@@ -138,7 +129,6 @@ const AvatarSelection = ({ onComplete }) => {
           </div>
         </div>
 
-        {/* Submit Button */}
         <div style={{ textAlign: 'center' }}>
           <button
             onClick={handleSubmit}
