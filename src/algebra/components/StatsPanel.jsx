@@ -158,12 +158,6 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
 
         </div>
 
-        {/* Footer */}
-        <div className="algebra-modal-footer">
-          <button className="btn-modal-primary" onClick={onClose}>
-            Close
-          </button>
-        </div>
       </div>
     </div>
   );
