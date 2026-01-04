@@ -1,4 +1,4 @@
-// FloatingIcons.jsx - FIXED: Crystal icon (💎), top-right row positioning
+// FloatingIcons.jsx - FIXED: Badge z-index properly layered
 // Location: src/algebra/components/FloatingIcons.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -15,7 +15,7 @@ const FloatingIcons = ({
   
   const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
-  // FIXED: Default positions - single row, top-right
+  // Default positions - single row, top-right
   const defaultPositions = {
     story: { x: window.innerWidth - 400, y: 20 },
     badges: { x: window.innerWidth - 310, y: 20 },
@@ -104,7 +104,7 @@ const FloatingIcons = ({
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             transition: dragging === icon.id ? 'none' : 'transform 0.2s ease',
             userSelect: 'none',
-            overflow: 'hidden'
+            overflow: 'visible'
           }}
           onMouseDown={(e) => {
             handleMouseDown(icon.id, e);
@@ -144,12 +144,12 @@ const FloatingIcons = ({
           {icon.badge !== undefined && icon.badge > 0 && (
             <div style={{
               position: 'absolute',
-              top: '-5px',
-              right: '-5px',
+              top: '-8px',
+              right: '-8px',
               background: '#EF4444',
               color: 'white',
               borderRadius: '50%',
-              width: '28px',
+              minWidth: '28px',
               height: '28px',
               display: 'flex',
               alignItems: 'center',
@@ -158,8 +158,10 @@ const FloatingIcons = ({
               fontWeight: 700,
               fontFamily: 'Poppins, sans-serif',
               border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-              pointerEvents: 'none'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              pointerEvents: 'none',
+              zIndex: 100,
+              padding: '0 0.25rem'
             }}>
               {icon.badge}
             </div>
