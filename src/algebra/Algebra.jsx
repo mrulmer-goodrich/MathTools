@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import AvatarSelection from './components/AvatarSelection';
+import StoryIntro from './components/StoryIntro';  // ← ADD THIS LINE
 import BaseCamp from './components/BaseCamp';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
@@ -12,10 +13,11 @@ import './styles/algebra.css';
 
 const Algebra = () => {
   const [showAvatarSelection, setShowAvatarSelection] = useState(!localStorage.getItem('algebra_player_name'));
+  const [showStory, setShowStory] = useState(!localStorage.getItem('algebra_story_seen'));  // ← ADD THIS LINE
   const [gameState, setGameState] = useState('baseCamp');
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
-  const [currentModule, setCurrentModule] = useState(1);
+  const [currentModule, setCurrentModule] = useState(null);
   const [currentLevel, setCurrentLevel] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -63,6 +65,12 @@ const Algebra = () => {
   const handleAvatarComplete = (data) => {
     setPlayerData(data);
     setShowAvatarSelection(false);
+  };
+
+  // ← ADD THIS FUNCTION
+  const handleStoryComplete = () => {
+    localStorage.setItem('algebra_story_seen', 'true');
+    setShowStory(false);
   };
 
   const handleStartGame = (selectedDifficulty, isContinue = false) => {
@@ -138,6 +146,11 @@ const Algebra = () => {
 
   if (showAvatarSelection) {
     return <AvatarSelection onComplete={handleAvatarComplete} />;
+  }
+
+  // ← ADD THIS BLOCK
+  if (showStory) {
+    return <StoryIntro onComplete={handleStoryComplete} />;
   }
 
   return (
