@@ -1,11 +1,11 @@
-// PracticeMode.jsx - WITH DIFFICULTY TOGGLE PILL
+// PracticeMode.jsx - FINAL: No scroll, clean UI, correct difficulty
 // Location: src/algebra/components/PracticeMode.jsx
 
 import React, { useState } from 'react';
 import '../styles/algebra.css';
 
 const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, playerName }) => {
-  // Track current difficulty selection (applies to all levels until changed)
+  // Track current difficulty selection
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   
   const levelGroups = [
@@ -109,12 +109,21 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
   ];
 
   const handleLevelClick = (levelId) => {
+    console.log('PracticeMode: Selected difficulty =', selectedDifficulty);
+    console.log('PracticeMode: Calling onSelectLevel with', levelId, selectedDifficulty);
     // Pass both levelId and current difficulty
     onSelectLevel(levelId, selectedDifficulty);
   };
 
   return (
-    <div className="base-camp-screen">
+    <div className="base-camp-screen" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'auto'
+    }}>
       <button className="btn-back-base" onClick={onBackToBaseCamp}>
         ← Back to Base Camp
       </button>
@@ -122,35 +131,26 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '2rem'
+        padding: '2rem',
+        paddingTop: '5rem'
       }}>
         <h1 style={{
           textAlign: 'center',
           fontSize: '2.5rem',
           fontWeight: 700,
           color: '#1F2937',
-          marginBottom: '0.5rem',
+          marginBottom: '1.5rem',
           fontFamily: 'Poppins, sans-serif',
           textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
         }}>
           Practice Mode
         </h1>
 
-        <p style={{
-          textAlign: 'center',
-          fontSize: '1rem',
-          color: '#6B7280',
-          marginBottom: '1rem',
-          fontFamily: 'Poppins, sans-serif'
-        }}>
-          All 37 levels available for practice
-        </p>
-
         {/* DIFFICULTY TOGGLE PILL */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '2rem'
+          marginBottom: '2.5rem'
         }}>
           <div style={{
             display: 'inline-flex',
@@ -206,19 +206,6 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
             </button>
           </div>
         </div>
-
-        {/* Current difficulty indicator (subtle) */}
-        <p style={{
-          textAlign: 'center',
-          fontSize: '0.75rem',
-          color: '#9CA3AF',
-          marginBottom: '2rem',
-          fontFamily: 'Poppins, sans-serif'
-        }}>
-          {selectedDifficulty === 'easy' 
-            ? 'Whole numbers, clear problems, variable always x' 
-            : 'Fractions, decimals, multiple variables, grade-level rigor'}
-        </p>
 
         {levelGroups.map((group, groupIndex) => (
           <div key={groupIndex} style={{ marginBottom: '2.5rem' }}>
