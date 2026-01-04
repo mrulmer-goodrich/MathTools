@@ -1,23 +1,29 @@
-// formatUtils.js - Utilities for proper math notation
+// formatUtils.js - UPDATED: Use · (middot) for multiplication in algebra
 // Location: src/algebra/utils/formatUtils.js
 
 /**
- * Formats multiplication to use * instead of adjacent variables
+ * Formats multiplication for algebra display
+ * Uses · (middot) instead of × to avoid confusion with variable x
  * Examples:
  *   "3x" stays "3x" 
- *   "x x" becomes "x * x"
- *   "-8 x x" becomes "-8 * x"
- *   "6 × 8" stays "6 × 8"
+ *   "x x" becomes "x · x"
+ *   "-8 x" becomes "-8x" (coefficient)
+ *   "6 × 8" becomes "6 · 8"
+ *   "-9 × -7" becomes "-9 · -7"
  */
 export const formatMultiplication = (expression) => {
   if (!expression) return expression;
   
-  // Replace "x x" with "x * x" 
-  let formatted = expression.replace(/\bx\s+x\b/g, 'x * x');
+  let formatted = String(expression);
   
-  // Replace "number x" with "number * x" (but keep coefficient notation like "3x")
-  // This catches cases like "-8 x" but not "3x"
-  formatted = formatted.replace(/(\d)\s+x\b/g, '$1 * x');
+  // Replace × with · (middot) for all multiplications
+  formatted = formatted.replace(/×/g, '·');
+  
+  // Replace "x x" with "x · x" 
+  formatted = formatted.replace(/\bx\s+x\b/gi, 'x · x');
+  
+  // Clean up spacing around middot
+  formatted = formatted.replace(/\s*·\s*/g, ' · ');
   
   return formatted;
 };
@@ -60,11 +66,19 @@ export const formatAnswerChoice = (value) => {
 };
 
 /**
+ * Formats problem display text
+ * Converts × to · for algebra
+ */
+export const formatProblemText = (text) => {
+  if (!text) return text;
+  return formatMultiplication(text);
+};
+
+/**
  * Cleans up step-by-step work for display
  */
 export const formatStepWork = (work) => {
   if (!work) return work;
-  
   return formatMultiplication(work);
 };
 
@@ -90,6 +104,7 @@ export default {
   formatMultiplication,
   validateNumber,
   formatAnswerChoice,
+  formatProblemText,
   formatStepWork,
   validateChoices
 };
