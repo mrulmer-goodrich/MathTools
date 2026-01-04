@@ -1,6 +1,6 @@
 // LevelPlayer.jsx - Fixed and cleaned
 import React, { useState, useEffect } from 'react';
-import LevelIntro from './LevelIntro';
+import LevelIntro from '../LevelIntro';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
 import MathWorksheet from './MathWorksheet';
