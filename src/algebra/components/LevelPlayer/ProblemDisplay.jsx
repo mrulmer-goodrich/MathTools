@@ -1,6 +1,6 @@
 // ProblemDisplay.jsx - Safe rendering
 import React from 'react';
-import '../styles/algebra.css';
+import '../../styles/algebra.css';
 
 const ProblemDisplay = ({ problem }) => {
   // SAFETY: Don't render if problem is missing
