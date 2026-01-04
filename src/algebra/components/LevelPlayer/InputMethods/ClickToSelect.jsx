@@ -1,4 +1,4 @@
-// ClickToSelect.jsx - UPDATED: Handles both regular multiple choice AND term banks for staged workflow
+// ClickToSelect.jsx - UPDATED: Safety check added, all functionality preserved
 // Location: src/algebra/components/LevelPlayer/InputMethods/ClickToSelect.jsx
 
 import React, { useState } from 'react';
@@ -10,11 +10,16 @@ const ClickToSelect = ({
   onSubmit, 
   disabled,
   selectedAnswer,
-  isTermBank = false,        // NEW: Is this a term bank (for Row 1) or multiple choice (for Row 2)?
-  blanksNeeded = 1,           // NEW: How many terms need to be selected?
-  selectedTerms = []          // NEW: Currently selected terms for term bank
+  isTermBank = false,
+  blanksNeeded = 1,
+  selectedTerms = []
 }) => {
   const [localSelected, setLocalSelected] = useState(selectedAnswer || null);
+
+  // SAFETY CHECK: Don't render if no choices
+  if (!choices || choices.length === 0) {
+    return null;
+  }
 
   // Filter out NaN and invalid choices
   const validChoices = validateChoices(choices);
@@ -23,6 +28,12 @@ const ClickToSelect = ({
   if (validChoices.length < choices.length) {
     console.error('Invalid choices detected and filtered:', 
       choices.filter(c => !validChoices.includes(c)));
+  }
+
+  // SAFETY CHECK: If all choices were invalid, don't render
+  if (validChoices.length === 0) {
+    console.error('No valid choices available');
+    return null;
   }
 
   const handleClick = (choice) => {
