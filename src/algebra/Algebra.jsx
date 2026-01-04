@@ -1,9 +1,8 @@
-// Algebra.jsx - COMPLETE with new components
+// Algebra.jsx - Main orchestrator with avatar, story, base camp
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
 import AvatarSelection from './components/AvatarSelection';
-import DifficultySelector from './components/DifficultySelector';
 import BaseCamp from './components/BaseCamp';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
@@ -11,16 +10,19 @@ import StatsPanel from './components/StatsPanel';
 import MapDisplay from './components/MapDisplay';
 import './styles/algebra.css';
 
-
 const Algebra = () => {
   const [showAvatarSelection, setShowAvatarSelection] = useState(!localStorage.getItem('algebra_player_name'));
-  const [gameState, setGameState] = useState('difficulty');
+  const [gameState, setGameState] = useState('baseCamp');
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
   const [currentModule, setCurrentModule] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [playerData, setPlayerData] = useState({
+    name: localStorage.getItem('algebra_player_name') || '',
+    avatar: localStorage.getItem('algebra_player_avatar') || null
+  });
   const [progress, setProgress] = useState({
     completedLevels: [],
     badges: [],
@@ -37,22 +39,20 @@ const Algebra = () => {
   useEffect(() => {
     const savedDifficulty = localStorage.getItem('algebra_difficulty');
     const savedProgress = localStorage.getItem('algebra_progress');
+    const savedLevel = localStorage.getItem('algebra_current_level');
     
     if (savedDifficulty) {
       setDifficulty(savedDifficulty);
-      setGameState('menu');
     }
     
     if (savedProgress) {
       setProgress(JSON.parse(savedProgress));
     }
-  }, []);
 
-  const handleDifficultySelect = (selectedDifficulty) => {
-    setDifficulty(selectedDifficulty);
-    localStorage.setItem('algebra_difficulty', selectedDifficulty);
-    setGameState('menu');
-  };
+    if (savedLevel) {
+      setCurrentLevel(savedLevel);
+    }
+  }, []);
 
   useEffect(() => {
     if (progress.completedLevels.length > 0) {
@@ -60,11 +60,25 @@ const Algebra = () => {
     }
   }, [progress]);
 
-  const handleStartPlay = () => {
+  const handleAvatarComplete = (data) => {
+    setPlayerData(data);
+    setShowAvatarSelection(false);
+  };
+
+  const handleStartGame = (selectedDifficulty, isContinue = false) => {
+    if (!isContinue) {
+      // Starting new game - clear progress
+      setDifficulty(selectedDifficulty);
+      localStorage.setItem('algebra_difficulty', selectedDifficulty);
+      localStorage.removeItem('algebra_current_level');
+      setCurrentLevel(null);
+    }
+    
     setPlayMode('play');
     setGameState('playing');
     const firstIncomplete = getFirstIncompleteLevel();
     setCurrentLevel(firstIncomplete);
+    localStorage.setItem('algebra_current_level', firstIncomplete);
   };
 
   const handleStartPractice = () => {
@@ -82,7 +96,7 @@ const Algebra = () => {
   };
 
   const handleReturnToMenu = () => {
-    setGameState('menu');
+    setGameState('baseCamp');
     setPlayMode(null);
     setCurrentLevel(null);
   };
@@ -119,7 +133,12 @@ const Algebra = () => {
 
   const handleLevelChange = (newLevelId) => {
     setCurrentLevel(newLevelId);
+    localStorage.setItem('algebra_current_level', newLevelId);
   };
+
+  if (showAvatarSelection) {
+    return <AvatarSelection onComplete={handleAvatarComplete} />;
+  }
 
   return (
     <div className="algebra-app">
@@ -131,22 +150,19 @@ const Algebra = () => {
           onExitGame={handleExitGame}
           badges={progress.badges}
           currentLevel={currentLevel}
+          playerName={playerData.name}
+          playerAvatar={playerData.avatar}
         />
       )}
 
-      {gameState === 'difficulty' && (
-        <DifficultySelector onSelectDifficulty={handleDifficultySelect} />
-      )}
-
-      {gameState === 'menu' && (
+      {gameState === 'baseCamp' && (
         <BaseCamp
-          onStartGame={handleStartPlay}
-          onContinueGame={handleStartPlay}
+          onStartGame={handleStartGame}
           onPracticeMode={handleStartPractice}
           onExitGame={handleExitGame}
           sessionData={{
-            hasSession: progress.completedLevels.length > 0,
-            currentLevel: getFirstIncompleteLevel(),
+            hasSession: !!currentLevel && !!difficulty,
+            currentLevel: currentLevel || getFirstIncompleteLevel(),
             difficulty: difficulty,
             levelsCompleted: progress.completedLevels.length
           }}
@@ -166,13 +182,10 @@ const Algebra = () => {
           onLevelChange={handleLevelChange}
           onReturnToMenu={handleReturnToMenu}
           onSwitchToPlayMode={handleSwitchToPlayMode}
+          playerName={playerData.name}
         />
       )}
 
-      {showAvatarSelection && (
-     <AvatarSelection onComplete={() => setShowAvatarSelection(false)} />
-       )}
-      
       {showMap && (
         <MapDisplay 
           progress={progress}
@@ -186,6 +199,7 @@ const Algebra = () => {
         <StatsPanel 
           stats={stats}
           progress={progress}
+          playerName={playerData.name}
           onClose={() => setShowStats(false)}
         />
       )}
