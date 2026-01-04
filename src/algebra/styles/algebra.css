@@ -1414,3 +1414,41 @@ h6 { font-size: var(--text-base); }
     opacity: 1;
   }
 }
+
+/* Level Player Container Fix */
+.level-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Click-to-Select Choice Styling */
+.choice-button {
+  background: white;
+  border: 3px solid #E5E7EB;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.choice-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  border-color: #10B981;
+}
+
+.choice-button.selected {
+  background: #10B981;
+  color: white;
+  border-color: #059669;
+}
+
+.choice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
