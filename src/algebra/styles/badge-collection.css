@@ -61,7 +61,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 28px;
+  padding: 16px 20px;
   border-bottom: 2px solid #E5E7EB;
   background: linear-gradient(to bottom, #F9FAFB 0%, white 100%);
 }
@@ -69,7 +69,7 @@
 .algebra-modal-header h2 {
   margin: 0;
   color: #1F2937;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
 }
@@ -102,7 +102,7 @@
 /* ========== MODAL CONTENT ========== */
 
 .algebra-modal-content {
-  padding: 24px 28px;
+  padding: 18px 20px 20px 20px;
   overflow-y: auto;
   flex: 1;
   font-family: 'Poppins', sans-serif;
@@ -167,16 +167,16 @@
   background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
   border: 2px solid #FDE68A;
   border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .crystal-icon-large {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -186,15 +186,15 @@
 }
 
 .crystal-amount {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #92400E;
   font-family: 'Poppins', sans-serif;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .crystal-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #78350F;
 }
 
@@ -204,12 +204,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .artifacts-header h3 {
   color: #1F2937;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
   margin: 0;
@@ -218,18 +218,18 @@
 .artifacts-count {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   color: white;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 20px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
 }
 
 .artifacts-description {
   color: #6B7280;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 20px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 14px;
 }
 
 /* ========== ARTIFACTS GRID ========== */
@@ -237,14 +237,14 @@
 .artifacts-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 .artifact-card {
   background: white;
   border: 2px solid;
-  border-radius: 12px;
-  padding: 18px;
+  border-radius: 10px;
+  padding: 12px;
   text-align: center;
   transition: all 0.2s ease;
   position: relative;
@@ -273,12 +273,12 @@
 /* ========== ARTIFACT ICON ========== */
 
 .artifact-icon {
-  font-size: 3.5rem;
-  height: 80px;
+  font-size: 2.75rem;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .artifact-emoji {
