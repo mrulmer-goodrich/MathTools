@@ -2,6 +2,7 @@
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
+import AvatarSelection from './components/AvatarSelection';
 import DifficultySelector from './components/DifficultySelector';
 import BaseCamp from './components/BaseCamp';
 import ModulePlayer from './components/ModulePlayer';
