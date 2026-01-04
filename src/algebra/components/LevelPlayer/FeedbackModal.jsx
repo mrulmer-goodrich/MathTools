@@ -1,8 +1,34 @@
-// FeedbackModal.jsx - Styled feedback with proper formatting
+// FeedbackModal.jsx - FIXED: Handle explanation object/string properly
+// Location: src/algebra/components/FeedbackModal.jsx
+
 import React from 'react';
 import '../../styles/algebra.css';
 
 const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer }) => {
+  // SAFETY: Handle explanation as object or string
+  const getExplanationText = () => {
+    if (!explanation) return 'Review the problem and try again.';
+    
+    // If explanation is a string, return it
+    if (typeof explanation === 'string') return explanation;
+    
+    // If explanation has steps (old format), extract text
+    if (explanation.steps && Array.isArray(explanation.steps)) {
+      return explanation.steps
+        .map(step => step.description || step.work || '')
+        .filter(Boolean)
+        .join('\n');
+    }
+    
+    // If explanation has a rule property
+    if (explanation.rule) return explanation.rule;
+    
+    // Fallback
+    return 'Check your work and try again.';
+  };
+
+  const explanationText = getExplanationText();
+
   return (
     <div style={{
       position: 'fixed',
@@ -138,7 +164,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             fontSize: '1rem',
             whiteSpace: 'pre-wrap'
           }}>
-            {explanation}
+            {explanationText}
           </div>
         </div>
 
