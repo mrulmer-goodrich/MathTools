@@ -1,11 +1,11 @@
-// MapDisplay.jsx - FIXED CSS IMPORT
+// MapDisplay.jsx - REDESIGNED: Unified modal styling, no scroll, polished UI
 // Location: src/algebra/components/MapDisplay.jsx
 
 import React from 'react';
 import '../styles/map-display.css';
 
 const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
-  // Define map regions
+  // Define map regions matching PracticeMode bands
   const regions = [
     {
       name: "Base Camp",
@@ -36,45 +36,45 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
   const isCurrentLevel = (levelId) => currentLevel === levelId;
 
   return (
-    <div className="map-display-overlay">
-      <div className="map-display-container">
-        <div className="map-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="modal-header">
           <h2>🗺️ Expedition Map</h2>
-          <button className="btn-close-panel" onClick={onClose}>
-            ✕
-          </button>
+          <button className="btn-close-modal" onClick={onClose}>✕</button>
         </div>
 
-        <div className="map-content">
+        {/* Content */}
+        <div className="modal-content">
           <div className="map-intro">
-            <p>Dr. Martinez's journal reveals three distinct regions of the mountain range. Track your progress through each area.</p>
+            Dr. Martinez's journal reveals three distinct regions. Track your expedition progress through each area.
           </div>
 
-          <div className="regions-container">
+          <div className="regions-grid">
             {regions.map((region, regionIndex) => (
               <div key={regionIndex} className="region-card">
                 <div className="region-header">
-                  <div className="region-icon" style={{color: region.color}}>
+                  <span className="region-icon" style={{color: region.color}}>
                     {region.icon}
-                  </div>
-                  <h3>{region.name}</h3>
-                  <div className="region-progress">
-                    {getRegionProgress(region)}% Complete
-                  </div>
+                  </span>
+                  <h3 className="region-name">{region.name}</h3>
                 </div>
 
-                <div className="progress-bar-container">
+                <div className="region-progress-bar">
                   <div 
-                    className="progress-bar-fill" 
+                    className="region-progress-fill" 
                     style={{ 
                       width: `${getRegionProgress(region)}%`,
                       backgroundColor: region.color
                     }}
                   />
+                  <span className="region-progress-text">
+                    {getRegionProgress(region)}% Complete
+                  </span>
                 </div>
 
-                <div className="region-levels">
-                  {region.levels.map((levelId, index) => {
+                <div className="region-levels-grid">
+                  {region.levels.map((levelId) => {
                     const levelNum = parseInt(levelId.split('-')[1]);
                     const completed = isLevelCompleted(levelId);
                     const current = isCurrentLevel(levelId);
@@ -82,8 +82,8 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
                     return (
                       <div 
                         key={levelId}
-                        className={`map-level-marker ${completed ? 'completed' : ''} ${current ? 'current' : ''}`}
-                        title={`Level ${levelNum}`}
+                        className={`level-marker ${completed ? 'completed' : ''} ${current ? 'current' : ''}`}
+                        title={`Level ${levelNum}${completed ? ' - Complete' : ''}${current ? ' - Current' : ''}`}
                       >
                         {completed ? '✓' : levelNum}
                       </div>
@@ -96,22 +96,23 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
 
           <div className="map-legend">
             <div className="legend-item">
-              <div className="legend-marker completed">✓</div>
+              <div className="legend-dot completed"></div>
               <span>Completed</span>
             </div>
             <div className="legend-item">
-              <div className="legend-marker current">●</div>
+              <div className="legend-dot current"></div>
               <span>Current Level</span>
             </div>
             <div className="legend-item">
-              <div className="legend-marker locked">#</div>
+              <div className="legend-dot locked"></div>
               <span>Not Yet Reached</span>
             </div>
           </div>
         </div>
 
-        <div className="map-footer">
-          <button className="btn-primary" onClick={onClose}>
+        {/* Footer */}
+        <div className="modal-footer">
+          <button className="btn-modal-primary" onClick={onClose}>
             Continue Expedition
           </button>
         </div>
