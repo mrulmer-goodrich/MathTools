@@ -1,6 +1,6 @@
 // FeedbackModal.jsx - Styled feedback with proper formatting
 import React from 'react';
-import '../styles/algebra.css';
+import '../../styles/algebra.css';
 
 const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer }) => {
   return (
