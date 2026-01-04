@@ -36,16 +36,16 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
   const isCurrentLevel = (levelId) => currentLevel === levelId;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+    <div className="algebra-modal-overlay" onClick={onClose}>
+      <div className="algebra-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header">
+        <div className="algebra-modal-header">
           <h2>🗺️ Expedition Map</h2>
           <button className="btn-close-modal" onClick={onClose}>✕</button>
         </div>
 
         {/* Content */}
-        <div className="modal-content">
+        <div className="algebra-modal-content">
           <div className="map-intro">
             Dr. Martinez's journal reveals three distinct regions. Track your expedition progress through each area.
           </div>
@@ -111,7 +111,7 @@ const MapDisplay = ({ progress, completedLevels, currentLevel, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="modal-footer">
+        <div className="algebra-modal-footer">
           <button className="btn-modal-primary" onClick={onClose}>
             Continue Expedition
           </button>
