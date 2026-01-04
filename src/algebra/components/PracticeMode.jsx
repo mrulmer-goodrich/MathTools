@@ -1,4 +1,6 @@
-// PracticeMode.jsx - 37 level grid grouped by skills
+// PracticeMode.jsx - FIXED: Readable headers, spacing, completion indicator
+// Location: src/algebra/components/PracticeMode.jsx
+
 import React from 'react';
 import '../styles/algebra.css';
 
@@ -105,7 +107,15 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
   ];
 
   return (
-    <div className="base-camp-screen">
+    <div className="base-camp-screen" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflowY: 'auto',
+      overflowX: 'hidden'
+    }}>
       <button className="btn-back-base" onClick={onBackToBaseCamp}>
         ← Back to Base Camp
       </button>
@@ -113,51 +123,29 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '2rem'
+        padding: '6rem 2rem 2rem'
       }}>
-        <h1 style={{
-          textAlign: 'center',
-          fontSize: '2.5rem',
-          fontWeight: 700,
-          color: '#1F2937',
-          marginBottom: '0.5rem',
-          fontFamily: 'Poppins, sans-serif',
-          textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
-        }}>
-          Practice Mode
-        </h1>
-
-        <p style={{
-          textAlign: 'center',
-          fontSize: '1rem',
-          color: '#6B7280',
-          marginBottom: '2rem',
-          fontFamily: 'Poppins, sans-serif'
-        }}>
-          All 37 levels available for practice
-        </p>
+        <div className="practice-mode-header">
+          <h1 style={{
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            color: '#1F2937',
+            marginBottom: 0,
+            fontFamily: 'Poppins, sans-serif',
+            textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
+          }}>
+            Practice Mode
+          </h1>
+        </div>
 
         {levelGroups.map((group, groupIndex) => (
-          <div key={groupIndex} style={{ marginBottom: '2.5rem' }}>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#1F2937',
-              marginBottom: '1rem',
-              fontFamily: 'Poppins, sans-serif',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <span>{group.badge}</span>
+          <div key={groupIndex} className="practice-section">
+            <div className="practice-section-header">
+              <span className="badge-emoji">{group.badge}</span>
               <span>{group.name}</span>
-            </h2>
+            </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: '1rem'
-            }}>
+            <div className="practice-tiles-grid">
               {group.levels.map((level) => {
                 const isCompleted = completedLevels.includes(level.id);
                 
@@ -165,67 +153,23 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
                   <div
                     key={level.id}
                     onClick={() => onSelectLevel(level.id)}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      border: `3px solid ${isCompleted ? '#10B981' : '#E5E7EB'}`,
-                      borderRadius: '0.75rem',
-                      padding: '1.25rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      position: 'relative',
-                      minHeight: '120px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)';
-                      e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
-                      e.currentTarget.style.borderColor = isCompleted ? '#059669' : '#10B981';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                      e.currentTarget.style.borderColor = isCompleted ? '#10B981' : '#E5E7EB';
-                    }}
+                    className={`practice-tile ${isCompleted ? 'completed' : ''}`}
                   >
                     {isCompleted && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '0.75rem',
-                        right: '0.75rem',
-                        fontSize: '1.5rem',
-                        color: '#10B981'
-                      }}>
+                      <div className="practice-tile-completion">
                         ✓
                       </div>
                     )}
 
-                    <div style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      color: '#10B981',
-                      marginBottom: '0.5rem',
-                      fontFamily: 'Poppins, sans-serif',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
+                    <div className="practice-tile-level-num">
                       Level {level.id.split('-')[1]}
                     </div>
 
-                    <div style={{
-                      fontSize: '1.125rem',
-                      fontWeight: 700,
-                      color: '#1F2937',
-                      marginBottom: '0.5rem',
-                      fontFamily: 'Poppins, sans-serif'
-                    }}>
+                    <div className="practice-tile-name">
                       {level.name}
                     </div>
 
-                    <div style={{
-                      fontSize: '0.875rem',
-                      color: '#6B7280',
-                      fontFamily: 'Poppins, sans-serif',
-                      lineHeight: 1.4
-                    }}>
+                    <div className="practice-tile-skill">
                       {level.skill}
                     </div>
                   </div>

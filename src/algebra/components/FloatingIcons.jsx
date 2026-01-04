@@ -1,4 +1,6 @@
-// FloatingIcons.jsx - Badge counter on badges icon
+// FloatingIcons.jsx - FIXED: Stats icon shows player avatar
+// Location: src/algebra/components/FloatingIcons.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
@@ -10,6 +12,8 @@ const FloatingIcons = ({
   playerName,
   crystalCount = 0
 }) => {
+  
+  const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
   const defaultPositions = {
     story: { x: 20, y: 120 },
@@ -73,7 +77,7 @@ const FloatingIcons = ({
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
     { id: 'badges', emoji: '🏆', label: 'Badges', onClick: onOpenBadges, badge: crystalCount },
-    { id: 'stats', emoji: '📊', label: 'Stats', onClick: onOpenStats },
+    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
@@ -98,7 +102,8 @@ const FloatingIcons = ({
             zIndex: 90,
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             transition: dragging === icon.id ? 'none' : 'transform 0.2s ease',
-            userSelect: 'none'
+            userSelect: 'none',
+            overflow: 'hidden'
           }}
           onMouseDown={(e) => {
             handleMouseDown(icon.id, e);
@@ -117,9 +122,23 @@ const FloatingIcons = ({
             e.currentTarget.style.transform = 'scale(1)';
           }}
         >
-          <span style={{ fontSize: '35px' }}>
-            {icon.emoji}
-          </span>
+          {icon.image ? (
+            <img 
+              src={icon.image} 
+              alt={icon.label}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '50%',
+                pointerEvents: 'none'
+              }}
+            />
+          ) : (
+            <span style={{ fontSize: '35px', pointerEvents: 'none' }}>
+              {icon.emoji}
+            </span>
+          )}
           
           {icon.badge > 0 && (
             <div style={{
@@ -138,7 +157,8 @@ const FloatingIcons = ({
               fontWeight: 700,
               fontFamily: 'Poppins, sans-serif',
               border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              pointerEvents: 'none'
             }}>
               {icon.badge}
             </div>

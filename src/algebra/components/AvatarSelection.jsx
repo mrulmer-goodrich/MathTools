@@ -1,4 +1,6 @@
-// AvatarSelection.jsx - Fixed height and spacing
+// AvatarSelection.jsx - FIXED: Poppins font, no scroll, opacity, no white bar
+// Location: src/algebra/components/AvatarSelection.jsx
+
 import React, { useState } from 'react';
 import '../styles/algebra.css';
 
@@ -25,10 +27,20 @@ const AvatarSelection = ({ onComplete }) => {
   };
 
   return (
-    <div className="base-camp-screen">
+    <div className="base-camp-screen" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
       <div style={{
         maxWidth: '700px',
-        margin: '0 auto',
+        width: '90%',
         padding: '2rem 1rem',
         textAlign: 'center'
       }}>
@@ -38,7 +50,7 @@ const AvatarSelection = ({ onComplete }) => {
           color: '#1F2937',
           marginBottom: '0.5rem',
           textShadow: '2px 2px 4px rgba(255,255,255,0.8)',
-          fontFamily: 'Inter, sans-serif'
+          fontFamily: 'Poppins, sans-serif'
         }}>
           Welcome, Explorer!
         </h1>
@@ -47,7 +59,7 @@ const AvatarSelection = ({ onComplete }) => {
           fontSize: '1rem', 
           color: '#4B5563',
           marginBottom: '1.5rem',
-          fontFamily: 'Inter, sans-serif'
+          fontFamily: 'Poppins, sans-serif'
         }}>
           Before you begin your expedition, tell us about yourself.
         </p>
@@ -59,7 +71,7 @@ const AvatarSelection = ({ onComplete }) => {
             fontWeight: 600, 
             color: '#1F2937',
             marginBottom: '0.5rem',
-            fontFamily: 'Inter, sans-serif'
+            fontFamily: 'Poppins, sans-serif'
           }}>
             Your Name:
           </label>
@@ -75,9 +87,10 @@ const AvatarSelection = ({ onComplete }) => {
               border: '2px solid #D1D5DB',
               borderRadius: '0.5rem',
               width: '300px',
+              maxWidth: '100%',
               textAlign: 'center',
               fontWeight: 600,
-              fontFamily: 'Inter, sans-serif'
+              fontFamily: 'Poppins, sans-serif'
             }}
           />
         </div>
@@ -87,7 +100,7 @@ const AvatarSelection = ({ onComplete }) => {
           fontWeight: 600, 
           color: '#1F2937',
           marginBottom: '1rem',
-          fontFamily: 'Inter, sans-serif'
+          fontFamily: 'Poppins, sans-serif'
         }}>
           Choose Your Avatar:
         </h2>
@@ -141,7 +154,7 @@ const AvatarSelection = ({ onComplete }) => {
             fontSize: '1.25rem',
             cursor: name && selectedAvatar ? 'pointer' : 'not-allowed',
             opacity: name && selectedAvatar ? 1 : 0.5,
-            fontFamily: 'Inter, sans-serif'
+            fontFamily: 'Poppins, sans-serif'
           }}
         >
           Begin Your Journey →

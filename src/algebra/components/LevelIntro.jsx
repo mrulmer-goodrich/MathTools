@@ -1,4 +1,6 @@
-// LevelIntro.jsx - Story snippet + journal clue before each level
+// LevelIntro.jsx - FIXED: Poppins font throughout
+// Location: src/algebra/components/LevelIntro.jsx
+
 import React from 'react';
 import '../styles/algebra.css';
 
@@ -17,7 +19,7 @@ const LevelIntro = ({ levelData, onContinue }) => {
       story: 'You reach Pack It Up station. Multiple steps are required here.',
       clue: 'First distribute, then combine like terms. Work methodically!'
     },
-    // Add more as needed - this is just examples
+    // Add more as needed
   };
 
   const story = levelStories[levelData.id] || {
@@ -26,15 +28,21 @@ const LevelIntro = ({ levelData, onContinue }) => {
   };
 
   return (
-    <div className="base-camp-screen">
+    <div className="base-camp-screen" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'hidden',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
       <div style={{
         maxWidth: '700px',
-        margin: '0 auto',
-        padding: '3rem 2rem',
-        minHeight: '500px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center'
+        width: '90%',
+        padding: '2rem 1rem'
       }}>
         <div style={{
           background: 'rgba(255, 255, 255, 0.98)',
