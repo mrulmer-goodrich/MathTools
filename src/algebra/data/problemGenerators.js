@@ -218,19 +218,213 @@ const formatAnswer = (coefficient, variable, constant) => {
 };
 
 // Helper to ensure exactly 4 unique choices
+// problemGenerators.js - COMPREHENSIVE FIX for ensureFourChoices
+// Location: Replace lines 221-233
+
+// Helper: Create canonical form for comparison
+const canonicalForm = (expr) => {
+  if (!expr) return '';
+  
+  // Parse the expression
+  const parsed = parseExpression(String(expr));
+  
+  // If parsing failed, use normalized string
+  if (!parsed) {
+    return String(expr)
+      .replace(/\s+/g, '')  // Remove all whitespace
+      .replace(/\+\-/g, '-')  // Normalize +- to -
+      .replace(/^\+/, '');     // Remove leading +
+  }
+  
+  // Create canonical string from parsed form
+  const { coefficient, variable, constant } = parsed;
+  
+  // Build canonical form: always "ax+b" format (never "b+ax")
+  let canonical = '';
+  
+  // Variable term (if exists)
+  if (coefficient !== 0 && variable) {
+    if (coefficient === 1) {
+      canonical = variable;
+    } else if (coefficient === -1) {
+      canonical = '-' + variable;
+    } else {
+      canonical = coefficient + variable;
+    }
+  }
+  
+  // Constant term (if exists)
+  if (constant !== 0) {
+    if (canonical) {
+      // We have a variable term, add constant
+      canonical += (constant > 0 ? '+' + constant : constant);
+    } else {
+      // Only constant, no variable
+      canonical = String(constant);
+    }
+  }
+  
+  // Edge case: if both are 0
+  if (!canonical) {
+    canonical = '0';
+  }
+  
+  return canonical;
+};
+
+// Helper: Validate that a distractor is actually incorrect
+const isActuallyWrong = (distractor, correctAnswer) => {
+  const distractorCanonical = canonicalForm(distractor);
+  const correctCanonical = canonicalForm(correctAnswer);
+  
+  // Must be different in canonical form
+  return distractorCanonical !== correctCanonical;
+};
+
+// Main function: Ensure exactly 4 unique, valid choices
 const ensureFourChoices = (choices, answer) => {
-  const uniqueChoices = [...new Set(choices)];
+  const MAX_ATTEMPTS = 20;
+  const canonicalSet = new Set();
+  const uniqueChoices = [];
+  
+  // Step 1: Add the correct answer first (guaranteed inclusion)
+  const answerCanonical = canonicalForm(answer);
+  canonicalSet.add(answerCanonical);
+  uniqueChoices.push(answer);
+  
+  // Step 2: Process provided choices (distractors)
+  for (const choice of choices) {
+    if (uniqueChoices.length >= 4) break;
+    
+    const canonical = canonicalForm(choice);
+    
+    // Skip if duplicate OR if actually correct
+    if (canonicalSet.has(canonical)) continue;
+    if (!isActuallyWrong(choice, answer)) continue;
+    
+    canonicalSet.add(canonical);
+    uniqueChoices.push(choice);
+  }
+  
+  // Step 3: Generate additional distractors if needed
   let attempts = 0;
-  while (uniqueChoices.length < 4 && attempts < 20) {
-    const offset = randomInt(1, 10);
-    const filler = Math.random() < 0.5 ? answer + offset : answer - offset;
-    if (!uniqueChoices.includes(filler)) {
+  const parsed = parseExpression(String(answer));
+  
+  while (uniqueChoices.length < 4 && attempts < MAX_ATTEMPTS) {
+    let filler;
+    
+    if (parsed && parsed.variable) {
+      // Generate algebraically plausible distractors
+      const strategies = [
+        // Strategy 1: Wrong coefficient
+        () => {
+          const wrongCoef = parsed.coefficient + randomFrom([-3, -2, -1, 1, 2, 3]);
+          return formatAnswer(wrongCoef, parsed.variable, parsed.constant);
+        },
+        // Strategy 2: Wrong constant
+        () => {
+          const wrongConst = parsed.constant + randomFrom([-5, -3, -2, -1, 1, 2, 3, 5]);
+          return formatAnswer(parsed.coefficient, parsed.variable, wrongConst);
+        },
+        // Strategy 3: Sign flip on coefficient
+        () => {
+          return formatAnswer(-parsed.coefficient, parsed.variable, parsed.constant);
+        },
+        // Strategy 4: Sign flip on constant
+        () => {
+          return formatAnswer(parsed.coefficient, parsed.variable, -parsed.constant);
+        },
+        // Strategy 5: Both wrong
+        () => {
+          const wrongCoef = parsed.coefficient + randomFrom([-2, -1, 1, 2]);
+          const wrongConst = parsed.constant + randomFrom([-3, -1, 1, 3]);
+          return formatAnswer(wrongCoef, parsed.variable, wrongConst);
+        }
+      ];
+      
+      // Pick random strategy
+      const strategy = randomFrom(strategies);
+      filler = strategy();
+    } else {
+      // For pure numbers, use simple offset
+      const numAnswer = typeof answer === 'number' ? answer : parseFloat(answer);
+      if (isNaN(numAnswer)) {
+        // If we can't parse, just use a random number
+        filler = randomInt(-20, 20);
+      } else {
+        const offset = randomFrom([-5, -3, -2, -1, 1, 2, 3, 5]);
+        filler = numAnswer + offset;
+      }
+    }
+    
+    const fillerCanonical = canonicalForm(filler);
+    
+    // Validate: must be unique AND actually wrong
+    if (!canonicalSet.has(fillerCanonical) && isActuallyWrong(filler, answer)) {
+      canonicalSet.add(fillerCanonical);
       uniqueChoices.push(filler);
     }
+    
     attempts++;
   }
-  return uniqueChoices.slice(0, 4).sort(() => Math.random() - 0.5);
+  
+  // Step 4: Fallback if we still don't have 4
+  // Use pre-validated safe distractors
+  const fallbackDistractors = [-99, -88, -77, 999, 888, 777];
+  
+  for (const fallback of fallbackDistractors) {
+    if (uniqueChoices.length >= 4) break;
+    
+    const fallbackCanonical = canonicalForm(fallback);
+    
+    if (!canonicalSet.has(fallbackCanonical) && isActuallyWrong(fallback, answer)) {
+      canonicalSet.add(fallbackCanonical);
+      uniqueChoices.push(fallback);
+    }
+  }
+  
+  // Step 5: Absolute failsafe - ensure we have exactly 4
+  // If we STILL don't have 4, pad with obviously wrong values
+  while (uniqueChoices.length < 4) {
+    const desperate = 9999 + uniqueChoices.length;
+    uniqueChoices.push(desperate);
+  }
+  
+  // Step 6: Shuffle (Fisher-Yates)
+  const finalChoices = uniqueChoices.slice(0, 4);
+  for (let i = finalChoices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [finalChoices[i], finalChoices[j]] = [finalChoices[j], finalChoices[i]];
+  }
+  
+  return finalChoices;
 };
+
+// CRITICAL VALIDATION (for testing only - remove in production)
+// After calling ensureFourChoices, validate the result:
+const validateChoices = (choices, answer) => {
+  if (choices.length !== 4) {
+    console.error('ensureFourChoices: Did not return exactly 4 choices!', choices);
+    return false;
+  }
+  
+  const canonicals = choices.map(c => canonicalForm(c));
+  const uniqueCanonicals = new Set(canonicals);
+  
+  if (uniqueCanonicals.size !== 4) {
+    console.error('ensureFourChoices: Duplicate choices detected!', choices, canonicals);
+    return false;
+  }
+  
+  const answerCanonical = canonicalForm(answer);
+  if (!canonicals.includes(answerCanonical)) {
+    console.error('ensureFourChoices: Correct answer not in choices!', answer, choices);
+    return false;
+  }
+  
+  return true;
+};
+
 
 // ============================================
 // LEVEL 1-1: ADDITION (REBUILT)
