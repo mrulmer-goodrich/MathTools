@@ -1,5 +1,4 @@
-// MathWorksheet.jsx - FIXED: Proper staged workflow for L13-16
-// Two-stage process: Row 1 (distribute with term bank) → Row 2 (combine with term bank)
+// MathWorksheet.jsx - REVISED: Proper Row 2 choices handling, better layout
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
 import React, { useState } from 'react';
@@ -27,6 +26,10 @@ const MathWorksheet = ({
   // Get current selections for this row
   const currentSelections = selectedTerms[currentRow.id] || [];
 
+  // Determine if current row uses term bank or choices
+  const hasBank = currentRow.bank && currentRow.bank.length > 0;
+  const hasChoices = currentRow.choices && currentRow.choices.length > 0;
+
   // Clean display helper - removes leading + for first term
   const cleanDisplay = (term, isFirst = false) => {
     if (!term) return '___';
@@ -37,8 +40,8 @@ const MathWorksheet = ({
     return str;
   };
 
-  // Handle chip click - add term to current row
-  const handleChipClick = (chip) => {
+  // Handle chip click - add term to current row (for bank rows)
+  const handleBankChipClick = (chip) => {
     const rowId = currentRow.id;
     const current = selectedTerms[rowId] || [];
     
@@ -49,6 +52,15 @@ const MathWorksheet = ({
         [rowId]: [...current, chip]
       }));
     }
+  };
+
+  // Handle choice click - select answer for current row (for choice rows)
+  const handleChoiceClick = (choice) => {
+    const rowId = currentRow.id;
+    setSelectedTerms(prev => ({
+      ...prev,
+      [rowId]: [choice]  // Store as array for consistency
+    }));
   };
 
   // Handle blank click - remove term from that position
@@ -98,22 +110,6 @@ const MathWorksheet = ({
     }
   };
 
-  // Count how many times a chip has been used across all completed rows
-  const getChipUsageCount = (chip) => {
-    let count = 0;
-    Object.entries(selectedTerms).forEach(([rowId, terms]) => {
-      // Only count if this row is completed (locked in)
-      if (completedRows.includes(rowId)) {
-        count += terms.filter(t => String(t).trim() === String(chip).trim()).length;
-      }
-    });
-    // Also count in current active row
-    if (currentSelections.filter(t => String(t).trim() === String(chip).trim()).length > 0) {
-      count += currentSelections.filter(t => String(t).trim() === String(chip).trim()).length;
-    }
-    return count;
-  };
-
   return (
     <div className="math-worksheet-container">
       {/* Original Problem - Always visible at top */}
@@ -128,89 +124,115 @@ const MathWorksheet = ({
           const isActive = index === currentRowIndex;
           const isLocked = index > currentRowIndex;
           const rowSelections = selectedTerms[row.id] || [];
+          const rowHasBank = row.bank && row.bank.length > 0;
+          const rowHasChoices = row.choices && row.choices.length > 0;
 
           return (
             <div 
               key={row.id}
               className={`worksheet-row ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}
             >
-              {/* Row Label (optional, can show prompt) */}
-              {/* <div className="row-label">{row.prompt}</div> */}
+              <div className="worksheet-row-content">
+                {/* COMPLETED ROW - Show the locked-in answer */}
+                {isCompleted && (
+                  <div className="worksheet-row-answer">
+                    {rowSelections.map((term, i) => (
+                      <span key={i} className="completed-term">
+                        {cleanDisplay(term, i === 0)}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-              {/* COMPLETED ROW - Show the locked-in answer */}
-              {isCompleted && (
-                <div className="worksheet-row-answer">
-                  {rowSelections.map((term, i) => (
-                    <span key={i} className="completed-term">
-                      {cleanDisplay(term, i === 0)}
-                    </span>
-                  ))}
-                </div>
-              )}
+                {/* ACTIVE ROW - Show blanks to fill */}
+                {isActive && !isCompleted && (
+                  <>
+                    <div className="worksheet-row-blanks">
+                      {Array.from({ length: row.blanks }).map((_, i) => (
+                        <button
+                          key={i}
+                          className={`worksheet-blank ${rowSelections[i] ? 'filled' : 'empty'}`}
+                          onClick={() => rowSelections[i] && handleBlankClick(i)}
+                        >
+                          {rowSelections[i] ? cleanDisplay(rowSelections[i], i === 0) : '___'}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {/* Check Button - Inline with blanks */}
+                    {rowSelections.length === row.blanks && (
+                      <button 
+                        className="worksheet-check-btn-inline"
+                        onClick={handleCheckRow}
+                      >
+                        {isFinalRow ? '✓ Submit' : '✓ Check'}
+                      </button>
+                    )}
+                  </>
+                )}
 
-              {/* ACTIVE ROW - Show blanks to fill */}
-              {isActive && !isCompleted && (
-                <div className="worksheet-row-blanks">
-                  {Array.from({ length: row.blanks }).map((_, i) => (
-                    <button
-                      key={i}
-                      className={`worksheet-blank ${rowSelections[i] ? 'filled' : 'empty'}`}
-                      onClick={() => rowSelections[i] && handleBlankClick(i)}
-                    >
-                      {rowSelections[i] ? cleanDisplay(rowSelections[i], i === 0) : '___'}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* LOCKED ROW - Show empty blanks (future rows) */}
-              {isLocked && (
-                <div className="worksheet-row-locked">
-                  {Array.from({ length: row.blanks }).map((_, i) => (
-                    <span key={i} className="locked-blank">___</span>
-                  ))}
-                </div>
-              )}
+                {/* LOCKED ROW - Show empty blanks (future rows) */}
+                {isLocked && (
+                  <div className="worksheet-row-locked">
+                    {Array.from({ length: row.blanks }).map((_, i) => (
+                      <span key={i} className="locked-blank">___</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Term Bank - Only show for active row if it has a bank */}
-      {currentRow.bank && currentRow.bank.length > 0 && !completedRows.includes(currentRow.id) && (
-        <div className="worksheet-term-bank">
-          <div className="term-bank-label">Available Terms:</div>
-          <div className="term-bank-chips">
-            {currentRow.bank.map((chip, index) => {
-              const usageCount = getChipUsageCount(chip);
-              const isInCurrentRow = currentSelections.includes(chip);
-              
-              return (
-                <button
-                  key={index}
-                  className={`term-chip ${isInCurrentRow ? 'selected' : ''} ${usageCount > 0 ? 'used' : ''}`}
-                  onClick={() => handleChipClick(chip)}
-                  disabled={currentSelections.length >= currentRow.blanks}
-                >
-                  {cleanDisplay(chip)}
-                  {usageCount > 0 && <span className="chip-badge">{usageCount}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Term Bank OR Choices - Only show for active row */}
+      {!completedRows.includes(currentRow.id) && (
+        <>
+          {/* TERM BANK (Row 1 style) */}
+          {hasBank && (
+            <div className="worksheet-term-bank">
+              <div className="term-bank-label">Available Terms:</div>
+              <div className="term-bank-chips">
+                {currentRow.bank.map((chip, index) => {
+                  const isSelected = currentSelections.includes(chip);
+                  
+                  return (
+                    <button
+                      key={index}
+                      className={`term-chip ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleBankChipClick(chip)}
+                      disabled={currentSelections.length >= currentRow.blanks}
+                    >
+                      {cleanDisplay(chip)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-      {/* Check Button - Show when all blanks filled */}
-      {!completedRows.includes(currentRow.id) && currentSelections.length === currentRow.blanks && (
-        <div className="worksheet-check-container">
-          <button 
-            className="worksheet-check-btn"
-            onClick={handleCheckRow}
-          >
-            {isFinalRow ? 'Submit Answer' : 'Check & Continue →'}
-          </button>
-        </div>
+          {/* CHOICES (Row 2 style) */}
+          {hasChoices && !hasBank && (
+            <div className="worksheet-choices">
+              <div className="term-bank-label">Select Final Answer:</div>
+              <div className="term-bank-chips">
+                {currentRow.choices.map((choice, index) => {
+                  const isSelected = currentSelections.includes(choice);
+                  
+                  return (
+                    <button
+                      key={index}
+                      className={`term-chip choice-chip ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleChoiceClick(choice)}
+                    >
+                      {cleanDisplay(choice)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
