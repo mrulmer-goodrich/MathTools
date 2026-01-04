@@ -221,15 +221,15 @@ const Algebra = () => {
       )}
 
       {!showAvatarSelection && !showStory && (
-  <FloatingIcons
-    onOpenStory={() => setShowStoryModal(true)}
-    onOpenBadges={() => setShowBadges(true)}
-    onOpenStats={handleViewStats}
-    onOpenMap={handleViewMap}
-    playerName={playerData.name}
-    crystalCount={progress.crystals}
-  />
-)}
+        <FloatingIcons
+          onOpenStory={() => setShowStoryModal(true)}
+          onOpenBadges={() => setShowBadges(true)}
+          onOpenStats={handleViewStats}
+          onOpenMap={handleViewMap}
+          playerName={playerData.name}
+          crystalCount={progress.crystals}
+        />
+      )}
 
       {showStoryModal && (
         <div style={{
@@ -251,22 +251,11 @@ const Algebra = () => {
       )}
 
       {showBadges && (
-  <BadgeCollection 
-    completedLevels={progress.completedLevels}
-    progress={progress}
-    onClose={() => setShowBadges(false)}
-  />
-)}
-         
-            <button 
-              onClick={() => setShowBadges(false)}
-              className="base-camp-tile-button"
-              style={{ width: '100%' }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <BadgeCollection 
+          completedLevels={progress.completedLevels}
+          progress={progress}
+          onClose={() => setShowBadges(false)}
+        />
       )}
 
       {showMap && (
