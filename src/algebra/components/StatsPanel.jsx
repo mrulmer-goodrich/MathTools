@@ -146,7 +146,7 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
           {/* Knowledge Crystals */}
           <div className="crystals-display">
             <img 
-              src="/assets/algebra/KnowledgeCrystal.png" 
+              src="/algebra/KnowledgeCrystal.png" 
               alt="Knowledge Crystal" 
               className="crystal-icon"
             />
