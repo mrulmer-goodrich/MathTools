@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Header from '../Header';
-import FloatingUI from '../FloatingUI';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
 import MathWorksheet from './MathWorksheet';
