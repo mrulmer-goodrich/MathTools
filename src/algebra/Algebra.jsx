@@ -1,4 +1,4 @@
-// Algebra.jsx - COMPLETE FIX (Stats/Map as overlays to prevent remounting)
+// Algebra.jsx - FIXED: Header only shows during gameplay
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -16,8 +16,8 @@ const Algebra = () => {
   const [playMode, setPlayMode] = useState(null);
   const [currentModule, setCurrentModule] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(null);
-  const [showStats, setShowStats] = useState(false);  // CHANGED: Separate state
-  const [showMap, setShowMap] = useState(false);      // CHANGED: Separate state
+  const [showStats, setShowStats] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [progress, setProgress] = useState({
     completedLevels: [],
     badges: [],
@@ -70,7 +70,6 @@ const Algebra = () => {
     setCurrentLevel(null);
   };
 
-  // CHANGED: Show overlays instead of changing gameState
   const handleViewMap = () => {
     setShowMap(true);
   };
@@ -115,7 +114,6 @@ const Algebra = () => {
     }));
   };
 
-  // ADDED: Update current level when playing
   const handleLevelChange = (newLevelId) => {
     console.log('Level changed to:', newLevelId);
     setCurrentLevel(newLevelId);
@@ -123,7 +121,8 @@ const Algebra = () => {
 
   return (
     <div className="algebra-app">
-      {gameState !== 'difficulty' && (
+      {/* FIXED: Header ONLY shows during playing, not on menu */}
+      {gameState === 'playing' && (
         <Header 
           onViewMap={handleViewMap}
           onViewStats={handleViewStats}
@@ -138,20 +137,20 @@ const Algebra = () => {
         <DifficultySelector onSelect={handleDifficultySelect} />
       )}
 
-     {gameState === 'menu' && (
-  <BaseCamp
-    onStartGame={handleStartPlay}
-    onContinueGame={handleStartPlay}
-    onPracticeMode={handleStartPractice}
-    onExitGame={handleExitGame}
-    sessionData={{
-      hasSession: progress.completedLevels.length > 0,
-      currentLevel: getFirstIncompleteLevel(),
-      difficulty: difficulty,
-      levelsCompleted: progress.completedLevels.length
-    }}
-  />
-)}
+      {gameState === 'menu' && (
+        <BaseCamp
+          onStartGame={handleStartPlay}
+          onContinueGame={handleStartPlay}
+          onPracticeMode={handleStartPractice}
+          onExitGame={handleExitGame}
+          sessionData={{
+            hasSession: progress.completedLevels.length > 0,
+            currentLevel: getFirstIncompleteLevel(),
+            difficulty: difficulty,
+            levelsCompleted: progress.completedLevels.length
+          }}
+        />
+      )}
 
       {gameState === 'playing' && (
         <ModulePlayer
@@ -163,13 +162,12 @@ const Algebra = () => {
           stats={stats}
           setStats={setStats}
           onLevelComplete={handleLevelComplete}
-          onLevelChange={handleLevelChange}  // PASS IT DOWN
+          onLevelChange={handleLevelChange}
           onReturnToMenu={handleReturnToMenu}
           onSwitchToPlayMode={handleSwitchToPlayMode}
         />
       )}
 
-      {/* CHANGED: Render as overlays, not route changes */}
       {showMap && (
         <MapDisplay 
           progress={progress}
