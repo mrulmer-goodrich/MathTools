@@ -4,6 +4,7 @@ import AvatarSelection from './components/AvatarSelection';
 import StoryIntro from './components/StoryIntro';
 import BaseCamp from './components/BaseCamp';
 import PracticeMode from './components/PracticeMode';
+import FloatingIcons from './components/FloatingIcons';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
 import StatsPanel from './components/StatsPanel';
@@ -20,6 +21,8 @@ const Algebra = () => {
   const [currentLevel, setCurrentLevel] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
+  const [showStoryModal, setShowStoryModal] = useState(false);
   const [playerData, setPlayerData] = useState({
     name: localStorage.getItem('algebra_player_name') || '',
     avatar: localStorage.getItem('algebra_player_avatar') || null
@@ -204,6 +207,94 @@ const Algebra = () => {
           onSwitchToPlayMode={handleSwitchToPlayMode}
           playerName={playerData.name}
         />
+      )}
+
+      {!showAvatarSelection && !showStory && (
+        <FloatingIcons
+          onOpenStory={() => setShowStoryModal(true)}
+          onOpenBadges={() => setShowBadges(true)}
+          onOpenStats={handleViewStats}
+          onOpenMap={handleViewMap}
+          playerName={playerData.name}
+        />
+      )}
+
+      {showStoryModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <StoryIntro onComplete={() => setShowStoryModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {showBadges && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }} onClick={() => setShowBadges(false)}>
+          <div style={{
+            background: 'white',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '600px',
+            width: '90%'
+          }} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ 
+              fontFamily: 'Poppins, sans-serif', 
+              marginBottom: '1rem',
+              fontSize: '1.5rem',
+              fontWeight: 700
+            }}>
+              {playerData.name}'s Badges
+            </h2>
+            <p style={{ fontFamily: 'Poppins, sans-serif', marginBottom: '1.5rem' }}>
+              Earn badges by completing skill groups!
+            </p>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              {['🔢', '📦', '🧮', '⛺', '🌊', '⛰️', '🏔️', '🗝️', '🏆', '⚖️'].map((badge, i) => (
+                <div key={i} style={{
+                  fontSize: '3rem',
+                  textAlign: 'center',
+                  opacity: progress.badges?.includes(`badge-${i+1}`) ? 1 : 0.3,
+                  filter: progress.badges?.includes(`badge-${i+1}`) ? 'none' : 'grayscale(100%)'
+                }}>
+                  {badge}
+                </div>
+              ))}
+            </div>
+            <button 
+              onClick={() => setShowBadges(false)}
+              className="base-camp-tile-button"
+              style={{ width: '100%' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
 
       {showMap && (
