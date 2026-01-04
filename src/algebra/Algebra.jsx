@@ -1,10 +1,9 @@
-// Algebra.jsx - Main orchestrator with avatar, story, base camp
-// Location: src/algebra/Algebra.jsx
-
+// Algebra.jsx - Main orchestrator
 import React, { useState, useEffect } from 'react';
 import AvatarSelection from './components/AvatarSelection';
-import StoryIntro from './components/StoryIntro';  // ← ADD THIS LINE
+import StoryIntro from './components/StoryIntro';
 import BaseCamp from './components/BaseCamp';
+import PracticeMode from './components/PracticeMode';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
 import StatsPanel from './components/StatsPanel';
@@ -13,11 +12,11 @@ import './styles/algebra.css';
 
 const Algebra = () => {
   const [showAvatarSelection, setShowAvatarSelection] = useState(!localStorage.getItem('algebra_player_name'));
-  const [showStory, setShowStory] = useState(!localStorage.getItem('algebra_story_seen'));  // ← ADD THIS LINE
+  const [showStory, setShowStory] = useState(!localStorage.getItem('algebra_story_seen'));
   const [gameState, setGameState] = useState('baseCamp');
   const [difficulty, setDifficulty] = useState(null);
   const [playMode, setPlayMode] = useState(null);
-  const [currentModule, setCurrentModule] = useState(null);
+  const [currentModule, setCurrentModule] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showMap, setShowMap] = useState(false);
@@ -67,7 +66,6 @@ const Algebra = () => {
     setShowAvatarSelection(false);
   };
 
-  // ← ADD THIS FUNCTION
   const handleStoryComplete = () => {
     localStorage.setItem('algebra_story_seen', 'true');
     setShowStory(false);
@@ -75,7 +73,6 @@ const Algebra = () => {
 
   const handleStartGame = (selectedDifficulty, isContinue = false) => {
     if (!isContinue) {
-      // Starting new game - clear progress
       setDifficulty(selectedDifficulty);
       localStorage.setItem('algebra_difficulty', selectedDifficulty);
       localStorage.removeItem('algebra_current_level');
@@ -90,9 +87,7 @@ const Algebra = () => {
   };
 
   const handleStartPractice = () => {
-    setPlayMode('practice');
-    setGameState('playing');
-    setCurrentLevel(null);
+    setGameState('practice');
   };
 
   const handleViewMap = () => {
@@ -148,7 +143,6 @@ const Algebra = () => {
     return <AvatarSelection onComplete={handleAvatarComplete} />;
   }
 
-  // ← ADD THIS BLOCK
   if (showStory) {
     return <StoryIntro onComplete={handleStoryComplete} />;
   }
@@ -179,6 +173,19 @@ const Algebra = () => {
             difficulty: difficulty,
             levelsCompleted: progress.completedLevels.length
           }}
+        />
+      )}
+
+      {gameState === 'practice' && (
+        <PracticeMode
+          onSelectLevel={(levelId) => {
+            setPlayMode('practice');
+            setCurrentLevel(levelId);
+            setGameState('playing');
+          }}
+          onBackToBaseCamp={() => setGameState('baseCamp')}
+          completedLevels={progress.completedLevels}
+          playerName={playerData.name}
         />
       )}
 
