@@ -20,45 +20,35 @@ const BaseCamp = ({
     <div className="base-camp-screen">
       {/* Exit Game Button */}
       <button className="btn-exit-game" onClick={onExitGame}>
-        <span className="btn-exit-game-icon">🏠</span>
-        Exit Game
+        🏠 EXIT
       </button>
 
       {/* Main Container */}
       <div className="base-camp-container">
         {/* Title Area */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ 
-            fontSize: '3.5rem', 
+            fontSize: '3rem', 
             fontWeight: 700, 
             color: '#1F2937',
-            marginBottom: '1rem',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+            marginBottom: '0.5rem',
+            textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
           }}>
             Algebra Expedition
           </h1>
-          <p style={{ 
-            fontSize: '1.25rem', 
-            color: '#4B5563',
-            maxWidth: '600px',
-            margin: '0 auto'
-          }}>
-            Dr. Martinez's journal lies open before you. Her map shows three distinct regions. 
-            You must master each challenge to progress deeper into the mountains.
-          </p>
           
           {/* Progress Indicator */}
           {levelsCompleted > 0 && (
             <div style={{
-              marginTop: '2rem',
-              padding: '1rem 2rem',
-              background: 'rgba(16, 185, 129, 0.1)',
-              borderRadius: '0.75rem',
-              border: '2px solid rgba(16, 185, 129, 0.3)',
+              marginTop: '1rem',
+              padding: '0.5rem 1.5rem',
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '0.5rem',
+              border: '2px solid #10B981',
               display: 'inline-block'
             }}>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#059669' }}>
-                EXPEDITION PROGRESS: {levelsCompleted} / 37 LEVELS COMPLETED
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#059669' }}>
+                {levelsCompleted} / 37 COMPLETED
               </span>
             </div>
           )}
@@ -70,31 +60,28 @@ const BaseCamp = ({
           <div 
             className="base-camp-tile"
             onClick={hasSession ? onContinueGame : onStartGame}
+            style={{ minHeight: '200px', padding: '2rem' }}
           >
             <div className="base-camp-tile-icon">📍</div>
-            <h2 className="base-camp-tile-title">Game Mode</h2>
-            <p className="base-camp-tile-subtitle">
-              Follow Dr. Martinez's path. Master each challenge to unlock the next. 
-              Earn badges as you progress through the expedition.
+            <h2 className="base-camp-tile-title" style={{ fontSize: '1.75rem' }}>Game Mode</h2>
+            <p className="base-camp-tile-subtitle" style={{ fontSize: '0.875rem' }}>
+              Sequential challenges
             </p>
 
             {hasSession ? (
               <>
-                <div className="base-camp-session-info">
-                  <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>
-                    Session in Progress
-                  </div>
-                  <div>
-                    {currentLevel} • {difficulty === 'easy' ? 'Standard Route' : 'Advanced Route'}
+                <div className="base-camp-session-info" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
+                  <div style={{ fontWeight: 700 }}>
+                    {currentLevel} • {difficulty === 'easy' ? 'Standard' : 'Advanced'}
                   </div>
                 </div>
-                <button className="base-camp-tile-button">
-                  Continue Journey →
+                <button className="base-camp-tile-button" style={{ marginTop: '1rem', padding: '0.75rem 1.5rem' }}>
+                  Continue →
                 </button>
               </>
             ) : (
-              <button className="base-camp-tile-button">
-                Start New Journey →
+              <button className="base-camp-tile-button" style={{ marginTop: '2.5rem', padding: '0.75rem 1.5rem' }}>
+                Start →
               </button>
             )}
           </div>
@@ -103,33 +90,18 @@ const BaseCamp = ({
           <div 
             className="base-camp-tile"
             onClick={onPracticeMode}
+            style={{ minHeight: '200px', padding: '2rem' }}
           >
             <div className="base-camp-tile-icon">🎯</div>
-            <h2 className="base-camp-tile-title">Practice Mode</h2>
-            <p className="base-camp-tile-subtitle">
-              Review any level you've encountered. Practice without pressure. 
-              Perfect for reinforcement and skill building.
+            <h2 className="base-camp-tile-title" style={{ fontSize: '1.75rem' }}>Practice Mode</h2>
+            <p className="base-camp-tile-subtitle" style={{ fontSize: '0.875rem' }}>
+              Free practice
             </p>
 
-            <button className="base-camp-tile-button" style={{ marginTop: '3.375rem' }}>
-              Practice Skills →
+            <button className="base-camp-tile-button" style={{ marginTop: '2.5rem', padding: '0.75rem 1.5rem' }}>
+              Practice →
             </button>
           </div>
-        </div>
-
-        {/* Additional Info */}
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '3rem',
-          fontSize: '0.875rem',
-          color: '#6B7280'
-        }}>
-          <p>
-            <strong>Standard Route:</strong> Building solid foundations • Whole numbers only • Clear, straightforward problems
-          </p>
-          <p style={{ marginTop: '0.5rem' }}>
-            <strong>Advanced Route:</strong> Seeking a challenge • Fractions and decimals • Multiple variables • Grade-level rigor
-          </p>
         </div>
       </div>
     </div>
