@@ -1,10 +1,12 @@
-// PracticeMode.jsx - FIXED: Readable headers, spacing, completion indicator
+// PracticeMode.jsx - WITH DIFFICULTY TOGGLE PILL
 // Location: src/algebra/components/PracticeMode.jsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/algebra.css';
 
 const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, playerName }) => {
+  // Track current difficulty selection (applies to all levels until changed)
+  const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   
   const levelGroups = [
     {
@@ -106,16 +108,13 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
     }
   ];
 
+  const handleLevelClick = (levelId) => {
+    // Pass both levelId and current difficulty
+    onSelectLevel(levelId, selectedDifficulty);
+  };
+
   return (
-    <div className="base-camp-screen" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflowY: 'auto',
-      overflowX: 'hidden'
-    }}>
+    <div className="base-camp-screen">
       <button className="btn-back-base" onClick={onBackToBaseCamp}>
         ← Back to Base Camp
       </button>
@@ -123,53 +122,193 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '6rem 2rem 2rem'
+        padding: '2rem'
       }}>
-        <div className="practice-mode-header">
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: 700,
-            color: '#1F2937',
-            marginBottom: 0,
-            fontFamily: 'Poppins, sans-serif',
-            textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
+        <h1 style={{
+          textAlign: 'center',
+          fontSize: '2.5rem',
+          fontWeight: 700,
+          color: '#1F2937',
+          marginBottom: '0.5rem',
+          fontFamily: 'Poppins, sans-serif',
+          textShadow: '2px 2px 4px rgba(255,255,255,0.8)'
+        }}>
+          Practice Mode
+        </h1>
+
+        <p style={{
+          textAlign: 'center',
+          fontSize: '1rem',
+          color: '#6B7280',
+          marginBottom: '1rem',
+          fontFamily: 'Poppins, sans-serif'
+        }}>
+          All 37 levels available for practice
+        </p>
+
+        {/* DIFFICULTY TOGGLE PILL */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '2rem'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            background: '#F3F4F6',
+            borderRadius: '9999px',
+            padding: '0.25rem',
+            gap: '0.25rem',
+            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
           }}>
-            Practice Mode
-          </h1>
+            <button
+              onClick={() => setSelectedDifficulty('easy')}
+              style={{
+                padding: '0.5rem 1.5rem',
+                borderRadius: '9999px',
+                border: 'none',
+                fontFamily: 'Poppins, sans-serif',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                background: selectedDifficulty === 'easy' 
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : 'transparent',
+                color: selectedDifficulty === 'easy' ? 'white' : '#6B7280',
+                boxShadow: selectedDifficulty === 'easy' 
+                  ? '0 2px 8px rgba(16, 185, 129, 0.4)'
+                  : 'none'
+              }}
+            >
+              📍 Standard Route
+            </button>
+            <button
+              onClick={() => setSelectedDifficulty('notEasy')}
+              style={{
+                padding: '0.5rem 1.5rem',
+                borderRadius: '9999px',
+                border: 'none',
+                fontFamily: 'Poppins, sans-serif',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                background: selectedDifficulty === 'notEasy' 
+                  ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'
+                  : 'transparent',
+                color: selectedDifficulty === 'notEasy' ? 'white' : '#6B7280',
+                boxShadow: selectedDifficulty === 'notEasy' 
+                  ? '0 2px 8px rgba(245, 158, 11, 0.4)'
+                  : 'none'
+              }}
+            >
+              ⚡ Advanced Route
+            </button>
+          </div>
         </div>
 
-        {levelGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="practice-section">
-            <div className="practice-section-header">
-              <span className="badge-emoji">{group.badge}</span>
-              <span>{group.name}</span>
-            </div>
+        {/* Current difficulty indicator (subtle) */}
+        <p style={{
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          color: '#9CA3AF',
+          marginBottom: '2rem',
+          fontFamily: 'Poppins, sans-serif'
+        }}>
+          {selectedDifficulty === 'easy' 
+            ? 'Whole numbers, clear problems, variable always x' 
+            : 'Fractions, decimals, multiple variables, grade-level rigor'}
+        </p>
 
-            <div className="practice-tiles-grid">
+        {levelGroups.map((group, groupIndex) => (
+          <div key={groupIndex} style={{ marginBottom: '2.5rem' }}>
+            <h2 style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#1F2937',
+              marginBottom: '1rem',
+              fontFamily: 'Poppins, sans-serif',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <span>{group.badge}</span>
+              <span>{group.name}</span>
+            </h2>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: '1rem'
+            }}>
               {group.levels.map((level) => {
                 const isCompleted = completedLevels.includes(level.id);
                 
                 return (
                   <div
                     key={level.id}
-                    onClick={() => onSelectLevel(level.id)}
-                    className={`practice-tile ${isCompleted ? 'completed' : ''}`}
+                    onClick={() => handleLevelClick(level.id)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.95)',
+                      border: `3px solid ${isCompleted ? '#10B981' : '#E5E7EB'}`,
+                      borderRadius: '0.75rem',
+                      padding: '1.25rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      minHeight: '120px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
+                      e.currentTarget.style.borderColor = isCompleted ? '#059669' : '#10B981';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = isCompleted ? '#10B981' : '#E5E7EB';
+                    }}
                   >
                     {isCompleted && (
-                      <div className="practice-tile-completion">
+                      <div style={{
+                        position: 'absolute',
+                        top: '0.75rem',
+                        right: '0.75rem',
+                        fontSize: '1.5rem',
+                        color: '#10B981'
+                      }}>
                         ✓
                       </div>
                     )}
 
-                    <div className="practice-tile-level-num">
+                    <div style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#10B981',
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Poppins, sans-serif',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
                       Level {level.id.split('-')[1]}
                     </div>
 
-                    <div className="practice-tile-name">
+                    <div style={{
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
+                      color: '#1F2937',
+                      marginBottom: '0.5rem',
+                      fontFamily: 'Poppins, sans-serif'
+                    }}>
                       {level.name}
                     </div>
 
-                    <div className="practice-tile-skill">
+                    <div style={{
+                      fontSize: '0.875rem',
+                      color: '#6B7280',
+                      fontFamily: 'Poppins, sans-serif',
+                      lineHeight: 1.4
+                    }}>
                       {level.skill}
                     </div>
                   </div>
