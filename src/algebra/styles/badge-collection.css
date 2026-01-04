@@ -1,108 +1,214 @@
-/* Compact Header Display */
-.badge-collection-compact {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
+/* badge-collection.css - BadgeCollection Specific Styles */
+/* Location: src/algebra/styles/badge-collection.css */
 
-.badge-icon-small {
-  width: 32px;
-  height: 32px;
-  position: relative;
-}
+@import 'modal-system.css';
 
-.badge-icon-small img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
+/* ========== CRYSTALS BANNER ========== */
 
-.badge-emoji-fallback {
-  display: none;
-  font-size: 24px;
-}
-
-/* Full Collection Display */
-.badge-collection-full {
-  padding: 20px;
-  background: #f8f9fa;
+.crystals-banner {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 2px solid #FDE68A;
   border-radius: 12px;
-}
-
-.badge-collection-full h2 {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 20px;
-}
-
-.badge-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
   gap: 16px;
 }
 
-.badge-card {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+.crystal-icon-large {
+  font-size: 3.5rem;
+  flex-shrink: 0;
 }
 
-.badge-card.earned {
-  transform: scale(1);
+.crystal-details {
+  flex: 1;
 }
 
-.badge-card.earned:hover {
-  transform: scale(1.05);
-}
-
-.badge-card.locked {
-  opacity: 0.4;
-  filter: grayscale(100%);
-}
-
-.badge-card.special {
-  background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
-  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
-}
-
-.badge-icon {
-  font-size: 48px;
-  margin-bottom: 8px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.badge-icon img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.badge-locked {
-  font-size: 32px;
-}
-
-.badge-name {
-  font-weight: bold;
-  font-size: 14px;
-  color: #2c3e50;
+.crystal-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #92400E;
+  font-family: 'Poppins', sans-serif;
   margin-bottom: 4px;
 }
 
-.badge-level {
-  font-size: 12px;
-  color: #7f8c8d;
+.crystal-subtitle {
+  font-size: 0.875rem;
+  color: #78350F;
 }
 
-@media (max-width: 600px) {
-  .badge-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+/* ========== ARTIFACTS HEADER ========== */
+
+.artifacts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.artifacts-header h3 {
+  color: #1F2937;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+}
+
+.artifacts-count {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.artifacts-description {
+  color: #6B7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* ========== ARTIFACTS GRID ========== */
+
+.artifacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.artifact-card {
+  background: white;
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.artifact-card.earned {
+  border-color: #D1FAE5;
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+}
+
+.artifact-card.earned:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
+  border-color: #10B981;
+}
+
+.artifact-card.locked {
+  border-color: #E5E7EB;
+  background: #F9FAFB;
+}
+
+.artifact-card.locked:hover {
+  border-color: #D1D5DB;
+}
+
+/* ========== ARTIFACT ICON ========== */
+
+.artifact-icon {
+  font-size: 3.5rem;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.artifact-emoji {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.artifact-locked {
+  font-size: 2.5rem;
+  opacity: 0.3;
+}
+
+/* ========== ARTIFACT INFO ========== */
+
+.artifact-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #1F2937;
+  margin-bottom: 6px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.artifact-skill {
+  font-size: 0.75rem;
+  color: #6B7280;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+/* ========== ARTIFACT PROGRESS ========== */
+
+.artifact-progress {
+  margin-top: 12px;
+}
+
+.artifact-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #E5E7EB;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.artifact-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+  transition: width 0.5s ease;
+  border-radius: 3px;
+}
+
+.artifact-progress-text {
+  font-size: 0.7rem;
+  color: #6B7280;
+  font-weight: 600;
+}
+
+/* ========== EARNED BADGE ========== */
+
+.artifact-earned-badge {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+  .artifacts-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
+  }
+
+  .artifact-icon {
+    font-size: 3rem;
+    height: 70px;
+  }
+
+  .crystals-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .artifacts-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
