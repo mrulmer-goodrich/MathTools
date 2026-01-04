@@ -903,7 +903,7 @@ h1, h2, h3, h4, h5, h6 {
 .term-chip {
   padding: var(--space-2) var(--space-4);
   font-family: var(--font-primary);
-  font-size: 1.15rem;
+  font-size: 1.15rem !important;  /* Standardized - no overrides */
   font-weight: 700;
   background: white;
   color: var(--color-gray-900);
@@ -935,9 +935,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .term-chip.choice-chip {
-  min-width: 100px;
-  font-size: 1.2rem;
+  min-width: 120px;  /* Slightly wider for final answers */
   padding: var(--space-3) var(--space-5);
+  /* font-size removed - uses standard 1.15rem */
+}
+
+/* Grid layout for Row 2 choices - evenly spaced */
+.worksheet-choices .term-bank-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: var(--space-3);
+  justify-items: center;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .term-chip.used {
