@@ -1,8 +1,8 @@
-// Algebra.jsx - FIXED: Header only shows during gameplay
+// Algebra.jsx - COMPLETE with new components
 // Location: src/algebra/Algebra.jsx
 
 import React, { useState, useEffect } from 'react';
-import DifficultySelector from './components/DifficultySelector';
+import DifficultySelection from './components/DifficultySelection';
 import BaseCamp from './components/BaseCamp';
 import ModulePlayer from './components/ModulePlayer';
 import Header from './components/Header';
@@ -115,13 +115,11 @@ const Algebra = () => {
   };
 
   const handleLevelChange = (newLevelId) => {
-    console.log('Level changed to:', newLevelId);
     setCurrentLevel(newLevelId);
   };
 
   return (
     <div className="algebra-app">
-      {/* FIXED: Header ONLY shows during playing, not on menu */}
       {gameState === 'playing' && (
         <Header 
           onViewMap={handleViewMap}
@@ -134,7 +132,7 @@ const Algebra = () => {
       )}
 
       {gameState === 'difficulty' && (
-        <DifficultySelector onSelect={handleDifficultySelect} />
+        <DifficultySelection onSelectDifficulty={handleDifficultySelect} />
       )}
 
       {gameState === 'menu' && (
