@@ -1,16 +1,12 @@
-// LevelPlayer.jsx - FINAL VERSION
-// Full-width backgrounds, new header, floating UI
-// Location: src/algebra/components/LevelPlayer.jsx
-
+// LevelPlayer.jsx - Fixed and cleaned
 import React, { useState, useEffect } from 'react';
-import Header from '../Header';
+import LevelIntro from './LevelIntro';
 import ProblemDisplay from './ProblemDisplay';
 import ClickToSelect from './InputMethods/ClickToSelect';
 import MathWorksheet from './MathWorksheet';
 import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
-import StatsPanel from '../StatsPanel';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
 
@@ -24,11 +20,11 @@ const LevelPlayer = ({
   onLevelComplete,
   onReturnToMenu 
 }) => {
+  const [showIntro, setShowIntro] = useState(true);
   const [currentProblem, setCurrentProblem] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [levelComplete, setLevelComplete] = useState(false);
@@ -45,8 +41,16 @@ const LevelPlayer = ({
   const region = getRegion(levelId);
 
   useEffect(() => {
-    generateNewProblem();
+    setShowIntro(true);
+    setCorrectStreak(0);
+    setLevelComplete(false);
   }, [levelId]);
+
+  useEffect(() => {
+    if (!showIntro) {
+      generateNewProblem();
+    }
+  }, [showIntro]);
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
@@ -154,42 +158,133 @@ const LevelPlayer = ({
     onReturnToMenu();
   };
 
+  // Show intro first
+  if (showIntro) {
+    return (
+      <LevelIntro
+        levelData={{ id: levelId, name: level.name }}
+        onContinue={() => setShowIntro(false)}
+      />
+    );
+  }
+
   if (!currentProblem) {
     return <div className="loading">Generating problem...</div>;
   }
 
   if (levelComplete) {
     return (
-      <div className="level-complete" data-region={region}>
-        <div className="completion-container">
-          <div className="completion-icon">🎉</div>
-          <h2>Level Complete!</h2>
-          <h3>{level.name}</h3>
-          
-          {level.badge && (
-            <div className="badge-earned">
-              <p><strong>Badge Earned!</strong></p>
-              <div className="badge-display">🏆 {level.badge}</div>
-            </div>
-          )}
+      <div className="level-player" data-region={region}>
+        <div className="level-content">
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.98)',
+            borderRadius: '1rem',
+            padding: '3rem',
+            maxWidth: '600px',
+            margin: '0 auto',
+            textAlign: 'center',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+            border: '3px solid #10B981'
+          }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
+            <h2 style={{ 
+              fontSize: '2rem', 
+              fontWeight: 700, 
+              marginBottom: '0.5rem',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              Level Complete!
+            </h2>
+            <h3 style={{ 
+              fontSize: '1.5rem', 
+              color: '#6B7280', 
+              marginBottom: '2rem',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              {level.name}
+            </h3>
+            
+            {level.badge && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '2px solid #F59E0B',
+                borderRadius: '0.75rem',
+                padding: '1.5rem',
+                marginBottom: '2rem'
+              }}>
+                <p style={{ 
+                  fontWeight: 700, 
+                  marginBottom: '0.5rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  Badge Earned!
+                </p>
+                <div style={{ fontSize: '3rem' }}>🏆</div>
+              </div>
+            )}
 
-          <div className="completion-stats">
-            <div>
-              <strong>{level.problemsRequired}</strong>
-              <div style={{fontSize: '0.85rem', color: '#666'}}>Problems Solved</div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '1.5rem',
+              marginBottom: '2rem'
+            }}>
+              <div style={{
+                background: '#F9FAFB',
+                borderRadius: '0.5rem',
+                padding: '1rem'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 700, 
+                  color: '#10B981',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {level.problemsRequired}
+                </div>
+                <div style={{ 
+                  fontSize: '0.875rem', 
+                  color: '#6B7280',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  Problems Solved
+                </div>
+              </div>
+              <div style={{
+                background: '#F9FAFB',
+                borderRadius: '0.5rem',
+                padding: '1rem'
+              }}>
+                <div style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: 700, 
+                  color: '#10B981',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {correctStreak}
+                </div>
+                <div style={{ 
+                  fontSize: '0.875rem', 
+                  color: '#6B7280',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  Final Streak
+                </div>
+              </div>
             </div>
-            <div>
-              <strong>{correctStreak}</strong>
-              <div style={{fontSize: '0.85rem', color: '#666'}}>Final Streak</div>
-            </div>
+
+            <button 
+              className="base-camp-tile-button"
+              onClick={handleContinueFromComplete}
+              style={{ 
+                width: '100%', 
+                padding: '1rem',
+                fontFamily: 'Poppins, sans-serif'
+              }}
+            >
+              {playMode === 'practice' ? 'Back to Practice →' : 'Continue Expedition →'}
+            </button>
           </div>
-
-          <button 
-            className="btn-continue-expedition"
-            onClick={handleContinueFromComplete}
-          >
-            {level.moduleBadge ? 'Continue Expedition' : 'Next Level'} →
-          </button>
         </div>
       </div>
     );
@@ -199,20 +294,11 @@ const LevelPlayer = ({
 
   return (
     <div className="level-player" data-region={region}>
-      <Header 
-        onReturnToMenu={onReturnToMenu}
-        currentLevel={levelId}
-        levelName={level.name}
-      />
+      <button className="btn-back-base" onClick={onReturnToMenu}>
+        ← Back to Base Camp
+      </button>
 
-
-      <FloatingUI
-  onViewStats={() => setShowStats(true)}
-  onViewMap={null} 
-  badges={progress?.badges || []}
-/>
-
-      <div className="level-content-container">
+      <div className="level-content">
         <ProgressTracker 
           current={correctStreak} 
           required={level.problemsRequired} 
@@ -249,14 +335,6 @@ const LevelPlayer = ({
           onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
           selectedAnswer={selectedAnswer}
-        />
-      )}
-
-      {showStats && (
-        <StatsPanel
-          stats={stats}
-          progress={progress}
-          onClose={() => setShowStats(false)}
         />
       )}
     </div>
