@@ -1658,7 +1658,8 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
     add(formatWithSign(v));
   }
   
-  return bank;
+  // Shuffle the bank so correct terms aren't always first
+  return bank.sort(() => Math.random() - 0.5);
 };
 
 // Create two-row staged specification
