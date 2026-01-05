@@ -2014,21 +2014,15 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
         return {
-          problem, displayProblem: problem, answer, choices, staged,
           explanation: {
             originalProblem: problem,
-            steps: [
-              { description: `Distribute ${outside}`, work: `` },
-              { description: `Combine like terms`, work: answer }
-            ],
-          rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
             steps: [
               { description: `Distribute ${outside}`, work: row1Terms.join(' ') },
               { description: 'Combine like terms', work: answer }
             ],
+            rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
             finalAnswer: answer
           }
-        };
       }
     } else {
       const skeletons = ['-a(v+b)+cv', '-a(v-b)+cv', 'cv-a(v+b)', '-a(v+b)-cv'];
@@ -2165,18 +2159,14 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         
         return {
           problem, displayProblem: problem, answer, choices, staged,
-          explanation: {
+         explanation: {
             originalProblem: problem,
-            steps: [
-              { description: `Distribute`, work: `` },
-              { description: `Combine like terms`, work: answer }
-            ],
-            rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!',
             steps: [
               { description: `Distribute ${outside}`, work: row1Terms.slice(0, 2).join(' ') },
               { description: 'Add standalone terms', work: row1Terms.join(' ') },
               { description: 'Combine like terms', work: answer }
             ],
+            rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!',
             finalAnswer: answer
           }
         };
@@ -4133,12 +4123,12 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       
       const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
       
-      // FIXED: Removed duplicate-creating distractor
+      // FIXED: Better misconceptions that avoid duplicates
       const row2Choices = [
         answer,
-        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // Didn't combine x terms
+        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Didn't combine constants
         formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant instead of distributed
-        formatCoefficient(finalCoef, 'x') + ' + ' + (distConst + standaloneAbs) // Combined constant wrong
+        formatCoefficient(distVarCoef + standaloneAbs, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst) // Added standalone to coefficient instead of constant
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
@@ -4420,12 +4410,11 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
           },
           explanation: {
             originalProblem: problem,
-            steps: [],
-                        rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
             steps: [
               { description: 'Distribute', work: row1Expected.join(' ') },
               { description: 'Combine like terms', work: answer }
             ],
+            rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
             finalAnswer: answer
           }
         };
