@@ -1610,20 +1610,20 @@ const buildRow1Terms = ({
   
   // Distribute to variable term (coefficient assumed 1 inside parentheses for L13-16)
   const distVarCoef = outside * 1;
-  terms.push(formatCoefficient(distVarCoef, variable));
+  terms.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
   
   // Distribute to constant inside parentheses
   const distConst = insideOp === '-' ? outside * (-insideConst) : outside * insideConst;
-  terms.push(String(distConst));
+  terms.push(formatWithSign(distConst));
   
   // Standalone variable term after parentheses
   if (standaloneCoef !== 0) {
-    terms.push(formatCoefficient(standaloneCoef, variable));
+    terms.push(formatWithSign(formatCoefficient(standaloneCoef, variable)));
   }
   
   // Trailing constant
   if (trailingConst !== 0) {
-    terms.push(String(trailingConst));
+    terms.push(formatWithSign(trailingConst));
   }
   
   return terms;
