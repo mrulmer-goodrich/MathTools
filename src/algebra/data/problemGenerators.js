@@ -1467,11 +1467,11 @@ export const generateSubtractLikeTermsProblem = (difficulty) => {
       const answer = formatCoefficient(combined, 'x');
 
       const choices = [
-        answer,
-        formatCoefficient(Math.abs(coef1) + Math.abs(coef2), 'x'), // Added instead of subtracted
-        problem, // Didn't combine
-        formatCoefficient(-combined, 'x') // Wrong sign
-      ];
+  answer,
+  formatCoefficient(Math.abs(coef1) + Math.abs(coef2), 'x'), // Added instead of subtracted
+  formatCoefficient(coef1, 'x'), // Didn't combine at all - just first term
+  formatCoefficient(-combined, 'x') // Wrong sign
+];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2 });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
