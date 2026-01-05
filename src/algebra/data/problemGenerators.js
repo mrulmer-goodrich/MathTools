@@ -2021,7 +2021,11 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
               { description: `Distribute ${outside}`, work: `` },
               { description: `Combine like terms`, work: answer }
             ],
-            rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
+          rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
+            steps: [
+              { description: `Distribute ${outside}`, work: row1Terms.join(' ') },
+              { description: 'Combine like terms', work: answer }
+            ],
             finalAnswer: answer
           }
         };
@@ -2081,7 +2085,9 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
+        const fallbackRow1 = [formatWithSign(formatCoefficient(-2, 'x')), formatWithSign(-4), formatWithSign(formatCoefficient(standaloneTerm, 'x'))];
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute -2', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
+        
       }
     }
   }
@@ -2166,6 +2172,11 @@ export const generateComplexSimplifyProblem = (difficulty) => {
               { description: `Combine like terms`, work: answer }
             ],
             rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!',
+            steps: [
+              { description: `Distribute ${outside}`, work: row1Terms.slice(0, 2).join(' ') },
+              { description: 'Add standalone terms', work: row1Terms.join(' ') },
+              { description: 'Combine like terms', work: answer }
+            ],
             finalAnswer: answer
           }
         };
@@ -2214,8 +2225,9 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
-      }
+        const fallbackRow1 = [formatWithSign(formatCoefficient(3, 'x')), formatWithSign(6), formatWithSign(formatCoefficient(2, 'x')), formatWithSign(5)];
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute 3', work: '+3x +6' }, { description: 'Add standalone terms', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
+ }
     }
   }
   
@@ -4369,13 +4381,14 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
       }
       
       const finalCoef = distVarCoef + standaloneCoef;
-      const answer = formatCoefficient(finalCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst);
+      const finalConst = distConst;
+      const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
       
       const row2Choices = [
         answer,
-        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Didn't combine x terms
-        formatCoefficient(finalCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Wrong constant - didn't subtract inside
-        formatCoefficient(outsidePos + Math.abs(standaloneCoef), 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst) // Added coefficients instead of distributing
+        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // Didn't combine x terms
+        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant instead of distributed
+        formatCoefficient(outsidePos + Math.abs(standaloneCoef), 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst) // Added coefficients instead of distributing
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
@@ -4408,7 +4421,11 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
           explanation: {
             originalProblem: problem,
             steps: [],
-            rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
+                        rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
+            steps: [
+              { description: 'Distribute', work: row1Expected.join(' ') },
+              { description: 'Combine like terms', work: answer }
+            ],
             finalAnswer: answer
           }
         };
