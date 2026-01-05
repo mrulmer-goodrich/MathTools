@@ -1,6 +1,6 @@
 // StackedEquation.jsx - Properly formatted stacked equations for feedback
 import React from 'react';
-import '../../styles/algebra.css';
+import '../styles/algebra.css';
 
 const StackedEquation = ({ steps }) => {
   return (
