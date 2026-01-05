@@ -2231,7 +2231,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
          const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [formatWithSign(formatCoefficient(outside, 'x')), formatWithSign(insideTerm), formatWithSign(distributedConstant + constantMag)],
-
+});
   const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
