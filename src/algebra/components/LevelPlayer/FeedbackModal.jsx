@@ -1,33 +1,49 @@
-// FeedbackModal.jsx - FIXED: Handle explanation object/string properly
+// FeedbackModal.jsx - COMPREHENSIVE FIX: Visual steps + staged mode support
 // Location: src/algebra/components/FeedbackModal.jsx
 
 import React from 'react';
+import StackedEquation from '../StackedEquation';
 import '../../styles/algebra.css';
 
 const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer }) => {
   // SAFETY: Handle explanation as object or string
-  const getExplanationText = () => {
-    if (!explanation) return 'Review the problem and try again.';
-    
-    // If explanation is a string, return it
-    if (typeof explanation === 'string') return explanation;
-    
-    // If explanation has steps (old format), extract text
-    if (explanation.steps && Array.isArray(explanation.steps)) {
-      return explanation.steps
-        .map(step => step.description || step.work || '')
-        .filter(Boolean)
-        .join('\n');
+  const getExplanationContent = () => {
+    if (!explanation) {
+      return {
+        rule: 'Review the problem and try again.',
+        hasSteps: false,
+        steps: null
+      };
     }
     
-    // If explanation has a rule property
-    if (explanation.rule) return explanation.rule;
+    // If explanation is a string, return it as rule
+    if (typeof explanation === 'string') {
+      return {
+        rule: explanation,
+        hasSteps: false,
+        steps: null
+      };
+    }
     
-    // Fallback
-    return 'Check your work and try again.';
+    // If explanation is an object, extract rule and steps
+    const rule = explanation.rule || 'Check your work and try again.';
+    const steps = explanation.steps && Array.isArray(explanation.steps) && explanation.steps.length > 0
+      ? explanation.steps
+      : null;
+    
+    return {
+      rule,
+      hasSteps: !!steps,
+      steps
+    };
   };
 
-  const explanationText = getExplanationText();
+  const { rule, hasSteps, steps } = getExplanationContent();
+
+  // Determine if we should show answer comparison
+  // ENHANCED: Always show correct answer, even in staged mode
+  const showAnswerComparison = correctAnswer !== null;
+  const showSelectedAnswer = selectedAnswer !== null;
 
   return (
     <div style={{
@@ -54,6 +70,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
         border: '3px solid #EF4444'
       }}>
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>❌</div>
           <h2 style={{
@@ -67,47 +84,51 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           </h2>
         </div>
 
-        {selectedAnswer !== null && correctAnswer !== null && (
+        {/* Answer Comparison - ENHANCED for staged mode */}
+        {showAnswerComparison && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
             gap: '1rem',
             marginBottom: '1.5rem'
           }}>
-            <div style={{
-              background: '#FEE2E2',
-              border: '2px solid #EF4444',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              textAlign: 'center'
-            }}>
+            {showSelectedAnswer && (
               <div style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#991B1B',
-                marginBottom: '0.5rem',
-                fontFamily: 'Poppins, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
+                background: '#FEE2E2',
+                border: '2px solid #EF4444',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+                textAlign: 'center'
               }}>
-                Your Answer
+                <div style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#991B1B',
+                  marginBottom: '0.5rem',
+                  fontFamily: 'Poppins, sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  Your Answer
+                </div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: '#DC2626',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  {selectedAnswer}
+                </div>
               </div>
-              <div style={{
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                color: '#DC2626',
-                fontFamily: 'Poppins, sans-serif'
-              }}>
-                {selectedAnswer}
-              </div>
-            </div>
+            )}
 
             <div style={{
               background: '#D1FAE5',
               border: '2px solid #10B981',
               borderRadius: '0.5rem',
               padding: '1rem',
-              textAlign: 'center'
+              textAlign: 'center',
+              gridColumn: showSelectedAnswer ? 'auto' : '1 / -1'
             }}>
               <div style={{
                 fontSize: '0.75rem',
@@ -132,12 +153,13 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           </div>
         )}
 
+        {/* Rule Section - Always show the intro rule */}
         <div style={{
           background: '#FFFBEB',
           border: '2px solid #F59E0B',
           borderRadius: '0.75rem',
           padding: '1.5rem',
-          marginBottom: '1.5rem'
+          marginBottom: hasSteps ? '1.5rem' : '1.5rem'
         }}>
           <div style={{
             display: 'flex',
@@ -145,7 +167,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             gap: '0.5rem',
             marginBottom: '0.75rem'
           }}>
-            <span style={{ fontSize: '1.25rem' }}>📝</span>
+            <span style={{ fontSize: '1.25rem' }}>📖</span>
             <span style={{
               fontWeight: 700,
               color: '#92400E',
@@ -154,7 +176,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
               letterSpacing: '0.05em',
               fontFamily: 'Poppins, sans-serif'
             }}>
-              Explanation
+              Key Rule
             </span>
           </div>
           <div style={{
@@ -164,10 +186,42 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             fontSize: '1rem',
             whiteSpace: 'pre-wrap'
           }}>
-            {explanationText}
+            {rule}
           </div>
         </div>
 
+        {/* Steps Section - Visual rendering if available */}
+        {hasSteps && (
+          <div style={{
+            background: '#F3F4F6',
+            border: '2px solid #9CA3AF',
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '1rem'
+            }}>
+              <span style={{ fontSize: '1.25rem' }}>🔢</span>
+              <span style={{
+                fontWeight: 700,
+                color: '#374151',
+                fontSize: '0.875rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                fontFamily: 'Poppins, sans-serif'
+              }}>
+                Step-by-Step Solution
+              </span>
+            </div>
+            <StackedEquation steps={steps} />
+          </div>
+        )}
+
+        {/* Continue Button */}
         <button
           onClick={onContinue}
           className="base-camp-tile-button"
