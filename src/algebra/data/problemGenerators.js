@@ -1655,7 +1655,7 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
   // Pad with random integers (checking for equivalents)
   while (bank.length < padTo) {
     const v = randomInt(1, 60) * (Math.random() < 0.5 ? -1 : 1);
-    add(String(v));
+    add(formatWithSign(v));
   }
   
   return bank;
@@ -2008,8 +2008,8 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(-outside, 'x'), String(-distributedConstant), formatCoefficient(standaloneTerm - outside, 'x')],
-          padTo: 12
+                   distractorTerms: [formatWithSign(formatCoefficient(-outside, 'x')), formatWithSign(-distributedConstant), formatWithSign(formatCoefficient(standaloneTerm - outside, 'x'))],
+        padTo: 12
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
@@ -2091,7 +2091,10 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
+   const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [formatWithSign(formatCoefficient(-outside, 'x')), formatWithSign(-distributedConstant), formatWithSign(formatCoefficient(standaloneTerm - outside, 'x'))],
+
   const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
@@ -2152,8 +2155,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(insideTerm), String(distributedConstant + constantMag), formatCoefficient(totalXCoef, 'x')],
-          padTo: 14
+                distractorTerms: [formatWithSign(formatCoefficient(outside, 'x')), formatWithSign(insideTerm), formatWithSign(distributedConstant + constantMag), formatWithSign(formatCoefficient(totalXCoef, 'x'))],
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
@@ -2226,7 +2228,10 @@ export const generateComplexSimplifyProblem = (difficulty) => {
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constant}`;
   const choices = ensureFourChoices([answer], answer);
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm, trailingConst: -constant });
-  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 12 });
+         const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [formatWithSign(formatCoefficient(outside, 'x')), formatWithSign(insideTerm), formatWithSign(distributedConstant + constantMag)],
+
   const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
