@@ -2223,12 +2223,17 @@ export const generateComplexSimplifyProblem = (difficulty) => {
     }
   }
   
-  const outside = randomInt(2, 12), insideTerm = randomInt(1, 12), standaloneTerm = randomInt(1, 12), constant = randomInt(1, 12);
-  const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm - constant);
-  const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constant}`;
-  const choices = ensureFourChoices([answer], answer);
- 
-  const row1Terms = buildRow1Terms({
+// Fallback after MAX_RETRIES
+const outside = randomInt(2, 12);
+const insideTerm = randomInt(1, 12);
+const standaloneTerm = randomInt(1, 12);
+const constant = randomInt(1, 12);
+const distributedConstant = outside * insideTerm;
+const answer = formatAnswer(outside + standaloneTerm, 'x', distributedConstant - constant);
+const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constant}`;
+const choices = ensureFourChoices([answer], answer);
+
+const row1Terms = buildRow1Terms({
   outside,
   variable: 'x',
   insideConst: insideTerm,
@@ -2242,13 +2247,13 @@ const row1Bank = buildTermBank({
   distractorTerms: [
     formatWithSign(formatCoefficient(outside, 'x')),
     formatWithSign(insideTerm),
-    formatWithSign(distributedConstant + constantMag),
+    formatWithSign(distributedConstant + constant),
   ],
 });
 
 const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
 
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
 
