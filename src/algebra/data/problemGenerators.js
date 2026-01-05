@@ -1992,13 +1992,12 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       const totalXCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
-     const misconceptions = [
+           const misconceptions = [
         answer,
         canonicalizeExpression(distributedCoef, 'x', distributedConstant + standaloneTerm, false), // Combined wrong terms
-        canonicalizeExpression(totalXCoef, 'x', insideTerm, false), // Used inside constant
+        canonicalizeExpression(totalXCoef, 'x', insideTerm, false), // Used inside constant instead of distributed
         canonicalizeExpression(-distributedCoef, 'x', distributedConstant, false), // Flipped only variable coefficient
-        canonicalizeExpression(distributedCoef, 'x', -distributedConstant, false), // Flipped only constant
-        canonicalizeExpression(Math.abs(outside) + standaloneCoef, 'x', Math.abs(distributedConstant), false) // Forgot negative affects both terms
+        canonicalizeExpression(distributedCoef, 'x', -distributedConstant, false) // Flipped only constant
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outsideMag, insideTerm, standaloneTerm });
@@ -2137,15 +2136,13 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       const totalConstant = distributedConstant + trailingConst;
       
       const answer = formatAnswer(totalXCoef, 'x', totalConstant);
-      const misconceptions = [
+         const misconceptions = [
         answer,
-        formatAnswer(distributedCoef, 'x', distributedConstant + trailingConst + standaloneTerm), // Wrong constant combination
+        formatAnswer(distributedCoef, 'x', distributedConstant + trailingConst), // Wrong constant combination
         formatAnswer(totalXCoef, 'x', insideTerm), // Used inside constant
-        formatAnswer(totalXCoef, 'x', -totalConstant), // Wrong sign on final constant
         formatAnswer(distributedCoef, 'x', totalConstant), // Didn't combine x terms
-        formatAnswer(outside + standaloneTerm, 'x', totalConstant), // Added coefficients instead of distributing
         formatAnswer(totalXCoef, 'x', distributedConstant) // Forgot trailing constant
-      ];;
+      ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneTerm, constantMag });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
@@ -4377,8 +4374,7 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
       const row2Choices = [
         answer,
         formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Didn't combine x terms
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant
-        formatCoefficient(finalCoef, 'x') + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst), // Wrong sign on constant
+        formatCoefficient(finalCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Wrong constant - didn't subtract inside
         formatCoefficient(outsidePos + Math.abs(standaloneCoef), 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst) // Added coefficients instead of distributing
       ];
       
