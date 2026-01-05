@@ -4107,11 +4107,12 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       
       const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
       
+      // FIXED: Removed duplicate-creating distractor
       const row2Choices = [
         answer,
-        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst),
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside),
-        formatCoefficient(outsidePos + standaloneAbs, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst)
+        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // Didn't combine x terms
+        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant instead of distributed
+        formatCoefficient(finalCoef, 'x') + ' + ' + (distConst + standaloneAbs) // Combined constant wrong
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
@@ -4147,7 +4148,7 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
               { description: 'Distribute', work: row1Expected.join(' ') },
               { description: 'Combine like terms', work: answer }
             ],
-            rule: 'Distribute → Combine',
+            rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
             finalAnswer: answer
           }
         };
@@ -4157,35 +4158,34 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       const variables = ['x', 'y', 'n', 'm', 'p', 'q', 'r', 's', 't', 'w'];
       const variable = randomFrom(variables);
       
-      skeleton = randomFrom(['a(v+b)+cv', 'cv+a(v+b)', 'a(v+b)-cv', 'a(v+b)+cv-d']);
+      // FIXED: Removed problematic skeletons
+      skeleton = randomFrom(['a(v+b)+cv', 'cv+a(v+b)', 'a(v-b)+cv', 'cv+a(v-b)']);
       
       let standaloneTerm, trailingConst = 0;
       
-      if (skeleton === 'a(v+b)+cv-d') {
+      if (skeleton === 'a(v-b)+cv' || skeleton === 'cv+a(v-b)') {
         standaloneTerm = Math.abs(standalone);
-        trailingConst = -randomInt(1, 12);
-        problem = `${outside}(${variable} + ${inside}) + ${formatCoefficient(standaloneTerm, variable)} - ${Math.abs(trailingConst)}`;
-        insideOp = '+';
-      } else if (skeleton === 'a(v+b)-cv') {
-        standaloneTerm = -Math.abs(standalone);
-        problem = `${outside}(${variable} + ${inside}) - ${formatCoefficient(Math.abs(standalone), variable)}`;
-        insideOp = '+';
-      } else if (skeleton === 'cv+a(v+b)') {
-        standaloneTerm = Math.abs(standalone);
-        problem = `${formatCoefficient(standaloneTerm, variable)} + ${outside}(${variable} + ${inside})`;
-        insideOp = '+';
+        if (skeleton === 'a(v-b)+cv') {
+          problem = `${outside}(${variable} - ${inside}) + ${formatCoefficient(standaloneTerm, variable)}`;
+        } else {
+          problem = `${formatCoefficient(standaloneTerm, variable)} + ${outside}(${variable} - ${inside})`;
+        }
+        insideOp = '-';
       } else {
         standaloneTerm = Math.abs(standalone);
-        problem = `${outside}(${variable} + ${inside}) + ${formatCoefficient(standaloneTerm, variable)}`;
+        if (skeleton === 'cv+a(v+b)') {
+          problem = `${formatCoefficient(standaloneTerm, variable)} + ${outside}(${variable} + ${inside})`;
+        } else {
+          problem = `${outside}(${variable} + ${inside}) + ${formatCoefficient(standaloneTerm, variable)}`;
+        }
         insideOp = '+';
       }
       
       const distVarCoef = outside;
-      const distConst = outside * inside;
+      const distConst = insideOp === '-' ? -(outside * inside) : (outside * inside);
       
       const row1Expected = [];
-      
-      if (skeleton === 'cv+a(v+b)') {
+      if (skeleton === 'cv+a(v+b)' || skeleton === 'cv+a(v-b)') {
         row1Expected.push(formatWithSign(formatCoefficient(standaloneTerm, variable)));
         row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
         row1Expected.push(formatWithSign(distConst));
@@ -4193,10 +4193,6 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
         row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
         row1Expected.push(formatWithSign(distConst));
         row1Expected.push(formatWithSign(formatCoefficient(standaloneTerm, variable)));
-      }
-      
-      if (trailingConst !== 0) {
-        row1Expected.push(formatWithSign(trailingConst));
       }
       
       const termBank = new Set();
@@ -4206,33 +4202,22 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
       termBank.add(formatWithSign(outside));
       termBank.add(formatWithSign(-distConst));
       termBank.add(formatWithSign(formatCoefficient(-distVarCoef, variable)));
-      termBank.add(formatWithSign(formatCoefficient(Math.abs(distVarCoef + standaloneTerm), variable)));
+      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneTerm, variable)));
+      termBank.add(formatWithSign(distConst + inside));
       
       while (termBank.size < 14) {
         const randomVal = randomInt(-12, 12);
-        const useVar = Math.random() < 0.5;
-        if (useVar) {
-          termBank.add(formatWithSign(formatCoefficient(randomVal, variable)));
-        } else {
-          termBank.add(formatWithSign(randomVal));
-        }
+        termBank.add(formatWithSign(randomVal));
       }
       
       const finalCoef = distVarCoef + standaloneTerm;
-      const finalConst = distConst + trailingConst;
-      
-      let answer;
-      if (finalConst === 0) {
-        answer = formatCoefficient(finalCoef, variable);
-      } else {
-        answer = formatCoefficient(finalCoef, variable) + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
-      }
+      const answer = formatCoefficient(finalCoef, variable) + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst);
       
       const row2Choices = [
         answer,
-        formatCoefficient(distVarCoef, variable) + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst),
+        formatCoefficient(distVarCoef, variable) + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst),
         formatCoefficient(finalCoef, variable) + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside),
-        formatCoefficient(Math.abs(outside + standaloneTerm), variable) + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst)
+        formatCoefficient(finalCoef, variable) + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst)
       ];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside, inside, standalone, variable });
@@ -4265,7 +4250,7 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
           explanation: {
             originalProblem: problem,
             steps: [],
-            rule: 'Distribute → Combine',
+            rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
             finalAnswer: answer
           }
         };
@@ -4300,12 +4285,11 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
     explanation: {
       originalProblem: '3(x + 2)',
       steps: [],
-      rule: 'Distribute → Combine',
+      rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
       finalAnswer: fallbackAnswer
     }
   };
 };
-
 // ============================================
 // LEVEL 1-14: STEEP CLIMB
 // ============================================
