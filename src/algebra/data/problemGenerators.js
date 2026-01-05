@@ -425,6 +425,21 @@ const validateChoices = (choices, answer) => {
   return true;
 };
 
+// ============================================
+// FORMATTING HELPER FOR INTEGER OPERATIONS
+// ============================================
+
+/**
+ * Format integer operations with proper parentheses for negative in second position
+ * Examples: 8 × (-6), -5 ÷ (-3)
+ */
+const formatIntegerOperation = (num1, op, num2) => {
+  if (num2 < 0 && (op === '×' || op === '÷')) {
+    return `${num1} ${op} (${num2})`;
+  }
+  return `${num1} ${op} ${num2}`;
+};
+
 
 // ============================================
 // LEVEL 1-1: ADDITION (REBUILT)
@@ -608,7 +623,8 @@ export const generateMultiplicationProblem = (difficulty) => {
     if (!isRecentDuplicate(levelId, difficulty, signature)) {
       recordProblem(levelId, difficulty, signature);
       
-      const problem = `${num1} × ${num2}`;
+      // FIXED: Use formatIntegerOperation for proper parentheses
+      const problem = formatIntegerOperation(num1, '×', num2);
       const misconceptions = [answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2, Math.abs(num1 * num2) * -1];
       const choices = ensureFourChoices(misconceptions, answer);
       
@@ -621,7 +637,8 @@ export const generateMultiplicationProblem = (difficulty) => {
             { description: `Multiply absolute values: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
             { description: skeleton === 'negNeg' ? "Negative × Negative = Positive" : "Positive × Negative = Negative", work: `Result: ${answer}` }
           ],
-          rule: skeleton === 'negNeg' ? "Neg × Neg = Pos" : "Pos × Neg = Neg",
+          // FIXED: Enhanced rule
+          rule: "Multiplying integers: Same signs = positive result. Different signs = negative result.",
           finalAnswer: answer
         }
       };
@@ -635,9 +652,11 @@ export const generateMultiplicationProblem = (difficulty) => {
   else if (skeleton === 'negPos') { num1 = -randomInt(1, 12); num2 = randomInt(1, 12); }
   else { num1 = -randomInt(1, 12); num2 = -randomInt(1, 12); }
   const answer = num1 * num2;
-  const problem = `${num1} × ${num2}`;
+  // FIXED: Use formatIntegerOperation for proper parentheses
+  const problem = formatIntegerOperation(num1, '×', num2);
   const choices = ensureFourChoices([answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2], answer);
-  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Multiplication", finalAnswer: answer }};
+  // FIXED: Enhanced rule
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Multiplying integers: Same signs = positive result. Different signs = negative result.", finalAnswer: answer }};
 };
 
 // ============================================
@@ -684,7 +703,8 @@ export const generateDivisionProblem = (difficulty) => {
             { description: `Divide absolute values: ${Math.abs(dividend)} ÷ ${Math.abs(divisor)} = ${Math.abs(answer)}`, work: `` },
             { description: skeleton === 'negNeg' ? "Negative ÷ Negative = Positive" : "Positive ÷ Negative = Negative", work: `Result: ${answer}` }
           ],
-          rule: skeleton === 'negNeg' ? "Neg ÷ Neg = Pos" : "Pos ÷ Neg = Neg",
+          // FIXED: Enhanced rule
+          rule: "Dividing integers: Same signs = positive result. Different signs = negative result.",
           finalAnswer: answer
         }
       };
@@ -699,9 +719,9 @@ export const generateDivisionProblem = (difficulty) => {
   else { divisor = -randomInt(1, 12); answer = randomInt(1, 12); dividend = answer * divisor; }
   const problem = `${dividend} ÷ ${divisor >= 0 ? divisor : `(${divisor})`}`;
   const choices = ensureFourChoices([answer, -answer, Math.abs(dividend) / Math.abs(divisor), divisor], answer);
-  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Division", finalAnswer: answer }};
+  // FIXED: Enhanced rule
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Dividing integers: Same signs = positive result. Different signs = negative result.", finalAnswer: answer }};
 };
-
 
 // ============================================
 // LEVEL 1-5: BASIC DISTRIBUTION (REBUILT)
@@ -1933,10 +1953,6 @@ export const generateDistributeSubtractProblem = (difficulty) => {
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
-// ============================================
-// LEVEL 1-15: ROCKY LEDGE (Negative Outside)
-// ============================================
-
 
 // ============================================
 // LEVEL 1-15: ROCKY LEDGE (Negative Outside)
@@ -1976,12 +1992,14 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       const totalXCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
-      const misconceptions = [
-        answer,
-        formatAnswer(-distributedCoef + standaloneCoef, 'x', distributedConstant),
-        formatAnswer(totalXCoef, 'x', -distributedConstant),
-        formatAnswer(Math.abs(distributedCoef) + standaloneCoef, 'x', Math.abs(distributedConstant))
-      ];
+     const misconceptions = [
+  answer,
+  canonicalizeExpression(distVarCoef, variable, distConst + Math.abs(standaloneCoef), false), // Combined wrong terms
+  canonicalizeExpression(totalCoef, variable, inside, false), // Used inside constant
+  canonicalizeExpression(-distVarCoef, variable, distributedConst, false), // Flipped only variable coefficient
+  canonicalizeExpression(distVarCoef, variable, -distributedConst, false), // Flipped only constant
+  canonicalizeExpression(Math.abs(outside) + standaloneCoef, variable, Math.abs(distributedConst), false) // Forgot negative affects both terms
+];;
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outsideMag, insideTerm, standaloneTerm });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
@@ -2004,7 +2022,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
               { description: `Distribute ${outside}`, work: `` },
               { description: `Combine like terms`, work: answer }
             ],
-            rule: "Negative outside affects ALL terms inside",
+            rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
             finalAnswer: answer
           }
         };
@@ -2064,7 +2082,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
       }
     }
   }
@@ -2079,10 +2097,6 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
 };
 
-// ============================================
-// LEVEL 1-16: SUMMIT (Complex Simplification with Trailing Constant)
-// ============================================
-
 
 // ============================================
 // LEVEL 1-16: SUMMIT (Complex Simplification)
@@ -2093,7 +2107,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (difficulty === 'easy') {
-      const skeletons = ['a(x+b)+cx-d', 'a(x+b)+cx+d', 'a(x-b)+cx-d'];
+      const skeletons = ['a(x+b)+cx+d', 'a(x-b)+cx+d', 'a(x+b)+cx-d', 'a(x-b)+cx+d'];
       const skeleton = randomFrom(skeletons);
       
       const outside = randomInt(2, 12);
@@ -2123,12 +2137,15 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       const totalConstant = distributedConstant + trailingConst;
       
       const answer = formatAnswer(totalXCoef, 'x', totalConstant);
-      const misconceptions = [
-        answer,
-        formatAnswer(totalXCoef, 'x', distributedConstant + constantMag),
-        formatAnswer(distributedCoef, 'x', totalConstant),
-        formatAnswer(totalXCoef, 'x', -totalConstant)
-      ];
+    const misconceptions = [
+  answer,
+  formatAnswer(distributedCoef, variable, distributedConst + trailing + standalone), // Wrong constant combination
+  formatAnswer(finalCoef, variable, inside), // Used inside constant
+  formatAnswer(finalCoef, variable, -finalConst), // Wrong sign on final constant
+  formatAnswer(distributedCoef, variable, finalConst), // Didn't combine x terms
+  formatAnswer(outside + standalone, variable, finalConst), // Added coefficients instead of distributing
+  formatAnswer(finalCoef, variable, distributedConst) // Forgot trailing constant
+];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneTerm, constantMag });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
@@ -2151,7 +2168,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
               { description: `Distribute`, work: `` },
               { description: `Combine like terms`, work: answer }
             ],
-            rule: "Distribute → Combine x terms → Combine constants",
+            rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!',
             finalAnswer: answer
           }
         };
@@ -2200,7 +2217,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
       }
     }
   }
@@ -4358,11 +4375,12 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
       const answer = formatCoefficient(finalCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst);
       
       const row2Choices = [
-        answer,
-        formatCoefficient(finalCoef, 'x') + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst),
-        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst),
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside)
-      ];
+  answer,
+  formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // Didn't combine x terms
+  formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant
+  formatCoefficient(finalCoef, 'x') + (-finalConst >= 0 ? ' + ' : ' - ') + Math.abs(-finalConst), // Wrong sign on constant
+  formatCoefficient(outsidePos + Math.abs(standaloneCoef), 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst) // Added coefficients instead of distributing
+];
       
       const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
       
@@ -4394,7 +4412,7 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
           explanation: {
             originalProblem: problem,
             steps: [],
-            rule: 'Watch signs when distributing',
+            rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
             finalAnswer: answer
           }
         };
@@ -4428,7 +4446,7 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
     explanation: {
       originalProblem: '4(x - 2) + 3x',
       steps: [],
-      rule: 'Watch signs',
+      rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
       finalAnswer: '7x - 8'
     }
   };
