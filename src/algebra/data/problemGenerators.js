@@ -2013,7 +2013,8 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         });
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
-        return {
+       return {
+          problem, displayProblem: problem, answer, choices, staged,
           explanation: {
             originalProblem: problem,
             steps: [
@@ -2023,6 +2024,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
             rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b",
             finalAnswer: answer
           }
+        };
       }
     } else {
       const skeletons = ['-a(v+b)+cv', '-a(v-b)+cv', 'cv-a(v+b)', '-a(v+b)-cv'];
