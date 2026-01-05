@@ -2093,7 +2093,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
    const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatWithSign(formatCoefficient(-outside, 'x')), formatWithSign(-distributedConstant), formatWithSign(formatCoefficient(standaloneTerm - outside, 'x'))],
+          distractorTerms: [formatWithSign(formatCoefficient(-outside, 'x')), formatWithSign(-distributedConstant), formatWithSign(formatCoefficient(standaloneTerm - outside, 'x'))], });
 
   const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
   return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
