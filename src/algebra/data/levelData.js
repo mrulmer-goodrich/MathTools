@@ -333,56 +333,58 @@ export const levels = {
     badge: null
   },
 
-  // LEVELS 16-20: One-Step & Two-Step Equations (Territory Begins)
+  // LEVEL 16: Summit - END OF BASE CAMP (Module 1)
   '1-16': {
     id: '1-16',
     module: 1,
     number: 16,
-    name: "River Crossing",
-    skill: "One-step equations: x + a = b",
+    name: "Summit",
+    skill: "Complex simplification with trailing constants",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: '🏔️ Base Camp Complete'
   },
+
+  // LEVELS 17-20: One-Step Equations (Territory Begins - Module 2)
   '1-17': {
     id: '1-17',
-    module: 1,
+    module: 2,
     number: 17,
-    name: "Mountain Climb",
-    skill: "One-step equations: ax = b",
+    name: "River Crossing",
+    skill: "One-step addition equations: x + a = b",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
   },
   '1-18': {
     id: '1-18',
-    module: 1,
+    module: 2,
     number: 18,
-    name: "Shadow Valley",
-    skill: "One-step equations with negatives",
+    name: "Bridge Building",
+    skill: "One-step multiplication equations: ax = b",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
   },
   '1-19': {
     id: '1-19',
-    module: 1,
+    module: 2,
     number: 19,
-    name: "Hidden Canyon",
-    skill: "Two-step equations: ax + b = c",
+    name: "Canyon Leap",
+    skill: "Variable on right: b = x + a",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
   },
   '1-20': {
     id: '1-20',
-    module: 1,
+    module: 2,
     number: 20,
-    name: "Storm Passage",
-    skill: "Two-step with negative coefficients",
+    name: "Waterfall",
+    skill: "Negative variable: -x + a = b",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
-    badge: '🚣 Territory Navigator'
+    badge: '🌊 Equations Expert'
   },
 
   // LEVELS 21-25: Advanced Two-Step & Multi-Step
