@@ -2218,7 +2218,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
         
         const fallbackRow1 = [formatWithSign(formatCoefficient(3, 'x')), formatWithSign(6), formatWithSign(formatCoefficient(2, 'x')), formatWithSign(5)];
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute 3', work: '+3x +6' }, { description: 'Add standalone terms', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute 3', work: '+3x +6' }, { description: 'Add standalone terms', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer };
       }
     }
   } 
