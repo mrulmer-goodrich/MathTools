@@ -36,6 +36,8 @@ const LevelPlayer = ({
     attempted: 0,
     correct: 0
   });
+  const [problemStartTime, setProblemStartTime] = useState(null);
+  const [problemAttempts, setProblemAttempts] = useState(0);
 
   const level = levels[levelId];
 
@@ -70,12 +72,18 @@ const LevelPlayer = ({
       setShowFeedback(false);
       setShowSuccess(false);
       setSelectedAnswer(null);
+      setProblemStartTime(Date.now()); // Start timer
+      setProblemAttempts(0); // Reset attempts for new problem
     } else {
       console.error(`No generator found for level ${levelId}`);
     }
   };
 
   const handleProblemComplete = () => {
+    const problemEndTime = Date.now();
+    const timeSpent = problemStartTime ? (problemEndTime - problemStartTime) / 1000 : 0;
+    const isFirstTry = problemAttempts === 0;
+
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
@@ -93,9 +101,9 @@ const LevelPlayer = ({
     
     setShowSuccess(true);
 
-    // Award crystal for correct answer
+    // Award crystal and track enhanced stats
     if (onProblemSolved) {
-      onProblemSolved(1);
+      onProblemSolved(1, levelId, isFirstTry, timeSpent);
     }
     
     setTimeout(() => {
@@ -110,6 +118,8 @@ const LevelPlayer = ({
   };
 
   const handleProblemWrong = () => {
+    setProblemAttempts(prev => prev + 1); // Track attempts for first-try calculation
+
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
@@ -196,11 +206,11 @@ const LevelPlayer = ({
         justifyContent: 'center'
       }}>
         <div className="level-complete-container">
-          <div className="level-complete-icon">🎉</div>
-          <h2 className="level-complete-title">
+          <div className="level-complete-icon" style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🎉</div>
+          <h2 className="level-complete-title" style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>
             Level Complete!
           </h2>
-          <h3 className="level-complete-subtitle">
+          <h3 className="level-complete-subtitle" style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
             {level.name}
           </h3>
           
@@ -209,21 +219,22 @@ const LevelPlayer = ({
               background: 'rgba(245, 158, 11, 0.1)',
               border: '2px solid #F59E0B',
               borderRadius: '0.75rem',
-              padding: '1.5rem',
-              marginBottom: '2rem'
+              padding: '1rem',
+              marginBottom: '1.25rem'
             }}>
               <p style={{ 
                 fontWeight: 700, 
-                marginBottom: '0.5rem',
+                marginBottom: '0.25rem',
+                fontSize: '0.875rem',
                 fontFamily: 'Poppins, sans-serif'
               }}>
                 Artifact Discovered!
               </p>
-              <div style={{ fontSize: '3rem' }}>🔮</div>
+              <div style={{ fontSize: '2rem' }}>🔮</div>
             </div>
           )}
 
-          <div className="level-complete-stats">
+          <div className="level-complete-stats" style={{ marginBottom: '1.25rem', gap: '0.75rem' }}>
             <div className="stat-box">
               <div className="stat-value">{levelStats.attempted}</div>
               <div className="stat-label">Attempted</div>
@@ -247,7 +258,8 @@ const LevelPlayer = ({
             onClick={handleContinueFromComplete}
             style={{ 
               width: '100%', 
-              padding: '1rem',
+              padding: '0.875rem',
+              fontSize: '1rem',
               fontFamily: 'Poppins, sans-serif'
             }}
           >
