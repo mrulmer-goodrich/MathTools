@@ -5,8 +5,16 @@ import React, { useState } from 'react';
 import '../styles/algebra.css';
 
 const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, playerName }) => {
-  // Track current difficulty selection
-  const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
+  // Track current difficulty selection with localStorage persistence
+  const [selectedDifficulty, setSelectedDifficulty] = useState(() => {
+    return localStorage.getItem('algebra_practice_difficulty') || 'easy';
+  });
+
+  // Update localStorage when difficulty changes
+  const handleDifficultyChange = (diff) => {
+    setSelectedDifficulty(diff);
+    localStorage.setItem('algebra_practice_difficulty', diff);
+  };
   
   const levelGroups = [
     {
@@ -161,7 +169,7 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
           }}>
             <button
-              onClick={() => setSelectedDifficulty('easy')}
+              onClick={() => handleDifficultyChange('easy')}
               style={{
                 padding: '0.5rem 1.5rem',
                 borderRadius: '9999px',
@@ -183,7 +191,7 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
               📍 Standard Route
             </button>
             <button
-              onClick={() => setSelectedDifficulty('notEasy')}
+              onClick={() => handleDifficultyChange('notEasy')}
               style={{
                 padding: '0.5rem 1.5rem',
                 borderRadius: '9999px',
