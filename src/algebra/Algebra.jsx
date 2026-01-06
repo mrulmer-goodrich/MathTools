@@ -183,6 +183,35 @@ const Algebra = () => {
     localStorage.setItem('algebra_current_level', newLevelId);
   };
 
+  const handleProblemAttempted = (levelId) => {
+    // Track attempted problems (including wrong answers)
+    setStats(prev => {
+      const diffKey = difficulty || 'easy';
+      const levelKey = `${levelId}-${diffKey}`;
+      const existingLevel = prev.levelStats[levelKey] || {
+        attempted: 0,
+        correct: 0,
+        firstTryCorrect: 0,
+        totalSolved: 0,
+        totalTime: 0,
+        lastPlayed: Date.now()
+      };
+
+      return {
+        ...prev,
+        levelStats: {
+          ...prev.levelStats,
+          [levelKey]: {
+            ...existingLevel,
+            attempted: existingLevel.attempted + 1,
+            lastPlayed: Date.now()
+          }
+        },
+        problemsAttempted: prev.problemsAttempted + 1
+      };
+    });
+  };
+
   const handleProblemSolved = (crystalsEarned, levelId, isFirstTry, timeSpent) => {
     setProgress(prev => ({
       ...prev,
@@ -196,8 +225,8 @@ const Algebra = () => {
       const existingLevel = prev.levelStats[levelKey] || {
         attempted: 0,
         correct: 0,
-        firstTrySuccess: 0,
-        firstTryAttempts: 0,
+        firstTryCorrect: 0,
+        totalSolved: 0,
         totalTime: 0,
         lastPlayed: Date.now()
       };
@@ -210,12 +239,14 @@ const Algebra = () => {
             ...existingLevel,
             attempted: existingLevel.attempted + 1,
             correct: existingLevel.correct + 1,
-            firstTrySuccess: existingLevel.firstTrySuccess + (isFirstTry ? 1 : 0),
-            firstTryAttempts: existingLevel.firstTryAttempts + 1,
+            firstTryCorrect: existingLevel.firstTryCorrect + (isFirstTry ? 1 : 0),
+            totalSolved: existingLevel.totalSolved + 1,
             totalTime: existingLevel.totalTime + (timeSpent || 0),
             lastPlayed: Date.now()
           }
         },
+        problemsAttempted: prev.problemsAttempted + 1,
+        problemsCorrect: prev.problemsCorrect + 1,
         [playMode === 'practice' ? 'practiceProblems' : 'gameProblems']: 
           (prev[playMode === 'practice' ? 'practiceProblems' : 'gameProblems'] || 0) + 1
       };
@@ -272,13 +303,14 @@ const Algebra = () => {
           onLevelComplete={handleLevelComplete}
           onReturnToMenu={handleReturnToMenu}
           onProblemSolved={handleProblemSolved}
+          onProblemAttempted={handleProblemAttempted}
+          onBackToPractice={() => setGameState('practice')}
         />
       )}
 
       {!showAvatarSelection && !showStory && (
         <FloatingIcons
           onOpenStory={() => setShowStoryModal(true)}
-          onOpenBadges={() => setShowBadges(true)}
           onOpenStats={handleViewStats}
           onOpenMap={handleViewMap}
           playerName={playerData.name}
@@ -306,9 +338,11 @@ const Algebra = () => {
       )}
 
       {showBadges && (
-        <BadgeCollection 
-          completedLevels={progress.completedLevels}
+        <StatsPanel 
+          stats={stats}
           progress={progress}
+          playerName={playerData.name}
+          difficulty={difficulty}
           onClose={() => setShowBadges(false)}
         />
       )}
