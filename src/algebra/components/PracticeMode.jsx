@@ -132,7 +132,7 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
         maxWidth: '1400px',
         margin: '0 auto',
         padding: '2rem',
-        paddingTop: '5rem'
+        paddingTop: '3.5rem'
       }}>
         <h1 style={{
           textAlign: 'center',
