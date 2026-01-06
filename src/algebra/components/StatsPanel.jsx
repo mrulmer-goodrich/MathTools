@@ -1,10 +1,10 @@
-// StatsPanel.jsx - REDESIGNED: Comprehensive stats, polished UI, unified modal styling
+// StatsPanel.jsx - ENHANCED: Per-level stats, first-try success, difficulty tracking
 // Location: src/algebra/components/StatsPanel.jsx
 
 import React from 'react';
 import '../styles/stats-panel.css';
 
-const StatsPanel = ({ stats, progress, playerName, onClose }) => {
+const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
   const sessionTime = stats?.sessionStart ? Math.floor((Date.now() - stats.sessionStart) / 60000) : 0;
   const accuracy = stats?.problemsAttempted > 0 
     ? Math.round((stats.problemsCorrect / stats.problemsAttempted) * 100) 
@@ -15,11 +15,113 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
   const gameProblems = stats?.gameProblems || 0;
   const totalProblems = stats?.problemsAttempted || 0;
 
-  // Get level-by-level stats
+  // Get level-by-level stats grouped by difficulty
   const levelStats = stats?.levelStats || {};
-  const recentLevels = Object.entries(levelStats)
-    .sort((a, b) => (b[1].lastPlayed || 0) - (a[1].lastPlayed || 0))
-    .slice(0, 5);
+  
+  // Calculate first-try success rate
+  const calculateFirstTryRate = () => {
+    let totalFirstTry = 0;
+    let totalAttempts = 0;
+    Object.values(levelStats).forEach(level => {
+      totalFirstTry += level.firstTrySuccess || 0;
+      totalAttempts += level.firstTryAttempts || 0;
+    });
+    return totalAttempts > 0 ? Math.round((totalFirstTry / totalAttempts) * 100) : 0;
+  };
+
+  const firstTryRate = calculateFirstTryRate();
+
+  // Group stats by skill areas (Levels 1-4, 5-8, 9-12, 13-16, etc.)
+  const skillAreas = [
+    { name: 'Operations with Integers', levels: ['1-1', '1-2', '1-3', '1-4'], emoji: '🔢' },
+    { name: 'Distribution', levels: ['1-5', '1-6', '1-7', '1-8'], emoji: '📦' },
+    { name: 'Combining Like Terms', levels: ['1-9', '1-10', '1-11', '1-12'], emoji: '🧮' },
+    { name: 'Distribute Then Combine', levels: ['1-13', '1-14', '1-15', '1-16'], emoji: '⛺' },
+    { name: 'One-Step Equations', levels: ['1-17', '1-18', '1-19', '1-20'], emoji: '🌊' },
+    { name: 'Two-Step Equations', levels: ['1-21', '1-22', '1-23'], emoji: '⛰️' },
+    { name: 'Multi-Step Equations', levels: ['1-24', '1-25'], emoji: '🏔️' },
+    { name: 'Variables on Both Sides', levels: ['1-26', '1-27', '1-28', '1-29', '1-30'], emoji: '🗝️' },
+    { name: 'Ultimate Challenges', levels: ['1-31', '1-32'], emoji: '🏆' },
+    { name: 'Inequalities', levels: ['1-33', '1-34', '1-35', '1-36', '1-37'], emoji: '⚖️' }
+  ];
+
+  // Calculate stats for each skill area
+  const getSkillAreaStats = () => {
+    const diffKey = difficulty || 'easy';
+    return skillAreas.map(area => {
+      let totalProblems = 0;
+      let totalCorrect = 0;
+      let totalTime = 0;
+      let levelsStarted = 0;
+
+      area.levels.forEach(levelId => {
+        const key = `${levelId}-${diffKey}`;
+        const levelData = levelStats[key];
+        if (levelData && levelData.attempted > 0) {
+          levelsStarted++;
+          totalProblems += levelData.attempted;
+          totalCorrect += levelData.correct;
+          totalTime += levelData.totalTime || 0;
+        }
+      });
+
+      const accuracy = totalProblems > 0 ? Math.round((totalCorrect / totalProblems) * 100) : 0;
+      const avgTime = totalProblems > 0 ? Math.round(totalTime / totalProblems) : 0;
+
+      return {
+        ...area,
+        levelsStarted,
+        totalLevels: area.levels.length,
+        totalProblems,
+        accuracy,
+        avgTime
+      };
+    }).filter(area => area.levelsStarted > 0); // Only show started areas
+  };
+
+  const skillAreaStats = getSkillAreaStats();
+
+  // Get top performing levels
+  const getTopPerformers = () => {
+    const diffKey = difficulty || 'easy';
+    const performers = Object.entries(levelStats)
+      .filter(([key]) => key.endsWith(`-${diffKey}`))
+      .map(([key, data]) => {
+        const levelId = key.replace(`-${diffKey}`, '');
+        const levelNum = levelId.split('-')[1];
+        const accuracy = data.attempted > 0 ? Math.round((data.correct / data.attempted) * 100) : 0;
+        const avgTime = data.attempted > 0 ? Math.round(data.totalTime / data.attempted) : 0;
+        return { levelNum, accuracy, avgTime, attempted: data.attempted };
+      })
+      .filter(level => level.attempted > 0)
+      .sort((a, b) => {
+        if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+        return a.avgTime - b.avgTime; // Faster is better
+      })
+      .slice(0, 5);
+    
+    return performers;
+  };
+
+  const topPerformers = getTopPerformers();
+
+  // Get areas for improvement
+  const getAreasForImprovement = () => {
+    const diffKey = difficulty || 'easy';
+    return Object.entries(levelStats)
+      .filter(([key]) => key.endsWith(`-${diffKey}`))
+      .map(([key, data]) => {
+        const levelId = key.replace(`-${diffKey}`, '');
+        const levelNum = levelId.split('-')[1];
+        const accuracy = data.attempted > 0 ? Math.round((data.correct / data.attempted) * 100) : 0;
+        return { levelNum, accuracy, attempted: data.attempted };
+      })
+      .filter(level => level.attempted >= 3 && level.accuracy < 70)
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 3);
+  };
+
+  const areasForImprovement = getAreasForImprovement();
 
   const formatTime = (seconds) => {
     if (!seconds) return '0s';
@@ -48,7 +150,7 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
             <div className="stat-card green">
               <div className="stat-icon">✓</div>
               <div className="stat-value">{stats?.problemsCorrect || 0}</div>
-              <div className="stat-label">Problems Solved</div>
+              <div className="stat-label">Solved</div>
             </div>
 
             <div className="stat-card orange">
@@ -58,19 +160,19 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
             </div>
 
             <div className="stat-card blue">
-              <div className="stat-icon">🔥</div>
-              <div className="stat-value">{stats?.currentStreak || 0}</div>
-              <div className="stat-label">Current Streak</div>
+              <div className="stat-icon">⚡</div>
+              <div className="stat-value">{firstTryRate}%</div>
+              <div className="stat-label">First Try</div>
             </div>
 
             <div className="stat-card purple">
               <div className="stat-icon">⏱️</div>
               <div className="stat-value">{sessionTime}</div>
-              <div className="stat-label">Minutes Played</div>
+              <div className="stat-label">Minutes</div>
             </div>
           </div>
 
-          {/* Practice vs Game Mode */}
+          {/* Mode Breakdown */}
           <div className="stats-section">
             <h3>Mode Breakdown</h3>
             <div className="mode-stats">
@@ -99,49 +201,68 @@ const StatsPanel = ({ stats, progress, playerName, onClose }) => {
             </div>
           </div>
 
-          {/* Recent Levels Performance */}
-          <div className="stats-section">
-            <h3>Recent Level Performance</h3>
-            {recentLevels.length > 0 ? (
-              <div className="level-stats-list">
-                {recentLevels.map(([levelId, data]) => {
-                  const levelNum = levelId.split('-')[1];
-                  const levelAccuracy = data.attempted > 0 
-                    ? Math.round((data.correct / data.attempted) * 100) 
-                    : 0;
-                  
-                  return (
-                    <div key={levelId} className="level-stat-row">
-                      <div className="level-info">
-                        <span className="level-number">Level {levelNum}</span>
-                        <span className="level-attempts">{data.attempted} attempts</span>
-                      </div>
-                      <div className="level-metrics">
-                        <span className="metric-item">
-                          <span className="metric-icon">✓</span>
-                          {data.correct}/{data.attempted}
-                        </span>
-                        <span className="metric-item">
-                          <span className="metric-icon">🎯</span>
-                          {levelAccuracy}%
-                        </span>
-                        <span className="metric-item">
-                          <span className="metric-icon">⏱️</span>
-                          {formatTime(data.timeSpent)}
-                        </span>
-                        <span className="metric-item">
-                          <span className="metric-icon">💎</span>
-                          {data.crystalsEarned || 0}
-                        </span>
-                      </div>
+          {/* Performance by Skill Area */}
+          {skillAreaStats.length > 0 && (
+            <div className="stats-section">
+              <h3>📈 Performance by Skill Area</h3>
+              <div className="skill-areas-list">
+                {skillAreaStats.map((area, idx) => (
+                  <div key={idx} className="skill-area-card">
+                    <div className="skill-area-header">
+                      <span className="skill-emoji">{area.emoji}</span>
+                      <span className="skill-name">{area.name}</span>
                     </div>
-                  );
-                })}
+                    <div className="skill-stats">
+                      <span className="skill-stat">{area.levelsStarted}/{area.totalLevels} levels</span>
+                      <span className="skill-stat">•</span>
+                      <span className="skill-stat">{area.totalProblems} problems</span>
+                      <span className="skill-stat">•</span>
+                      <span className="skill-stat">{area.accuracy}%</span>
+                      {area.avgTime > 0 && (
+                        <>
+                          <span className="skill-stat">•</span>
+                          <span className="skill-stat">{area.avgTime}s avg</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="no-data">No level data yet. Start playing to see stats!</div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Top 5 Best Performance */}
+          {topPerformers.length > 0 && (
+            <div className="stats-section">
+              <h3>🏆 Top Performance</h3>
+              <div className="top-performers-list">
+                {topPerformers.map((level, idx) => (
+                  <div key={idx} className="performer-row">
+                    <span className="rank">{idx + 1}.</span>
+                    <span className="level-info">Level {level.levelNum}</span>
+                    <span className="performer-stats">
+                      {level.accuracy}% • {level.avgTime}s avg
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Areas for Improvement */}
+          {areasForImprovement.length > 0 && (
+            <div className="stats-section">
+              <h3>⚠️ Areas for Improvement</h3>
+              <div className="improvement-list">
+                {areasForImprovement.map((level, idx) => (
+                  <div key={idx} className="improvement-row">
+                    <span className="level-info">Level {level.levelNum}</span>
+                    <span className="improvement-stats">{level.accuracy}% • Needs review</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Knowledge Crystals */}
           <div className="crystals-display">
