@@ -99,30 +99,18 @@ const StoryIntro = ({ onComplete }) => {
       <div style={{
         maxWidth: '800px',
         width: '90%',
-        padding: '2rem 1rem',
-        minHeight: '500px',
+        padding: '1rem',
+        minHeight: '400px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         position: 'relative'
       }}>
-        {/* Mood indicator icon */}
-        <div style={{
-          position: 'absolute',
-          top: '-20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: '3rem',
-          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
-          animation: 'float 3s ease-in-out infinite'
-        }}>
-          {moodStyle.icon}
-        </div>
 
         <div style={{
           background: 'rgba(255, 255, 255, 0.98)',
           borderRadius: '1rem',
-          padding: '3rem 2.5rem',
+          padding: '1.5rem 2rem',
           boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
           border: `4px solid ${moodStyle.border}`,
           position: 'relative',
@@ -142,19 +130,19 @@ const StoryIntro = ({ onComplete }) => {
 
           {/* Page icon */}
           <div style={{
-            fontSize: '3.5rem',
+            fontSize: '2.5rem',
             textAlign: 'center',
-            marginBottom: '1rem',
+            marginBottom: '0.75rem',
             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
           }}>
             {page.icon}
           </div>
 
           <h1 style={{
-            fontSize: '2.25rem',
+            fontSize: '1.75rem',
             fontWeight: 700,
             color: '#1F2937',
-            marginBottom: '2rem',
+            marginBottom: '1.25rem',
             textAlign: 'center',
             fontFamily: 'Poppins, sans-serif',
             textShadow: '1px 1px 2px rgba(255,255,255,0.8)'
@@ -163,15 +151,15 @@ const StoryIntro = ({ onComplete }) => {
           </h1>
 
           <div style={{
-            fontSize: '1.125rem',
-            lineHeight: 1.8,
+            fontSize: '1rem',
+            lineHeight: 1.6,
             color: '#374151',
-            marginBottom: '2.5rem',
+            marginBottom: '1.5rem',
             fontFamily: 'Poppins, sans-serif'
           }}>
             {page.content.map((paragraph, index) => (
               <p key={index} style={{ 
-                marginBottom: index === page.content.length - 1 ? 0 : '1.5rem',
+                marginBottom: index === page.content.length - 1 ? 0 : '1rem',
                 fontStyle: paragraph.startsWith('"') || paragraph.startsWith('\"') ? 'italic' : 'normal',
                 color: paragraph.startsWith('"') || paragraph.startsWith('\"') ? '#059669' : '#374151',
                 fontWeight: paragraph.includes('—') ? 600 : 400,
