@@ -33,16 +33,14 @@ const AvatarSelection = ({ onComplete }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      overflow: 'auto',
+      overflow: 'hidden',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center'
     }}>
       <div style={{
-        maxWidth: '600px',
+        maxWidth: '800px',
         width: '90%',
-        maxHeight: '90vh',
-        overflowY: 'auto',
         padding: '2rem 1rem',
         textAlign: 'center'
       }}>
@@ -109,10 +107,10 @@ const AvatarSelection = ({ onComplete }) => {
         
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'repeat(10, 1fr)',
           gap: '0.5rem',
           marginBottom: '1.5rem',
-          maxWidth: '380px',
+          maxWidth: '700px',
           margin: '0 auto 1.5rem'
         }}>
           {avatars.map((num) => (
