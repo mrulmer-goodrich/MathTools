@@ -21,7 +21,9 @@ const LevelPlayer = ({
   progress,
   onLevelComplete,
   onReturnToMenu,
-  onProblemSolved
+  onProblemSolved,
+  onProblemAttempted,
+  onBackToPractice
 }) => {
   const [showIntro, setShowIntro] = useState(true);
   const [currentProblem, setCurrentProblem] = useState(null);
@@ -140,6 +142,11 @@ const LevelPlayer = ({
     const correct = answer === currentProblem.answer;
     setIsCorrect(correct);
 
+    // Track all problem attempts
+    if (onProblemAttempted) {
+      onProblemAttempted(levelId);
+    }
+
     if (correct) {
       handleProblemComplete();
     } else {
@@ -255,7 +262,13 @@ const LevelPlayer = ({
 
           <button 
             className="base-camp-tile-button"
-            onClick={handleContinueFromComplete}
+            onClick={() => {
+              if (playMode === 'practice' && onBackToPractice) {
+                onBackToPractice();
+              } else {
+                handleContinueFromComplete();
+              }
+            }}
             style={{ 
               width: '100%', 
               padding: '0.875rem',
