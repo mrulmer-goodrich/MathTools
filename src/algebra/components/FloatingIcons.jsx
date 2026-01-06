@@ -15,12 +15,13 @@ const FloatingIcons = ({
   
   const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
-  // Default positions - single row, top-right
+  // Default positions - VERTICAL STACK, TOP-LEFT
+  // Order: User/Statistics, Badges, Story, Map (top to bottom)
   const defaultPositions = {
-    story: { x: window.innerWidth - 400, y: 20 },
-    badges: { x: window.innerWidth - 310, y: 20 },
-    stats: { x: window.innerWidth - 200, y: 20 },
-    map: { x: window.innerWidth - 90, y: 20 }
+    stats: { x: 20, y: 20 },      // Top
+    badges: { x: 20, y: 110 },    // 90px gap
+    story: { x: 20, y: 200 },     // 90px gap
+    map: { x: 20, y: 290 }        // 90px gap
   };
 
   const [positions, setPositions] = useState(() => {
