@@ -1,7 +1,7 @@
 // StatsPanel.jsx - PROFESSIONAL DATA TABLE VERSION
 // Location: src/algebra/components/StatsPanel.jsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo , useState } from 'react';
 import '../styles/stats-panel.css';
 
 const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
