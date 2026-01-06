@@ -62,19 +62,19 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       <div style={{
         background: 'white',
         borderRadius: '1rem',
-        padding: '2.5rem',
+        padding: '1.5rem',
         maxWidth: '700px',
         width: '100%',
-        maxHeight: '80vh',
+        maxHeight: '85vh',
         overflowY: 'auto',
         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
         border: '3px solid #EF4444'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>❌</div>
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>❌</div>
           <h2 style={{
-            fontSize: '1.75rem',
+            fontSize: '1.5rem',
             fontWeight: 700,
             color: '#DC2626',
             fontFamily: 'Poppins, sans-serif',
@@ -89,8 +89,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           <div style={{
             display: 'grid',
             gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
-            gap: '1rem',
-            marginBottom: '1.5rem'
+            gap: '0.75rem',
+            marginBottom: '1rem'
           }}>
             {showSelectedAnswer && (
               <div style={{
@@ -158,8 +158,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           background: '#FFFBEB',
           border: '2px solid #F59E0B',
           borderRadius: '0.75rem',
-          padding: '1.5rem',
-          marginBottom: hasSteps ? '1.5rem' : '1.5rem'
+          padding: '1rem',
+          marginBottom: hasSteps ? '1rem' : '1rem'
         }}>
           <div style={{
             display: 'flex',
@@ -196,8 +196,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             background: '#F3F4F6',
             border: '2px solid #9CA3AF',
             borderRadius: '0.75rem',
-            padding: '1.5rem',
-            marginBottom: '1.5rem'
+            padding: '1rem',
+            marginBottom: '1rem'
           }}>
             <div style={{
               display: 'flex',
