@@ -36,8 +36,31 @@ const Algebra = () => {
     problemsAttempted: 0,
     problemsCorrect: 0,
     currentStreak: 0,
-    skillBreakdown: {}
+    skillBreakdown: {},
+    levelStats: {}, // Enhanced: per-level stats
+    practiceProblems: 0,
+    gameProblems: 0
   });
+
+  // Load enhanced stats from localStorage
+  useEffect(() => {
+    const savedStats = localStorage.getItem('algebra_enhanced_stats');
+    if (savedStats) {
+      const parsed = JSON.parse(savedStats);
+      setStats(prev => ({
+        ...prev,
+        ...parsed,
+        sessionStart: Date.now() // Reset session start
+      }));
+    }
+  }, []);
+
+  // Save enhanced stats to localStorage
+  useEffect(() => {
+    if (stats.problemsAttempted > 0) {
+      localStorage.setItem('algebra_enhanced_stats', JSON.stringify(stats));
+    }
+  }, [stats]);
 
   useEffect(() => {
     const savedDifficulty = localStorage.getItem('algebra_difficulty');
@@ -160,11 +183,43 @@ const Algebra = () => {
     localStorage.setItem('algebra_current_level', newLevelId);
   };
 
-  const handleProblemSolved = (crystalsEarned) => {
+  const handleProblemSolved = (crystalsEarned, levelId, isFirstTry, timeSpent) => {
     setProgress(prev => ({
       ...prev,
       crystals: prev.crystals + crystalsEarned
     }));
+
+    // Enhanced stats tracking per level and difficulty
+    setStats(prev => {
+      const diffKey = difficulty || 'easy';
+      const levelKey = `${levelId}-${diffKey}`;
+      const existingLevel = prev.levelStats[levelKey] || {
+        attempted: 0,
+        correct: 0,
+        firstTrySuccess: 0,
+        firstTryAttempts: 0,
+        totalTime: 0,
+        lastPlayed: Date.now()
+      };
+
+      return {
+        ...prev,
+        levelStats: {
+          ...prev.levelStats,
+          [levelKey]: {
+            ...existingLevel,
+            attempted: existingLevel.attempted + 1,
+            correct: existingLevel.correct + 1,
+            firstTrySuccess: existingLevel.firstTrySuccess + (isFirstTry ? 1 : 0),
+            firstTryAttempts: existingLevel.firstTryAttempts + 1,
+            totalTime: existingLevel.totalTime + (timeSpent || 0),
+            lastPlayed: Date.now()
+          }
+        },
+        [playMode === 'practice' ? 'practiceProblems' : 'gameProblems']: 
+          (prev[playMode === 'practice' ? 'practiceProblems' : 'gameProblems'] || 0) + 1
+      };
+    });
   };
 
   if (showAvatarSelection) {
