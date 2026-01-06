@@ -62,23 +62,23 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       <div style={{
         background: 'white',
         borderRadius: '1rem',
-        padding: '1.5rem',
+        padding: '1.25rem',
         maxWidth: '700px',
         width: '100%',
-        maxHeight: '85vh',
+        maxHeight: '88vh',
         overflowY: 'auto',
         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
         border: '3px solid #EF4444'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>❌</div>
+        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>❌</div>
           <h2 style={{
-            fontSize: '1.5rem',
+            fontSize: '1.25rem',
             fontWeight: 700,
             color: '#DC2626',
             fontFamily: 'Poppins, sans-serif',
-            marginBottom: '0.5rem'
+            marginBottom: '0rem'
           }}>
             Not Quite!
           </h2>
@@ -89,8 +89,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           <div style={{
             display: 'grid',
             gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
-            gap: '0.75rem',
-            marginBottom: '1rem'
+            gap: '0.5rem',
+            marginBottom: '0.75rem'
           }}>
             {showSelectedAnswer && (
               <div style={{
