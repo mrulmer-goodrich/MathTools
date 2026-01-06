@@ -119,7 +119,6 @@ const ClickToSelect = ({
               border: `4px solid ${isSelected ? '#047857' : '#D1D5DB'}`,
               borderRadius: '1rem',
               padding: '1.75rem 1.5rem',
-              fontSize: '1.5rem',
               fontWeight: 700,
               fontFamily: 'Poppins, sans-serif',
               cursor: disabled ? 'not-allowed' : 'pointer',
