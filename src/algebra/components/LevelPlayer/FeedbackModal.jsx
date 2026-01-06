@@ -62,19 +62,19 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       <div style={{
         background: 'white',
         borderRadius: '1rem',
-        padding: '1.25rem',
+        padding: '1rem',
         maxWidth: '700px',
         width: '100%',
-        maxHeight: '88vh',
+        maxHeight: '90vh',
         overflowY: 'auto',
         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
         border: '3px solid #EF4444'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>❌</div>
+        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>❌</div>
           <h2 style={{
-            fontSize: '1.25rem',
+            fontSize: '1.125rem',
             fontWeight: 700,
             color: '#DC2626',
             fontFamily: 'Poppins, sans-serif',
@@ -90,21 +90,21 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             display: 'grid',
             gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
             gap: '0.5rem',
-            marginBottom: '0.75rem'
+            marginBottom: '0.5rem'
           }}>
             {showSelectedAnswer && (
               <div style={{
                 background: '#FEE2E2',
                 border: '2px solid #EF4444',
                 borderRadius: '0.5rem',
-                padding: '1rem',
+                padding: '0.75rem',
                 textAlign: 'center'
               }}>
                 <div style={{
-                  fontSize: '0.75rem',
+                  fontSize: '0.7rem',
                   fontWeight: 700,
                   color: '#991B1B',
-                  marginBottom: '0.5rem',
+                  marginBottom: '0.25rem',
                   fontFamily: 'Poppins, sans-serif',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
@@ -112,7 +112,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                   Your Answer
                 </div>
                 <div style={{
-                  fontSize: '1.5rem',
+                  fontSize: '1.25rem',
                   fontWeight: 700,
                   color: '#DC2626',
                   fontFamily: 'Poppins, sans-serif'
@@ -126,15 +126,15 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
               background: '#D1FAE5',
               border: '2px solid #10B981',
               borderRadius: '0.5rem',
-              padding: '1rem',
+              padding: '0.75rem',
               textAlign: 'center',
               gridColumn: showSelectedAnswer ? 'auto' : '1 / -1'
             }}>
               <div style={{
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
                 color: '#065F46',
-                marginBottom: '0.5rem',
+                marginBottom: '0.25rem',
                 fontFamily: 'Poppins, sans-serif',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -142,7 +142,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                 Correct Answer
               </div>
               <div style={{
-                fontSize: '1.5rem',
+                fontSize: '1.25rem',
                 fontWeight: 700,
                 color: '#059669',
                 fontFamily: 'Poppins, sans-serif'
@@ -158,20 +158,20 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           background: '#FFFBEB',
           border: '2px solid #F59E0B',
           borderRadius: '0.75rem',
-          padding: '1rem',
-          marginBottom: hasSteps ? '1rem' : '1rem'
+          padding: '0.75rem',
+          marginBottom: hasSteps ? '0.75rem' : '0.75rem'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            marginBottom: '0.75rem'
+            marginBottom: '0.5rem'
           }}>
-            <span style={{ fontSize: '1.25rem' }}>📖</span>
+            <span style={{ fontSize: '1.125rem' }}>📖</span>
             <span style={{
               fontWeight: 700,
               color: '#92400E',
-              fontSize: '0.875rem',
+              fontSize: '0.8rem',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               fontFamily: 'Poppins, sans-serif'
@@ -181,9 +181,9 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           </div>
           <div style={{
             color: '#78350F',
-            lineHeight: 1.7,
+            lineHeight: 1.5,
             fontFamily: 'Poppins, sans-serif',
-            fontSize: '1rem',
+            fontSize: '0.925rem',
             whiteSpace: 'pre-wrap'
           }}>
             {rule}
@@ -196,20 +196,20 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             background: '#F3F4F6',
             border: '2px solid #9CA3AF',
             borderRadius: '0.75rem',
-            padding: '1rem',
-            marginBottom: '1rem'
+            padding: '0.75rem',
+            marginBottom: '0.75rem'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              marginBottom: '1rem'
+              marginBottom: '0.5rem'
             }}>
-              <span style={{ fontSize: '1.25rem' }}>🔢</span>
+              <span style={{ fontSize: '1.125rem' }}>🔢</span>
               <span style={{
                 fontWeight: 700,
                 color: '#374151',
-                fontSize: '0.875rem',
+                fontSize: '0.8rem',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 fontFamily: 'Poppins, sans-serif'
@@ -227,8 +227,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           className="base-camp-tile-button"
           style={{
             width: '100%',
-            padding: '1rem',
-            fontSize: '1.125rem',
+            padding: '0.75rem',
+            fontSize: '1rem',
             fontFamily: 'Poppins, sans-serif'
           }}
         >
