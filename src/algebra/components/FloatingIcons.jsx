@@ -17,11 +17,12 @@ const FloatingIcons = ({
   
   // Default positions - VERTICAL STACK, TOP-LEFT
   // Order: User/Statistics, Badges, Story, Map (top to bottom)
+  // START AT y:100 to avoid overlapping header buttons (EXIT, Back to Base Camp)
   const defaultPositions = {
-    stats: { x: 20, y: 20 },      // Top
-    badges: { x: 20, y: 110 },    // 90px gap
-    story: { x: 20, y: 200 },     // 90px gap
-    map: { x: 20, y: 290 }        // 90px gap
+    stats: { x: 20, y: 100 },     // Top (below header)
+    badges: { x: 20, y: 190 },    // 90px gap
+    story: { x: 20, y: 280 },     // 90px gap
+    map: { x: 20, y: 370 }        // 90px gap
   };
 
   const [positions, setPositions] = useState(() => {
