@@ -137,14 +137,14 @@ const MathWorksheet = ({
               className={`worksheet-row ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}
             >
               <div className="worksheet-row-content">
-                {/* COMPLETED ROW - Show the locked-in answer */}
+                {/* COMPLETED ROW - Transform to algebraic expression */}
                 {isCompleted && (
-                  <div className="worksheet-row-answer">
-                    {rowSelections.map((term, i) => (
-                      <span key={i} className="completed-term">
-                        {cleanDisplay(term, i === 0)}
-                      </span>
-                    ))}
+                  <div className="worksheet-row-expression">
+                    {rowSelections.map((term, i) => {
+                      const cleanTerm = cleanDisplay(term, i === 0);
+                      // Add spacing between terms
+                      return i === 0 ? cleanTerm : ` ${cleanTerm}`;
+                    }).join('')}
                   </div>
                 )}
 
