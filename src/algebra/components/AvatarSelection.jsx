@@ -110,7 +110,7 @@ const AvatarSelection = ({ onComplete }) => {
           gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '0.75rem',
           marginBottom: '1.5rem',
-          maxWidth: '550px',
+          maxWidth: '450px',
           margin: '0 auto 1.5rem'
         }}>
           {avatars.map((num) => (
@@ -118,8 +118,8 @@ const AvatarSelection = ({ onComplete }) => {
               key={num}
               onClick={() => setSelectedAvatar(num)}
               style={{
-                width: '90px',
-                height: '90px',
+                width: '70px',
+                height: '70px',
                 borderRadius: '50%',
                 border: selectedAvatar === num ? '4px solid #10B981' : '3px solid #E5E7EB',
                 cursor: 'pointer',
