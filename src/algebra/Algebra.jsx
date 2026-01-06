@@ -361,6 +361,7 @@ const Algebra = () => {
           stats={stats}
           progress={progress}
           playerName={playerData.name}
+          difficulty={difficulty}
           onClose={() => setShowStats(false)}
         />
       )}
