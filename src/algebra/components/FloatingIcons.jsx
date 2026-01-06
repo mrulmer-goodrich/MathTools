@@ -6,7 +6,6 @@ import '../styles/algebra.css';
 
 const FloatingIcons = ({ 
   onOpenStory, 
-  onOpenBadges, 
   onOpenStats, 
   onOpenMap,
   playerName,
@@ -15,14 +14,12 @@ const FloatingIcons = ({
   
   const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
-  // Default positions - VERTICAL STACK, TOP-LEFT
-  // Order: User/Statistics, Badges, Story, Map (top to bottom)
-  // START AT y:100 to avoid overlapping header buttons (EXIT, Back to Base Camp)
+  // Default positions - VERTICAL STACK, TOP-LEFT (3 icons only - removed badges)
+  // Order: User/Statistics (with crystals), Story, Map
   const defaultPositions = {
-    stats: { x: 20, y: 100 },     // Top (below header)
-    badges: { x: 20, y: 190 },    // 90px gap
-    story: { x: 20, y: 280 },     // 90px gap
-    map: { x: 20, y: 370 }        // 90px gap
+    stats: { x: 20, y: 100 },     // Top (below header) - shows crystal count
+    story: { x: 20, y: 190 },     // 90px gap
+    map: { x: 20, y: 280 }        // 90px gap
   };
 
   const [positions, setPositions] = useState(() => {
@@ -78,9 +75,8 @@ const FloatingIcons = ({
   }, [dragging, dragOffset]);
 
   const icons = [
+    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats, badge: crystalCount },
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'badges', image: '/algebra/KnowledgeCrystal.png', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
-    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
