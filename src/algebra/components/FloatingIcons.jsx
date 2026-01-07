@@ -5,59 +5,34 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
 const FloatingIcons = ({ 
-  onOpenStory,  onOpenStats, 
+  onOpenStory, 
+  onOpenStats, 
   onOpenMap,
   playerName,
   crystalCount = 0
 }) => {
   
-  const [playerAvatar, setPlayerAvatar] = useState(() => 
-    localStorage.getItem('algebra_player_avatar') || '1'
-  );
+  const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
   
-  // Listen for avatar changes from StatsPanel
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const newAvatar = localStorage.getItem('algebra_player_avatar') || '1';
-      setPlayerAvatar(newAvatar);
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-  
-  // Default positions - VERTICAL STACK, TOP-LEFT
-// Order: Story, Stats, Map
-const defaultPositions = {
-  story: { x: 20, y: 20 },
-  stats: { x: 20, y: 110 },  // ~90px gap
-  map: { x: 20, y: 200 }     // ~90px gap
-};
+  // Default positions - VERTICAL STACK, TOP-LEFT (3 icons only - removed badges)
+  // Order: User/Statistics (with crystals), Story, Map
+  const defaultPositions = {
+    stats: { x: 20, y: 100 },     // Top (below header) - shows crystal count
+    story: { x: 20, y: 190 },     // 90px gap
+    map: { x: 20, y: 280 }        // 90px gap
+  };
 
-  const POSITIONS_KEY = 'algebra_icon_positions';
-const LAYOUT_KEY = 'algebra_icon_positions_layout';
-const LAYOUT_VERSION = 'v2_vertical_left_no_badges';
-
-const [positions, setPositions] = useState(() => {
-  const savedLayout = localStorage.getItem(LAYOUT_KEY);
-  const saved = localStorage.getItem(POSITIONS_KEY);
-
-  // If layout changed, reset to defaults so users immediately see the intended starting positions.
-  if (savedLayout !== LAYOUT_VERSION) {
-    localStorage.setItem(LAYOUT_KEY, LAYOUT_VERSION);
-    localStorage.setItem(POSITIONS_KEY, JSON.stringify(defaultPositions));
-    return defaultPositions;
-  }
-
-  return saved ? JSON.parse(saved) : defaultPositions;
-});
+  const [positions, setPositions] = useState(() => {
+    const saved = localStorage.getItem('algebra_icon_positions');
+    return saved ? JSON.parse(saved) : defaultPositions;
+  });
 
   const [dragging, setDragging] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const draggedRef = useRef(false);
 
   useEffect(() => {
-    localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
+    localStorage.setItem('algebra_icon_positions', JSON.stringify(positions));
   }, [positions]);
 
   const handleMouseDown = (icon, e) => {
@@ -100,8 +75,8 @@ const [positions, setPositions] = useState(() => {
   }, [dragging, dragOffset]);
 
   const icons = [
+    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats, badge: crystalCount },
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
