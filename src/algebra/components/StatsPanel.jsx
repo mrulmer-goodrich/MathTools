@@ -1,7 +1,7 @@
-// StatsPanel.jsx - PROFESSIONAL DATA TABLE VERSION
+// StatsPanel.jsx - COMPLETE FIX: All morning notes addressed
 // Location: src/algebra/components/StatsPanel.jsx
 
-import React, { useMemo , useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import '../styles/stats-panel.css';
 
 const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
@@ -23,39 +23,52 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
     }));
   };
 
-  // Handle avatar selection
+  // Handle avatar selection WITHOUT page reload
   const handleAvatarChange = (avatarNum) => {
     setSelectedAvatar(avatarNum);
     localStorage.setItem('algebra_player_avatar', avatarNum);
-    // Force refresh to update avatar in floating icons
-    window.location.reload();
+    setShowAvatarSelector(false);
+    // Trigger storage event so FloatingIcons updates
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Handle clear session
   const handleClearSession = () => {
     if (window.confirm('⚠️ This will delete ALL your progress in Algebra Expedition. Are you sure?')) {
       if (window.confirm('This action cannot be undone. Really delete everything?')) {
-        // Clear all algebra localStorage
         localStorage.removeItem('algebra_difficulty');
         localStorage.removeItem('algebra_current_level');
         localStorage.removeItem('algebra_progress');
         localStorage.removeItem('algebra_enhanced_stats');
         localStorage.removeItem('algebra_practice_difficulty');
         localStorage.removeItem('algebra_story_seen');
-        
-        // Reload to reset everything
         window.location.reload();
       }
     }
   };
   
-  // Calculate overall stats
-  const totalAttempted = stats?.problemsAttempted || 0;
-  const totalCorrect = stats?.problemsCorrect || 0;
+  // Calculate overall stats from levelStats (ACCURATE)
+  const levelStats = stats?.levelStats || {};
+  
+  const totalAttempted = useMemo(() => {
+    let total = 0;
+    Object.values(levelStats).forEach(level => {
+      total += level.attempted || 0;
+    });
+    return total;
+  }, [levelStats]);
+  
+  const totalCorrect = useMemo(() => {
+    let total = 0;
+    Object.values(levelStats).forEach(level => {
+      total += level.correct || 0;
+    });
+    return total;
+  }, [levelStats]);
+  
   const accuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
 
   // Calculate active time (sum of problem times)
-  const levelStats = stats?.levelStats || {};
   const activeTime = useMemo(() => {
     let totalSeconds = 0;
     Object.values(levelStats).forEach(level => {
@@ -77,39 +90,57 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
     return totalSolved > 0 ? Math.round((firstTryCorrect / totalSolved) * 100) : 0;
   }, [levelStats]);
 
-  // Get level performance data as table rows
-  const diffKey = difficulty || 'easy';
+  // Get COMBINED level performance data (both Standard and Advanced)
   const levelPerformanceData = useMemo(() => {
     const rows = [];
-    Object.entries(levelStats)
-      .filter(([key]) => key.endsWith(`-${diffKey}`))
-      .forEach(([key, data]) => {
-        const levelId = key.replace(`-${diffKey}`, '');
-        const levelNum = levelId.split('-')[1];
-        const levelAccuracy = data.attempted > 0 ? Math.round((data.correct / data.attempted) * 100) : 0;
-        const avgTime = data.correct > 0 ? Math.round(data.totalTime / data.correct) : 0;
-        
-        rows.push({
-          level: parseInt(levelNum),
-          attempted: data.attempted,
-          correct: data.correct,
-          accuracy: levelAccuracy,
-          time: avgTime
-        });
+    const processedLevels = new Set();
+    
+    Object.entries(levelStats).forEach(([key, data]) => {
+      // Extract level ID and difficulty
+      const parts = key.split('-');
+      const diffSuffix = parts[parts.length - 1];
+      const levelId = key.replace(`-${diffSuffix}`, '');
+      const levelNum = levelId.split('-')[1];
+      
+      // Create unique key for this level
+      const levelKey = `${levelNum}-${diffSuffix}`;
+      
+      if (processedLevels.has(levelKey)) return;
+      processedLevels.add(levelKey);
+      
+      const levelAccuracy = data.attempted > 0 ? Math.round((data.correct / data.attempted) * 100) : 0;
+      const avgTime = data.correct > 0 ? Math.round(data.totalTime / data.correct) : 0;
+      
+      rows.push({
+        level: parseInt(levelNum),
+        difficulty: diffSuffix === 'easy' ? 'Standard' : 'Advanced',
+        attempted: data.attempted,
+        correct: data.correct,
+        accuracy: levelAccuracy,
+        time: avgTime
       });
+    });
     
     // Apply sorting
     return rows.sort((a, b) => {
-      const aVal = a[sortConfig.key];
-      const bVal = b[sortConfig.key];
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
       
+      // For difficulty, use string comparison
+      if (sortConfig.key === 'difficulty') {
+        return sortConfig.direction === 'asc' 
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      
+      // For numbers
       if (sortConfig.direction === 'asc') {
         return aVal > bVal ? 1 : -1;
       } else {
         return aVal < bVal ? 1 : -1;
       }
     });
-  }, [levelStats, diffKey, sortConfig]);
+  }, [levelStats, sortConfig]);
 
   const formatTime = (seconds) => {
     if (!seconds || seconds === 0) return '-';
@@ -159,9 +190,9 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
             </div>
           </div>
 
-          {/* Level Performance Table */}
+          {/* Level Performance Table - COMBINED VIEW */}
           <div className="stats-section-pro">
-            <h3>Level Performance ({difficulty === 'easy' ? 'Standard' : 'Advanced'} Route)</h3>
+            <h3>Level Performance (All Routes)</h3>
             
             {levelPerformanceData.length > 0 ? (
               <div className="stats-table-container">
@@ -171,14 +202,17 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <th onClick={() => handleSort('level')} style={{ cursor: 'pointer' }}>
                         Level {sortConfig.key === 'level' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
+                      <th onClick={() => handleSort('difficulty')} style={{ cursor: 'pointer' }}>
+                        Route {sortConfig.key === 'difficulty' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th onClick={() => handleSort('attempted')} style={{ cursor: 'pointer' }}>
                         Attempted {sortConfig.key === 'attempted' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('correct')} style={{ cursor: 'pointer' }}>
-                        Right {sortConfig.key === 'correct' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        Correct {sortConfig.key === 'correct' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('accuracy')} style={{ cursor: 'pointer' }}>
-                        Acc {sortConfig.key === 'accuracy' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                        Accuracy % {sortConfig.key === 'accuracy' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
                       <th onClick={() => handleSort('time')} style={{ cursor: 'pointer' }}>
                         Avg Time {sortConfig.key === 'time' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -186,9 +220,10 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {levelPerformanceData.map((row) => (
-                      <tr key={row.level}>
+                    {levelPerformanceData.map((row, index) => (
+                      <tr key={`${row.level}-${row.difficulty}-${index}`}>
                         <td className="level-cell">{row.level}</td>
+                        <td className="difficulty-cell">{row.difficulty}</td>
                         <td>{row.attempted}</td>
                         <td>{row.correct}</td>
                         <td className={row.accuracy >= 70 ? 'acc-good' : row.accuracy >= 50 ? 'acc-ok' : 'acc-poor'}>
@@ -202,7 +237,7 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
               </div>
             ) : (
               <div className="no-data-pro">
-                No level data yet for this route. Start playing to see your stats!
+                No level data yet. Start playing to see your stats!
               </div>
             )}
           </div>
