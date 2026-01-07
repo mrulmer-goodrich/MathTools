@@ -2071,7 +2071,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-        const choices = ensureFourChoices(misconceptions, answer);
+        
         const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
      
       const row1Bank = buildTermBank({
@@ -2234,7 +2234,7 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-        const choices = ensureFourChoices(misconceptions, answer);
+        
         const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
        const row1Bank = buildTermBank({
           correctTerms: row1Terms,
