@@ -2083,7 +2083,10 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
             formatCoefficient(standaloneTerm - outside, 'x')
           ],
           padTo: 12
-        });
+       });
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
         
        return {
           problem, displayProblem: problem, answer, choices, staged,
@@ -2192,10 +2195,10 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       const skeletons = ['a(x+b)+cx+d', 'a(x-b)+cx+d', 'a(x+b)+cx-d', 'a(x-b)+cx+d'];
       const skeleton = randomFrom(skeletons);
       
-      const outside = randomInt(2, 12);
-      const insideTerm = randomInt(1, 12);
-      const standaloneTerm = randomInt(1, 12);
-      const constantMag = randomInt(1, 12);
+      const outside = randomNonZeroInt(2, 12);
+      const insideTerm = randomNonZeroInt(1, 12);
+      const standaloneTerm = randomNonZeroInt(1, 12);
+      const constantMag = randomNonZeroInt(1, 12);
       
       let problem, insideOp, trailingConst;
       
@@ -2233,12 +2236,20 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         
         const choices = ensureFourChoices(misconceptions, answer);
         const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
-        const row1Bank = buildTermBank({
+       const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-                distractorTerms: [formatWithSign(formatCoefficient(outside, 'x')), formatWithSign(insideTerm), formatWithSign(distributedConstant + constantMag), formatWithSign(formatCoefficient(totalXCoef, 'x'))],
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),  // This is the missing +5!
+            String(insideTerm), 
+            String(trailingConst),  // Add this too
+            formatCoefficient(standaloneTerm + outside, 'x'),
+            String(distributedConstant + trailingConst)
+          ],
+          padTo: 12
         });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
         return {
           problem, displayProblem: problem, answer, choices, staged,
          explanation: {
@@ -2257,14 +2268,15 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       const skeletons = ['±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d'];
       const skeleton = randomFrom(skeletons);
       
-      const outsideMag = randomInt(2, 12);
+   const outsideMag = randomNonZeroInt(2, 12);
       const outside = Math.random() < 0.5 ? outsideMag : -outsideMag;
-      const insideTerm = randomInt(1, 12);
+      const insideTerm = randomNonZeroInt(1, 12);
       const insideOp = Math.random() < 0.5 ? '+' : '-';
-      const standaloneMag = randomInt(1, 12);
+      const standaloneMag = randomNonZeroInt(1, 12);
       const standaloneCoef = Math.random() < 0.5 ? standaloneMag : -standaloneMag;
-      const constantMag = randomInt(1, 12);
+      const constantMag = randomNonZeroInt(1, 12);
       const trailingConst = Math.random() < 0.5 ? constantMag : -constantMag;
+      
       const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
       
       const distributedCoef = outside;
@@ -2288,14 +2300,22 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-        const choices = ensureFourChoices(misconceptions, answer);
+
         const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef, trailingConst });
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outsideMag, variable), String(insideTerm), String(-distributedConstant), String(trailingConst * -1)],
-          padTo: 16
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(insideTerm),
+            String(trailingConst),
+            formatCoefficient(standaloneMag + outside, variable),
+            String(distributedConstant + trailingConst)
+          ],
+          padTo: 14
         });
-        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
         
         const fallbackRow1 = [formatWithSign(formatCoefficient(3, 'x')), formatWithSign(6), formatWithSign(formatCoefficient(2, 'x')), formatWithSign(5)];
         return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute 3', work: '+3x +6' }, { description: 'Add standalone terms', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
@@ -4162,9 +4182,9 @@ export const generateDistributeCombineProblemNEW = (difficulty) => {
   const levelId = '1-13';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const outside = randomInt(-12, 12);
-    const inside = randomInt(1, 12);
-    const standalone = randomInt(-12, 12);
+    const outside = randomNonZeroInt(-12, 12);
+    const inside = randomNonZeroInt(1, 12);
+    const standalone = randomNonZeroInt(-12, 12);
     
     let skeleton, problem, insideOp;
     
@@ -4418,9 +4438,9 @@ export const generateDistributeSubtractProblemNEW = (difficulty) => {
   const levelId = '1-14';
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const outside = randomInt(-12, 12);
-    const inside = randomInt(1, 12);
-    const standalone = randomInt(-12, 12);
+    const outside = randomNonZeroInt(-12, 12);
+    const inside = randomNonZeroInt(1, 12);
+    const standalone = randomNonZeroInt(-12, 12);
     
     let skeleton, problem, insideOp;
     
