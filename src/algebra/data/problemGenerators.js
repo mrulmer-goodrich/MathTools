@@ -1678,29 +1678,6 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
   return sortTermBank(uniqueBank);
 };
 
-// Sort term bank: variables first (descending), then constants (descending)
-const sortTermBank = (terms) => {
-  return terms.sort((a, b) => {
-    const aStr = String(a).replace(/^\+/, '');
-    const bStr = String(b).replace(/^\+/, '');
-    
-    // Check if term has variable
-    const aHasVar = /[a-z]/i.test(aStr);
-    const bHasVar = /[a-z]/i.test(bStr);
-    
-    // Variables come before constants
-    if (aHasVar && !bHasVar) return -1;
-    if (!aHasVar && bHasVar) return 1;
-    
-    // Extract numeric part for sorting
-    const aNum = parseInt(aStr.replace(/[a-z]/gi, '')) || 1;
-    const bNum = parseInt(bStr.replace(/[a-z]/gi, '')) || 1;
-    
-    // Sort by absolute value descending
-    return Math.abs(bNum) - Math.abs(aNum);
-  });
-};
-
 // Ensure unique terms in bank (no duplicates like "+10x" appearing twice)
 const ensureUniqueTermBank = (terms) => {
   const seen = new Set();
