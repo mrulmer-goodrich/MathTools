@@ -1746,12 +1746,14 @@ const makeStagedSpec = ({ row1Terms, row2Answer, row1Bank, row2Choices }) => ({
 });
 
 // ============================================
-// PHASE 5: SIMPLIFYING EXPRESSIONS (Levels 13-16)
-// Copy these 4 functions and paste them BEFORE the EXPORTS section
+// LEVELS 13-16 COMPLETE REPLACEMENT
+// ROBUST, PEDAGOGICALLY SOUND, ZERO REGRESSION
 // ============================================
 
 // ============================================
-// LEVEL 1-13: MOUNTAIN BASE (Distribute then Combine)
+// LEVEL 1-13: PACK IT UP (Distribute Then Combine)
+// Standard: 3 skeletons, range -9 to 9, variable x
+// Advanced: 5 skeletons, range -12 to 12, random variables, optional decimals
 // ============================================
 
 export const generateDistributeCombineProblem = (difficulty) => {
@@ -1759,42 +1761,80 @@ export const generateDistributeCombineProblem = (difficulty) => {
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (difficulty === 'easy') {
-      const skeletons = ['a(x+b)+cx', 'cx+a(x+b)', 'a(x+b)+cx'];
+      // STANDARD: 3 skeletons
+      const skeletons = [
+        { type: 'a(x+b)+cx', desc: 'Basic distribute and add' },
+        { type: 'cx+a(x+b)', desc: 'Reversed order' },
+        { type: 'a(x+b)+cx+d', desc: 'With trailing constant' }
+      ];
       const skeleton = randomFrom(skeletons);
       
-      const outside = randomNonZeroInt(2, 12);
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneTerm = randomNonZeroInt(1, 12);
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(-9, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      const trailingConst = skeleton.type === 'a(x+b)+cx+d' ? randomNonZeroInt(-9, 9) : 0;
       
-      const distributedCoef = outside;
-      const distributedConstant = outside * insideTerm;
-      const totalXCoef = distributedCoef + standaloneTerm;
+      let problem, standaloneCoef;
       
-      let problem;
-      if (skeleton === 'cx+a(x+b)') {
+      if (skeleton.type === 'cx+a(x+b)') {
+        standaloneCoef = standaloneTerm;
         problem = `${formatCoefficient(standaloneTerm, 'x')} + ${outside}(x + ${insideTerm})`;
+      } else if (skeleton.type === 'a(x+b)+cx+d') {
+        standaloneCoef = standaloneTerm;
+        if (trailingConst >= 0) {
+          problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} + ${trailingConst}`;
+        } else {
+          problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${Math.abs(trailingConst)}`;
+        }
       } else {
+        standaloneCoef = standaloneTerm;
         problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
       }
       
-      const answer = canonicalizeExpression(totalXCoef, 'x', distributedConstant, false);
+      const distributedCoef = outside;
+      const distributedConstant = outside * insideTerm;
+      const totalXCoef = distributedCoef + standaloneCoef;
+      const totalConstant = distributedConstant + trailingConst;
+      
+      const answer = totalConstant !== 0 
+        ? canonicalizeExpression(totalXCoef, 'x', totalConstant, false)
+        : formatCoefficient(totalXCoef, 'x');
+      
+      // PEDAGOGICAL MISCONCEPTIONS
       const misconceptions = [
         answer,
-        canonicalizeExpression(distributedCoef, 'x', distributedConstant + standaloneTerm, false),
-        canonicalizeExpression(totalXCoef, 'x', insideTerm, false),
-        canonicalizeExpression(outside + standaloneTerm, 'x', distributedConstant, false)
+        // Forgot to distribute constant
+        totalConstant !== 0 ? canonicalizeExpression(distributedCoef, 'x', insideTerm + trailingConst, false) : formatCoefficient(distributedCoef, 'x'),
+        // Combined x-terms but left constants separate
+        totalConstant !== 0 ? canonicalizeExpression(totalXCoef, 'x', insideTerm, false) : formatCoefficient(totalXCoef, 'x'),
+        // Added everything together (3x + 2x + 5 → 10x)
+        formatCoefficient(totalXCoef + totalConstant, 'x')
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneTerm });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm, trailingConst });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp: '+', 
+          standaloneCoef,
+          trailingConst 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(insideTerm), formatCoefficient(standaloneTerm + outside, 'x'), String(distributedConstant + insideTerm)],
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),  // Undistributed coefficient
+            String(insideTerm),                // Constant not distributed
+            formatCoefficient(standaloneTerm + outside, 'x'),  // Wrong combination
+            String(distributedConstant + (trailingConst || 0))  // Combined constants wrong
+          ],
           padTo: 12
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
@@ -1807,80 +1847,133 @@ export const generateDistributeCombineProblem = (difficulty) => {
               { description: `Distribute ${outside}`, work: `${formatCoefficient(distributedCoef, 'x')} + ${distributedConstant}` },
               { description: `Combine like terms`, work: answer }
             ],
-            rule: "Distribute → Combine",
+            rule: "Distribute → Combine like terms",
             finalAnswer: answer
           }
         };
       }
     } else {
-      const skeletons = ['a(v+b)+cv', 'cv+a(v+b)', 'a(v+b)+cv-d', 'a(v+b)-cv'];
+      // ADVANCED: 5 skeletons with decimals and wider range
+      const skeletons = [
+        { type: 'a(v+b)+cv', desc: 'Basic with variable' },
+        { type: 'cv+a(v+b)', desc: 'Reversed order' },
+        { type: 'a(v+b)+cv-d', desc: 'With subtracted trailing' },
+        { type: 'a(v-b)+cv', desc: 'Subtraction inside' },
+        { type: '-a(v+b)+cv', desc: 'Negative outside' }
+      ];
       const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
       
-      const outside = randomNonZeroInt(2, 12);
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneMag = randomNonZeroInt(1, 12);
-      const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+      // Optional decimals for advanced
+      const useDecimal = Math.random() < 0.3;
+      const outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
+      const insideTerm = randomNonZeroInt(-12, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
       
-      let standaloneCoef, problem, trailingConst = 0;
-      if (skeleton === 'a(v+b)+cv-d') {
+      let problem, standaloneCoef, insideOp, trailingConst = 0;
+      
+      if (skeleton.type === 'cv+a(v+b)') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        problem = `${formatCoefficient(standaloneCoef, variable)} + ${outside}(${variable} + ${insideTerm})`;
+      } else if (skeleton.type === 'a(v+b)+cv-d') {
+        insideOp = '+';
         standaloneCoef = standaloneMag;
         trailingConst = -randomNonZeroInt(1, 12);
         problem = `${outside}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneCoef, variable)} - ${Math.abs(trailingConst)}`;
-      } else if (skeleton === 'a(v+b)-cv') {
-        standaloneCoef = -standaloneMag;
-        problem = `${outside}(${variable} + ${insideTerm}) - ${formatCoefficient(standaloneMag, variable)}`;
-      } else if (skeleton === 'cv+a(v+b)') {
+      } else if (skeleton.type === 'a(v-b)+cv') {
+        insideOp = '-';
         standaloneCoef = standaloneMag;
-        problem = `${formatCoefficient(standaloneCoef, variable)} + ${outside}(${variable} + ${insideTerm})`;
+        problem = `${outside}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneCoef, variable)}`;
+      } else if (skeleton.type === '-a(v+b)+cv') {
+        insideOp = '+';
+        const outsideMag = Math.abs(outside);
+        standaloneCoef = standaloneMag;
+        problem = `${-outsideMag}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneCoef, variable)}`;
       } else {
+        insideOp = '+';
         standaloneCoef = standaloneMag;
         problem = `${outside}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneCoef, variable)}`;
       }
       
       const distributedCoef = outside;
-      const distributedConstant = outside * insideTerm;
+      const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
       const totalCoef = distributedCoef + standaloneCoef;
       const totalConstant = distributedConstant + trailingConst;
       
-      const answer = totalConstant !== 0 ? canonicalizeExpression(totalCoef, variable, totalConstant, false) : formatCoefficient(totalCoef, variable);
+      const answer = totalConstant !== 0 
+        ? canonicalizeExpression(totalCoef, variable, totalConstant, false)
+        : formatCoefficient(totalCoef, variable);
+      
       const misconceptions = [
         answer,
         totalConstant !== 0 ? canonicalizeExpression(distributedCoef, variable, totalConstant, false) : formatCoefficient(distributedCoef, variable),
         totalConstant !== 0 ? canonicalizeExpression(totalCoef, variable, insideTerm, false) : formatCoefficient(totalCoef, variable),
-        totalConstant !== 0 ? canonicalizeExpression(outside + standaloneCoef, variable, distributedConstant, false) : formatCoefficient(outside + standaloneCoef, variable)
+        formatCoefficient(Math.abs(outside) + Math.abs(standaloneCoef), variable)
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneMag, variable });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneMag, variable });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-       const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp: '+', standaloneCoef, trailingConst });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable, 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef, 
+          trailingConst 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, variable), String(insideTerm), String(distributedConstant + (trailingConst || 0))],
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(insideTerm),
+            String(distributedConstant + (trailingConst || 0))
+          ],
           padTo: 14
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+        return {
+          problem, displayProblem: problem, answer, choices, staged,
+          explanation: {
+            originalProblem: problem,
+            steps: [],
+            rule: "Distribute → Combine",
+            finalAnswer: answer
+          }
+        };
       }
     }
   }
   
-  const outside = randomInt(2, 12), insideTerm = randomInt(1, 12), standaloneTerm = randomInt(1, 12);
-  const answer = canonicalizeExpression(outside + standaloneTerm, 'x', outside * insideTerm, false);
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm);
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
   const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { 
+    problem, displayProblem: problem, answer, choices, staged, 
+    explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } 
+  };
 };
 
 // ============================================
-// LEVEL 1-14: STEEP CLIMB (Distribute with Subtraction)
+// LEVEL 1-14: DOUBLE CHECK (Distribute with Subtraction)
+// Standard: 3 skeletons, range -9 to 9, variable x
+// Advanced: 5 skeletons, range -12 to 12, random variables, optional decimals
 // ============================================
 
 export const generateDistributeSubtractProblem = (difficulty) => {
@@ -1888,27 +1981,32 @@ export const generateDistributeSubtractProblem = (difficulty) => {
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (difficulty === 'easy') {
-      const skeletons = ['a(x-b)+cx', 'a(x+b)-cx', 'cx+a(x-b)'];
+      // STANDARD: 3 skeletons
+      const skeletons = [
+        { type: 'a(x-b)+cx', desc: 'Subtract inside, add outside' },
+        { type: 'a(x+b)-cx', desc: 'Add inside, subtract outside' },
+        { type: 'cx-a(x-b)', desc: 'Reversed with subtraction' }
+      ];
       const skeleton = randomFrom(skeletons);
       
-      const outside = randomNonZeroInt(2, 12);
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneTerm = randomNonZeroInt(1, 12);
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(-9, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
       
       let problem, insideOp, standaloneCoef;
       
-      if (skeleton === 'a(x-b)+cx') {
+      if (skeleton.type === 'a(x-b)+cx') {
         insideOp = '-';
         standaloneCoef = standaloneTerm;
         problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
-      } else if (skeleton === 'a(x+b)-cx') {
+      } else if (skeleton.type === 'a(x+b)-cx') {
         insideOp = '+';
         standaloneCoef = -standaloneTerm;
         problem = `${outside}(x + ${insideTerm}) - ${formatCoefficient(standaloneTerm, 'x')}`;
       } else {
         insideOp = '-';
         standaloneCoef = standaloneTerm;
-        problem = `${formatCoefficient(standaloneTerm, 'x')} + ${outside}(x - ${insideTerm})`;
+        problem = `${formatCoefficient(standaloneTerm, 'x')} - ${outside}(x - ${insideTerm})`;
       }
       
       const distributedCoef = outside;
@@ -1916,23 +2014,40 @@ export const generateDistributeSubtractProblem = (difficulty) => {
       const totalXCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
+      
+      // PEDAGOGICAL MISCONCEPTIONS
       const misconceptions = [
         answer,
-        formatAnswer(totalXCoef, 'x', -distributedConstant),
-        formatAnswer(totalXCoef, 'x', insideTerm),
-        formatAnswer(distributedCoef, 'x', distributedConstant)
+        // Wrong sign on distributed constant
+        formatAnswer(distributedCoef, 'x', -distributedConstant + standaloneTerm),
+        // Didn't combine x-terms
+        formatAnswer(distributedCoef, 'x', distributedConstant),
+        // Sign error when combining
+        formatAnswer(Math.abs(distributedCoef) + Math.abs(standaloneCoef), 'x', distributedConstant)
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneTerm });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '-', standaloneCoef: standaloneTerm });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, 'x'), String(-insideTerm), formatCoefficient(standaloneTerm - outside, 'x')],
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),
+            String(-insideTerm),
+            formatCoefficient(standaloneTerm - outside, 'x')
+          ],
           padTo: 12
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
@@ -1951,32 +2066,45 @@ export const generateDistributeSubtractProblem = (difficulty) => {
         };
       }
     } else {
-      const skeletons = ['a(v-b)+cv', 'a(v+b)-cv', 'cv-a(v-b)', 'a(v-b)-cv'];
+      // ADVANCED: 5 skeletons
+      const skeletons = [
+        { type: 'a(v-b)+cv', desc: 'Basic subtraction inside' },
+        { type: 'a(v+b)-cv', desc: 'Subtraction outside' },
+        { type: 'cv-a(v-b)', desc: 'Reversed order' },
+        { type: 'a(v-b)-cv', desc: 'Double subtraction' },
+        { type: '-a(v-b)+cv', desc: 'Negative outside with subtraction' }
+      ];
       const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
       
-      const outside = randomNonZeroInt(2, 12);
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneMag = randomNonZeroInt(1, 12);
-      const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+      const useDecimal = Math.random() < 0.25;
+      const outside = useDecimal ? randomFrom([0.25, 0.75, 1.5]) : randomNonZeroInt(-12, 12);
+      const insideTerm = randomNonZeroInt(-12, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.25, 0.75, 1.5]) : randomNonZeroInt(-12, 12);
       
-      let problem, insideOp, standaloneCoef;
+      let problem, insideOp, standaloneCoef, trailingConst = 0;
       
-      if (skeleton === 'a(v-b)+cv') {
+      if (skeleton.type === 'a(v-b)+cv') {
         insideOp = '-';
         standaloneCoef = standaloneMag;
         problem = `${outside}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)}`;
-      } else if (skeleton === 'a(v+b)-cv') {
+      } else if (skeleton.type === 'a(v+b)-cv') {
         insideOp = '+';
         standaloneCoef = -standaloneMag;
         problem = `${outside}(${variable} + ${insideTerm}) - ${formatCoefficient(standaloneMag, variable)}`;
-      } else if (skeleton === 'cv-a(v-b)') {
+      } else if (skeleton.type === 'cv-a(v-b)') {
         insideOp = '-';
         standaloneCoef = standaloneMag;
         problem = `${formatCoefficient(standaloneMag, variable)} - ${outside}(${variable} - ${insideTerm})`;
-      } else {
+      } else if (skeleton.type === 'a(v-b)-cv') {
         insideOp = '-';
         standaloneCoef = -standaloneMag;
         problem = `${outside}(${variable} - ${insideTerm}) - ${formatCoefficient(standaloneMag, variable)}`;
+      } else {
+        insideOp = '-';
+        const outsideMag = Math.abs(outside);
+        standaloneCoef = standaloneMag;
+        problem = `${-outsideMag}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)}`;
       }
       
       const distributedCoef = outside;
@@ -1984,45 +2112,71 @@ export const generateDistributeSubtractProblem = (difficulty) => {
       const totalCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalCoef, variable, distributedConstant);
+      
       const misconceptions = [
         answer,
-        formatAnswer(totalCoef, variable, -distributedConstant),
-        formatAnswer(distributedCoef, variable, distributedConstant),
-        formatAnswer(totalCoef, variable, insideTerm)
+        formatAnswer(distributedCoef, variable, -distributedConstant),
+        formatAnswer(totalCoef, variable, insideTerm),
+        formatAnswer(outside + standaloneCoef, variable, distributedConstant)
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneMag, variable });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneMag, variable });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp: '-', standaloneCoef, trailingConst });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable, 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef, 
+          trailingConst 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
-          distractorTerms: [formatCoefficient(outside, variable), String(-insideTerm), formatCoefficient(standaloneMag - outside, variable)],
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(-insideTerm),
+            formatCoefficient(standaloneMag - outside, variable)
+          ],
           padTo: 14
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
         
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+        return { 
+          problem, displayProblem: problem, answer, choices, staged, 
+          explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } 
+        };
       }
     }
   }
   
-  const outside = randomInt(2, 12), insideTerm = randomInt(1, 12), standaloneTerm = randomInt(1, 12);
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
   const answer = formatAnswer(outside + standaloneTerm, 'x', -(outside * insideTerm));
   const problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '-', standaloneCoef: standaloneTerm });
   const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { 
+    problem, displayProblem: problem, answer, choices, staged, 
+    explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } 
+  };
 };
 
-
 // ============================================
-// LEVEL 1-15: ROCKY LEDGE (Negative Outside)
+// LEVEL 1-15: ROCKY LEDGE (Negative Outside Distribution)
+// Standard: 3 skeletons, range -9 to 9, variable x
+// Advanced: 5 skeletons, range -12 to 12, random variables, decimals
 // ============================================
 
 export const generateNegativeDistributeCombineProblem = (difficulty) => {
@@ -2030,28 +2184,33 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (difficulty === 'easy') {
-      const skeletons = ['-a(x+b)+cx', '-a(x-b)+cx', 'cx-a(x+b)'];
+      // STANDARD: 3 skeletons
+      const skeletons = [
+        { type: '-a(x+b)+cx', desc: 'Negative outside with addition' },
+        { type: '-a(x-b)+cx', desc: 'Negative outside with subtraction' },
+        { type: 'cx-a(x+b)', desc: 'Reversed negative distribution' }
+      ];
       const skeleton = randomFrom(skeletons);
       
-      const outsideMag = randomNonZeroInt(2, 12);
+      const outsideMag = randomNonZeroInt(1, 9);
       const outside = -outsideMag;
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneTerm = randomNonZeroInt(1, 12);
+      const insideTerm = randomNonZeroInt(1, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
       
       let problem, insideOp, standaloneCoef;
       
-      if (skeleton === '-a(x+b)+cx') {
+      if (skeleton.type === '-a(x+b)+cx') {
         insideOp = '+';
         standaloneCoef = standaloneTerm;
         problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
-      } else if (skeleton === '-a(x-b)+cx') {
+      } else if (skeleton.type === '-a(x-b)+cx') {
         insideOp = '-';
         standaloneCoef = standaloneTerm;
         problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
       } else {
         insideOp = '+';
         standaloneCoef = standaloneTerm;
-        problem = `${formatCoefficient(standaloneTerm, 'x')} ${outside}(x + ${insideTerm})`;
+        problem = `${formatCoefficient(standaloneTerm, 'x')} - ${outsideMag}(x + ${insideTerm})`;
       }
       
       const distributedCoef = outside;
@@ -2059,36 +2218,46 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       const totalXCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
-           const misconceptions = [
+      
+      // PEDAGOGICAL MISCONCEPTIONS
+      const misconceptions = [
         answer,
-        canonicalizeExpression(distributedCoef, 'x', distributedConstant + standaloneTerm, false), // Combined wrong terms
-        canonicalizeExpression(totalXCoef, 'x', insideTerm, false), // Used inside constant instead of distributed
-        canonicalizeExpression(-distributedCoef, 'x', distributedConstant, false), // Flipped only variable coefficient
-        canonicalizeExpression(distributedCoef, 'x', -distributedConstant, false) // Flipped only constant
+        // Forgot to flip sign on constant
+        formatAnswer(distributedCoef, 'x', Math.abs(distributedConstant)),
+        // Flipped only variable coefficient
+        formatAnswer(-distributedCoef, 'x', distributedConstant),
+        // Didn't combine
+        formatAnswer(distributedCoef, 'x', distributedConstant + standaloneTerm)
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outsideMag, insideTerm, standaloneTerm });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneTerm });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef 
+        });
         
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
-     
-      const row1Bank = buildTermBank({
+        const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
             formatCoefficient(outside, 'x'), 
-            String(insideTerm),  // This is the missing +6!
-            String(-insideTerm), // Add negative version too
+            String(insideTerm),
+            String(-insideTerm),
             formatCoefficient(standaloneTerm - outside, 'x')
           ],
           padTo: 12
-       });
+        });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
         
-       return {
+        return {
           problem, displayProblem: problem, answer, choices, staged,
           explanation: {
             originalProblem: problem,
@@ -2102,33 +2271,45 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
         };
       }
     } else {
-      const skeletons = ['-a(v+b)+cv', '-a(v-b)+cv', 'cv-a(v+b)', '-a(v+b)-cv'];
+      // ADVANCED: 5 skeletons with decimals
+      const skeletons = [
+        { type: '-a(v+b)+cv', desc: 'Negative outside basic' },
+        { type: '-a(v-b)+cv', desc: 'Negative outside with subtraction' },
+        { type: 'cv-a(v+b)', desc: 'Reversed order' },
+        { type: '-a(v+b)-cv', desc: 'Double negative' },
+        { type: '-a(v-b)-cv', desc: 'Full complexity' }
+      ];
       const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
       
-      const outsideMag = randomNonZeroInt(2, 12);
+      const useDecimal = Math.random() < 0.4;
+      const outsideMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(1, 12);
       const outside = -outsideMag;
       const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneMag = randomNonZeroInt(1, 12);
-      const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(-12, 12);
       
       let problem, insideOp, standaloneCoef;
       
-      if (skeleton === '-a(v+b)+cv') {
+      if (skeleton.type === '-a(v+b)+cv') {
         insideOp = '+';
         standaloneCoef = standaloneMag;
         problem = `${outside}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)}`;
-      } else if (skeleton === '-a(v-b)+cv') {
+      } else if (skeleton.type === '-a(v-b)+cv') {
         insideOp = '-';
         standaloneCoef = standaloneMag;
         problem = `${outside}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)}`;
-      } else if (skeleton === 'cv-a(v+b)') {
+      } else if (skeleton.type === 'cv-a(v+b)') {
         insideOp = '+';
         standaloneCoef = standaloneMag;
-        problem = `${formatCoefficient(standaloneMag, variable)} ${outside}(${variable} + ${insideTerm})`;
-      } else {
+        problem = `${formatCoefficient(standaloneMag, variable)} - ${outsideMag}(${variable} + ${insideTerm})`;
+      } else if (skeleton.type === '-a(v+b)-cv') {
         insideOp = '+';
-        standaloneCoef = -standaloneMag;
-        problem = `${outside}(${variable} + ${insideTerm}) - ${formatCoefficient(standaloneMag, variable)}`;
+        standaloneCoef = -Math.abs(standaloneMag);
+        problem = `${outside}(${variable} + ${insideTerm}) - ${formatCoefficient(Math.abs(standaloneMag), variable)}`;
+      } else {
+        insideOp = '-';
+        standaloneCoef = -Math.abs(standaloneMag);
+        problem = `${outside}(${variable} - ${insideTerm}) - ${formatCoefficient(Math.abs(standaloneMag), variable)}`;
       }
       
       const distributedCoef = outside;
@@ -2136,18 +2317,26 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       const totalCoef = distributedCoef + standaloneCoef;
       
       const answer = formatAnswer(totalCoef, variable, distributedConstant);
+      
       const misconceptions = [
         answer,
-        formatAnswer(-distributedCoef + standaloneCoef, variable, distributedConstant),
-        formatAnswer(totalCoef, variable, -distributedConstant),
+        formatAnswer(Math.abs(distributedCoef), variable, Math.abs(distributedConstant)),
+        formatAnswer(totalCoef, variable, insideTerm),
         formatAnswer(Math.abs(distributedCoef) + standaloneCoef, variable, Math.abs(distributedConstant))
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outsideMag, insideTerm, standaloneMag, variable });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneMag, variable });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-const row1Terms = buildRow1Terms({ outside: -outside, variable, insideConst: insideTerm, insideOp: '+', standaloneCoef });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable, 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
@@ -2158,33 +2347,57 @@ const row1Terms = buildRow1Terms({ outside: -outside, variable, insideConst: ins
           ],
           padTo: 14
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
         
-        const fallbackRow1 = [formatWithSign(formatCoefficient(-2, 'x')), formatWithSign(-4), formatWithSign(formatCoefficient(standaloneTerm, 'x'))];
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute -2', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
-        
+        return { 
+          problem, displayProblem: problem, answer, choices, staged, 
+          explanation: { 
+            originalProblem: problem, 
+            steps: [
+              { description: `Distribute ${outside}`, work: row1Terms.join(' ') }, 
+              { description: 'Combine like terms', work: answer }
+            ], 
+            rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", 
+            finalAnswer: answer 
+          } 
+        };
       }
     }
   }
   
-  const outside = -randomInt(2, 12), insideTerm = randomInt(1, 12), standaloneTerm = randomInt(1, 12);
+  // Fallback
+  const outside = -randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
   const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm);
   const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
   const choices = ensureFourChoices([answer], answer);
   const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
-   const row1Bank = buildTermBank({
-          correctTerms: row1Terms,
-          distractorTerms: [formatWithSign(formatCoefficient(-outside, 'x')), formatWithSign(-distributedConstant), formatWithSign(formatCoefficient(standaloneTerm - outside, 'x'))], });
-
-  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+  const row1Bank = buildTermBank({
+    correctTerms: row1Terms,
+    distractorTerms: [
+      formatCoefficient(-outside, 'x'), 
+      String(-distributedConstant), 
+      formatCoefficient(standaloneTerm - outside, 'x')
+    ],
+    padTo: 12
+  });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { 
+    problem, displayProblem: problem, answer, choices, staged, 
+    explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } 
+  };
 };
 
-
 // ============================================
-// LEVEL 1-16: SUMMIT (Complex Simplification)
+// LEVEL 1-16: SUMMIT (Complex Multi-Step)
+// Standard: 3 skeletons, range -9 to 9, variable x
+// Advanced: 5 skeletons, range -12 to 12, random variables, decimals
 // ============================================
 
 export const generateComplexSimplifyProblem = (difficulty) => {
@@ -2192,28 +2405,33 @@ export const generateComplexSimplifyProblem = (difficulty) => {
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     if (difficulty === 'easy') {
-      const skeletons = ['a(x+b)+cx+d', 'a(x-b)+cx+d', 'a(x+b)+cx-d', 'a(x-b)+cx+d'];
+      // STANDARD: 3 skeletons
+      const skeletons = [
+        { type: 'a(x+b)+cx+d', desc: 'Basic with trailing constant' },
+        { type: 'a(x-b)+cx+d', desc: 'Subtraction inside with trailing' },
+        { type: 'cx+a(x+b)-d', desc: 'Reversed with subtraction' }
+      ];
       const skeleton = randomFrom(skeletons);
       
-      const outside = randomNonZeroInt(2, 12);
-      const insideTerm = randomNonZeroInt(1, 12);
-      const standaloneTerm = randomNonZeroInt(1, 12);
-      const constantMag = randomNonZeroInt(1, 12);
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(-9, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      const constantMag = randomNonZeroInt(1, 9);
       
       let problem, insideOp, trailingConst;
       
-      if (skeleton === 'a(x+b)+cx-d') {
-        insideOp = '+';
-        trailingConst = -constantMag;
-        problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constantMag}`;
-      } else if (skeleton === 'a(x+b)+cx+d') {
+      if (skeleton.type === 'a(x+b)+cx+d') {
         insideOp = '+';
         trailingConst = constantMag;
         problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} + ${constantMag}`;
-      } else {
+      } else if (skeleton.type === 'a(x-b)+cx+d') {
         insideOp = '-';
+        trailingConst = constantMag;
+        problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} + ${constantMag}`;
+      } else {
+        insideOp = '+';
         trailingConst = -constantMag;
-        problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constantMag}`;
+        problem = `${formatCoefficient(standaloneTerm, 'x')} + ${outside}(x + ${insideTerm}) - ${constantMag}`;
       }
       
       const distributedCoef = outside;
@@ -2222,37 +2440,50 @@ export const generateComplexSimplifyProblem = (difficulty) => {
       const totalConstant = distributedConstant + trailingConst;
       
       const answer = formatAnswer(totalXCoef, 'x', totalConstant);
-         const misconceptions = [
+      
+      // PEDAGOGICAL MISCONCEPTIONS
+      const misconceptions = [
         answer,
-        formatAnswer(distributedCoef, 'x', distributedConstant + trailingConst), // Wrong constant combination
-        formatAnswer(totalXCoef, 'x', insideTerm), // Used inside constant
-        formatAnswer(distributedCoef, 'x', totalConstant), // Didn't combine x terms
-        formatAnswer(totalXCoef, 'x', distributedConstant) // Forgot trailing constant
+        // Combined x-terms but not constants
+        formatAnswer(totalXCoef, 'x', distributedConstant),
+        // Forgot to distribute constant inside
+        formatAnswer(distributedCoef, 'x', totalConstant),
+        // Combined everything together
+        formatCoefficient(totalXCoef + totalConstant, 'x')
       ];
       
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, insideTerm, standaloneTerm, constantMag });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm, constantMag });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef: standaloneTerm, 
+          trailingConst 
+        });
         
-        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
-       const row1Bank = buildTermBank({
+        const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
-            formatCoefficient(outside, 'x'),  // This is the missing +5!
+            formatCoefficient(outside, 'x'),
             String(insideTerm), 
-            String(trailingConst),  // Add this too
+            String(trailingConst),
             formatCoefficient(standaloneTerm + outside, 'x'),
             String(distributedConstant + trailingConst)
           ],
           padTo: 12
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
+        
         return {
           problem, displayProblem: problem, answer, choices, staged,
-         explanation: {
+          explanation: {
             originalProblem: problem,
             steps: [
               { description: `Distribute ${outside}`, work: row1Terms.slice(0, 2).join(' ') },
@@ -2265,30 +2496,60 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         };
       }
     } else {
-      const skeletons = ['±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d', '±a(v±b)±cv±d'];
+      // ADVANCED: 5 skeletons
+      const skeletons = [
+        { type: 'a(v+b)+cv+d', desc: 'Basic complexity' },
+        { type: 'a(v-b)+cv-d', desc: 'Double subtraction' },
+        { type: '-a(v+b)+cv+d', desc: 'Negative outside' },
+        { type: 'a(v+b)-cv-d', desc: 'Subtract both' },
+        { type: '-a(v-b)+cv-d', desc: 'Full sign complexity' }
+      ];
       const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
       
-   const outsideMag = randomNonZeroInt(2, 12);
-      const outside = Math.random() < 0.5 ? outsideMag : -outsideMag;
+      const useDecimal = Math.random() < 0.3;
+      const outsideMag = useDecimal ? randomFrom([0.25, 1.5, 2.5]) : randomNonZeroInt(1, 12);
+      const outside = skeleton.type.startsWith('-a') ? -outsideMag : outsideMag;
       const insideTerm = randomNonZeroInt(1, 12);
-      const insideOp = Math.random() < 0.5 ? '+' : '-';
-      const standaloneMag = randomNonZeroInt(1, 12);
-      const standaloneCoef = Math.random() < 0.5 ? standaloneMag : -standaloneMag;
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(1, 12);
       const constantMag = randomNonZeroInt(1, 12);
-      const trailingConst = Math.random() < 0.5 ? constantMag : -constantMag;
       
-      const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+      let problem, insideOp, standaloneCoef, trailingConst;
+      
+      if (skeleton.type === 'a(v+b)+cv+d') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        trailingConst = constantMag;
+        problem = `${outside}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)} + ${constantMag}`;
+      } else if (skeleton.type === 'a(v-b)+cv-d') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        trailingConst = -constantMag;
+        problem = `${outside}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)} - ${constantMag}`;
+      } else if (skeleton.type === '-a(v+b)+cv+d') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        trailingConst = constantMag;
+        problem = `${outside}(${variable} + ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)} + ${constantMag}`;
+      } else if (skeleton.type === 'a(v+b)-cv-d') {
+        insideOp = '+';
+        standaloneCoef = -standaloneMag;
+        trailingConst = -constantMag;
+        problem = `${outside}(${variable} + ${insideTerm}) - ${formatCoefficient(standaloneMag, variable)} - ${constantMag}`;
+      } else {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        trailingConst = -constantMag;
+        problem = `${outside}(${variable} - ${insideTerm}) + ${formatCoefficient(standaloneMag, variable)} - ${constantMag}`;
+      }
       
       const distributedCoef = outside;
       const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
       const totalCoef = distributedCoef + standaloneCoef;
       const totalConstant = distributedConstant + trailingConst;
       
-      const standaloneStr = standaloneCoef >= 0 ? `+ ${formatCoefficient(standaloneCoef, variable)}` : `- ${formatCoefficient(Math.abs(standaloneCoef), variable)}`;
-      const trailingStr = trailingConst >= 0 ? `+ ${trailingConst}` : `- ${Math.abs(trailingConst)}`;
-      const problem = `${outside}(${variable} ${insideOp} ${insideTerm}) ${standaloneStr} ${trailingStr}`;
-      
       const answer = formatAnswer(totalCoef, variable, totalConstant);
+      
       const misconceptions = [
         answer,
         formatAnswer(totalCoef, variable, -totalConstant),
@@ -2296,12 +2557,19 @@ export const generateComplexSimplifyProblem = (difficulty) => {
         formatAnswer(totalCoef, variable, distributedConstant)
       ];
       
-      const signature = generateSignature(levelId, difficulty, { outsideMag, insideTerm, standaloneMag, constantMag, variable });
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneMag, constantMag, variable });
       if (!isRecentDuplicate(levelId, difficulty, signature)) {
         recordProblem(levelId, difficulty, signature);
         
-
-        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef, trailingConst });
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable, 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef, 
+          trailingConst 
+        });
+        
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
@@ -2313,57 +2581,56 @@ export const generateComplexSimplifyProblem = (difficulty) => {
           ],
           padTo: 14
         });
+        
         const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
         const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
         const choices = ensureFourChoices(row2Choices, answer);
         
-        const fallbackRow1 = [formatWithSign(formatCoefficient(3, 'x')), formatWithSign(6), formatWithSign(formatCoefficient(2, 'x')), formatWithSign(5)];
-        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [{ description: 'Distribute 3', work: '+3x +6' }, { description: 'Add standalone terms', work: fallbackRow1.join(' ') }, { description: 'Combine like terms', work: answer }], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
+        return { 
+          problem, displayProblem: problem, answer, choices, staged, 
+          explanation: { 
+            originalProblem: problem, 
+            steps: [
+              { description: `Distribute ${outside}`, work: '+' + formatCoefficient(distributedCoef, variable) + ' +' + distributedConstant }, 
+              { description: 'Add standalone terms', work: row1Terms.join(' ') }, 
+              { description: 'Combine like terms', work: answer }
+            ], 
+            rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', 
+            finalAnswer: answer 
+          } 
+        };
       }
     }
-  } 
-// Fallback after MAX_RETRIES
-const outside = randomInt(2, 12);
-const insideTerm = randomInt(1, 12);
-const standaloneTerm = randomInt(1, 12);
-const constant = randomInt(1, 12);
-const distributedConstant = outside * insideTerm;
-const answer = formatAnswer(outside + standaloneTerm, 'x', distributedConstant - constant);
-const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} - ${constant}`;
-const choices = ensureFourChoices([answer], answer);
-
-const row1Terms = buildRow1Terms({
-  outside,
-  variable: 'x',
-  insideConst: insideTerm,
-  insideOp: '+',
-  standaloneCoef: standaloneTerm,
-  trailingConst: -constant,
-});
-
-const row1Bank = buildTermBank({
-  correctTerms: row1Terms,
-  distractorTerms: [
-    formatWithSign(formatCoefficient(outside, 'x')),
-    formatWithSign(insideTerm),
-    formatWithSign(distributedConstant + constant),
-  ],
-});
-
-const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices: choices });
-
-return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+  }
+  
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const constant = randomNonZeroInt(1, 9);
+  const distributedConstant = outside * insideTerm;
+  const answer = formatAnswer(outside + standaloneTerm, 'x', distributedConstant + constant);
+  const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer], answer);
+  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm, trailingConst: constant });
+  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { 
+    problem, displayProblem: problem, answer, choices, staged, 
+    explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } 
+  };
 };
 
-
-// ============================================
+// ==============================================================================================================================================
 // PHASE 6: ONE-STEP EQUATIONS (Levels 17-20)
 // Copy these 4 functions and paste them BEFORE the EXPORTS section
-// ============================================
+// =============================================================================================================================================
 
-// ============================================
+// =============================================================================================================================================
 // LEVEL 1-17: RIVER CROSSING (Addition Equations)
-// ============================================
+// =============================================================================================================================================
 
 export const generateAdditionEquationProblem = (difficulty) => {
   if (difficulty === 'easy') {
@@ -4174,412 +4441,6 @@ const sortTermBank = (terms) => {
   });
 };
 
-// ============================================
-// LEVEL 1-13: MOUNTAIN BASE
-// ============================================
-
-export const generateDistributeCombineProblemNEW = (difficulty) => {
-  const levelId = '1-13';
-  
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const outside = randomNonZeroInt(-12, 12);
-    const inside = randomNonZeroInt(1, 12);
-    const standalone = randomNonZeroInt(-12, 12);
-    
-    let skeleton, problem, insideOp;
-    
-    if (difficulty === 'easy') {
-      const outsidePos = Math.abs(outside);
-      const standaloneAbs = Math.abs(standalone);
-      
-      skeleton = randomFrom(['a(x+b)+cx', 'cx+a(x+b)', 'a(x+b)+c']);
-      
-      if (skeleton === 'a(x+b)+cx') {
-        problem = `${outsidePos}(x + ${inside}) + ${formatCoefficient(standaloneAbs, 'x')}`;
-        insideOp = '+';
-      } else if (skeleton === 'cx+a(x+b)') {
-        problem = `${formatCoefficient(standaloneAbs, 'x')} + ${outsidePos}(x + ${inside})`;
-        insideOp = '+';
-      } else {
-        problem = `${outsidePos}(x + ${inside}) + ${standaloneAbs}`;
-        insideOp = '+';
-      }
-      
-      const distVarCoef = outsidePos;
-      const distConst = outsidePos * inside;
-      
-      const row1Expected = [];
-      row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, 'x')));
-      row1Expected.push(formatWithSign(distConst));
-      
-      if (skeleton !== 'a(x+b)+c') {
-        row1Expected.push(formatWithSign(formatCoefficient(standaloneAbs, 'x')));
-      } else {
-        row1Expected.push(formatWithSign(standaloneAbs));
-      }
-      
-      const termBank = new Set();
-      row1Expected.forEach(term => termBank.add(term));
-      
-      // Distractors
-      termBank.add(formatWithSign(inside));
-      termBank.add(formatWithSign(outsidePos));
-      termBank.add(formatWithSign(-distConst));
-      termBank.add(formatWithSign(formatCoefficient(-distVarCoef, 'x')));
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneAbs, 'x')));
-      termBank.add(formatWithSign(distConst + inside));
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef - 1, 'x')));
-      termBank.add(formatWithSign(distConst + 1));
-      
-      while (termBank.size < 12) {
-        const randomVal = randomInt(-12, 12);
-        termBank.add(formatWithSign(randomVal));
-      }
-      
-      let finalCoef, finalConst;
-      if (skeleton === 'a(x+b)+cx' || skeleton === 'cx+a(x+b)') {
-        finalCoef = distVarCoef + standaloneAbs;
-        finalConst = distConst;
-      } else {
-        finalCoef = distVarCoef;
-        finalConst = distConst + standaloneAbs;
-      }
-      
-      const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
-      
-      // FIXED: Better misconceptions that avoid duplicates
-      const row2Choices = [
-        answer,
-        formatCoefficient(distVarCoef, 'x') + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst), // Didn't combine constants
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant instead of distributed
-        formatCoefficient(distVarCoef + standaloneAbs, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst) // Added standalone to coefficient instead of constant
-      ];
-      
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
-      
-      if (!isRecentDuplicate(levelId, difficulty, signature)) {
-        recordProblem(levelId, difficulty, signature);
-        
-        return {
-          problem,
-          displayProblem: problem,
-          answer,
-          choices: row2Choices,
-          staged: {
-            mode: 'distribute_then_combine',
-            rows: [
-              {
-                id: 'row1_distribute',
-                blanks: row1Expected.length,
-                expected: row1Expected,
-                bank: sortTermBank(Array.from(termBank))
-              },
-              {
-                id: 'row2_combine',
-                blanks: 1,
-                expected: [answer],
-                choices: row2Choices
-              }
-            ]
-          },
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: 'Distribute', work: row1Expected.join(' ') },
-              { description: 'Combine like terms', work: answer }
-            ],
-            rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
-            finalAnswer: answer
-          }
-        };
-      }
-    } else {
-      // Hard mode
-      const variables = ['x', 'y', 'n', 'm', 'p', 'q', 'r', 's', 't', 'w'];
-      const variable = randomFrom(variables);
-      
-      // FIXED: Removed problematic skeletons
-      skeleton = randomFrom(['a(v+b)+cv', 'cv+a(v+b)', 'a(v-b)+cv', 'cv+a(v-b)']);
-      
-      let standaloneTerm, trailingConst = 0;
-      
-      if (skeleton === 'a(v-b)+cv' || skeleton === 'cv+a(v-b)') {
-        standaloneTerm = Math.abs(standalone);
-        if (skeleton === 'a(v-b)+cv') {
-          problem = `${outside}(${variable} - ${inside}) + ${formatCoefficient(standaloneTerm, variable)}`;
-        } else {
-          problem = `${formatCoefficient(standaloneTerm, variable)} + ${outside}(${variable} - ${inside})`;
-        }
-        insideOp = '-';
-      } else {
-        standaloneTerm = Math.abs(standalone);
-        if (skeleton === 'cv+a(v+b)') {
-          problem = `${formatCoefficient(standaloneTerm, variable)} + ${outside}(${variable} + ${inside})`;
-        } else {
-          problem = `${outside}(${variable} + ${inside}) + ${formatCoefficient(standaloneTerm, variable)}`;
-        }
-        insideOp = '+';
-      }
-      
-      const distVarCoef = outside;
-      const distConst = insideOp === '-' ? -(outside * inside) : (outside * inside);
-      
-      const row1Expected = [];
-      if (skeleton === 'cv+a(v+b)' || skeleton === 'cv+a(v-b)') {
-        row1Expected.push(formatWithSign(formatCoefficient(standaloneTerm, variable)));
-        row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
-        row1Expected.push(formatWithSign(distConst));
-      } else {
-        row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
-        row1Expected.push(formatWithSign(distConst));
-        row1Expected.push(formatWithSign(formatCoefficient(standaloneTerm, variable)));
-      }
-      
-      const termBank = new Set();
-      row1Expected.forEach(term => termBank.add(term));
-      
-      termBank.add(formatWithSign(inside));
-      termBank.add(formatWithSign(outside));
-      termBank.add(formatWithSign(-distConst));
-      termBank.add(formatWithSign(formatCoefficient(-distVarCoef, variable)));
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneTerm, variable)));
-      termBank.add(formatWithSign(distConst + inside));
-      
-      while (termBank.size < 14) {
-        const randomVal = randomInt(-12, 12);
-        termBank.add(formatWithSign(randomVal));
-      }
-      
-      const finalCoef = distVarCoef + standaloneTerm;
-      const answer = formatCoefficient(finalCoef, variable) + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst);
-      
-      const row2Choices = [
-        answer,
-        formatCoefficient(distVarCoef, variable) + (distConst >= 0 ? ' + ' : ' - ') + Math.abs(distConst),
-        formatCoefficient(finalCoef, variable) + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside),
-        formatCoefficient(finalCoef, variable) + (-distConst >= 0 ? ' + ' : ' - ') + Math.abs(-distConst)
-      ];
-      
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside, inside, standalone, variable });
-      
-      if (!isRecentDuplicate(levelId, difficulty, signature)) {
-        recordProblem(levelId, difficulty, signature);
-        
-        return {
-          problem,
-          displayProblem: problem,
-          answer,
-          choices: row2Choices,
-          staged: {
-            mode: 'distribute_then_combine',
-            rows: [
-              {
-                id: 'row1_distribute',
-                blanks: row1Expected.length,
-                expected: row1Expected,
-                bank: sortTermBank(Array.from(termBank))
-              },
-              {
-                id: 'row2_combine',
-                blanks: 1,
-                expected: [answer],
-                choices: row2Choices
-              }
-            ]
-          },
-          explanation: {
-            originalProblem: problem,
-            steps: [],
-            rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
-            finalAnswer: answer
-          }
-        };
-      }
-    }
-  }
-  
-  // Fallback
-  const fallbackAnswer = '3x + 6';
-  return {
-    problem: '3(x + 2)',
-    displayProblem: '3(x + 2)',
-    answer: fallbackAnswer,
-    choices: [fallbackAnswer, '3x + 2', 'x + 6', '5x'],
-    staged: {
-      mode: 'distribute_then_combine',
-      rows: [
-        {
-          id: 'row1_distribute',
-          blanks: 2,
-          expected: ['+3x', '+6'],
-          bank: sortTermBank(['+3x', '+6', '+2', '+3', '-3x', '-6', '+5x', '+9', '+4', '-2'])
-        },
-        {
-          id: 'row2_combine',
-          blanks: 1,
-          expected: [fallbackAnswer],
-          choices: [fallbackAnswer, '3x + 2', 'x + 6', '5x']
-        }
-      ]
-    },
-    explanation: {
-      originalProblem: '3(x + 2)',
-      steps: [],
-      rule: 'Two steps: (1) Distribute to remove parentheses. (2) Combine like terms.',
-      finalAnswer: fallbackAnswer
-    }
-  };
-};
-// ============================================
-// LEVEL 1-14: STEEP CLIMB
-// ============================================
-
-export const generateDistributeSubtractProblemNEW = (difficulty) => {
-  const levelId = '1-14';
-  
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const outside = randomNonZeroInt(-12, 12);
-    const inside = randomNonZeroInt(1, 12);
-    const standalone = randomNonZeroInt(-12, 12);
-    
-    let skeleton, problem, insideOp;
-    
-    if (difficulty === 'easy') {
-      const outsidePos = Math.abs(outside);
-      const standaloneAbs = Math.abs(standalone);
-      
-      skeleton = randomFrom(['a(x-b)+cx', 'a(x+b)-cx', 'cx+a(x-b)']);
-      
-      let standaloneCoef;
-      
-      if (skeleton === 'a(x-b)+cx') {
-        insideOp = '-';
-        standaloneCoef = standaloneAbs;
-        problem = `${outsidePos}(x - ${inside}) + ${formatCoefficient(standaloneCoef, 'x')}`;
-      } else if (skeleton === 'a(x+b)-cx') {
-        insideOp = '+';
-        standaloneCoef = -standaloneAbs;
-        problem = `${outsidePos}(x + ${inside}) - ${formatCoefficient(standaloneAbs, 'x')}`;
-      } else {
-        insideOp = '-';
-        standaloneCoef = standaloneAbs;
-        problem = `${formatCoefficient(standaloneCoef, 'x')} + ${outsidePos}(x - ${inside})`;
-      }
-      
-      const distVarCoef = outsidePos;
-      const distConst = insideOp === '-' ? -(outsidePos * inside) : (outsidePos * inside);
-      
-      const row1Expected = [];
-      
-      if (skeleton === 'cx+a(x-b)') {
-        row1Expected.push(formatWithSign(formatCoefficient(standaloneCoef, 'x')));
-        row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, 'x')));
-        row1Expected.push(formatWithSign(distConst));
-      } else {
-        row1Expected.push(formatWithSign(formatCoefficient(distVarCoef, 'x')));
-        row1Expected.push(formatWithSign(distConst));
-        row1Expected.push(formatWithSign(formatCoefficient(standaloneCoef, 'x')));
-      }
-      
-      const termBank = new Set();
-      row1Expected.forEach(term => termBank.add(term));
-      
-      termBank.add(formatWithSign(inside));
-      termBank.add(formatWithSign(outsidePos));
-      termBank.add(formatWithSign(-distConst));
-      termBank.add(formatWithSign(formatCoefficient(-distVarCoef, 'x')));
-      termBank.add(formatWithSign(formatCoefficient(distVarCoef + standaloneCoef, 'x')));
-      
-      while (termBank.size < 12) {
-        termBank.add(formatWithSign(randomInt(-12, 12)));
-      }
-      
-      const finalCoef = distVarCoef + standaloneCoef;
-      const finalConst = distConst;
-      const answer = formatCoefficient(finalCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst);
-      
-      const row2Choices = [
-        answer,
-        formatCoefficient(distVarCoef, 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst), // Didn't combine x terms
-        formatCoefficient(finalCoef, 'x') + (inside >= 0 ? ' + ' : ' - ') + Math.abs(inside), // Used inside constant instead of distributed
-        formatCoefficient(outsidePos + Math.abs(standaloneCoef), 'x') + (finalConst >= 0 ? ' + ' : ' - ') + Math.abs(finalConst) // Added coefficients instead of distributing
-      ];
-      
-      const signature = generateSignature(levelId, difficulty, { skeleton, outside: outsidePos, inside, standalone: standaloneAbs });
-      
-      if (!isRecentDuplicate(levelId, difficulty, signature)) {
-        recordProblem(levelId, difficulty, signature);
-        
-        return {
-          problem,
-          displayProblem: problem,
-          answer,
-          choices: row2Choices,
-          staged: {
-            mode: 'distribute_then_combine',
-            rows: [
-              {
-                id: 'row1_distribute',
-                blanks: row1Expected.length,
-                expected: row1Expected,
-                bank: sortTermBank(Array.from(termBank))
-              },
-              {
-                id: 'row2_combine',
-                blanks: 1,
-                expected: [answer],
-                choices: row2Choices
-              }
-            ]
-          },
-          explanation: {
-            originalProblem: problem,
-            steps: [
-              { description: 'Distribute', work: row1Expected.join(' ') },
-              { description: 'Combine like terms', work: answer }
-            ],
-            rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
-            finalAnswer: answer
-          }
-        };
-      }
-    }
-  }
-  
-  // Fallback
-  return {
-    problem: '4(x - 2) + 3x',
-    displayProblem: '4(x - 2) + 3x',
-    answer: '7x - 8',
-    choices: ['7x - 8', '7x + 8', '4x - 5', '7x - 2'],
-    staged: {
-      mode: 'distribute_then_combine',
-      rows: [
-        {
-          id: 'row1_distribute',
-          blanks: 3,
-          expected: ['+4x', '-8', '+3x'],
-          bank: sortTermBank(['+4x', '-8', '+3x', '-2', '+8', '+7x', '-4x', '+2', '-3x', '+5', '+11', '-5'])
-        },
-        {
-          id: 'row2_combine',
-          blanks: 1,
-          expected: ['7x - 8'],
-          choices: ['7x - 8', '7x + 8', '4x - 5', '7x - 2']
-        }
-      ]
-    },
-    explanation: {
-      originalProblem: '4(x - 2) + 3x',
-      steps: [],
-      rule: 'Watch the signs! When subtracting, be extra careful with negatives.',
-      finalAnswer: '7x - 8'
-    }
-  };
-};
-
-
-
 
 // ============================================
 // EXPORTS
@@ -4598,10 +4459,10 @@ export const problemGenerators = {
   '1-9': generateBasicLikeTermsProblem,
   '1-10': generateUnlikeTermsProblem,
   '1-11': generateMultipleLikeTermsProblem,
-'1-12': generateSubtractLikeTermsProblem,
-'1-13': generateDistributeCombineProblemNEW,
-'1-14': generateDistributeSubtractProblemNEW,
-'1-15': generateNegativeDistributeCombineProblem,
+  '1-12': generateSubtractLikeTermsProblem,
+  '1-13': generateDistributeCombineProblem,
+  '1-14': generateDistributeSubtractProblem,
+  '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
   
   // Module 2: Territory (Levels 17-31)
