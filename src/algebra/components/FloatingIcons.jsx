@@ -5,9 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/algebra.css';
 
 const FloatingIcons = ({ 
-  onOpenStory, 
-  onOpenBadges, 
-  onOpenStats, 
+  onOpenStory,  onOpenStats, 
   onOpenMap,
   playerName,
   crystalCount = 0
@@ -28,25 +26,38 @@ const FloatingIcons = ({
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
-  // Default positions - single row, top-right
-  const defaultPositions = {
-    story: { x: window.innerWidth - 400, y: 20 },
-    badges: { x: window.innerWidth - 310, y: 20 },
-    stats: { x: window.innerWidth - 200, y: 20 },
-    map: { x: window.innerWidth - 90, y: 20 }
-  };
+  // Default positions - VERTICAL STACK, TOP-LEFT
+// Order: Story, Stats, Map
+const defaultPositions = {
+  story: { x: 20, y: 20 },
+  stats: { x: 20, y: 110 },  // ~90px gap
+  map: { x: 20, y: 200 }     // ~90px gap
+};
 
-  const [positions, setPositions] = useState(() => {
-    const saved = localStorage.getItem('algebra_icon_positions');
-    return saved ? JSON.parse(saved) : defaultPositions;
-  });
+  const POSITIONS_KEY = 'algebra_icon_positions';
+const LAYOUT_KEY = 'algebra_icon_positions_layout';
+const LAYOUT_VERSION = 'v2_vertical_left_no_badges';
+
+const [positions, setPositions] = useState(() => {
+  const savedLayout = localStorage.getItem(LAYOUT_KEY);
+  const saved = localStorage.getItem(POSITIONS_KEY);
+
+  // If layout changed, reset to defaults so users immediately see the intended starting positions.
+  if (savedLayout !== LAYOUT_VERSION) {
+    localStorage.setItem(LAYOUT_KEY, LAYOUT_VERSION);
+    localStorage.setItem(POSITIONS_KEY, JSON.stringify(defaultPositions));
+    return defaultPositions;
+  }
+
+  return saved ? JSON.parse(saved) : defaultPositions;
+});
 
   const [dragging, setDragging] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const draggedRef = useRef(false);
 
   useEffect(() => {
-    localStorage.setItem('algebra_icon_positions', JSON.stringify(positions));
+    localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
   }, [positions]);
 
   const handleMouseDown = (icon, e) => {
@@ -90,7 +101,6 @@ const FloatingIcons = ({
 
   const icons = [
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
-    { id: 'badges', image: '/algebra/KnowledgeCrystal.png', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
     { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
