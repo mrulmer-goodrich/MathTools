@@ -6,20 +6,34 @@ import '../styles/algebra.css';
 
 const FloatingIcons = ({ 
   onOpenStory, 
+  onOpenBadges, 
   onOpenStats, 
   onOpenMap,
   playerName,
   crystalCount = 0
 }) => {
   
-  const playerAvatar = localStorage.getItem('algebra_player_avatar') || '1';
+  const [playerAvatar, setPlayerAvatar] = useState(() => 
+    localStorage.getItem('algebra_player_avatar') || '1'
+  );
   
-  // Default positions - VERTICAL STACK, TOP-LEFT (3 icons only - removed badges)
-  // Order: User/Statistics (with crystals), Story, Map
+  // Listen for avatar changes from StatsPanel
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newAvatar = localStorage.getItem('algebra_player_avatar') || '1';
+      setPlayerAvatar(newAvatar);
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
+  // Default positions - single row, top-right
   const defaultPositions = {
-    stats: { x: 20, y: 100 },     // Top (below header) - shows crystal count
-    story: { x: 20, y: 190 },     // 90px gap
-    map: { x: 20, y: 280 }        // 90px gap
+    story: { x: window.innerWidth - 400, y: 20 },
+    badges: { x: window.innerWidth - 310, y: 20 },
+    stats: { x: window.innerWidth - 200, y: 20 },
+    map: { x: window.innerWidth - 90, y: 20 }
   };
 
   const [positions, setPositions] = useState(() => {
@@ -75,8 +89,9 @@ const FloatingIcons = ({
   }, [dragging, dragOffset]);
 
   const icons = [
-    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats, badge: crystalCount },
     { id: 'story', emoji: '📖', label: 'Story', onClick: onOpenStory },
+    { id: 'badges', image: '/algebra/KnowledgeCrystal.png', label: 'Crystals', onClick: onOpenBadges, badge: crystalCount },
+    { id: 'stats', image: `/algebra/avatar-${playerAvatar}.png`, label: 'Stats', onClick: onOpenStats },
     { id: 'map', emoji: '🗺️', label: 'Map', onClick: onOpenMap }
   ];
 
