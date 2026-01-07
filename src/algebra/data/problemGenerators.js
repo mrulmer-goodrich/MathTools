@@ -59,6 +59,13 @@ const recordProblem = (levelId, difficulty, signature) => {
 // ============================================
 
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomNonZeroInt = (min, max) => {
+  let val;
+  do {
+    val = Math.floor(Math.random() * (max - min + 1)) + min;
+  } while (val === 0);
+  return val;
+};
 const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randomDecimal = () => randomFrom([0.5, 0.25, 0.75, 1.5, 2.5, 0.2, 0.4, 0.6, 0.8]);
 
@@ -1639,10 +1646,18 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
     if (!term) return;
     const s = String(term).trim();
     if (!s) return;
+    
+    // Normalize for duplicate detection (remove leading +)
+    const normalized = s.replace(/^\+/, '');
+    
+    // Check for exact duplicates first
+    if (seen.has(normalized)) return;
+    
     // Use enhanced equivalence to prevent duplicates
     const isDuplicate = bank.some(existing => areEquivalent(s, existing));
     if (isDuplicate) return;
-    seen.add(s);
+    
+    seen.add(normalized);
     bank.push(s);
   };
   
@@ -1654,12 +1669,82 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
   
   // Pad with random integers (checking for equivalents)
   while (bank.length < padTo) {
-    const v = randomInt(1, 60) * (Math.random() < 0.5 ? -1 : 1);
+    const v = randomNonZeroInt(1, 60) * (Math.random() < 0.5 ? -1 : 1);
     add(formatWithSign(v));
   }
   
-  // Shuffle the bank so correct terms aren't always first
-  return bank.sort(() => Math.random() - 0.5);
+  // Ensure uniqueness and sort
+  const uniqueBank = ensureUniqueTermBank(bank);
+  return sortTermBank(uniqueBank);
+};
+
+// Sort term bank: variables first (descending), then constants (descending)
+const sortTermBank = (terms) => {
+  return terms.sort((a, b) => {
+    const aStr = String(a).replace(/^\+/, '');
+    const bStr = String(b).replace(/^\+/, '');
+    
+    // Check if term has variable
+    const aHasVar = /[a-z]/i.test(aStr);
+    const bHasVar = /[a-z]/i.test(bStr);
+    
+    // Variables come before constants
+    if (aHasVar && !bHasVar) return -1;
+    if (!aHasVar && bHasVar) return 1;
+    
+    // Extract numeric part for sorting
+    const aNum = parseInt(aStr.replace(/[a-z]/gi, '')) || 1;
+    const bNum = parseInt(bStr.replace(/[a-z]/gi, '')) || 1;
+    
+    // Sort by absolute value descending
+    return Math.abs(bNum) - Math.abs(aNum);
+  });
+};
+
+// Ensure unique terms in bank (no duplicates like "+10x" appearing twice)
+const ensureUniqueTermBank = (terms) => {
+  const seen = new Set();
+  const unique = [];
+  
+  terms.forEach(term => {
+    const normalized = String(term).trim().replace(/^\+/, '');
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      unique.push(term);
+    }
+  });
+  
+  return unique;
+};
+
+// Generate contextual Row 2 distractors based on common mistakes from Row 1
+const generateContextualRow2Distractors = (row1Terms, correctAnswer, variable) => {
+  // Parse the correct answer to get coefficient and constant
+  const answerStr = String(correctAnswer);
+  let xCoef = 0;
+  let constTerm = 0;
+  
+  // Extract coefficient and constant from answer
+  const varMatch = answerStr.match(new RegExp(`([+-]?\\d*)${variable}`));
+  const constMatch = answerStr.match(/([+-]?\d+)(?![a-z])/);
+  
+  if (varMatch) {
+    const coefStr = varMatch[1];
+    xCoef = coefStr === '' || coefStr === '+' ? 1 : coefStr === '-' ? -1 : parseInt(coefStr);
+  }
+  if (constMatch) {
+    constTerm = parseInt(constMatch[1]);
+  }
+  
+  // Generate misconception-based distractors
+  const distractors = [
+    correctAnswer, // Correct
+    canonicalizeExpression(xCoef, variable, constTerm + 1, false), // Off-by-one constant
+    canonicalizeExpression(xCoef + 1, variable, constTerm, false), // Off-by-one coefficient
+    canonicalizeExpression(xCoef * 2, variable, constTerm, false)  // Doubled coefficient
+  ];
+  
+  return [...new Set(distractors)];
 };
 
 // Create two-row staged specification
