@@ -237,7 +237,7 @@ const Algebra = () => {
           ...prev.levelStats,
           [levelKey]: {
             ...existingLevel,
-            attempted: existingLevel.attempted + 1,
+            // DON'T increment attempted here - already done in handleProblemAttempted
             correct: existingLevel.correct + 1,
             firstTryCorrect: existingLevel.firstTryCorrect + (isFirstTry ? 1 : 0),
             totalSolved: existingLevel.totalSolved + 1,
