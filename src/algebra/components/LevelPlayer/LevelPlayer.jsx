@@ -86,6 +86,12 @@ const LevelPlayer = ({
     const timeSpent = problemStartTime ? (problemEndTime - problemStartTime) / 1000 : 0;
     const isFirstTry = problemAttempts === 0;
 
+    // Track attempt in parent stats ONLY for staged problems
+    // (non-staged problems already track in handleAnswerSubmit)
+    if (isStaged && onProblemAttempted) {
+      onProblemAttempted(levelId);
+    }
+
     setStats(prev => ({
       ...prev,
       problemsAttempted: prev.problemsAttempted + 1,
