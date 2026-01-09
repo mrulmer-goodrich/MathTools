@@ -2,7 +2,7 @@
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect } from ‘react’;
-import ‘../../styles/algebra.css’;
+import '../../styles/algebra.css';
 
 const EquationWorksheet = ({
 problem,
