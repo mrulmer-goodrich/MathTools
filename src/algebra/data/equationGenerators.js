@@ -298,7 +298,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
     `${Math.abs(a)} + x`
   ];
   
-  // Expected Row 2 (left: x, right: solution)
+  // Expected Row 2 (left: x, right: solution WITHOUT leading +)
   const row2ExpectedLeft = ['x'];
   const row2ExpectedRight = [String(solution)];
   
