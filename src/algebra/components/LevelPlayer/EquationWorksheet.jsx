@@ -1,4 +1,4 @@
-// EquationWorksheet.jsx - FINAL FIXED VERSION
+// EquationWorksheet.jsx - COMPLETE FIXED VERSION
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -54,7 +54,7 @@ const EquationWorksheet = ({
     return str;
   };
 
-  // FIX #5: Force plus signs in term bank for single positive terms
+  // FIX #5: Force plus signs in term bank for single positive terms (DISPLAY ONLY)
   const formatTermBankDisplay = (term) => {
     const str = String(term).trim();
     
@@ -63,7 +63,7 @@ const EquationWorksheet = ({
     if (str.includes(' ')) return str; // Compound like "x + 4"
     if (str.includes('×') || str.includes('÷')) return str; // Operation
     
-    // Single term without sign - add plus
+    // Single term without sign - add plus FOR DISPLAY ONLY
     return `+${str}`;
   };
 
@@ -89,11 +89,13 @@ const EquationWorksheet = ({
   };
 
   // Handle bank chip click (fills sequentially)
+  // FIX #2: Store ORIGINAL chip value (validation will normalize)
   const handleBankChipClick = (chip) => {
     const rowId = currentRow.id;
     const current = selectedTerms[rowId] || [];
     const totalBlanks = (currentRow.leftBlanks || 0) + (currentRow.rightBlanks || 0);
     
+    // Store ORIGINAL chip value (not the display-formatted one)
     if (current.length < totalBlanks) {
       setSelectedTerms(prev => ({
         ...prev,
@@ -145,7 +147,24 @@ const EquationWorksheet = ({
           }
         }, 300);
       } else {
-        onWrongAnswer();
+        // FIX #3: Enhanced feedback with user's answer
+        const userAnswer = {
+          left: leftSelected.join(' '),
+          right: rightSelected.join(' ')
+        };
+        const correctAnswer = {
+          left: leftExpected.join(' '),
+          right: rightExpected.join(' ')
+        };
+        
+        // Call onWrongAnswer with enhanced data
+        onWrongAnswer({
+          userAnswer: `${userAnswer.left} = ${userAnswer.right}`,
+          correctAnswer: `${correctAnswer.left} = ${correctAnswer.right}`,
+          originalProblem: problem.displayProblem || problem.problem,
+          rowInstruction: currentRow.instruction
+        });
+        
         setSelectedTerms(prev => ({
           ...prev,
           [rowId]: []
@@ -180,7 +199,8 @@ const EquationWorksheet = ({
         return {
           left: leftTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
           right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
-          alignHint: row.alignHint // BONUS: for future alignment
+          alignHint: row.alignHint, // FIX #4: Alignment hints ready
+          isOperationRow
         };
       });
   };
@@ -189,7 +209,7 @@ const EquationWorksheet = ({
     <div className="equation-mode-container">
       {/* FIX #2: Wrapper for line + equation rows (excludes term bank) */}
       <div className="equation-content-wrapper">
-        {/* FIX #2: Vertical line - BLACK, stops before term bank */}
+        {/* FIX #1: Vertical line - lighter gray, thinner */}
         {showVerticalLine && (
           <div className="equation-vertical-line" />
         )}
@@ -205,7 +225,10 @@ const EquationWorksheet = ({
 
           {/* Completed Rows - same 3-column layout, BLACK font */}
           {getCompletedRowsDisplay().map((row, idx) => (
-            <div key={idx} className="equation-row-3col equation-completed-row">
+            <div 
+              key={idx} 
+              className={`equation-row-3col equation-completed-row ${row.alignHint ? 'has-alignment' : ''}`}
+            >
               <div className="equation-left-side">{row.left}</div>
               <div className="equation-equals-col">=</div>
               <div className="equation-right-side">{row.right}</div>
