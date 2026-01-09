@@ -1,7 +1,7 @@
-// EquationWorksheet.jsx - Aligned equation solver with continuous vertical line
+// EquationWorksheet.jsx - FIXED with 3-column layout and dynamic vertical line
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/algebra.css';
 
 const EquationWorksheet = ({ 
@@ -13,6 +13,9 @@ const EquationWorksheet = ({
   const [completedRows, setCompletedRows] = useState([]);
   const [selectedTerms, setSelectedTerms] = useState({});
   const [showVerticalLine, setShowVerticalLine] = useState(false);
+  
+  const problemEqualsRef = useRef(null);
+  const lineContainerRef = useRef(null);
 
   // Reset state when problem changes
   useEffect(() => {
@@ -21,20 +24,6 @@ const EquationWorksheet = ({
     setSelectedTerms({});
     setShowVerticalLine(false);
   }, [problem]);
-
-  // Strip leading + for display (keep - signs)
-  const stripLeadingPlus = (term) => {
-    const str = String(term).trim();
-    if (str.startsWith('+')) {
-      return str.substring(1);
-    }
-    return str;
-  };
-
-  // Normalize for comparison (strip leading + from both)
-  const normalizeForComparison = (term) => {
-    return stripLeadingPlus(term);
-  };
 
   // SAFETY: Validate problem structure
   if (!problem.staged || !problem.staged.rows) {
@@ -48,6 +37,37 @@ const EquationWorksheet = ({
 
   // Get current selections for this row (flat array)
   const currentSelections = selectedTerms[currentRow.id] || [];
+
+  // Strip leading + for DISPLAY in completed rows and final answer (NOT in operation rows)
+  const stripLeadingPlusForDisplay = (term) => {
+    const str = String(term).trim();
+    // Only strip + if it's a simple term (not an operation like "+5" in "add 5 to both sides")
+    if (str.startsWith('+') && !str.includes('×') && !str.includes('÷')) {
+      return str.substring(1);
+    }
+    return str;
+  };
+
+  // Normalize for comparison (strip leading + from both)
+  const normalizeForComparison = (term) => {
+    const str = String(term).trim();
+    if (str.startsWith('+')) {
+      return str.substring(1);
+    }
+    return str;
+  };
+
+  // Parse problem into left side and right side
+  const parseProblem = (problemStr) => {
+    const parts = problemStr.split('=');
+    if (parts.length !== 2) return { left: problemStr, right: '' };
+    return {
+      left: parts[0].trim(),
+      right: parts[1].trim()
+    };
+  };
+
+  const problemParts = parseProblem(problem.displayProblem || problem.problem);
 
   // Handle "Draw a line" (Row 0)
   const handleDrawLine = () => {
@@ -141,72 +161,50 @@ const EquationWorksheet = ({
       .map(row => {
         const rowSelections = selectedTerms[row.id] || [];
         const leftBlanks = row.leftBlanks || 0;
-        const leftTerms = rowSelections.slice(0, leftBlanks).map(stripLeadingPlus);
-        const rightTerms = rowSelections.slice(leftBlanks).map(stripLeadingPlus);
+        const leftTerms = rowSelections.slice(0, leftBlanks);
+        const rightTerms = rowSelections.slice(leftBlanks);
+        
+        // Determine if this is an operation row (Row 1) or solution row (Row 2)
+        const isOperationRow = row.id.includes('row1');
+        
         return {
-          left: leftTerms.join(' '),
-          right: rightTerms.join(' ')
+          left: leftTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
+          right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' ')
         };
       });
   };
 
   return (
-    <div className="math-worksheet-container equation-mode-container" style={{ position: 'relative', padding: '0.5rem' }}>
-      {/* Continuous Vertical Line Overlay - positioned at center */}
+    <div className="math-worksheet-container equation-mode-container">
+      {/* Vertical Line - dynamically positioned based on equals sign column */}
       {showVerticalLine && (
-        <div style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          top: '60px',
-          bottom: '180px',
-          width: '3px',
-          background: 'linear-gradient(180deg, #10B981 0%, #059669 100%)',
-          zIndex: 10,
-          pointerEvents: 'none'
-        }} />
+        <div 
+          ref={lineContainerRef}
+          className="equation-vertical-line-container"
+        />
       )}
 
-      {/* Problem + Completed Rows Container */}
-      <div className="worksheet-problem-display" style={{
-        padding: '1rem',
-        marginBottom: '0.5rem',
-        position: 'relative'
-      }}>
-        {/* Original Problem */}
-        <div style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 700, 
-          textAlign: 'center',
-          marginBottom: getCompletedRowsDisplay().length > 0 ? '0.75rem' : '0'
-        }}>
-          {problem.displayProblem || problem.problem}
+      {/* Problem + Completed Rows Container - 3-COLUMN LAYOUT */}
+      <div className="equation-problem-container">
+        {/* Original Problem - 3 columns */}
+        <div className="equation-row-3col">
+          <div className="equation-left-side">{problemParts.left}</div>
+          <div className="equation-equals-col" ref={problemEqualsRef}>=</div>
+          <div className="equation-right-side">{problemParts.right}</div>
         </div>
 
-        {/* Completed Rows (aligned by =) */}
+        {/* Completed Rows - same 3-column layout */}
         {getCompletedRowsDisplay().map((row, idx) => (
-          <div 
-            key={idx}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#059669',
-              marginTop: '0.5rem',
-              gap: '0.5rem'
-            }}
-          >
-            <span style={{ textAlign: 'right', minWidth: '80px' }}>{row.left}</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981', position: 'relative', zIndex: 20 }}>=</span>
-            <span style={{ textAlign: 'left', minWidth: '80px' }}>{row.right}</span>
+          <div key={idx} className="equation-row-3col equation-completed-row">
+            <div className="equation-left-side">{row.left}</div>
+            <div className="equation-equals-col">=</div>
+            <div className="equation-right-side">{row.right}</div>
           </div>
         ))}
       </div>
 
       {/* Current Row Work Area */}
-      <div className="worksheet-work-area" style={{ minHeight: '80px' }}>
+      <div className="equation-work-area">
         {rows.map((row, index) => {
           const isCompleted = completedRows.includes(row.id);
           const isActive = index === currentRowIndex;
@@ -218,21 +216,17 @@ const EquationWorksheet = ({
           return (
             <div 
               key={row.id}
-              className={`worksheet-row ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
-              style={{ padding: '0.5rem 0' }}
+              className={`equation-work-row ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
             >
               {/* SINGLE CHOICE ROW (Draw a line) */}
               {row.type === 'single_choice' && isActive && !isCompleted && (
-                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                  <div style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 600 }}>
-                    {row.instruction}
-                  </div>
+                <div className="equation-single-choice">
+                  <div className="equation-instruction">{row.instruction}</div>
                   {row.choices.map((choice, idx) => (
                     <button
                       key={idx}
                       className="base-camp-tile-button"
                       onClick={handleDrawLine}
-                      style={{ padding: '0.875rem 1.75rem', fontSize: '1.125rem' }}
                     >
                       {choice}
                     </button>
@@ -240,64 +234,52 @@ const EquationWorksheet = ({
                 </div>
               )}
 
-              {/* DUAL-BOX ROW (active working row) */}
+              {/* DUAL-BOX ROW (active working row) - 3-COLUMN LAYOUT */}
               {row.type === 'dual_box' && isActive && !isCompleted && (
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  gap: '0.75rem',
-                  padding: '0.5rem 0',
-                  position: 'relative'
-                }}>
-                  {/* Left blanks */}
-                  {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
-                    const term = currentSelections[i];
-                    return (
-                      <button
-                        key={`left-${i}`}
-                        className={`worksheet-blank ${term ? 'filled' : 'empty'}`}
-                        onClick={() => term && handleBlankClick(i)}
-                        style={{ minWidth: '70px', padding: '0.625rem 0.875rem' }}
-                      >
-                        {term ? stripLeadingPlus(term) : '___'}
-                      </button>
-                    );
-                  })}
+                <div className="equation-row-3col equation-active-row">
+                  {/* Left side blanks */}
+                  <div className="equation-left-side">
+                    {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
+                      const term = currentSelections[i];
+                      const isOperationRow = row.id.includes('row1');
+                      return (
+                        <button
+                          key={`left-${i}`}
+                          className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                          onClick={() => term && handleBlankClick(i)}
+                        >
+                          {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                        </button>
+                      );
+                    })}
+                  </div>
                   
-                  {/* Equals sign */}
-                  {showVerticalLine && (
-                    <span style={{ 
-                      fontSize: '1.75rem', 
-                      fontWeight: 700, 
-                      color: '#10B981',
-                      position: 'relative',
-                      zIndex: 20
-                    }}>=</span>
-                  )}
+                  {/* Equals sign column */}
+                  <div className="equation-equals-col">=</div>
                   
-                  {/* Right blanks */}
-                  {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
-                    const leftBlanks = row.leftBlanks || 0;
-                    const term = currentSelections[leftBlanks + i];
-                    return (
-                      <button
-                        key={`right-${i}`}
-                        className={`worksheet-blank ${term ? 'filled' : 'empty'}`}
-                        onClick={() => term && handleBlankClick(leftBlanks + i)}
-                        style={{ minWidth: '70px', padding: '0.625rem 0.875rem' }}
-                      >
-                        {term ? stripLeadingPlus(term) : '___'}
-                      </button>
-                    );
-                  })}
+                  {/* Right side blanks */}
+                  <div className="equation-right-side">
+                    {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
+                      const leftBlanks = row.leftBlanks || 0;
+                      const term = currentSelections[leftBlanks + i];
+                      const isOperationRow = row.id.includes('row1');
+                      return (
+                        <button
+                          key={`right-${i}`}
+                          className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                          onClick={() => term && handleBlankClick(leftBlanks + i)}
+                        >
+                          {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                        </button>
+                      );
+                    })}
+                  </div>
                   
                   {/* Check Button */}
                   {isRowFilled() && (
                     <button 
-                      className="worksheet-check-btn-inline"
+                      className="equation-check-btn"
                       onClick={handleCheckRow}
-                      style={{ marginLeft: '0.5rem' }}
                     >
                       {isFinalRow ? '✓ Submit' : '✓ Check'}
                     </button>
@@ -309,17 +291,11 @@ const EquationWorksheet = ({
         })}
       </div>
 
-      {/* Term Bank */}
+      {/* Term Bank - signs ALWAYS displayed */}
       {!completedRows.includes(currentRow.id) && currentRow.bank && currentRow.bank.length > 0 && (
-        <div className="worksheet-term-bank" style={{ padding: '1rem', marginTop: '0.5rem' }}>
-          <div className="term-bank-label" style={{ marginBottom: '0.625rem' }}>
-            {currentRow.instruction || 'Select term to place:'}
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: currentRow.bank.length <= 8 ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)',
-            gap: '0.5rem'
-          }}>
+        <div className="equation-term-bank">
+          <div className="term-bank-label">{currentRow.instruction || 'Select term to place:'}</div>
+          <div className="term-bank-grid">
             {currentRow.bank.map((chip, index) => {
               const isSelected = currentSelections.includes(chip);
               const totalBlanks = (currentRow.leftBlanks || 0) + (currentRow.rightBlanks || 0);
@@ -330,7 +306,6 @@ const EquationWorksheet = ({
                   className={`term-chip ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleBankChipClick(chip)}
                   disabled={currentSelections.length >= totalBlanks}
-                  style={{ padding: '0.625rem', minHeight: '42px' }}
                 >
                   {chip}
                 </button>
