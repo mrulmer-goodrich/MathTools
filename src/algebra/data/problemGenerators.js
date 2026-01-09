@@ -1,3 +1,5 @@
+import { generateOneStepAddSubtract } from './equationGenerators';
+
 // ============================================
 // GLOBAL NaN PROTECTION
 // ============================================
@@ -4422,7 +4424,7 @@ export const problemGenerators = {
   '1-16': generateComplexSimplifyProblem,
   
   // Module 2: Territory (Levels 17-31)
-  '1-17': generateAdditionEquationProblem,
+  '1-17': generateOneStepAddSubtract,
   '1-18': generateSubtractionEquationProblem,
   '1-19': generateMultiplicationEquationProblem,
   '1-20': generateDivisionEquationProblem,
