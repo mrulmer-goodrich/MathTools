@@ -151,7 +151,7 @@ const EquationWorksheet = ({
   };
 
   return (
-    <div className="math-worksheet-container" style={{ position: 'relative', padding: '0.5rem' }}>
+    <div className="math-worksheet-container equation-mode-container" style={{ position: 'relative', padding: '0.5rem' }}>
       {/* Continuous Vertical Line Overlay - positioned at center */}
       {showVerticalLine && (
         <div style={{
