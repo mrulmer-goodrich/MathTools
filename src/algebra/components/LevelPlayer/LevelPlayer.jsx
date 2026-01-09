@@ -332,7 +332,7 @@ const LevelPlayer = ({
       />
     )}
   </>
-        ) : (
+) : (
           <>
             <ProblemDisplay problem={currentProblem} />
             {level.inputMethod === 'clickToSelect' && (
