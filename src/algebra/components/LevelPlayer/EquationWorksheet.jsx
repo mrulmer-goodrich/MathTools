@@ -1,7 +1,7 @@
 // EquationWorksheet.jsx - ALL 7 FIXES IMPLEMENTED
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
-import React, { useState, useEffect } from ‘react’;
+import React, { useState, useEffect } from 'react';
 import '../../styles/algebra.css';
 
 const EquationWorksheet = ({
