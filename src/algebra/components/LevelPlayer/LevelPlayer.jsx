@@ -318,15 +318,15 @@ const LevelPlayer = ({
 
 {isStaged ? (
   <>
-    {problem.staged.mode === 'equation_solver' ? (
+    {currentProblem.staged.mode === 'equation_solver' ? (
       <EquationWorksheet
-        problem={problem}
+        problem={currentProblem}
         onComplete={handleProblemComplete}
         onWrongAnswer={handleProblemWrong}
       />
     ) : (
       <MathWorksheet
-        problem={problem}
+        problem={currentProblem}
         onComplete={handleProblemComplete}
         onWrongAnswer={handleProblemWrong}
       />
