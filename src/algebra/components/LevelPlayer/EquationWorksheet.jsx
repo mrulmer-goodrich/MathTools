@@ -151,15 +151,16 @@ const EquationWorksheet = ({
   };
 
   return (
-    <div className="math-worksheet-container" style={{ position: 'relative' }}>
-      {/* Continuous Vertical Line Overlay */}
+    <div className="math-worksheet-container" style={{ position: 'relative', padding: '0.5rem' }}>
+      {/* Continuous Vertical Line Overlay - positioned at center */}
       {showVerticalLine && (
         <div style={{
           position: 'absolute',
           left: '50%',
-          top: '80px',
-          bottom: '200px',
-          width: '4px',
+          transform: 'translateX(-50%)',
+          top: '60px',
+          bottom: '180px',
+          width: '3px',
           background: 'linear-gradient(180deg, #10B981 0%, #059669 100%)',
           zIndex: 10,
           pointerEvents: 'none'
@@ -168,8 +169,8 @@ const EquationWorksheet = ({
 
       {/* Problem + Completed Rows Container */}
       <div className="worksheet-problem-display" style={{
-        padding: '1.5rem',
-        marginBottom: '1rem',
+        padding: '1rem',
+        marginBottom: '0.5rem',
         position: 'relative'
       }}>
         {/* Original Problem */}
@@ -177,7 +178,7 @@ const EquationWorksheet = ({
           fontSize: '1.5rem', 
           fontWeight: 700, 
           textAlign: 'center',
-          marginBottom: getCompletedRowsDisplay().length > 0 ? '1rem' : '0'
+          marginBottom: getCompletedRowsDisplay().length > 0 ? '0.75rem' : '0'
         }}>
           {problem.displayProblem || problem.problem}
         </div>
@@ -190,39 +191,40 @@ const EquationWorksheet = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.25rem',
-              fontWeight: 600,
+              fontSize: '1.5rem',
+              fontWeight: 700,
               color: '#059669',
               marginTop: '0.5rem',
-              gap: '1rem'
+              gap: '0.5rem'
             }}
           >
-            <span style={{ textAlign: 'right', minWidth: '100px' }}>{row.left}</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981' }}>=</span>
-            <span style={{ textAlign: 'left', minWidth: '100px' }}>{row.right}</span>
+            <span style={{ textAlign: 'right', minWidth: '80px' }}>{row.left}</span>
+            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981', position: 'relative', zIndex: 20 }}>=</span>
+            <span style={{ textAlign: 'left', minWidth: '80px' }}>{row.right}</span>
           </div>
         ))}
       </div>
 
       {/* Current Row Work Area */}
-      <div className="worksheet-work-area">
+      <div className="worksheet-work-area" style={{ minHeight: '80px' }}>
         {rows.map((row, index) => {
           const isCompleted = completedRows.includes(row.id);
           const isActive = index === currentRowIndex;
           const isLocked = index > currentRowIndex;
 
-          // Skip completed rows (they're in the problem container now)
+          // Skip completed rows (they're in problem container)
           if (isCompleted && row.type !== 'single_choice') return null;
 
           return (
             <div 
               key={row.id}
               className={`worksheet-row ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
+              style={{ padding: '0.5rem 0' }}
             >
               {/* SINGLE CHOICE ROW (Draw a line) */}
               {row.type === 'single_choice' && isActive && !isCompleted && (
-                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                  <div style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 600 }}>
+                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                  <div style={{ marginBottom: '0.75rem', fontSize: '1rem', fontWeight: 600 }}>
                     {row.instruction}
                   </div>
                   {row.choices.map((choice, idx) => (
@@ -230,7 +232,7 @@ const EquationWorksheet = ({
                       key={idx}
                       className="base-camp-tile-button"
                       onClick={handleDrawLine}
-                      style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}
+                      style={{ padding: '0.875rem 1.75rem', fontSize: '1.125rem' }}
                     >
                       {choice}
                     </button>
@@ -244,26 +246,26 @@ const EquationWorksheet = ({
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center', 
-                  gap: '1rem',
-                  padding: '1rem 0',
+                  gap: '0.75rem',
+                  padding: '0.5rem 0',
                   position: 'relative'
                 }}>
                   {/* Left blanks */}
                   {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
-                    const leftBlanks = row.leftBlanks || 0;
                     const term = currentSelections[i];
                     return (
                       <button
                         key={`left-${i}`}
                         className={`worksheet-blank ${term ? 'filled' : 'empty'}`}
                         onClick={() => term && handleBlankClick(i)}
+                        style={{ minWidth: '70px', padding: '0.625rem 0.875rem' }}
                       >
                         {term ? stripLeadingPlus(term) : '___'}
                       </button>
                     );
                   })}
                   
-                  {/* Equals sign (positioned for vertical line) */}
+                  {/* Equals sign */}
                   {showVerticalLine && (
                     <span style={{ 
                       fontSize: '1.75rem', 
@@ -283,6 +285,7 @@ const EquationWorksheet = ({
                         key={`right-${i}`}
                         className={`worksheet-blank ${term ? 'filled' : 'empty'}`}
                         onClick={() => term && handleBlankClick(leftBlanks + i)}
+                        style={{ minWidth: '70px', padding: '0.625rem 0.875rem' }}
                       >
                         {term ? stripLeadingPlus(term) : '___'}
                       </button>
@@ -294,6 +297,7 @@ const EquationWorksheet = ({
                     <button 
                       className="worksheet-check-btn-inline"
                       onClick={handleCheckRow}
+                      style={{ marginLeft: '0.5rem' }}
                     >
                       {isFinalRow ? '✓ Submit' : '✓ Check'}
                     </button>
@@ -307,13 +311,14 @@ const EquationWorksheet = ({
 
       {/* Term Bank */}
       {!completedRows.includes(currentRow.id) && currentRow.bank && currentRow.bank.length > 0 && (
-        <div className="worksheet-term-bank">
-          <div className="term-bank-label">{currentRow.instruction || 'Select term to place:'}</div>
-          <div className="term-bank-chips" style={{
+        <div className="worksheet-term-bank" style={{ padding: '1rem', marginTop: '0.5rem' }}>
+          <div className="term-bank-label" style={{ marginBottom: '0.625rem' }}>
+            {currentRow.instruction || 'Select term to place:'}
+          </div>
+          <div style={{
             display: 'grid',
             gridTemplateColumns: currentRow.bank.length <= 8 ? 'repeat(4, 1fr)' : 'repeat(6, 1fr)',
-            gap: '0.5rem',
-            justifyItems: 'center'
+            gap: '0.5rem'
           }}>
             {currentRow.bank.map((chip, index) => {
               const isSelected = currentSelections.includes(chip);
@@ -325,6 +330,7 @@ const EquationWorksheet = ({
                   className={`term-chip ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleBankChipClick(chip)}
                   disabled={currentSelections.length >= totalBlanks}
+                  style={{ padding: '0.625rem', minHeight: '42px' }}
                 >
                   {chip}
                 </button>
