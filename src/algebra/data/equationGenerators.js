@@ -74,18 +74,16 @@ const formatOperation = (op, num) => {
 export const generateOneStepAddSubtract = (difficulty) => {
   const levelId = '1-17';
   
-  // All 10 skeletons
+  // All 8 skeletons (ONE STEP ONLY)
   const allSkeletons = [
     'x+a=b',
     'x-a=b',
     'a+x=b',
-    'a-x=b',
     'x+a=-b',
     'x-a=-b',
     'b=x+a',
     'b=x-a',
-    'b=a+x',
-    'b=a-x'
+    'b=a+x'
   ];
   
   // Get next skeleton from rotation
@@ -116,12 +114,6 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${a} + x = ${b}`;
       operationNeeded = 'subtract';
       operationValue = a;
-    } else if (skeleton === 'a-x=b') {
-      solution = a - b;
-      if (solution < 1) { a = b + randomInt(1, 12); solution = a - b; }
-      problem = `${a} - x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = -a; // Special case
     } else if (skeleton === 'x+a=-b') {
       // Skip in easy mode, regenerate
       return generateOneStepAddSubtract(difficulty);
@@ -145,12 +137,6 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = ${a} + x`;
       operationNeeded = 'subtract';
       operationValue = a;
-    } else if (skeleton === 'b=a-x') {
-      solution = a - b;
-      if (solution < 1) { a = b + randomInt(1, 12); solution = a - b; }
-      problem = `${b} = ${a} - x`;
-      operationNeeded = 'subtract';
-      operationValue = -a;
     }
   } else {
     // Hard: -25 to 25, decimals .5 only
@@ -186,15 +172,6 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${a} + x = ${b}`;
       operationNeeded = 'subtract';
       operationValue = a;
-    } else if (skeleton === 'a-x=b') {
-      solution = a - b;
-      if (solution !== Math.floor(solution)) {
-        a = b + randomNonZeroInt(-25, 25);
-        solution = a - b;
-      }
-      problem = `${a} - x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = -a;
     } else if (skeleton === 'x+a=-b') {
       b = Math.abs(b);
       solution = -b - a;
@@ -242,15 +219,6 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = ${a} + x`;
       operationNeeded = 'subtract';
       operationValue = a;
-    } else if (skeleton === 'b=a-x') {
-      solution = a - b;
-      if (solution !== Math.floor(solution)) {
-        a = b + randomNonZeroInt(-25, 25);
-        solution = a - b;
-      }
-      problem = `${b} = ${a} - x`;
-      operationNeeded = 'subtract';
-      operationValue = -a;
     }
   }
   
