@@ -11,6 +11,8 @@ import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
 import { problemGenerators } from '../../data/problemGenerators';
+import EquationWorksheet from './EquationWorksheet';
+import { generateOneStepAddSubtract } from '../../data/equationGenerators';
 
 const LevelPlayer = ({ 
   levelId, 
