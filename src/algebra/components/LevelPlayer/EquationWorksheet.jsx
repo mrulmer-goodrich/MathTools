@@ -1,4 +1,4 @@
-/ EquationWorksheet.jsx - CLEAN WORKING VERSION
+// EquationWorksheet.jsx - CLEAN WORKING VERSION
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect } from 'react';
