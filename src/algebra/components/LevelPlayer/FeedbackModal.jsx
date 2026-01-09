@@ -12,7 +12,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       return {
         rule: 'Review the problem and try again.',
         hasSteps: false,
-        steps: null
+        steps: null,
+        originalProblem: null
       };
     }
     
@@ -21,29 +22,57 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       return {
         rule: explanation,
         hasSteps: false,
-        steps: null
+        steps: null,
+        originalProblem: null
+      };
+    }
+
+    // FIX #6: Extract original problem from explanation object
+    if (typeof explanation === 'object') {
+      // Check if it's the enhanced object from EquationWorksheet
+      if (explanation.originalProblem) {
+        return {
+          rule: explanation.rowInstruction || 'Check your work and try again.',
+          hasSteps: false,
+          steps: null,
+          originalProblem: explanation.originalProblem,
+          userAnswer: explanation.userAnswer,
+          correctAnswer: explanation.correctAnswer
+        };
+      }
+      
+      // Standard explanation object
+      const rule = explanation.rule || 'Check your work and try again.';
+      const steps = explanation.steps && Array.isArray(explanation.steps) && explanation.steps.length > 0
+        ? explanation.steps
+        : null;
+      const originalProblem = explanation.originalProblem || null;
+      
+      return {
+        rule,
+        hasSteps: !!steps,
+        steps,
+        originalProblem
       };
     }
     
-    // If explanation is an object, extract rule and steps
-    const rule = explanation.rule || 'Check your work and try again.';
-    const steps = explanation.steps && Array.isArray(explanation.steps) && explanation.steps.length > 0
-      ? explanation.steps
-      : null;
-    
     return {
-      rule,
-      hasSteps: !!steps,
-      steps
+      rule: 'Check your work and try again.',
+      hasSteps: false,
+      steps: null,
+      originalProblem: null
     };
   };
 
-  const { rule, hasSteps, steps } = getExplanationContent();
+  const { rule, hasSteps, steps, originalProblem, userAnswer, correctAnswer: correctFromExplanation } = getExplanationContent();
+
+  // Use correctAnswer from props, or from explanation object
+  const displayCorrectAnswer = correctAnswer || correctFromExplanation;
+  const displayUserAnswer = selectedAnswer || userAnswer;
 
   // Determine if we should show answer comparison
-  // ENHANCED: Always show correct answer, even in staged mode
-  const showAnswerComparison = correctAnswer !== null;
-  const showSelectedAnswer = selectedAnswer !== null;
+  const showAnswerComparison = displayCorrectAnswer !== null;
+  const showSelectedAnswer = displayUserAnswer !== null;
 
   return (
     <div style={{
@@ -84,6 +113,38 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           </h2>
         </div>
 
+        {/* FIX #6: Original Problem Display */}
+        {originalProblem && (
+          <div style={{
+            background: '#F3F4F6',
+            border: '2px solid #9CA3AF',
+            borderRadius: 0.5rem',
+            padding: '0.75rem',
+            marginBottom: '0.5rem',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              color: '#374151',
+              marginBottom: '0.25rem',
+              fontFamily: 'Poppins, sans-serif',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              Original Problem
+            </div>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#1F2937',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              {originalProblem}
+            </div>
+          </div>
+        )}
+
         {/* Answer Comparison - ENHANCED for staged mode */}
         {showAnswerComparison && (
           <div style={{
@@ -117,7 +178,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                   color: '#DC2626',
                   fontFamily: 'Poppins, sans-serif'
                 }}>
-                  {selectedAnswer}
+                  {displayUserAnswer}
                 </div>
               </div>
             )}
@@ -147,7 +208,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                 color: '#059669',
                 fontFamily: 'Poppins, sans-serif'
               }}>
-                {correctAnswer}
+                {displayCorrectAnswer}
               </div>
             </div>
           </div>
