@@ -118,7 +118,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           <div style={{
             background: '#F3F4F6',
             border: '2px solid #9CA3AF',
-            borderRadius: 0.5rem',
+            borderRadius: '0.5rem',
             padding: '0.75rem',
             marginBottom: '0.5rem',
             textAlign: 'center'
