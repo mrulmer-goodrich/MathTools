@@ -1077,8 +1077,8 @@ body {
 }
 
 /* ============================================
-   LEVEL 17 EQUATION WORKSHEET - CLEAN VERSION
-   DELETE ALL OLD .equation-* CLASSES FIRST!
+   LEVEL 17 EQUATION WORKSHEET
+   ONLY CHANGES: Line is lighter + thinner
    ============================================ */
 
 /* Main container */
@@ -1095,15 +1095,15 @@ body {
   margin: 0 0 1rem 0;
 }
 
-/* Vertical line - shorter, lighter, only spans work area */
-.equation-vertical-line-short {
+/* Vertical line - ONLY CHANGED: color (lighter) + width (thinner) */
+.equation-vertical-line {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 120px;
-  bottom: 0;
-  width: 2px;
-  background: #6B7280;
+  top: 0;           /* ORIGINAL - keeps it aligned */
+  bottom: 0;        /* ORIGINAL - full height */
+  width: 2px;       /* CHANGED: was 3px */
+  background: #9CA3AF;  /* CHANGED: lighter gray (was #000000) */
   z-index: 5;
   pointer-events: none;
 }
@@ -1179,11 +1179,6 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   margin-top: 0.5rem;
-}
-
-/* Operation row (for future alignment) */
-.equation-completed-row.operation-row {
-  /* Future: Add padding-left to align with specific terms */
 }
 
 /* ============================================
@@ -1388,9 +1383,5 @@ body {
   
   .term-bank-grid-even {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  }
-
-  .equation-vertical-line-short {
-    top: 100px;
   }
 }
