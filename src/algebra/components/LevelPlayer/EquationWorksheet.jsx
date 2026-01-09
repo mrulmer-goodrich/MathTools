@@ -31,15 +31,6 @@ const EquationWorksheet = ({
     return str;
   };
 
-  // Strip leading + for display (keep - signs)
-  const stripLeadingPlus = (term) => {
-    const str = String(term).trim();
-    if (str.startsWith('+')) {
-      return str.substring(1);
-    }
-    return str;
-  };
-
   // Normalize for comparison (strip leading + from both)
   const normalizeForComparison = (term) => {
     return stripLeadingPlus(term);
