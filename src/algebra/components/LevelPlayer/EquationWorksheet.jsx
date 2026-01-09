@@ -1,7 +1,7 @@
-// EquationWorksheet.jsx - FIXED with 3-column layout and dynamic vertical line
+// EquationWorksheet.jsx - FINAL FIXED VERSION
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/algebra.css';
 
 const EquationWorksheet = ({ 
@@ -13,9 +13,6 @@ const EquationWorksheet = ({
   const [completedRows, setCompletedRows] = useState([]);
   const [selectedTerms, setSelectedTerms] = useState({});
   const [showVerticalLine, setShowVerticalLine] = useState(false);
-  
-  const problemEqualsRef = useRef(null);
-  const lineContainerRef = useRef(null);
 
   // Reset state when problem changes
   useEffect(() => {
@@ -55,6 +52,19 @@ const EquationWorksheet = ({
       return str.substring(1);
     }
     return str;
+  };
+
+  // FIX #5: Force plus signs in term bank for single positive terms
+  const formatTermBankDisplay = (term) => {
+    const str = String(term).trim();
+    
+    // Already has a sign or is compound expression - leave as-is
+    if (str.startsWith('+') || str.startsWith('-')) return str;
+    if (str.includes(' ')) return str; // Compound like "x + 4"
+    if (str.includes('×') || str.includes('÷')) return str; // Operation
+    
+    // Single term without sign - add plus
+    return `+${str}`;
   };
 
   // Parse problem into left side and right side
@@ -169,129 +179,136 @@ const EquationWorksheet = ({
         
         return {
           left: leftTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
-          right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' ')
+          right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
+          alignHint: row.alignHint // BONUS: for future alignment
         };
       });
   };
 
   return (
-    <div className="math-worksheet-container equation-mode-container">
-      {/* Vertical Line - dynamically positioned based on equals sign column */}
-      {showVerticalLine && (
-        <div 
-          ref={lineContainerRef}
-          className="equation-vertical-line-container"
-        />
-      )}
+    <div className="equation-mode-container">
+      {/* FIX #2: Wrapper for line + equation rows (excludes term bank) */}
+      <div className="equation-content-wrapper">
+        {/* FIX #2: Vertical line - BLACK, stops before term bank */}
+        {showVerticalLine && (
+          <div className="equation-vertical-line" />
+        )}
 
-      {/* Problem + Completed Rows Container - 3-COLUMN LAYOUT */}
-      <div className="equation-problem-container">
-        {/* Original Problem - 3 columns */}
-        <div className="equation-row-3col">
-          <div className="equation-left-side">{problemParts.left}</div>
-          <div className="equation-equals-col" ref={problemEqualsRef}>=</div>
-          <div className="equation-right-side">{problemParts.right}</div>
+        {/* Problem + Completed Rows Container - 3-COLUMN LAYOUT */}
+        <div className="equation-problem-container">
+          {/* Original Problem - 3 columns */}
+          <div className="equation-row-3col">
+            <div className="equation-left-side">{problemParts.left}</div>
+            <div className="equation-equals-col">=</div>
+            <div className="equation-right-side">{problemParts.right}</div>
+          </div>
+
+          {/* Completed Rows - same 3-column layout, BLACK font */}
+          {getCompletedRowsDisplay().map((row, idx) => (
+            <div key={idx} className="equation-row-3col equation-completed-row">
+              <div className="equation-left-side">{row.left}</div>
+              <div className="equation-equals-col">=</div>
+              <div className="equation-right-side">{row.right}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Completed Rows - same 3-column layout */}
-        {getCompletedRowsDisplay().map((row, idx) => (
-          <div key={idx} className="equation-row-3col equation-completed-row">
-            <div className="equation-left-side">{row.left}</div>
-            <div className="equation-equals-col">=</div>
-            <div className="equation-right-side">{row.right}</div>
-          </div>
-        ))}
+        {/* Current Row Work Area */}
+        <div className="equation-work-area">
+          {rows.map((row, index) => {
+            const isCompleted = completedRows.includes(row.id);
+            const isActive = index === currentRowIndex;
+            const isLocked = index > currentRowIndex;
+
+            // FIX #3: Don't render empty locked rows
+            if (isLocked) return null;
+
+            // Skip completed rows (they're in problem container)
+            if (isCompleted && row.type !== 'single_choice') return null;
+
+            return (
+              <div 
+                key={row.id}
+                className={`equation-work-row ${isActive ? 'active' : ''}`}
+              >
+                {/* SINGLE CHOICE ROW (Draw a line) - FIX #1: Compact styling */}
+                {row.type === 'single_choice' && isActive && !isCompleted && (
+                  <div className="equation-single-choice-compact">
+                    <div className="equation-instruction">{row.instruction}</div>
+                    {row.choices.map((choice, idx) => (
+                      <button
+                        key={idx}
+                        className="equation-draw-line-btn"
+                        onClick={handleDrawLine}
+                      >
+                        {choice}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* DUAL-BOX ROW (active working row) - FIX #4: 4-column grid */}
+                {row.type === 'dual_box' && isActive && !isCompleted && (
+                  <div className="equation-row-4col">
+                    {/* Left side blanks */}
+                    <div className="equation-left-side">
+                      {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
+                        const term = currentSelections[i];
+                        const isOperationRow = row.id.includes('row1');
+                        return (
+                          <button
+                            key={`left-${i}`}
+                            className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                            onClick={() => term && handleBlankClick(i)}
+                          >
+                            {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Equals sign column */}
+                    <div className="equation-equals-col">=</div>
+                    
+                    {/* Right side blanks */}
+                    <div className="equation-right-side">
+                      {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
+                        const leftBlanks = row.leftBlanks || 0;
+                        const term = currentSelections[leftBlanks + i];
+                        const isOperationRow = row.id.includes('row1');
+                        return (
+                          <button
+                            key={`right-${i}`}
+                            className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                            onClick={() => term && handleBlankClick(leftBlanks + i)}
+                          >
+                            {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* FIX #4: Check Button in 4th column */}
+                    <div className="equation-check-col">
+                      {isRowFilled() && (
+                        <button 
+                          className="equation-check-btn"
+                          onClick={handleCheckRow}
+                        >
+                          {isFinalRow ? '✓ Submit' : '✓ Check'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Current Row Work Area */}
-      <div className="equation-work-area">
-        {rows.map((row, index) => {
-          const isCompleted = completedRows.includes(row.id);
-          const isActive = index === currentRowIndex;
-          const isLocked = index > currentRowIndex;
-
-          // Skip completed rows (they're in problem container)
-          if (isCompleted && row.type !== 'single_choice') return null;
-
-          return (
-            <div 
-              key={row.id}
-              className={`equation-work-row ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
-            >
-              {/* SINGLE CHOICE ROW (Draw a line) */}
-              {row.type === 'single_choice' && isActive && !isCompleted && (
-                <div className="equation-single-choice">
-                  <div className="equation-instruction">{row.instruction}</div>
-                  {row.choices.map((choice, idx) => (
-                    <button
-                      key={idx}
-                      className="base-camp-tile-button"
-                      onClick={handleDrawLine}
-                    >
-                      {choice}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* DUAL-BOX ROW (active working row) - 3-COLUMN LAYOUT */}
-              {row.type === 'dual_box' && isActive && !isCompleted && (
-                <div className="equation-row-3col equation-active-row">
-                  {/* Left side blanks */}
-                  <div className="equation-left-side">
-                    {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
-                      const term = currentSelections[i];
-                      const isOperationRow = row.id.includes('row1');
-                      return (
-                        <button
-                          key={`left-${i}`}
-                          className={`equation-blank ${term ? 'filled' : 'empty'}`}
-                          onClick={() => term && handleBlankClick(i)}
-                        >
-                          {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Equals sign column */}
-                  <div className="equation-equals-col">=</div>
-                  
-                  {/* Right side blanks */}
-                  <div className="equation-right-side">
-                    {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
-                      const leftBlanks = row.leftBlanks || 0;
-                      const term = currentSelections[leftBlanks + i];
-                      const isOperationRow = row.id.includes('row1');
-                      return (
-                        <button
-                          key={`right-${i}`}
-                          className={`equation-blank ${term ? 'filled' : 'empty'}`}
-                          onClick={() => term && handleBlankClick(leftBlanks + i)}
-                        >
-                          {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Check Button */}
-                  {isRowFilled() && (
-                    <button 
-                      className="equation-check-btn"
-                      onClick={handleCheckRow}
-                    >
-                      {isFinalRow ? '✓ Submit' : '✓ Check'}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Term Bank - signs ALWAYS displayed */}
+      {/* FIX #2: Term Bank OUTSIDE wrapper (line won't go through it) */}
+      {/* FIX #5: All signs displayed via formatTermBankDisplay */}
       {!completedRows.includes(currentRow.id) && currentRow.bank && currentRow.bank.length > 0 && (
         <div className="equation-term-bank">
           <div className="term-bank-label">{currentRow.instruction || 'Select term to place:'}</div>
@@ -307,7 +324,7 @@ const EquationWorksheet = ({
                   onClick={() => handleBankChipClick(chip)}
                   disabled={currentSelections.length >= totalBlanks}
                 >
-                  {chip}
+                  {formatTermBankDisplay(chip)}
                 </button>
               );
             })}
