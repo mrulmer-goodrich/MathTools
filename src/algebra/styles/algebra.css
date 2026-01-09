@@ -1316,3 +1316,75 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   LEVEL 17 EQUATION WORKSHEET CSS
+   SCOPED - Only affects .equation-mode-container
+   Safe to append to algebra.css
+   ============================================ */
+
+/* Reduce padding in work area for equation mode ONLY */
+.equation-mode-container .worksheet-work-area {
+  padding: 0 !important;
+  min-height: 60px !important;
+}
+
+/* Reduce padding in worksheet rows - equation mode ONLY */
+.equation-mode-container .worksheet-row {
+  padding: 0.25rem 0 !important;
+  margin: 0 !important;
+}
+
+/* Problem display container - equation mode ONLY */
+.equation-mode-container .worksheet-problem-display {
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+/* Term bank - equation mode ONLY */
+.equation-mode-container .worksheet-term-bank {
+  padding: 0.75rem 1rem !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Term bank label - equation mode ONLY */
+.equation-mode-container .term-bank-label {
+  margin-bottom: 0.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+}
+
+/* Blank buttons - equation mode ONLY */
+.equation-mode-container .worksheet-blank {
+  min-width: 70px !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 1.125rem !important;
+}
+
+/* Term chips - equation mode ONLY */
+.equation-mode-container .term-chip {
+  padding: 0.5rem 0.75rem !important;
+  min-height: 40px !important;
+  font-size: 1rem !important;
+}
+
+/* Check button - equation mode ONLY */
+.equation-mode-container .worksheet-check-btn-inline {
+  padding: 0.5rem 1rem !important;
+  font-size: 1rem !important;
+  margin-left: 0.5rem !important;
+}
+
+/* Base camp button for "Draw a line" - equation mode ONLY */
+.equation-mode-container .base-camp-tile-button {
+  padding: 0.75rem 1.5rem !important;
+  margin: 0.5rem !important;
+}
+
+/* Remove extra spacing - equation mode ONLY */
+.equation-mode-container .worksheet-row.active,
+.equation-mode-container .worksheet-row.completed,
+.equation-mode-container .worksheet-row.locked {
+  margin: 0 !important;
+  padding: 0.25rem 0 !important;
+}
