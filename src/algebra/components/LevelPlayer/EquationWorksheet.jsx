@@ -26,7 +26,7 @@ setShowFinalAnswer(false);
 
 // SAFETY: Validate problem structure
 if (!problem.staged || !problem.staged.rows) {
-console.error(‘EquationWorksheet: Invalid staged structure’, problem);
+console.error('EquationWorksheet: Invalid staged structure', problem);
 return <div className="error">Problem structure invalid</div>;
 }
 
@@ -40,8 +40,8 @@ const currentSelections = selectedTerms[currentRow.id] || [];
 // Strip leading + for DISPLAY in completed rows and final answer (NOT in operation rows)
 const stripLeadingPlusForDisplay = (term) => {
 const str = String(term).trim();
-// Only strip + if it’s a simple term (not an operation like “+5” in “add 5 to both sides”)
-if (str.startsWith(’+’) && !str.includes(‘×’) && !str.includes(‘÷’)) {
+// Only strip + if it's a simple term (not an operation like “+5” in “add 5 to both sides”)
+if (str.startsWith('+') && !str.includes('×') && !str.includes('÷')) {
 return str.substring(1);
 }
 return str;
@@ -50,7 +50,7 @@ return str;
 // Normalize for comparison (strip leading + from both)
 const normalizeForComparison = (term) => {
 const str = String(term).trim();
-if (str.startsWith(’+’)) {
+if (str.startsWith('+')) {
 return str.substring(1);
 }
 return str;
@@ -74,8 +74,8 @@ return `+${str}`;
 
 // Parse problem into left side and right side
 const parseProblem = (problemStr) => {
-const parts = problemStr.split(’=’);
-if (parts.length !== 2) return { left: problemStr, right: ‘’ };
+const parts = problemStr.split('=');
+if (parts.length !== 2) return { left: problemStr, right: '' };
 return {
 left: parts[0].trim(),
 right: parts[1].trim()
@@ -188,8 +188,8 @@ if (currentRow.type === 'dual_box') {
 
 // Check if row is filled
 const isRowFilled = () => {
-if (currentRow.type === ‘single_choice’) return true;
-if (currentRow.type === ‘dual_box’) {
+if (currentRow.type === 'single_choice') return true;
+if (currentRow.type === 'dual_box') {
 const totalBlanks = (currentRow.leftBlanks || 0) + (currentRow.rightBlanks || 0);
 return currentSelections.length === totalBlanks;
 }
