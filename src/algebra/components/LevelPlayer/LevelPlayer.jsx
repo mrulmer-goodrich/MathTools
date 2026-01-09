@@ -315,12 +315,23 @@ const LevelPlayer = ({
 />
 
 
-        {isStaged ? (
-          <MathWorksheet
-            problem={currentProblem}
-            onComplete={handleProblemComplete}
-            onWrongAnswer={handleProblemWrong}
-          />
+
+{isStaged ? (
+  <>
+    {problem.staged.mode === 'equation_solver' ? (
+      <EquationWorksheet
+        problem={problem}
+        onComplete={handleProblemComplete}
+        onWrongAnswer={handleProblemWrong}
+      />
+    ) : (
+      <MathWorksheet
+        problem={problem}
+        onComplete={handleProblemComplete}
+        onWrongAnswer={handleProblemWrong}
+      />
+    )}
+  </>
         ) : (
           <>
             <ProblemDisplay problem={currentProblem} />
@@ -336,6 +347,7 @@ const LevelPlayer = ({
         )}
       </div>
 
+      
       {showSuccess && (
         <SuccessOverlay crystalsEarned={1} />
       )}
