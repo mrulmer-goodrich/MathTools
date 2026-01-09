@@ -1,4 +1,4 @@
-// EquationWorksheet.jsx - COMPLETE FIXED VERSION
+// EquationWorksheet.jsx - ALL 7 FIXES IMPLEMENTED
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -13,6 +13,7 @@ const EquationWorksheet = ({
   const [completedRows, setCompletedRows] = useState([]);
   const [selectedTerms, setSelectedTerms] = useState({});
   const [showVerticalLine, setShowVerticalLine] = useState(false);
+  const [showFinalAnswer, setShowFinalAnswer] = useState(false);
 
   // Reset state when problem changes
   useEffect(() => {
@@ -20,6 +21,7 @@ const EquationWorksheet = ({
     setCompletedRows([]);
     setSelectedTerms({});
     setShowVerticalLine(false);
+    setShowFinalAnswer(false);
   }, [problem]);
 
   // SAFETY: Validate problem structure
@@ -54,7 +56,7 @@ const EquationWorksheet = ({
     return str;
   };
 
-  // FIX #5: Force plus signs in term bank for single positive terms (DISPLAY ONLY)
+  // FIX #2: Force plus signs in term bank for single positive terms (DISPLAY ONLY)
   const formatTermBankDisplay = (term) => {
     const str = String(term).trim();
     
@@ -89,7 +91,6 @@ const EquationWorksheet = ({
   };
 
   // Handle bank chip click (fills sequentially)
-  // FIX #2: Store ORIGINAL chip value (validation will normalize)
   const handleBankChipClick = (chip) => {
     const rowId = currentRow.id;
     const current = selectedTerms[rowId] || [];
@@ -139,28 +140,28 @@ const EquationWorksheet = ({
       if (leftCorrect && rightCorrect) {
         setCompletedRows(prev => [...prev, rowId]);
         
-        setTimeout(() => {
-          if (isFinalRow) {
+        // FIX #4: If final row, show answer for 1.5s before success overlay
+        if (isFinalRow) {
+          setShowFinalAnswer(true);
+          setTimeout(() => {
             onComplete();
-          } else {
+          }, 1500);
+        } else {
+          setTimeout(() => {
             setCurrentRowIndex(prev => prev + 1);
-          }
-        }, 300);
+          }, 300);
+        }
       } else {
-        // FIX #3: Enhanced feedback with user's answer
-        const userAnswer = {
-          left: leftSelected.join(' '),
-          right: rightSelected.join(' ')
-        };
-        const correctAnswer = {
-          left: leftExpected.join(' '),
-          right: rightExpected.join(' ')
-        };
+        // FIX #6: Enhanced feedback with user's answer AND original problem
+        const userAnswerLeft = leftSelected.join(' ');
+        const userAnswerRight = rightSelected.join(' ');
+        const correctAnswerLeft = leftExpected.join(' ');
+        const correctAnswerRight = rightExpected.join(' ');
         
-        // Call onWrongAnswer with enhanced data
+        // Call onWrongAnswer with enhanced data object
         onWrongAnswer({
-          userAnswer: `${userAnswer.left} = ${userAnswer.right}`,
-          correctAnswer: `${correctAnswer.left} = ${correctAnswer.right}`,
+          userAnswer: `${userAnswerLeft} = ${userAnswerRight}`,
+          correctAnswer: `${correctAnswerLeft} = ${correctAnswerRight}`,
           originalProblem: problem.displayProblem || problem.problem,
           rowInstruction: currentRow.instruction
         });
@@ -199,19 +200,20 @@ const EquationWorksheet = ({
         return {
           left: leftTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
           right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
-          alignHint: row.alignHint, // FIX #4: Alignment hints ready
-          isOperationRow
+          isOperationRow,
+          rawLeft: leftTerms, // FIX #3: For alignment
+          rawRight: rightTerms
         };
       });
   };
 
   return (
     <div className="equation-mode-container">
-      {/* FIX #2: Wrapper for line + equation rows (excludes term bank) */}
+      {/* Wrapper for line + equation rows (excludes term bank) */}
       <div className="equation-content-wrapper">
-        {/* FIX #1: Vertical line - lighter gray, thinner */}
+        {/* FIX #1: Vertical line - 50% shorter (only spans work area) */}
         {showVerticalLine && (
-          <div className="equation-vertical-line" />
+          <div className="equation-vertical-line-short" />
         )}
 
         {/* Problem + Completed Rows Container - 3-COLUMN LAYOUT */}
@@ -219,18 +221,18 @@ const EquationWorksheet = ({
           {/* Original Problem - 3 columns */}
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-            <div className="equation-equals-col">=</div>
+            <div className="equation-equals-col-centered">=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
-          {/* Completed Rows - same 3-column layout, BLACK font */}
+          {/* Completed Rows - FIX #3: with alignment */}
           {getCompletedRowsDisplay().map((row, idx) => (
             <div 
               key={idx} 
-              className={`equation-row-3col equation-completed-row ${row.alignHint ? 'has-alignment' : ''}`}
+              className={`equation-row-3col equation-completed-row ${row.isOperationRow ? 'operation-row' : 'solution-row'}`}
             >
               <div className="equation-left-side">{row.left}</div>
-              <div className="equation-equals-col">=</div>
+              <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">{row.right}</div>
             </div>
           ))}
@@ -243,7 +245,7 @@ const EquationWorksheet = ({
             const isActive = index === currentRowIndex;
             const isLocked = index > currentRowIndex;
 
-            // FIX #3: Don't render empty locked rows
+            // Don't render empty locked rows
             if (isLocked) return null;
 
             // Skip completed rows (they're in problem container)
@@ -254,7 +256,7 @@ const EquationWorksheet = ({
                 key={row.id}
                 className={`equation-work-row ${isActive ? 'active' : ''}`}
               >
-                {/* SINGLE CHOICE ROW (Draw a line) - FIX #1: Compact styling */}
+                {/* SINGLE CHOICE ROW (Draw a line) */}
                 {row.type === 'single_choice' && isActive && !isCompleted && (
                   <div className="equation-single-choice-compact">
                     <div className="equation-instruction">{row.instruction}</div>
@@ -270,7 +272,7 @@ const EquationWorksheet = ({
                   </div>
                 )}
 
-                {/* DUAL-BOX ROW (active working row) - FIX #4: 4-column grid */}
+                {/* DUAL-BOX ROW (active working row) - 4-column grid */}
                 {row.type === 'dual_box' && isActive && !isCompleted && (
                   <div className="equation-row-4col">
                     {/* Left side blanks */}
@@ -290,8 +292,8 @@ const EquationWorksheet = ({
                       })}
                     </div>
                     
-                    {/* Equals sign column */}
-                    <div className="equation-equals-col">=</div>
+                    {/* FIX #1: Equals sign centered */}
+                    <div className="equation-equals-col-centered">=</div>
                     
                     {/* Right side blanks */}
                     <div className="equation-right-side">
@@ -311,9 +313,9 @@ const EquationWorksheet = ({
                       })}
                     </div>
                     
-                    {/* FIX #4: Check Button in 4th column */}
+                    {/* Check Button in 4th column */}
                     <div className="equation-check-col">
-                      {isRowFilled() && (
+                      {isRowFilled() && !showFinalAnswer && (
                         <button 
                           className="equation-check-btn"
                           onClick={handleCheckRow}
@@ -330,12 +332,11 @@ const EquationWorksheet = ({
         </div>
       </div>
 
-      {/* FIX #2: Term Bank OUTSIDE wrapper (line won't go through it) */}
-      {/* FIX #5: All signs displayed via formatTermBankDisplay */}
+      {/* FIX #2: Term Bank with even distribution */}
       {!completedRows.includes(currentRow.id) && currentRow.bank && currentRow.bank.length > 0 && (
         <div className="equation-term-bank">
           <div className="term-bank-label">{currentRow.instruction || 'Select term to place:'}</div>
-          <div className="term-bank-grid">
+          <div className="term-bank-grid-even">
             {currentRow.bank.map((chip, index) => {
               const isSelected = currentSelections.includes(chip);
               const totalBlanks = (currentRow.leftBlanks || 0) + (currentRow.rightBlanks || 0);
