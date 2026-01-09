@@ -266,9 +266,12 @@ export const generateOneStepAddSubtract = (difficulty) => {
     `${Math.abs(a)} + x`
   ];
   
-  // Expected Row 2 (left: x, right: solution WITHOUT leading +)
-  const row2ExpectedLeft = ['x'];
-  const row2ExpectedRight = [String(solution)];
+  // Expected Row 2 (depends on skeleton structure)
+  // For problems where constant is on LEFT (b=x+a, b=a+x, b=x-a), final answer is flipped
+  const problemHasConstantOnLeft = problem.startsWith(`${b}`);
+  
+  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
+  const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
   
   // Build staged structure
   const staged = {
