@@ -1385,3 +1385,292 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
   }
 }
+
+==========================================
+PART 1: CSS FIX - ADD TO END OF algebra.css
+==========================================
+
+/* ============================================ */
+/* EQUATION WORKSHEET - FIXED ALIGNMENT SYSTEM */
+/* Equal signs LOCKED in place, thick dark line */
+/* ============================================ */
+
+.equation-mode-container {
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+background: white;
+position: relative;
+overflow: hidden;
+}
+
+.equation-content-wrapper {
+flex: 1;
+display: flex;
+flex-direction: column;
+padding: 2rem;
+position: relative;
+overflow-y: auto;
+}
+
+/* VERTICAL LINE - THICK AND DARK */
+.equation-vertical-line {
+position: absolute;
+left: 50%;
+top: 0;
+bottom: 0;
+width: 4px;
+background: #1F2937;
+transform: translateX(-50%);
+z-index: 5;
+pointer-events: none;
+}
+
+.equation-problem-container {
+margin-bottom: 1.5rem;
+}
+
+/* ============================================ */
+/* FIXED-WIDTH GRID SYSTEM - EQUAL SIGNS LOCKED */
+/* ============================================ */
+
+.equation-row-3col,
+.equation-row-4col {
+display: grid;
+grid-template-columns: 1fr 60px 1fr;
+align-items: center;
+gap: 1rem;
+padding: 0.75rem 0;
+position: relative;
+}
+
+.equation-row-4col {
+grid-template-columns: 1fr 60px 1fr 120px;
+}
+
+.equation-left-side {
+text-align: right;
+padding-right: 1rem;
+font-size: 1.5rem;
+font-weight: 500;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: 0.5rem;
+flex-wrap: wrap;
+}
+
+.equation-equals-col-centered {
+width: 60px;
+text-align: center;
+font-size: 1.5rem;
+font-weight: 600;
+color: #1F2937;
+flex-shrink: 0;
+}
+
+.equation-right-side {
+text-align: left;
+padding-left: 1rem;
+font-size: 1.5rem;
+font-weight: 500;
+display: flex;
+align-items: center;
+justify-content: flex-start;
+gap: 0.5rem;
+flex-wrap: wrap;
+}
+
+.equation-check-col {
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+/* ============================================ */
+/* COMPLETED ROWS */
+/* ============================================ */
+
+.equation-completed-row {
+color: #6B7280;
+font-size: 1.25rem;
+}
+
+.equation-completed-row.operation-row {
+color: #9CA3AF;
+font-size: 1.125rem;
+}
+
+.equation-completed-row.solution-row {
+color: #4B5563;
+}
+
+/* ============================================ */
+/* WORK AREA */
+/* ============================================ */
+
+.equation-work-area {
+margin-top: 1rem;
+}
+
+.equation-work-row {
+opacity: 0.3;
+pointer-events: none;
+transition: opacity 0.2s;
+}
+
+.equation-work-row.active {
+opacity: 1;
+pointer-events: all;
+}
+
+/* ============================================ */
+/* SINGLE CHOICE (Draw Line) */
+/* ============================================ */
+
+.equation-single-choice-compact {
+display: flex;
+align-items: center;
+gap: 1rem;
+padding: 1rem;
+background: #F3F4F6;
+border-radius: 0.5rem;
+margin-bottom: 1rem;
+}
+
+.equation-instruction {
+font-size: 1rem;
+color: #4B5563;
+font-weight: 500;
+}
+
+.equation-draw-line-btn {
+padding: 0.5rem 1.5rem;
+background: white;
+border: 2px solid #D1D5DB;
+border-radius: 0.5rem;
+font-size: 1rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.equation-draw-line-btn:hover {
+background: #4F46E5;
+color: white;
+border-color: #4F46E5;
+transform: translateY(-2px);
+}
+
+/* ============================================ */
+/* BLANKS (Input Boxes) */
+/* ============================================ */
+
+.equation-blank {
+min-width: 80px;
+height: 48px;
+padding: 0 0.75rem;
+border: 2px solid #D1D5DB;
+border-radius: 0.5rem;
+background: white;
+font-size: 1.25rem;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+.equation-blank.empty {
+color: #9CA3AF;
+border-style: dashed;
+}
+
+.equation-blank.filled {
+background: #EEF2FF;
+border-color: #818CF8;
+color: #312E81;
+}
+
+.equation-blank.filled:hover {
+background: #FEE2E2;
+border-color: #EF4444;
+}
+
+/* ============================================ */
+/* CHECK BUTTON */
+/* ============================================ */
+
+.equation-check-btn {
+padding: 0.75rem 1.5rem;
+background: #10B981;
+color: white;
+border: none;
+border-radius: 0.5rem;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.equation-check-btn:hover {
+background: #059669;
+transform: translateY(-2px);
+box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================ */
+/* TERM BANK */
+/* ============================================ */
+
+.equation-term-bank {
+background: #F9FAFB;
+border-top: 2px solid #E5E7EB;
+padding: 1.5rem;
+margin-top: auto;
+}
+
+.term-bank-label {
+font-size: 1rem;
+color: #4B5563;
+font-weight: 600;
+margin-bottom: 1rem;
+}
+
+.term-bank-grid-even {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+gap: 0.75rem;
+max-width: 800px;
+}
+
+.term-chip {
+padding: 0.75rem 1rem;
+background: white;
+border: 2px solid #D1D5DB;
+border-radius: 0.5rem;
+font-size: 1.125rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+color: #1F2937;
+}
+
+.term-chip:hover:not(:disabled) {
+background: #EEF2FF;
+border-color: #818CF8;
+transform: translateY(-2px);
+}
+
+.term-chip.selected {
+opacity: 0.3;
+pointer-events: none;
+}
+
+.term-chip:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
