@@ -1090,3 +1090,229 @@ body {
   overflow: hidden !important;
 }
 
+
+/* ============================================ */
+/* EQUATION WORKSHEET STYLES */
+/* ============================================ */
+
+.equation-worksheet-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.equation-work-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 200px;
+}
+
+.equation-row {
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.equation-row.active {
+  opacity: 1;
+}
+
+.equation-row.completed {
+  opacity: 1;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.equation-instruction {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Single Choice (Draw a Line) */
+.equation-single-choice {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.equation-choice-btn {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-choice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Dual Box Layout */
+.equation-dual-box-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  position: relative;
+}
+
+.equation-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 200px;
+}
+
+.equation-vertical-line {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #10B981;
+  padding: 0 1rem;
+  border-left: 3px solid #10B981;
+  border-right: 3px solid #10B981;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.equation-blanks {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.equation-blank {
+  min-width: 80px;
+  padding: 0.75rem 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: 2px solid #D1D5DB;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-blank.filled {
+  background: #DBEAFE;
+  border-color: #3B82F6;
+  color: #1E40AF;
+}
+
+.equation-blank.empty {
+  background: #F9FAFB;
+  color: #9CA3AF;
+}
+
+.equation-blank:hover {
+  transform: scale(1.05);
+}
+
+.equation-result {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-locked {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.locked-blank {
+  display: inline-block;
+  min-width: 60px;
+  padding: 0.5rem;
+  color: #D1D5DB;
+  font-size: 1rem;
+}
+
+.equation-check-btn {
+  position: absolute;
+  right: -120px;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.equation-check-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Term Bank for Equations */
+.equation-term-bank {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid #E5E7EB;
+}
+
+.term-bank-chips-dual {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.bank-section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6B7280;
+  margin-bottom: 0.75rem;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .equation-dual-box-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .equation-vertical-line {
+    transform: rotate(90deg);
+    border-left: none;
+    border-right: none;
+    border-top: 3px solid #10B981;
+    border-bottom: 3px solid #10B981;
+    width: 100%;
+    height: auto;
+  }
+  
+  .equation-check-btn {
+    position: static;
+    margin-top: 1rem;
+    width: 100%;
+  }
+  
+  .term-bank-chips-dual {
+    grid-template-columns: 1fr;
+  }
+}
