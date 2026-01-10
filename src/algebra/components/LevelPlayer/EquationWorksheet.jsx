@@ -1,4 +1,4 @@
-// EquationWorksheet.jsx - FINAL: Calculated line position, fixed header, compact spacing
+// EquationWorksheet.jsx - FINAL FIX: Line tracks equals, stops at work area bottom
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -15,24 +15,32 @@ const EquationWorksheet = ({
   const [showVerticalLine, setShowVerticalLine] = useState(false);
   const [showFinalAnswer, setShowFinalAnswer] = useState(false);
   const [linePosition, setLinePosition] = useState('50%');
+  const [lineHeight, setLineHeight] = useState('100%');
   const equalsRef = useRef(null);
+  const workAreaRef = useRef(null);
 
-  // Calculate line position based on equals sign
+  // FIXED: Calculate line position AND height, recalculate when terms change
   useEffect(() => {
-    if (showVerticalLine && equalsRef.current) {
+    if (showVerticalLine && equalsRef.current && workAreaRef.current) {
       const equalsElement = equalsRef.current;
+      const workAreaElement = workAreaRef.current;
       const containerElement = equalsElement.closest('.equation-content-wrapper');
       
       if (containerElement) {
         const equalsRect = equalsElement.getBoundingClientRect();
         const containerRect = containerElement.getBoundingClientRect();
+        const workAreaRect = workAreaElement.getBoundingClientRect();
         
         // Calculate center of equals sign relative to container
         const equalsCenter = equalsRect.left + (equalsRect.width / 2) - containerRect.left;
         setLinePosition(`${equalsCenter}px`);
+        
+        // Calculate line height - from top to bottom of work area
+        const lineEnd = workAreaRect.bottom - containerRect.top;
+        setLineHeight(`${lineEnd}px`);
       }
     }
-  }, [showVerticalLine, completedRows, currentRowIndex]);
+  }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]); // FIXED: Added selectedTerms!
 
   useEffect(() => {
     setCurrentRowIndex(0);
@@ -257,23 +265,24 @@ const EquationWorksheet = ({
   return (
     <div className="equation-mode-container">
       <div className="equation-content-wrapper">
-        {/* Vertical line with calculated position */}
+        {/* Vertical line - position AND height calculated dynamically */}
         {showVerticalLine && !showFinalAnswer && (
           <div 
             className="equation-vertical-line-centered" 
-            style={{ left: linePosition }}
+            style={{ 
+              left: linePosition,
+              height: lineHeight
+            }}
           />
         )}
 
         <div className="equation-problem-container">
-          {/* Original Problem */}
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
             <div className="equation-equals-col" ref={equalsRef}>=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
-          {/* Completed Rows */}
           {getCompletedRowsDisplay().map((row, idx) => (
             <div 
               key={idx} 
@@ -285,7 +294,6 @@ const EquationWorksheet = ({
             </div>
           ))}
           
-          {/* Final Answer */}
           {showFinalAnswer && isFinalRow && (
             <div className="equation-row-3col equation-final-answer-highlight">
               <div className="equation-left-side">
@@ -301,9 +309,9 @@ const EquationWorksheet = ({
           )}
         </div>
 
-        {/* Current Row Work Area */}
+        {/* Work area - ref for calculating line height */}
         {!showFinalAnswer && (
-          <div className="equation-work-area">
+          <div className="equation-work-area" ref={workAreaRef}>
             {rows.map((row, index) => {
               const isCompleted = completedRows.includes(row.id);
               const isActive = index === currentRowIndex;
