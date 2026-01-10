@@ -1,7 +1,7 @@
-// EquationWorksheet.jsx - FINAL: Region colors, anchored equals, black line, no duplication, organized bank
+// EquationWorksheet.jsx - FIXED: Line centered, stops before final, answer once only
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/algebra.css';
 
 const EquationWorksheet = ({ 
@@ -14,6 +14,7 @@ const EquationWorksheet = ({
   const [selectedTerms, setSelectedTerms] = useState({});
   const [showVerticalLine, setShowVerticalLine] = useState(false);
   const [showFinalAnswer, setShowFinalAnswer] = useState(false);
+  const problemContainerRef = useRef(null);
 
   // Reset state when problem changes
   useEffect(() => {
@@ -61,10 +62,9 @@ const EquationWorksheet = ({
     
     // Already has a sign or is compound expression - leave as-is
     if (str.startsWith('+') || str.startsWith('-')) return str;
-    if (str.includes(' ')) return str; // Compound like "x + 4"
-    if (str.includes('×') || str.includes('÷')) return str; // Operation
+    if (str.includes(' ')) return str;
+    if (str.includes('×') || str.includes('÷')) return str;
     
-    // Single term without sign - add plus FOR DISPLAY ONLY
     return `+${str}`;
   };
 
@@ -95,7 +95,6 @@ const EquationWorksheet = ({
     const current = selectedTerms[rowId] || [];
     const totalBlanks = (currentRow.leftBlanks || 0) + (currentRow.rightBlanks || 0);
     
-    // Allow reuse of same term
     if (current.length < totalBlanks) {
       setSelectedTerms(prev => ({
         ...prev,
@@ -151,7 +150,6 @@ const EquationWorksheet = ({
           }, 300);
         }
       } else {
-        // Enhanced feedback with user's answer
         const userAnswer = {
           left: leftSelected.join(' '),
           right: rightSelected.join(' ')
@@ -187,17 +185,25 @@ const EquationWorksheet = ({
     return false;
   };
 
-  // Build completed rows display data
+  // Build completed rows display data - EXCLUDE FINAL ROW if showing final answer
   const getCompletedRowsDisplay = () => {
     return rows
-      .filter((row, idx) => idx > 0 && completedRows.includes(row.id))
+      .filter((row, idx) => {
+        // Include if completed
+        if (!completedRows.includes(row.id)) return false;
+        
+        // EXCLUDE final row if we're showing final answer separately
+        if (showFinalAnswer && idx === rows.length - 1) return false;
+        
+        // Include all other completed rows except Row 0
+        return idx > 0;
+      })
       .map(row => {
         const rowSelections = selectedTerms[row.id] || [];
         const leftBlanks = row.leftBlanks || 0;
         const leftTerms = rowSelections.slice(0, leftBlanks);
         const rightTerms = rowSelections.slice(leftBlanks);
         
-        // Determine if this is an operation row (Row 1) or solution row (Row 2)
         const isOperationRow = row.id.includes('row1');
         
         return {
@@ -212,7 +218,6 @@ const EquationWorksheet = ({
   const organizeBankChips = (bank) => {
     if (!bank || bank.length === 0) return { row1: [], row2: [] };
     
-    // Separate by type
     const additions = [];
     const subtractions = [];
     const multiplications = [];
@@ -237,7 +242,6 @@ const EquationWorksheet = ({
       }
     });
     
-    // Combine in logical order
     const organized = [
       ...additions.sort(),
       ...subtractions.sort(),
@@ -247,7 +251,6 @@ const EquationWorksheet = ({
       ...compounds.sort()
     ];
     
-    // Split evenly
     const half = Math.ceil(organized.length / 2);
     return {
       row1: organized.slice(0, half),
@@ -259,23 +262,23 @@ const EquationWorksheet = ({
 
   return (
     <div className="equation-mode-container">
-      {/* Wrapper for line + equation rows (excludes term bank) */}
+      {/* Wrapper for line + equation rows */}
       <div className="equation-content-wrapper">
-        {/* Vertical line - BLACK, 4px */}
-        {showVerticalLine && (
-          <div className="equation-vertical-line" />
+        {/* Vertical line - STOPS before final answer */}
+        {showVerticalLine && !showFinalAnswer && (
+          <div className="equation-vertical-line-centered" />
         )}
 
-        {/* Problem + Completed Rows Container - 3-COLUMN LAYOUT */}
-        <div className="equation-problem-container">
-          {/* Original Problem - 3 columns */}
+        {/* Problem + Completed Rows Container */}
+        <div className="equation-problem-container" ref={problemContainerRef}>
+          {/* Original Problem */}
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
             <div className="equation-equals-col">=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
-          {/* Completed Rows - same 3-column layout */}
+          {/* Completed Rows (excludes final if showing separately) */}
           {getCompletedRowsDisplay().map((row, idx) => (
             <div 
               key={idx} 
@@ -287,7 +290,7 @@ const EquationWorksheet = ({
             </div>
           ))}
           
-          {/* Final Answer - HIGHLIGHTED IN PLACE (no duplication) */}
+          {/* Final Answer - ONLY SHOWS ONCE, HIGHLIGHTED */}
           {showFinalAnswer && isFinalRow && (
             <div className="equation-row-3col equation-final-answer-highlight">
               <div className="equation-left-side">
@@ -311,10 +314,7 @@ const EquationWorksheet = ({
               const isActive = index === currentRowIndex;
               const isLocked = index > currentRowIndex;
 
-              // Don't render empty locked rows
               if (isLocked) return null;
-
-              // Skip completed rows (they're in problem container)
               if (isCompleted && row.type !== 'single_choice') return null;
 
               return (
@@ -322,7 +322,7 @@ const EquationWorksheet = ({
                   key={row.id}
                   className={`equation-work-row ${isActive ? 'active' : ''}`}
                 >
-                  {/* SINGLE CHOICE ROW (Draw a line) - Territory colors */}
+                  {/* SINGLE CHOICE ROW */}
                   {row.type === 'single_choice' && isActive && !isCompleted && (
                     <div className="equation-single-choice-territory">
                       <div className="equation-instruction-territory">{row.instruction}</div>
@@ -338,10 +338,9 @@ const EquationWorksheet = ({
                     </div>
                   )}
 
-                  {/* DUAL-BOX ROW (active working row) - 4-column grid */}
+                  {/* DUAL-BOX ROW */}
                   {row.type === 'dual_box' && isActive && !isCompleted && (
                     <div className="equation-row-4col">
-                      {/* Left side blanks */}
                       <div className="equation-left-side">
                         {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
                           const term = currentSelections[i];
@@ -358,10 +357,8 @@ const EquationWorksheet = ({
                         })}
                       </div>
                       
-                      {/* Equals sign column - ANCHORED */}
                       <div className="equation-equals-col">=</div>
                       
-                      {/* Right side blanks */}
                       <div className="equation-right-side">
                         {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
                           const leftBlanks = row.leftBlanks || 0;
@@ -379,7 +376,6 @@ const EquationWorksheet = ({
                         })}
                       </div>
                       
-                      {/* Check Button in 4th column */}
                       <div className="equation-check-col">
                         {isRowFilled() && (
                           <button 
@@ -399,12 +395,11 @@ const EquationWorksheet = ({
         )}
       </div>
 
-      {/* Term Bank OUTSIDE wrapper - ORGANIZED 2 ROWS */}
+      {/* Term Bank */}
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
         <div className="equation-term-bank">
           <div className="term-bank-label-territory">{currentRow.instruction || 'Select term to place:'}</div>
           <div className="equation-term-bank-2rows">
-            {/* Row 1 */}
             <div className="term-bank-row">
               {bankDistribution.row1.map((chip, index) => {
                 const timesUsed = currentSelections.filter(t => t === chip).length;
@@ -423,7 +418,6 @@ const EquationWorksheet = ({
                 );
               })}
             </div>
-            {/* Row 2 */}
             <div className="term-bank-row">
               {bankDistribution.row2.map((chip, index) => {
                 const timesUsed = currentSelections.filter(t => t === chip).length;
