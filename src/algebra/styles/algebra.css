@@ -3900,3 +3900,28 @@ cursor: not-allowed;
   position: relative;
   z-index: 3;
 }
+
+/* ===========================
+   APPEND-ONLY FIX v5
+   Goal:
+   - Force vertical center line ABOVE stage content (not behind cards)
+   - Make '=' glyphs render black by default
+   - Keep line non-interactive
+   =========================== */
+
+/* Ensure a predictable stacking context */
+.equation-stage { position: relative; }
+
+/* Put stage content on a known layer */
+.equation-problem-container-scrollable,
+.equation-work-area { position: relative; z-index: 1; }
+
+/* Bring the vertical line to the very top of the stage */
+.equation-stage .equation-vertical-line {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+/* Keep equals signs neutral/black (other tokens may still go green) */
+.equation-equals-col-centered,
+.equation-equals { color: #111 !important; }
