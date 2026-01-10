@@ -12,8 +12,7 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       return {
         rule: 'Review the problem and try again.',
         hasSteps: false,
-        steps: null,
-        originalProblem: null
+        steps: null
       };
     }
     
@@ -22,57 +21,29 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       return {
         rule: explanation,
         hasSteps: false,
-        steps: null,
-        originalProblem: null
-      };
-    }
-
-    // FIX #6: Extract original problem from explanation object
-    if (typeof explanation === 'object') {
-      // Check if it's the enhanced object from EquationWorksheet
-      if (explanation.originalProblem) {
-        return {
-          rule: explanation.rowInstruction || 'Check your work and try again.',
-          hasSteps: false,
-          steps: null,
-          originalProblem: explanation.originalProblem,
-          userAnswer: explanation.userAnswer,
-          correctAnswer: explanation.correctAnswer
-        };
-      }
-      
-      // Standard explanation object
-      const rule = explanation.rule || 'Check your work and try again.';
-      const steps = explanation.steps && Array.isArray(explanation.steps) && explanation.steps.length > 0
-        ? explanation.steps
-        : null;
-      const originalProblem = explanation.originalProblem || null;
-      
-      return {
-        rule,
-        hasSteps: !!steps,
-        steps,
-        originalProblem
+        steps: null
       };
     }
     
+    // If explanation is an object, extract rule and steps
+    const rule = explanation.rule || 'Check your work and try again.';
+    const steps = explanation.steps && Array.isArray(explanation.steps) && explanation.steps.length > 0
+      ? explanation.steps
+      : null;
+    
     return {
-      rule: 'Check your work and try again.',
-      hasSteps: false,
-      steps: null,
-      originalProblem: null
+      rule,
+      hasSteps: !!steps,
+      steps
     };
   };
 
-  const { rule, hasSteps, steps, originalProblem, userAnswer, correctAnswer: correctFromExplanation } = getExplanationContent();
-
-  // Use correctAnswer from props, or from explanation object
-  const displayCorrectAnswer = correctAnswer || correctFromExplanation;
-  const displayUserAnswer = selectedAnswer || userAnswer;
+  const { rule, hasSteps, steps } = getExplanationContent();
 
   // Determine if we should show answer comparison
-  const showAnswerComparison = displayCorrectAnswer !== null;
-  const showSelectedAnswer = displayUserAnswer !== null;
+  // ENHANCED: Always show correct answer, even in staged mode
+  const showAnswerComparison = correctAnswer !== null;
+  const showSelectedAnswer = selectedAnswer !== null;
 
   return (
     <div style={{
@@ -91,59 +62,27 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
       <div style={{
         background: 'white',
         borderRadius: '1rem',
-        padding: '0.875rem',
+        padding: '1.25rem',
         maxWidth: '700px',
         width: '100%',
-        maxHeight: '92vh',
+        maxHeight: '88vh',
         overflowY: 'auto',
         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
         border: '3px solid #EF4444'
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>❌</div>
           <h2 style={{
-            fontSize: '1.125rem',
+            fontSize: '1.25rem',
             fontWeight: 700,
             color: '#DC2626',
             fontFamily: 'Poppins, sans-serif',
-            marginBottom: '0rem',
-            marginTop: '0.25rem'
+            marginBottom: '0rem'
           }}>
             Not Quite!
           </h2>
         </div>
-
-        {/* FIX #6: Original Problem Display */}
-        {originalProblem && (
-          <div style={{
-            background: '#F3F4F6',
-            border: '2px solid #9CA3AF',
-            borderRadius: '0.5rem',
-            padding: '0.75rem',
-            marginBottom: '0.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              color: '#374151',
-              marginBottom: '0.25rem',
-              fontFamily: 'Poppins, sans-serif',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Original Problem
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#1F2937',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {originalProblem}
-            </div>
-          </div>
-        )}
 
         {/* Answer Comparison - ENHANCED for staged mode */}
         {showAnswerComparison && (
@@ -151,21 +90,21 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             display: 'grid',
             gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
             gap: '0.5rem',
-            marginBottom: '0.5rem'
+            marginBottom: '0.75rem'
           }}>
             {showSelectedAnswer && (
               <div style={{
                 background: '#FEE2E2',
                 border: '2px solid #EF4444',
                 borderRadius: '0.5rem',
-                padding: '0.75rem',
+                padding: '1rem',
                 textAlign: 'center'
               }}>
                 <div style={{
-                  fontSize: '0.7rem',
+                  fontSize: '0.75rem',
                   fontWeight: 700,
                   color: '#991B1B',
-                  marginBottom: '0.25rem',
+                  marginBottom: '0.5rem',
                   fontFamily: 'Poppins, sans-serif',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
@@ -173,12 +112,12 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                   Your Answer
                 </div>
                 <div style={{
-                  fontSize: '1.25rem',
+                  fontSize: '1.5rem',
                   fontWeight: 700,
                   color: '#DC2626',
                   fontFamily: 'Poppins, sans-serif'
                 }}>
-                  {displayUserAnswer}
+                  {selectedAnswer}
                 </div>
               </div>
             )}
@@ -187,15 +126,15 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
               background: '#D1FAE5',
               border: '2px solid #10B981',
               borderRadius: '0.5rem',
-              padding: '0.75rem',
+              padding: '1rem',
               textAlign: 'center',
               gridColumn: showSelectedAnswer ? 'auto' : '1 / -1'
             }}>
               <div style={{
-                fontSize: '0.7rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 color: '#065F46',
-                marginBottom: '0.25rem',
+                marginBottom: '0.5rem',
                 fontFamily: 'Poppins, sans-serif',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -203,12 +142,12 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
                 Correct Answer
               </div>
               <div style={{
-                fontSize: '1.25rem',
+                fontSize: '1.5rem',
                 fontWeight: 700,
                 color: '#059669',
                 fontFamily: 'Poppins, sans-serif'
               }}>
-                {displayCorrectAnswer}
+                {correctAnswer}
               </div>
             </div>
           </div>
@@ -219,20 +158,20 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           background: '#FFFBEB',
           border: '2px solid #F59E0B',
           borderRadius: '0.75rem',
-          padding: '0.75rem',
-          marginBottom: hasSteps ? '0.75rem' : '0.75rem'
+          padding: '1rem',
+          marginBottom: hasSteps ? '1rem' : '1rem'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            marginBottom: '0.5rem'
+            marginBottom: '0.75rem'
           }}>
-            <span style={{ fontSize: '1.125rem' }}>📖</span>
+            <span style={{ fontSize: '1.25rem' }}>📖</span>
             <span style={{
               fontWeight: 700,
               color: '#92400E',
-              fontSize: '0.8rem',
+              fontSize: '0.875rem',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               fontFamily: 'Poppins, sans-serif'
@@ -242,9 +181,9 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           </div>
           <div style={{
             color: '#78350F',
-            lineHeight: 1.5,
+            lineHeight: 1.7,
             fontFamily: 'Poppins, sans-serif',
-            fontSize: '0.925rem',
+            fontSize: '1rem',
             whiteSpace: 'pre-wrap'
           }}>
             {rule}
@@ -257,20 +196,20 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
             background: '#F3F4F6',
             border: '2px solid #9CA3AF',
             borderRadius: '0.75rem',
-            padding: '0.75rem',
-            marginBottom: '0.75rem'
+            padding: '1rem',
+            marginBottom: '1rem'
           }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              marginBottom: '0.5rem'
+              marginBottom: '1rem'
             }}>
-              <span style={{ fontSize: '1.125rem' }}>🔢</span>
+              <span style={{ fontSize: '1.25rem' }}>🔢</span>
               <span style={{
                 fontWeight: 700,
                 color: '#374151',
-                fontSize: '0.8rem',
+                fontSize: '0.875rem',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 fontFamily: 'Poppins, sans-serif'
@@ -288,8 +227,8 @@ const FeedbackModal = ({ explanation, onContinue, correctAnswer, selectedAnswer 
           className="base-camp-tile-button"
           style={{
             width: '100%',
-            padding: '0.75rem',
-            fontSize: '1rem',
+            padding: '1rem',
+            fontSize: '1.125rem',
             fontFamily: 'Poppins, sans-serif'
           }}
         >
