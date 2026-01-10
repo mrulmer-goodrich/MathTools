@@ -4138,3 +4138,102 @@ cursor: not-allowed;
   height: 100% !important;
   z-index: 5 !important;
 }
+
+/* ============================
+   Algebra Expedition — APPEND ONLY FIX v7
+   Goal: One continuous vertical divider spanning BOTH containers
+         + keep Check/Submit buttons on one line.
+   ============================ */
+
+/* Stage must be a positioning context for the overlay line */
+.equation-stage {
+  position: relative !important;
+}
+
+/* One continuous vertical divider that spans problem history + active row */
+.equation-vertical-line-overlay {
+  position: absolute;
+  width: 4px;
+  background: #111;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Ensure the white cards don't cover the overlay line */
+.equation-problem-container-scrollable,
+.equation-work-area {
+  position: relative;
+  z-index: 10;
+}
+
+/* Keep equals sign above the divider line */
+.equation-equals-col-centered,
+.equation-equals {
+  position: relative;
+  z-index: 30;
+}
+
+/* Active row: 4-column layout so the button is always in its own column */
+.equation-row-4col {
+  display: grid !important;
+  grid-template-columns: 1fr 60px 1fr auto !important;
+  gap: 1rem !important;
+  align-items: center !important;
+}
+
+/* Prevent the action button from wrapping */
+.equation-check-btn,
+.equation-submit-btn {
+  white-space: nowrap !important;
+  min-width: 140px;
+}
+
+/* Give the row enough room so the button doesn't force a wrap on smaller widths */
+.equation-work-row-container {
+  min-width: 520px;
+}
+
+@media (max-width: 768px) {
+  .equation-work-row-container {
+    min-width: 0;
+  }
+  .equation-check-btn,
+  .equation-submit-btn {
+    min-width: 120px;
+  }
+}
+
+/* v8: lock vertical line to stage center + widen stage to prevent button wrap */
+.equation-stage {
+  max-width: 860px !important;
+}
+
+.equation-vertical-line-overlay {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: 0 !important;
+  height: 100% !important;
+  z-index: 5 !important;
+}
+
+
+/* v9: Ensure vertical line renders ABOVE cards/containers but BELOW equals sign */
+.equation-vertical-line-overlay{
+  z-index: 60 !important;
+  pointer-events: none !important;
+}
+
+/* Keep equals sign above the vertical line so it reads cleanly */
+.equation-equals-col-centered,
+.equation-equals{
+  position: relative;
+  z-index: 70 !important;
+}
+
+/* Scrollable container should not cover the overlay line */
+.equation-problem-container-scrollable{
+  position: relative;
+  z-index: 30 !important; /* stays below line (60) */
+}
