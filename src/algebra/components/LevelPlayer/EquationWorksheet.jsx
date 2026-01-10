@@ -1,4 +1,4 @@
-// EquationWorksheet.jsx - FINAL FIX: Line tracks equals, stops at work area bottom
+// EquationWorksheet.jsx - CLEAN: Uses correct CSS classes, handles scroll, proper z-index
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -18,29 +18,48 @@ const EquationWorksheet = ({
   const [lineHeight, setLineHeight] = useState('100%');
   const equalsRef = useRef(null);
   const workAreaRef = useRef(null);
+  const wrapperRef = useRef(null);
 
-  // FIXED: Calculate line position AND height, recalculate when terms change
-  useEffect(() => {
-    if (showVerticalLine && equalsRef.current && workAreaRef.current) {
+  // Calculate line position AND height - recalc on scroll, resize, and state changes
+  const calculateLinePosition = () => {
+    if (showVerticalLine && equalsRef.current && workAreaRef.current && wrapperRef.current) {
       const equalsElement = equalsRef.current;
       const workAreaElement = workAreaRef.current;
-      const containerElement = equalsElement.closest('.equation-content-wrapper');
+      const wrapperElement = wrapperRef.current;
       
-      if (containerElement) {
-        const equalsRect = equalsElement.getBoundingClientRect();
-        const containerRect = containerElement.getBoundingClientRect();
-        const workAreaRect = workAreaElement.getBoundingClientRect();
-        
-        // Calculate center of equals sign relative to container
-        const equalsCenter = equalsRect.left + (equalsRect.width / 2) - containerRect.left;
-        setLinePosition(`${equalsCenter}px`);
-        
-        // Calculate line height - from top to bottom of work area
-        const lineEnd = workAreaRect.bottom - containerRect.top;
-        setLineHeight(`${lineEnd}px`);
-      }
+      const equalsRect = equalsElement.getBoundingClientRect();
+      const wrapperRect = wrapperElement.getBoundingClientRect();
+      const workAreaRect = workAreaElement.getBoundingClientRect();
+      
+      // Calculate center of equals sign relative to wrapper
+      const equalsCenter = equalsRect.left + (equalsRect.width / 2) - wrapperRect.left;
+      setLinePosition(`${equalsCenter}px`);
+      
+      // Calculate line height - from top of wrapper to bottom of work area
+      const lineEnd = workAreaRect.bottom - wrapperRect.top;
+      setLineHeight(`${lineEnd}px`);
     }
-  }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]); // FIXED: Added selectedTerms!
+  };
+
+  // Recalc on state changes
+  useEffect(() => {
+    calculateLinePosition();
+  }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]);
+
+  // Recalc on scroll
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.addEventListener('scroll', calculateLinePosition);
+      return () => wrapper.removeEventListener('scroll', calculateLinePosition);
+    }
+  }, [showVerticalLine]);
+
+  // Recalc on resize
+  useEffect(() => {
+    window.addEventListener('resize', calculateLinePosition);
+    return () => window.removeEventListener('resize', calculateLinePosition);
+  }, [showVerticalLine]);
 
   useEffect(() => {
     setCurrentRowIndex(0);
@@ -264,11 +283,12 @@ const EquationWorksheet = ({
 
   return (
     <div className="equation-mode-container">
-      <div className="equation-content-wrapper">
-        {/* Vertical line - position AND height calculated dynamically */}
+      {/* FIXED: Added ref for scroll listener */}
+      <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
+        {/* Vertical line - z-index handled by CSS */}
         {showVerticalLine && !showFinalAnswer && (
           <div 
-            className="equation-vertical-line-centered" 
+            className="equation-vertical-line-fixed" 
             style={{ 
               left: linePosition,
               height: lineHeight
@@ -279,7 +299,8 @@ const EquationWorksheet = ({
         <div className="equation-problem-container">
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-            <div className="equation-equals-col" ref={equalsRef}>=</div>
+            {/* FIXED: Use equation-equals-col-centered for proper styling */}
+            <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
@@ -289,7 +310,7 @@ const EquationWorksheet = ({
               className="equation-row-3col equation-completed-row"
             >
               <div className="equation-left-side">{row.left}</div>
-              <div className="equation-equals-col">=</div>
+              <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">{row.right}</div>
             </div>
           ))}
@@ -300,7 +321,7 @@ const EquationWorksheet = ({
                 {currentSelections.slice(0, currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
               </div>
-              <div className="equation-equals-col">=</div>
+              <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">
                 {currentSelections.slice(currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
@@ -309,7 +330,6 @@ const EquationWorksheet = ({
           )}
         </div>
 
-        {/* Work area - ref for calculating line height */}
         {!showFinalAnswer && (
           <div className="equation-work-area" ref={workAreaRef}>
             {rows.map((row, index) => {
@@ -358,7 +378,7 @@ const EquationWorksheet = ({
                         })}
                       </div>
                       
-                      <div className="equation-equals-col">=</div>
+                      <div className="equation-equals-col-centered">=</div>
                       
                       <div className="equation-right-side">
                         {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
