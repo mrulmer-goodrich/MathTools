@@ -3869,3 +3869,34 @@ cursor: not-allowed;
   padding-left: 0.75rem !important;
   padding-right: 0.75rem !important;
 }
+
+/* ===================================================== */
+/* FINAL FIX — VERTICAL LINE LAYER + ALIGNMENT LOCK       */
+/* This resolves the overlay + alignment permanently     */
+/* ===================================================== */
+
+/* 1️⃣ Force the equation wrapper to create a stacking context */
+.equation-content-wrapper {
+  position: relative;
+  z-index: 3; /* ABOVE the region fade overlay */
+}
+
+/* 2️⃣ Force the vertical line ABOVE the overlay and BELOW text */
+.equation-vertical-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  background: #000000;
+  z-index: 2; /* BELOW text (z:3), ABOVE overlay (z:1) */
+  pointer-events: none;
+}
+
+/* 3️⃣ Lock all equation rows to the same stacking plane */
+.equation-row-3col,
+.equation-row-4col {
+  position: relative;
+  z-index: 3;
+}
