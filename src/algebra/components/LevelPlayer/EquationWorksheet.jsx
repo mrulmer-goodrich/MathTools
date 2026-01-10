@@ -17,22 +17,34 @@ const EquationWorksheet = ({
   const [showFinalAnswer, setShowFinalAnswer] = useState(false);
   const [linePosition, setLinePosition] = useState('50%');
   const [lineHeight, setLineHeight] = useState('100%');
-const workAreaRef = useRef(null);
+  const [lineTop, setLineTop] = useState('0px');
+
+  // Refs used to compute a single, continuous vertical divider that spans
+  // the problem history + the active work row.
+  const stageRef = useRef(null);
+  const problemContainerRef = useRef(null);
+  const workAreaRef = useRef(null);
   const wrapperRef = useRef(null);
   const scrollRef = useRef(null);
   const activeEqualsRef = useRef(null);
-const calculateLinePosition = () => {
-    // Anchor the divider to the equals column inside the ACTIVE work row,
-    // and constrain it to the scrollable history container (so it never crosses the term bank).
-    if (!scrollRef.current || !activeEqualsRef.current) return;
 
-    const scrollRect = scrollRef.current.getBoundingClientRect();
+  const calculateLinePosition = () => {
+    // Anchor the divider to the equals column inside the ACTIVE work row,
+    // and span from the top of the history container to the bottom of the active work container.
+    if (!stageRef.current || !problemContainerRef.current || !workAreaRef.current || !activeEqualsRef.current) return;
+
+    const stageRect = stageRef.current.getBoundingClientRect();
+    const problemRect = problemContainerRef.current.getBoundingClientRect();
+    const workRect = workAreaRef.current.getBoundingClientRect();
     const eqRect = activeEqualsRef.current.getBoundingClientRect();
 
-    const x = Math.round((eqRect.left + eqRect.width / 2) - scrollRect.left);
-    const h = Math.round(scrollRef.current.clientHeight);
+    const x = Math.round((eqRect.left + eqRect.width / 2) - stageRect.left);
+    const top = Math.round(problemRect.top - stageRect.top);
+    const bottom = Math.round(workRect.bottom - stageRect.top);
+    const h = Math.max(0, bottom - top);
 
     setLinePosition(`${x}px`);
+    setLineTop(`${top}px`);
     setLineHeight(`${h}px`);
   };
 
@@ -286,16 +298,24 @@ const calculateLinePosition = () => {
     <div className="equation-mode-container">
       <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
         
-        <div className="equation-stage">
-          
-        {/* SCROLLABLE CONTAINER - prevents UI push */}
-        <div className="equation-problem-container-scrollable" ref={scrollRef}>
+        <div className="equation-stage" ref={stageRef}>
+
+          {/* Single continuous vertical divider spanning problem + active row */}
           {showVerticalLine && !showFinalAnswer && (
             <div
-              className="equation-vertical-line-fixed"
-              style={{ left: linePosition, height: lineHeight }}
+              className="equation-vertical-line-overlay"
+              style={{ left: linePosition, top: lineTop, height: lineHeight }}
             />
           )}
+          
+        {/* SCROLLABLE CONTAINER - prevents UI push */}
+          <div
+            className="equation-problem-container-scrollable"
+            ref={(el) => {
+              scrollRef.current = el;
+              problemContainerRef.current = el;
+            }}
+          >
 
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
@@ -303,13 +323,13 @@ const calculateLinePosition = () => {
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
-          {getCompletedRowsDisplay().map((row, idx) => (
+	          {getCompletedRowsDisplay().map((row, idx) => (
             <div 
               key={idx} 
               className="equation-row-3col equation-completed-row"
             >
               <div className="equation-left-side">{row.left}</div>
-              <div className="equation-equals-col-centered" ref={activeEqualsRef}>=</div>
+	              <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">{row.right}</div>
             </div>
           ))}
@@ -359,9 +379,9 @@ const calculateLinePosition = () => {
                     </div>
                   )}
 
-                  {/* FIXED: Use 3-column grid, check button absolutely positioned */}
+                  {/* Active row: use 4-column grid so the Check/Submit button never wraps */}
                   {row.type === 'dual_box' && isActive && !isCompleted && (
-                    <div className="equation-row-3col equation-work-row-grid">
+                    <div className="equation-row-4col equation-work-row-grid">
                       <div className="equation-left-side">
                         {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
                           const term = currentSelections[i];
@@ -378,7 +398,7 @@ const calculateLinePosition = () => {
                         })}
                       </div>
                       
-                      <div className="equation-equals-col-centered">=</div>
+                      <div className="equation-equals-col-centered" ref={activeEqualsRef}>=</div>
                       
                       <div className="equation-right-side">
                         {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
@@ -397,16 +417,13 @@ const calculateLinePosition = () => {
                         })}
                       </div>
                       
-                      {/* FIXED: Absolutely positioned check button - outside grid flow */}
                       {isRowFilled() && (
-                        <div className="absolute-check">
-                          <button 
-                            className="equation-check-btn"
-                            onClick={handleCheckRow}
-                          >
-                            {isFinalRow ? '✓ Submit' : '✓ Check'}
-                          </button>
-                        </div>
+                        <button
+                          className="equation-check-btn"
+                          onClick={handleCheckRow}
+                        >
+                          {isFinalRow ? '✓ Submit' : '✓ Check'}
+                        </button>
                       )}
                     </div>
                   )}
