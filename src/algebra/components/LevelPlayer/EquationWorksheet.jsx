@@ -17,26 +17,25 @@ const EquationWorksheet = ({
   const [showFinalAnswer, setShowFinalAnswer] = useState(false);
   const [linePosition, setLinePosition] = useState('50%');
   const [lineHeight, setLineHeight] = useState('100%');
-  const equalsRef = useRef(null);
-  const workAreaRef = useRef(null);
+const workAreaRef = useRef(null);
   const wrapperRef = useRef(null);
+  const stageRef = useRef(null);
+const calculateLinePosition = () => {
+    // We intentionally anchor the vertical line to the STAGE center (not a specific equals glyph),
+    // because padding / max-width / responsive layout can shift a measured glyph by a few pixels.
+    // The stage width is the shared width for BOTH the scrollable history AND the active work row.
+    if (!stageRef.current || !workAreaRef.current) return;
 
-  const calculateLinePosition = () => {
-    if (showVerticalLine && equalsRef.current && workAreaRef.current && wrapperRef.current) {
-      const equalsElement = equalsRef.current;
-      const workAreaElement = workAreaRef.current;
-      const wrapperElement = wrapperRef.current;
-      
-      const equalsRect = equalsElement.getBoundingClientRect();
-      const wrapperRect = wrapperElement.getBoundingClientRect();
-      const workAreaRect = workAreaElement.getBoundingClientRect();
-      
-      const equalsCenter = equalsRect.left + (equalsRect.width / 2) - wrapperRect.left;
-      setLinePosition(`${equalsCenter}px`);
-      
-      const lineEnd = workAreaRect.bottom - wrapperRect.top;
-      setLineHeight(`${lineEnd}px`);
-    }
+    const stageRect = stageRef.current.getBoundingClientRect();
+    const workRect = workAreaRef.current.getBoundingClientRect();
+
+    const linePosX = Math.round(stageRect.width / 2); // center of stage (px inside stage)
+    const lineTop = 0; // start at top of stage
+    const lineHeight = Math.max(0, Math.round(workRect.bottom - stageRect.top)); // stop at end of work area
+
+    setLineX(`${linePosX}px`);
+    setLineTop(`${lineTop}px`);
+    setLineHeight(`${lineHeight}px`);
   };
 
   useEffect(() => {
@@ -279,7 +278,8 @@ const EquationWorksheet = ({
   return (
     <div className="equation-mode-container">
       <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
-        {showVerticalLine && !showFinalAnswer && (
+        
+        <div className="equation-stage" ref={stageRef}>{showVerticalLine && !showFinalAnswer && (
           <div 
             className="equation-vertical-line-fixed" 
             style={{ 
@@ -293,7 +293,7 @@ const EquationWorksheet = ({
         <div className="equation-problem-container-scrollable">
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-            <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
+            <div className="equation-equals-col-centered">=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
@@ -412,6 +412,8 @@ const EquationWorksheet = ({
       </div>
 
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
+        </div>
+
         <div className="equation-term-bank">
           <div className="term-bank-label-territory">{currentRow.instruction || 'Select term to place:'}</div>
           <div className="equation-term-bank-2rows">
