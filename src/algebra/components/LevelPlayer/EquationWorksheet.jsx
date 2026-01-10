@@ -18,6 +18,7 @@ const EquationWorksheet = ({
   const [linePosition, setLinePosition] = useState('50%');
   const [lineHeight, setLineHeight] = useState('100%');
 const workAreaRef = useRef(null);
+  const equalsRef = useRef(null);
   const wrapperRef = useRef(null);
   const stageRef = useRef(null);
 const calculateLinePosition = () => {
@@ -292,7 +293,7 @@ const calculateLinePosition = () => {
         <div className="equation-problem-container-scrollable">
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-            <div className="equation-equals-col-centered">=</div>
+                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
@@ -302,7 +303,7 @@ const calculateLinePosition = () => {
               className="equation-row-3col equation-completed-row"
             >
               <div className="equation-left-side">{row.left}</div>
-              <div className="equation-equals-col-centered">=</div>
+                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
               <div className="equation-right-side">{row.right}</div>
             </div>
           ))}
@@ -313,7 +314,7 @@ const calculateLinePosition = () => {
                 {currentSelections.slice(0, currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
               </div>
-              <div className="equation-equals-col-centered">=</div>
+                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
               <div className="equation-right-side">
                 {currentSelections.slice(currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
@@ -371,7 +372,7 @@ const calculateLinePosition = () => {
                         })}
                       </div>
                       
-                      <div className="equation-equals-col-centered">=</div>
+                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
                       
                       <div className="equation-right-side">
                         {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
