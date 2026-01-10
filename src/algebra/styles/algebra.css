@@ -1099,17 +1099,7 @@ body {
 }
 
 /* Vertical line - ONLY CHANGED: color (lighter) + width (thinner) */
-.equation-vertical-line {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;           /* ORIGINAL - keeps it aligned */
-  bottom: 0;        /* ORIGINAL - full height */
-  width: 2px;       /* CHANGED: was 3px */
-  background: #9CA3AF;  /* CHANGED: lighter gray (was #000000) */
-  z-index: 5;
-  pointer-events: none;
-}
+
 
 /* ============================================
    3-COLUMN LAYOUT (left | = | right)
@@ -1418,17 +1408,7 @@ overflow-y: auto;
 }
 
 /* VERTICAL LINE - THICK AND DARK */
-.equation-vertical-line {
-position: absolute;
-left: 50%;
-top: 0;
-bottom: 0;
-width: 4px;
-background: #1F2937;
-transform: translateX(-50%);
-z-index: 5;
-pointer-events: none;
-}
+
 
 .equation-problem-container {
 margin-bottom: 1.5rem;
@@ -1698,17 +1678,7 @@ cursor: not-allowed;
 }
 
 /* FIX #2: Vertical line - GRAY, thinner, stops at bottom of wrapper */
-.equation-vertical-line {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 0;
-  bottom: 0;
-  width: 2px; /* Thinner - was 3px */
-  background: #6B7280; /* Gray-500 - less aggressive */
-  z-index: 5;
-  pointer-events: none;
-}
+
 
 /* ============================================
    3-COLUMN LAYOUT (left | = | right)
@@ -2052,16 +2022,7 @@ cursor: not-allowed;
    ======================================== */
 
 /* Vertical line - lighter and thinner */
-.equation-vertical-line {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #D1D5DB;
-  transform: translateX(-50%);
-  z-index: 1;
-}
+
 
 /* Compact single choice with proper padding */
 .equation-single-choice-compact {
@@ -2270,16 +2231,7 @@ cursor: not-allowed;
    VERTICAL LINE - BLACK, 4PX THICK
    ======================================== */
 
-.equation-vertical-line {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #000000;
-  transform: translateX(-50%);
-  z-index: 1;
-}
+
 
 /* ========================================
    PROBLEM DISPLAY - PROPER FONT/SIZE
@@ -2623,18 +2575,7 @@ cursor: not-allowed;
    Uses calc to account for grid positioning
    ======================================== */
 
-.equation-vertical-line-centered {
-  position: absolute;
-  /* Center of container + adjust for grid layout */
-  left: calc(50% - 0px);
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #000000;
-  transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
-}
+
 
 /* Territory colors for Level 17+ */
 .equation-single-choice-territory {
@@ -3013,4 +2954,292 @@ cursor: not-allowed;
   white-space: pre;
   overflow-x: auto;
   line-height: 1.5;
+}
+
+/* ============================================ */
+/* EQUATION MODE - CLEAN FINAL VERSION */
+/* ============================================ */
+
+.equation-mode-container {
+  font-family: 'Poppins', sans-serif;
+  padding: 0.5rem;
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+.equation-content-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.equation-vertical-line-centered {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #000000;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.equation-problem-container {
+  position: relative;
+  z-index: 2;
+  background: white;
+  border: 3px solid #9CA3AF;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.equation-row-3col {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-family: 'Poppins', sans-serif;
+  min-height: 50px;
+}
+
+.equation-row-3col:last-child {
+  margin-bottom: 0;
+}
+
+.equation-left-side,
+.equation-right-side {
+  font-size: 2rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+
+.equation-left-side {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.equation-right-side {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.equation-equals-col {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  color: #1F2937;
+  text-align: center;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equation-completed-row {
+  color: #4B5563;
+  background: #F3F4F6;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.equation-completed-row .equation-left-side,
+.equation-completed-row .equation-right-side {
+  font-size: 1.75rem;
+}
+
+.equation-final-answer-highlight {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border: 3px solid #10B981;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: pulseGreen 0.6s ease-in-out;
+}
+
+.equation-final-answer-highlight .equation-left-side,
+.equation-final-answer-highlight .equation-right-side {
+  font-size: 2rem;
+  color: #065F46;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.equation-work-area {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 1rem;
+}
+
+.equation-work-row {
+  margin-bottom: 0.75rem;
+}
+
+.equation-single-choice-territory {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+  border: 3px solid #4CAF50;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.equation-instruction-territory {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  color: #1B5E20;
+  flex-shrink: 0;
+}
+
+.equation-draw-line-btn-territory {
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(76, 175, 80, 0.3);
+}
+
+.equation-draw-line-btn-territory:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(76, 175, 80, 0.4);
+}
+
+.equation-row-4col {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  background: white;
+  padding: 0.75rem;
+  border: 3px solid #4CAF50;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.15);
+}
+
+.equation-blank {
+  min-width: 70px;
+  padding: 0.5rem 0.75rem;
+  border: 3px solid #D1D5DB;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.equation-blank.filled {
+  background: #DBEAFE;
+  border-color: #3B82F6;
+  color: #1E40AF;
+}
+
+.equation-blank.empty {
+  background: #F9FAFB;
+  color: #9CA3AF;
+}
+
+.equation-blank:hover:not(.empty) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.equation-check-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equation-check-btn {
+  padding: 0.625rem 1rem;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+  white-space: nowrap;
+}
+
+.equation-check-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
+}
+
+.equation-term-bank {
+  margin-top: 1rem;
+  background: white;
+  border: 2px solid #D1D5DB;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.term-bank-label-territory {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1B5E20;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+}
+
+.equation-term-bank-2rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.term-bank-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.worksheet-final-answer-highlight {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #059669;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border: 3px solid #10B981;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: pulseGreen 0.5s ease-in-out;
 }
