@@ -3718,3 +3718,109 @@ cursor: not-allowed;
   position: relative;
   z-index: 70 !important; /* term bank always above the line */
 }
+
+/* ============================================================
+   Algebra Expedition – Equation Worksheet Layout Fix Pack v11
+   Goals:
+   - Vertical line aligns with equation equals and DOES NOT run through term bank
+   - Remove scrollbars in equation problem box (expand naturally)
+   - Keep equals signs BLACK (completed + current)
+   - Keep UI stable for multi-step problems
+   NOTE: Safe to APPEND. Uses targeted overrides + !important.
+   ============================================================ */
+
+/* 1) The stage must size to its content (not full height). */
+.equation-stage{
+  height: auto !important;
+}
+
+/* 2) Stop the vertical line at the bottom of the stage (stage is now auto height). */
+.equation-vertical-line-overlay{
+  top: 0 !important;
+  bottom: 0 !important;
+  height: 100% !important;
+  background: #111 !important;
+  z-index: 8 !important;           /* above cards, below chips */
+  pointer-events: none !important;
+}
+
+/* 3) Ensure the problem/rows/chips render ABOVE the line, but keep line visible. */
+.equation-problem-container-scrollable,
+.equation-active-row-container,
+.equation-row,
+.equation-row-3col,
+.equation-row-4col{
+  position: relative !important;
+  z-index: 10 !important;
+}
+.equation-term,
+.equation-blank,
+.equation-equals-sign{
+  position: relative !important;
+  z-index: 12 !important;
+}
+
+/* 4) Equals signs must be black in all states. */
+.equation-equals-sign{
+  color: #111 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* 5) Remove internal scrolling: let the problem container expand (multi-step friendly). */
+.equation-problem-container-scrollable{
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Some builds used a wrapper that created scrollbars; neutralize it. */
+.equation-content-wrapper{
+  overflow: visible !important;
+  overflow-y: visible !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* If any inner card sets overflow auto, neutralize it. */
+.equation-problem-box,
+.equation-problem-card,
+.equation-problem-container{
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* 6) Keep the active row button from wrapping or forcing weird layout. */
+.equation-row-4col{
+  grid-template-columns: 1fr 60px 1fr auto !important;
+  column-gap: 14px !important;
+}
+.equation-check-btn,
+.equation-submit-btn{
+  white-space: nowrap !important;
+  min-width: 140px !important;
+}
+
+/* 7) Term bank distribution: even, responsive columns (prevents “bunched” rows). */
+.term-bank-grid,
+.equation-term-bank-grid,
+.equation-termbank-grid{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+
+/* Ensure chips fill their grid cell consistently. */
+.term-bank-item,
+.term-chip,
+.equation-term-bank .term-chip{
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+/* 8) Prevent accidental “tiny window” regression if any parent limits width/height. */
+.equation-mode-container{
+  overflow: visible !important; /* allow content to grow; page can scroll */
+}
