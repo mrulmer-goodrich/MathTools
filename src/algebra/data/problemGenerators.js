@@ -1,4 +1,8 @@
 import { generateOneStepAddSubtract } from './equationGenerators';
+import { generateOneStepMultiplyDivide } from './equationGenerators';
+import {generateOneStepAddSubtractNegatives} from './equationGenerators';
+import {generateOneStepMultiplyDivideNegativesFractions} from './equationGenerators';
+
 
 // ============================================
 // GLOBAL NaN PROTECTION
@@ -4422,12 +4426,13 @@ export const problemGenerators = {
   '1-14': generateDistributeSubtractProblem,
   '1-15': generateNegativeDistributeCombineProblem,
   '1-16': generateComplexSimplifyProblem,
-  
+
+
   // Module 2: Territory (Levels 17-31)
   '1-17': generateOneStepAddSubtract,
-  '1-18': generateSubtractionEquationProblem,
-  '1-19': generateMultiplicationEquationProblem,
-  '1-20': generateDivisionEquationProblem,
+  '1-18': generateOneStepMultiplyDivide,
+  '1-19': generateOneStepAddSubtractNegatives,
+  '1-20': generateOneStepMultiplyDivideNegativesFractions,
   '1-21': generateTwoStepAddProblem,
   '1-22': generateTwoStepSubtractProblem,
   '1-23': generateTwoStepDivideAddProblem,
