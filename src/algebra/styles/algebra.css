@@ -3625,3 +3625,63 @@ cursor: not-allowed;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
 }
+
+/* =========================================================
+   APPEND-ONLY OVERRIDES (no replacements required)
+   Purpose:
+   - Visually center/stabilize active row by keeping ✓ button inside row
+   - Reduce padding bloat and keep header + term bank on screen as rows accumulate
+   - Compact completed rows for multi-step scalability
+   Notes:
+   - Append this at the END of algebra.css
+   - Uses higher specificity + !important to safely override earlier rules
+   ========================================================= */
+
+/* ---------- 1) Active row: keep ✓ button INSIDE the green row ---------- */
+
+/* Reserve space on the right so terms never collide with the ✓ button */
+.equation-work-row .equation-work-row-grid,
+.equation-work-row-grid {
+  padding-right: 110px !important; /* space for check button */
+}
+
+/* If your check column uses absolute positioning, pull it INSIDE the row */
+.equation-check-col.absolute-check {
+  right: 16px !important;          /* inside the row */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Optional: ensure the active row doesn't add extra vertical "bounce" */
+.equation-work-row.active {
+  margin: 0 !important;
+  padding: 0.75rem 0 !important;
+}
+
+/* ---------- 2) Problem/completed scrollbox: reduce bloat + enforce scrolling ---------- */
+
+.equation-problem-container-scrollable {
+  padding: 0.75rem 1rem !important;     /* less bloat */
+  margin-bottom: 0.5rem !important;     /* less vertical push */
+  max-height: 32vh !important;          /* keeps header + bank visible */
+  overflow-y: auto !important;
+}
+
+/* ---------- 3) Completed rows: compact styling so multi-step doesn't balloon ---------- */
+
+.equation-problem-container-scrollable .equation-completed-row,
+.equation-completed-row {
+  background: transparent !important;   /* removes chunky gray blocks */
+  padding: 0.25rem 0 !important;
+  border-radius: 0 !important;
+  margin-top: 0.15rem !important;
+}
+
+/* ---------- 4) Safety: keep the vertical line visible above backgrounds ---------- */
+
+.equation-vertical-line-fixed,
+.equation-vertical-line-centered {
+  z-index: 15 !important;
+  pointer-events: none !important;
+  background: #000000 !important;
+}
