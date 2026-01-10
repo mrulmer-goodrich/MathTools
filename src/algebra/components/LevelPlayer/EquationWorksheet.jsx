@@ -1,4 +1,5 @@
-// EquationWorksheet.jsx - CLEAN: Uses correct CSS classes, handles scroll, proper z-index
+// EquationWorksheet.jsx - QA EXPERT STRUCTURAL FIXES
+// All rows use same 3-column grid, check button absolutely positioned
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -20,7 +21,6 @@ const EquationWorksheet = ({
   const workAreaRef = useRef(null);
   const wrapperRef = useRef(null);
 
-  // Calculate line position AND height - recalc on scroll, resize, and state changes
   const calculateLinePosition = () => {
     if (showVerticalLine && equalsRef.current && workAreaRef.current && wrapperRef.current) {
       const equalsElement = equalsRef.current;
@@ -31,22 +31,18 @@ const EquationWorksheet = ({
       const wrapperRect = wrapperElement.getBoundingClientRect();
       const workAreaRect = workAreaElement.getBoundingClientRect();
       
-      // Calculate center of equals sign relative to wrapper
       const equalsCenter = equalsRect.left + (equalsRect.width / 2) - wrapperRect.left;
       setLinePosition(`${equalsCenter}px`);
       
-      // Calculate line height - from top of wrapper to bottom of work area
       const lineEnd = workAreaRect.bottom - wrapperRect.top;
       setLineHeight(`${lineEnd}px`);
     }
   };
 
-  // Recalc on state changes
   useEffect(() => {
     calculateLinePosition();
   }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]);
 
-  // Recalc on scroll
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (wrapper) {
@@ -55,7 +51,6 @@ const EquationWorksheet = ({
     }
   }, [showVerticalLine]);
 
-  // Recalc on resize
   useEffect(() => {
     window.addEventListener('resize', calculateLinePosition);
     return () => window.removeEventListener('resize', calculateLinePosition);
@@ -283,9 +278,7 @@ const EquationWorksheet = ({
 
   return (
     <div className="equation-mode-container">
-      {/* FIXED: Added ref for scroll listener */}
       <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
-        {/* Vertical line - z-index handled by CSS */}
         {showVerticalLine && !showFinalAnswer && (
           <div 
             className="equation-vertical-line-fixed" 
@@ -296,10 +289,10 @@ const EquationWorksheet = ({
           />
         )}
 
-        <div className="equation-problem-container">
+        {/* SCROLLABLE CONTAINER - prevents UI push */}
+        <div className="equation-problem-container-scrollable">
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-            {/* FIXED: Use equation-equals-col-centered for proper styling */}
             <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
@@ -360,8 +353,9 @@ const EquationWorksheet = ({
                     </div>
                   )}
 
+                  {/* FIXED: Use 3-column grid, check button absolutely positioned */}
                   {row.type === 'dual_box' && isActive && !isCompleted && (
-                    <div className="equation-row-4col">
+                    <div className="equation-row-3col equation-work-row-grid">
                       <div className="equation-left-side">
                         {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
                           const term = currentSelections[i];
@@ -397,16 +391,17 @@ const EquationWorksheet = ({
                         })}
                       </div>
                       
-                      <div className="equation-check-col">
-                        {isRowFilled() && (
+                      {/* FIXED: Absolutely positioned check button - outside grid flow */}
+                      {isRowFilled() && (
+                        <div className="absolute-check">
                           <button 
                             className="equation-check-btn"
                             onClick={handleCheckRow}
                           >
                             {isFinalRow ? '✓ Submit' : '✓ Check'}
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -416,7 +411,6 @@ const EquationWorksheet = ({
         )}
       </div>
 
-      {/* Term Bank */}
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
         <div className="equation-term-bank">
           <div className="term-bank-label-territory">{currentRow.instruction || 'Select term to place:'}</div>
