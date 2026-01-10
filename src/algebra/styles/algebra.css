@@ -3626,614 +3626,95 @@ cursor: not-allowed;
   font-family: 'Poppins', sans-serif;
 }
 
-/* =========================================================
-   APPEND-ONLY OVERRIDES (no replacements required)
-   Purpose:
-   - Visually center/stabilize active row by keeping ✓ button inside row
-   - Reduce padding bloat and keep header + term bank on screen as rows accumulate
-   - Compact completed rows for multi-step scalability
-   Notes:
-   - Append this at the END of algebra.css
-   - Uses higher specificity + !important to safely override earlier rules
-   ========================================================= */
+/* ============================================================
+   Algebra Expedition – Equation Worksheet UI Hotfix (CONSOLIDATED)
+   Drop this as ONE block at the VERY END of algebra.css.
+   IMPORTANT: Remove/undo any older "APPEND_ONLY_FIX_v*" blocks you previously appended,
+   otherwise you'll keep fighting rule-order conflicts forever.
+   ============================================================ */
 
-/* ---------- 1) Active row: keep ✓ button INSIDE the green row ---------- */
-
-/* Reserve space on the right so terms never collide with the ✓ button */
-.equation-work-row .equation-work-row-grid,
-.equation-work-row-grid {
-  padding-right: 110px !important; /* space for check button */
-}
-
-/* If your check column uses absolute positioning, pull it INSIDE the row */
-.equation-check-col.absolute-check {
-  right: 16px !important;          /* inside the row */
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-}
-
-/* Optional: ensure the active row doesn't add extra vertical "bounce" */
-.equation-work-row.active {
-  margin: 0 !important;
-  padding: 0.75rem 0 !important;
-}
-
-/* ---------- 2) Problem/completed scrollbox: reduce bloat + enforce scrolling ---------- */
-
-.equation-problem-container-scrollable {
-  padding: 0.75rem 1rem !important;     /* less bloat */
-  margin-bottom: 0.5rem !important;     /* less vertical push */
-  max-height: 32vh !important;          /* keeps header + bank visible */
-  overflow-y: auto !important;
-}
-
-/* ---------- 3) Completed rows: compact styling so multi-step doesn't balloon ---------- */
-
-.equation-problem-container-scrollable .equation-completed-row,
-.equation-completed-row {
-  background: transparent !important;   /* removes chunky gray blocks */
-  padding: 0.25rem 0 !important;
-  border-radius: 0 !important;
-  margin-top: 0.15rem !important;
-}
-
-/* ---------- 4) Safety: keep the vertical line visible above backgrounds ---------- */
-
-.equation-vertical-line-fixed,
-.equation-vertical-line-centered {
-  z-index: 15 !important;
-  pointer-events: none !important;
-  background: #000000 !important;
-}
-
-/* ============================================
-   ALGEBRA EXPEDITION - APPEND ONLY FIX v2
-   Purpose: undo "absolute-check" side effects (button outside row),
-            keep 3-col for problem/completed, but 4-col for ACTIVE work row.
-   Drop this at VERY END of algebra.css (after prior append).
-   ============================================ */
-
-/* 1) Active work row: turn the grid into 4 columns so the check/submit button
-      lives INSIDE the bordered row (no absolute positioning needed). */
-.equation-work-area .equation-work-row-grid {
-  /* overrides .equation-row-3col */
-  grid-template-columns: 1fr 60px 1fr 140px !important;
-  column-gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* 2) Make the "absolute-check" participate in the grid flow instead of
-      floating outside the container. */
-.equation-work-area .equation-work-row-grid .absolute-check {
-  position: static !important;
-  right: auto !important;
-  top: auto !important;
-  transform: none !important;
-
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-
-  /* keeps spacing consistent even when button shows/hides */
-  min-height: 1px;
-}
-
-/* 3) If any earlier CSS injected extra right-padding to "reserve" space for the
-      absolute button, remove it so the grid centers correctly. */
-.equation-work-area .equation-work-row-grid {
-  padding-right: 0.75rem !important; /* keep same as other sides */
-}
-
-/* 4) Keep the problem/completed rows strictly 3 columns (guard rail) */
-.equation-problem-container-scrollable .equation-row-3col,
-.equation-problem-container-scrollable .equation-completed-row.equation-row-3col,
-.equation-problem-container-scrollable .equation-final-answer-highlight.equation-row-3col {
-  grid-template-columns: 1fr 60px 1fr !important;
-}
-
-/* 5) Optional: stabilize the scroll box so it doesn't feel "tiny" if a parent
-      is centering/auto-sizing. */
-.equation-problem-container-scrollable {
-  width: 100% !important;
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* =========================================================
-   APPEND-ONLY OVERRIDES (v3) — FIXES REMAINING LAYOUT DRIFT
-   Goal:
-   1) Stop vertical-line drift across rows by locking line to grid center.
-   2) Make “history/problem” and “work row” share the same width.
-   3) Make history compact so it won’t turn into a tiny scrollbox after 2 rows.
-   Paste at VERY END of algebra.css (after any prior appends).
-   ========================================================= */
-
-/* ---------------------------------------------------------
-   1) Vertical line: ignore JS-computed left and lock to center
-      Because rows use: grid-template-columns: 1fr 60px 1fr
-      the equals column is centered. This is the most robust fix.
-   --------------------------------------------------------- */
-.equation-content-wrapper-fixed .equation-vertical-line-fixed{
-  left: 50% !important;
-}
-
-/* ---------------------------------------------------------
-   2) Ensure ALL equation blocks share the same stage width
-      (problem/history box AND active work area).
-   --------------------------------------------------------- */
-.equation-content-wrapper-fixed{
-  width: 100% !important;
-  max-width: 900px !important;   /* pick one consistent stage width */
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.equation-work-area{
-  width: 100% !important;
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Make each row fill the stage width */
-.equation-row-3col,
-.equation-work-row-grid{
-  width: 100% !important;
-}
-
-/* ---------------------------------------------------------
-   3) History/progress box: don’t become “tiny” immediately
-      - Give it more height (relative to viewport)
-      - Remove excess padding + margins
-      - Reduce row min-heights and gaps inside history only
-   --------------------------------------------------------- */
-.equation-problem-container-scrollable{
-  max-height: 42vh !important;      /* scroll later (after ~4–6 rows) */
-  padding: 0.5rem 0.75rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-/* Compact row spacing in the history box ONLY */
-.equation-problem-container-scrollable .equation-row-3col{
-  margin-bottom: 0.15rem !important;
-  min-height: 34px !important;
-  gap: 0.35rem !important;
-}
-
-/* Remove chunky “completed row” padding/background */
-.equation-problem-container-scrollable .equation-completed-row{
-  padding: 0.15rem 0 !important;
-  background: transparent !important;
-}
-
-/* Final answer highlight should not add huge vertical padding */
-.equation-problem-container-scrollable .equation-final-answer-highlight{
-  padding: 0.35rem 0.5rem !important;
-  margin-top: 0.25rem !important;
-}
-
-/* ---------------------------------------------------------
-   4) Active work row: keep it visually consistent with history
-      (prevents subtle perceived “shift”).
-   --------------------------------------------------------- */
-.equation-work-area .equation-work-row-grid{
-  padding: 0.75rem !important; /* match history padding */
-}
-
-/* algebra_APPEND_ONLY_FIX_v4.css
-   Purpose: Fix vertical center line drift by anchoring the line to a shared stage container.
-   Requires: EquationWorksheet_FIXED_STAGE_CENTER.jsx (adds .equation-stage wrapper).
-*/
-
-/* The shared stage: everything that the center line should align to. */
-.equation-stage{
-  position: relative !important;
-  width: min(720px, 100%) !important;
-  margin: 0 auto !important;
-}
-
-/* Ensure inner blocks use full stage width */
-.equation-stage .equation-problem-container-scrollable,
-.equation-stage .equation-work-area{
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* The center line is now positioned in px from the left INSIDE the stage */
-.equation-stage .equation-vertical-line-fixed{
-  position: absolute !important;
-  top: var(--eq-line-top, 0px);
-  /* left is provided inline via React state; keep transform for centering on that x */
-  transform: translateX(-50%) !important;
-  width: 3px !important;
-  background: #111 !important;
-  z-index: 2 !important;
-  pointer-events: none !important;
-}
-
-/* Guarantee the equals column stays visually centered */
-.equation-row-3col{
-  grid-template-columns: 1fr 60px 1fr !important;
-}
-.equation-equals-col-centered{
-  justify-content: center !important;
-}
-
-/* Reduce accidental horizontal drift from padding/margins */
-.equation-problem-container-scrollable{
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-}
-.equation-work-area{
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-}
-
-/* ===================================================== */
-/* FINAL FIX — VERTICAL LINE LAYER + ALIGNMENT LOCK       */
-/* This resolves the overlay + alignment permanently     */
-/* ===================================================== */
-
-/* 1️⃣ Force the equation wrapper to create a stacking context */
-.equation-content-wrapper {
-  position: relative;
-  z-index: 3; /* ABOVE the region fade overlay */
-}
-
-/* 2️⃣ Force the vertical line ABOVE the overlay and BELOW text */
-.equation-vertical-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 3px;
-  background: #000000;
-  z-index: 2; /* BELOW text (z:3), ABOVE overlay (z:1) */
-  pointer-events: none;
-}
-
-/* 3️⃣ Lock all equation rows to the same stacking plane */
-.equation-row-3col,
-.equation-row-4col {
-  position: relative;
-  z-index: 3;
-}
-
-/* ===========================
-   APPEND-ONLY FIX v5
-   Goal:
-   - Force vertical center line ABOVE stage content (not behind cards)
-   - Make '=' glyphs render black by default
-   - Keep line non-interactive
-   =========================== */
-
-/* Ensure a predictable stacking context */
-.equation-stage { position: relative; }
-
-/* Put stage content on a known layer */
-.equation-problem-container-scrollable,
-.equation-work-area { position: relative; z-index: 1; }
-
-/* Bring the vertical line to the very top of the stage */
-.equation-stage .equation-vertical-line {
-  z-index: 9999 !important;
-  pointer-events: none;
-}
-
-/* Keep equals signs neutral/black (other tokens may still go green) */
+/* --- A) Guardrails: keep equals signs black everywhere --- */
+.equation-equals,
 .equation-equals-col-centered,
-.equation-equals { color: #111 !important; }
-
-
-/* ===========================
-   APPEND-ONLY FIX v5
-   Goal:
-   - Force vertical center line ABOVE stage content (not behind cards)
-   - Make '=' glyphs render black by default
-   - Keep line non-interactive
-   =========================== */
-
-/* Ensure a predictable stacking context */
-.equation-stage { position: relative; }
-
-/* Put stage content on a known layer */
-.equation-problem-container-scrollable,
-.equation-work-area { position: relative; z-index: 1; }
-
-/* Bring the vertical line to the very top of the stage */
-.equation-stage .equation-vertical-line {
-  z-index: 9999 !important;
-  pointer-events: none;
-}
-
-/* Keep equals signs neutral/black (other tokens may still go green) */
-.equation-equals-col-centered,
-.equation-equals { color: #111 !important; }
-
-
-/* =========================
-   v6: Divider line + equals alignment hard overrides
-   ========================= */
-
-/* Ensure the scrollable history container is the positioning context for the divider */
-.equation-problem-container-scrollable{
-  position: relative !important;
-}
-
-/* Divider line should sit ABOVE row cards but BELOW the equals glyphs */
-.equation-vertical-line-fixed{
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  height: auto !important; /* height is controlled by top/bottom; JS provides height as a fallback */
-  width: 3px !important;
-  background: #111 !important;
-  z-index: 6 !important;
-  pointer-events: none !important;
-}
-
-/* Make sure the equals column always sits above the divider */
-.equation-equals-col-centered,
-.equation-equals{
-  position: relative !important;
-  z-index: 10 !important;
+.equation-row-3col .equation-equals-col-centered,
+.equation-row-4col .equation-equals-col-centered {
   color: #111 !important;
 }
 
-/* Lock the active work row grid so the equals column is truly centered */
-.equation-work-row .equation-row-3col{
+/* --- B) Keep the equals column width stable so alignment doesn’t drift --- */
+.equation-row-3col {
   grid-template-columns: 1fr 60px 1fr !important;
 }
-.equation-equals-col-centered{
-  width: 60px !important;
+.equation-equals-col-centered {
   min-width: 60px !important;
+  width: 60px !important;
   max-width: 60px !important;
+  display: flex !important;
+  align-items: center !important;
   justify-content: center !important;
-  text-align: center !important;
 }
 
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
+/* --- C) Vertical line overlay: visible, but not blocking text --- 
+   Strategy:
+   1) Put the line ABOVE the cards (so it’s visible through the card background).
+   2) Raise ONLY the text/terms/equal sign above the line so the line doesn’t cut numbers.
+*/
 .equation-stage {
   position: relative !important;
 }
 
-/* One continuous vertical divider that spans problem history + active row */
+/* The line itself */
 .equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
-.equation-equals-col-centered,
-.equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
-.equation-stage {
-  position: relative !important;
-}
-
-/* One continuous vertical divider that spans problem history + active row */
-.equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
-.equation-equals-col-centered,
-.equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* v8: lock vertical line to stage center + widen stage to prevent button wrap */
-.equation-stage {
-  max-width: 860px !important;
-}
-
-.equation-vertical-line-overlay {
+  position: absolute !important;
   left: 50% !important;
-  transform: translateX(-50%) !important;
   top: 0 !important;
   height: 100% !important;
-  z-index: 5 !important;
-}
-
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
-.equation-stage {
-  position: relative !important;
-}
-
-/* One continuous vertical divider that spans problem history + active row */
-.equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
-.equation-equals-col-centered,
-.equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* v8: lock vertical line to stage center + widen stage to prevent button wrap */
-.equation-stage {
-  max-width: 860px !important;
-}
-
-.equation-vertical-line-overlay {
-  left: 50% !important;
+  width: 4px !important;
+  background: #111 !important;
   transform: translateX(-50%) !important;
-  top: 0 !important;
-  height: 100% !important;
-  z-index: 5 !important;
-}
-
-
-/* v9: Ensure vertical line renders ABOVE cards/containers but BELOW equals sign */
-.equation-vertical-line-overlay{
-  z-index: 60 !important;
   pointer-events: none !important;
+  z-index: 50 !important; /* sits above the cards so it can be seen */
+  opacity: 0.9 !important;
 }
 
-/* Keep equals sign above the vertical line so it reads cleanly */
+/* Text/content that must appear ABOVE the line */
+.equation-left-side,
+.equation-right-side,
 .equation-equals-col-centered,
-.equation-equals{
-  position: relative;
-  z-index: 70 !important;
+.equation-term-box,
+.equation-term-chip,
+.equation-work-row .equation-left-side,
+.equation-work-row .equation-right-side {
+  position: relative !important;
+  z-index: 60 !important; /* above the overlay line */
+  background: transparent !important;
 }
 
-/* Scrollable container should not cover the overlay line */
-.equation-problem-container-scrollable{
+/* If any card/container is creating a stacking context that hides the line, neutralize it */
+.equation-problem-container-scrollable,
+.equation-work-row,
+.equation-term-bank,
+.equation-step-box,
+.equation-work-box {
+  z-index: auto !important;
+}
+
+/* --- D) Active-row layout: keep the action button on the same line --- */
+.equation-row-4col {
+  display: grid !important;
+  grid-template-columns: 1fr 60px 1fr auto !important;
+  align-items: center !important;
+  column-gap: 1rem !important;
+}
+.equation-row-4col .equation-action-col {
+  min-width: 170px !important; /* prevents “✓ Check” wrapping */
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+/* --- E) Safety: never let the line run through the term bank --- */
+.equation-term-bank,
+.equation-term-bank * {
   position: relative;
-  z-index: 30 !important; /* stays below line (60) */
+  z-index: 70 !important; /* term bank always above the line */
 }
