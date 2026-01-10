@@ -1,4 +1,4 @@
-// FeedbackModal.jsx - FIXED: Compact, no large X, complete feedback for all modes
+// FeedbackModal.jsx - FINAL: Compact layout, no scroll, efficient spacing ALL levels
 // Location: src/algebra/components/FeedbackModal.jsx
 
 import React from 'react';
@@ -10,7 +10,7 @@ const FeedbackModal = ({
   onContinue, 
   correctAnswer, 
   selectedAnswer,
-  problem // NEW: Pass original problem for display
+  problem
 }) => {
   // SAFETY: Handle explanation as object or string
   const getExplanationContent = () => {
@@ -55,223 +55,62 @@ const FeedbackModal = ({
   const showSelectedAnswer = selectedAnswer !== null && selectedAnswer !== undefined;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.7)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '1.5rem'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '1rem',
-        padding: '1.25rem',
-        maxWidth: '700px',
-        width: '100%',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-        border: '3px solid #EF4444',
-        fontFamily: 'Poppins, sans-serif'
-      }}>
-        {/* Header - COMPACT (no large X) */}
-        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
-          <h2 style={{
-            fontSize: '1.25rem',
-            fontWeight: 700,
-            color: '#DC2626',
-            fontFamily: 'Poppins, sans-serif',
-            margin: 0
-          }}>
-            Not Quite!
-          </h2>
+    <div className="feedback-modal-overlay">
+      <div className="feedback-modal-content-compact">
+        {/* Header - MINIMAL */}
+        <div className="feedback-header-compact">
+          <h2 className="feedback-title-compact">Not Quite!</h2>
         </div>
 
-        {/* Original Problem - if available */}
+        {/* Original Problem - COMPACT */}
         {originalProblem && (
-          <div style={{
-            background: '#F3F4F6',
-            border: '2px solid #9CA3AF',
-            borderRadius: '0.5rem',
-            padding: '0.75rem',
-            marginBottom: '0.75rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              color: '#374151',
-              marginBottom: '0.25rem',
-              fontFamily: 'Poppins, sans-serif',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Original Problem
-            </div>
-            <div style={{
-              fontSize: '1.25rem',
-              fontWeight: 600,
-              color: '#1F2937',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              {originalProblem}
-            </div>
+          <div className="feedback-section-compact feedback-original">
+            <div className="feedback-section-label">ORIGINAL PROBLEM</div>
+            <div className="feedback-section-value">{originalProblem}</div>
           </div>
         )}
 
-        {/* Answer Comparison */}
+        {/* Answer Comparison - COMPACT GRID */}
         {showAnswerComparison && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: showSelectedAnswer ? 'repeat(2, 1fr)' : '1fr',
-            gap: '0.5rem',
-            marginBottom: '0.75rem'
-          }}>
+          <div className={`feedback-answers-grid ${showSelectedAnswer ? 'two-col' : 'one-col'}`}>
             {showSelectedAnswer && (
-              <div style={{
-                background: '#FEE2E2',
-                border: '2px solid #EF4444',
-                borderRadius: '0.5rem',
-                padding: '0.75rem',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  color: '#991B1B',
-                  marginBottom: '0.25rem',
-                  fontFamily: 'Poppins, sans-serif',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  Your Answer
-                </div>
-                <div style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 700,
-                  color: '#DC2626',
-                  fontFamily: 'Poppins, sans-serif'
-                }}>
-                  {selectedAnswer}
-                </div>
+              <div className="feedback-answer-box feedback-wrong">
+                <div className="feedback-answer-label">YOUR ANSWER</div>
+                <div className="feedback-answer-value">{selectedAnswer}</div>
               </div>
             )}
 
-            <div style={{
-              background: '#D1FAE5',
-              border: '2px solid #10B981',
-              borderRadius: '0.5rem',
-              padding: '0.75rem',
-              textAlign: 'center',
-              gridColumn: showSelectedAnswer ? 'auto' : '1 / -1'
-            }}>
-              <div style={{
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: '#065F46',
-                marginBottom: '0.25rem',
-                fontFamily: 'Poppins, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                Correct Answer
-              </div>
-              <div style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: '#059669',
-                fontFamily: 'Poppins, sans-serif'
-              }}>
-                {correctAnswer}
-              </div>
+            <div className={`feedback-answer-box feedback-correct ${!showSelectedAnswer ? 'full-width' : ''}`}>
+              <div className="feedback-answer-label">CORRECT ANSWER</div>
+              <div className="feedback-answer-value">{correctAnswer}</div>
             </div>
           </div>
         )}
 
-        {/* Rule Section */}
-        <div style={{
-          background: '#FFFBEB',
-          border: '2px solid #F59E0B',
-          borderRadius: '0.75rem',
-          padding: '0.75rem',
-          marginBottom: hasSteps ? '0.75rem' : '0.75rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            marginBottom: '0.5rem'
-          }}>
-            <span style={{ fontSize: '1rem' }}>📖</span>
-            <span style={{
-              fontWeight: 700,
-              color: '#92400E',
-              fontSize: '0.75rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              Key Rule
-            </span>
+        {/* Rule Section - COMPACT */}
+        <div className="feedback-section-compact feedback-rule">
+          <div className="feedback-section-icon-label">
+            <span>📖</span>
+            <span>KEY RULE</span>
           </div>
-          <div style={{
-            color: '#78350F',
-            lineHeight: 1.5,
-            fontFamily: 'Poppins, sans-serif',
-            fontSize: '0.95rem',
-            whiteSpace: 'pre-wrap'
-          }}>
-            {rule}
-          </div>
+          <div className="feedback-section-text">{rule}</div>
         </div>
 
-        {/* Steps Section */}
+        {/* Steps Section - COMPACT */}
         {hasSteps && (
-          <div style={{
-            background: '#F3F4F6',
-            border: '2px solid #9CA3AF',
-            borderRadius: '0.75rem',
-            padding: '0.75rem',
-            marginBottom: '0.75rem'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.75rem'
-            }}>
-              <span style={{ fontSize: '1rem' }}>🔢</span>
-              <span style={{
-                fontWeight: 700,
-                color: '#374151',
-                fontSize: '0.75rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                fontFamily: 'Poppins, sans-serif'
-              }}>
-                Step-by-Step Solution
-              </span>
+          <div className="feedback-section-compact feedback-steps">
+            <div className="feedback-section-icon-label">
+              <span>🔢</span>
+              <span>STEP-BY-STEP SOLUTION</span>
             </div>
             <StackedEquation steps={steps} />
           </div>
         )}
 
-        {/* Continue Button */}
+        {/* Continue Button - COMPACT */}
         <button
           onClick={onContinue}
-          className="base-camp-tile-button"
-          style={{
-            width: '100%',
-            padding: '0.875rem',
-            fontSize: '1rem',
-            fontFamily: 'Poppins, sans-serif'
-          }}
+          className="feedback-continue-btn-compact"
         >
           Try Again →
         </button>
