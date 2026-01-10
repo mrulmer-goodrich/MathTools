@@ -18,23 +18,22 @@ const EquationWorksheet = ({
   const [linePosition, setLinePosition] = useState('50%');
   const [lineHeight, setLineHeight] = useState('100%');
 const workAreaRef = useRef(null);
-  const equalsRef = useRef(null);
   const wrapperRef = useRef(null);
-  const stageRef = useRef(null);
+  const scrollRef = useRef(null);
+  const activeEqualsRef = useRef(null);
 const calculateLinePosition = () => {
-    // We intentionally anchor the vertical line to the STAGE center (not a specific equals glyph),
-    // because padding / max-width / responsive layout can shift a measured glyph by a few pixels.
-    // The stage width is the shared width for BOTH the scrollable history AND the active work row.
-    if (!stageRef.current || !workAreaRef.current) return;
+    // Anchor the divider to the equals column inside the ACTIVE work row,
+    // and constrain it to the scrollable history container (so it never crosses the term bank).
+    if (!scrollRef.current || !activeEqualsRef.current) return;
 
-    const stageRect = stageRef.current.getBoundingClientRect();
-    const workRect = workAreaRef.current.getBoundingClientRect();
+    const scrollRect = scrollRef.current.getBoundingClientRect();
+    const eqRect = activeEqualsRef.current.getBoundingClientRect();
 
-    const linePosX = Math.round(stageRect.width / 2); // center of stage (px inside stage)
-        const localLineHeight = Math.max(0, Math.round(workRect.bottom - stageRect.top)); // stop at end of work area
+    const x = Math.round((eqRect.left + eqRect.width / 2) - scrollRect.left);
+    const h = Math.round(scrollRef.current.clientHeight);
 
-    setLinePosition(`${linePosX}px`);
-    setLineHeight(`${localLineHeight}px`);
+    setLinePosition(`${x}px`);
+    setLineHeight(`${h}px`);
   };
 
   useEffect(() => {
@@ -42,12 +41,21 @@ const calculateLinePosition = () => {
   }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]);
 
   useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (wrapper) {
-      wrapper.addEventListener('scroll', calculateLinePosition);
-      return () => wrapper.removeEventListener('scroll', calculateLinePosition);
-    }
-  }, [showVerticalLine]);
+    if (!showVerticalLine) return;
+
+    calculateLinePosition();
+
+    const handleResize = () => calculateLinePosition();
+    const handleScroll = () => calculateLinePosition();
+
+    window.addEventListener("resize", handleResize);
+    scrollRef.current?.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      scrollRef.current?.removeEventListener("scroll", handleScroll);
+    };
+  }, [showVerticalLine, calculateLinePosition]);
 
   useEffect(() => {
     window.addEventListener('resize', calculateLinePosition);
@@ -278,22 +286,20 @@ const calculateLinePosition = () => {
     <div className="equation-mode-container">
       <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
         
-        <div className="equation-stage" ref={stageRef}>
-          {showVerticalLine && !showFinalAnswer && (
-          <div 
-            className="equation-vertical-line-fixed" 
-            style={{ 
-              left: linePosition,
-              height: lineHeight
-            }}
-          />
-        )}
-
+        <div className="equation-stage">
+          
         {/* SCROLLABLE CONTAINER - prevents UI push */}
-        <div className="equation-problem-container-scrollable">
+        <div className="equation-problem-container-scrollable" ref={scrollRef}>
+          {showVerticalLine && !showFinalAnswer && (
+            <div
+              className="equation-vertical-line-fixed"
+              style={{ left: linePosition, height: lineHeight }}
+            />
+          )}
+
           <div className="equation-row-3col">
             <div className="equation-left-side">{problemParts.left}</div>
-                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
+            <div className="equation-equals-col-centered">=</div>
             <div className="equation-right-side">{problemParts.right}</div>
           </div>
 
@@ -303,7 +309,7 @@ const calculateLinePosition = () => {
               className="equation-row-3col equation-completed-row"
             >
               <div className="equation-left-side">{row.left}</div>
-                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
+              <div className="equation-equals-col-centered" ref={activeEqualsRef}>=</div>
               <div className="equation-right-side">{row.right}</div>
             </div>
           ))}
@@ -314,7 +320,7 @@ const calculateLinePosition = () => {
                 {currentSelections.slice(0, currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
               </div>
-                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
+              <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">
                 {currentSelections.slice(currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
@@ -372,7 +378,7 @@ const calculateLinePosition = () => {
                         })}
                       </div>
                       
-                      <div className="equation-equals-col-centered" ref={equalsRef}>=</div>
+                      <div className="equation-equals-col-centered">=</div>
                       
                       <div className="equation-right-side">
                         {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
