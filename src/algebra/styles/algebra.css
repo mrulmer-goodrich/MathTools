@@ -3925,3 +3925,71 @@ cursor: not-allowed;
 /* Keep equals signs neutral/black (other tokens may still go green) */
 .equation-equals-col-centered,
 .equation-equals { color: #111 !important; }
+
+
+/* ===========================
+   APPEND-ONLY FIX v5
+   Goal:
+   - Force vertical center line ABOVE stage content (not behind cards)
+   - Make '=' glyphs render black by default
+   - Keep line non-interactive
+   =========================== */
+
+/* Ensure a predictable stacking context */
+.equation-stage { position: relative; }
+
+/* Put stage content on a known layer */
+.equation-problem-container-scrollable,
+.equation-work-area { position: relative; z-index: 1; }
+
+/* Bring the vertical line to the very top of the stage */
+.equation-stage .equation-vertical-line {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+/* Keep equals signs neutral/black (other tokens may still go green) */
+.equation-equals-col-centered,
+.equation-equals { color: #111 !important; }
+
+
+/* =========================
+   v6: Divider line + equals alignment hard overrides
+   ========================= */
+
+/* Ensure the scrollable history container is the positioning context for the divider */
+.equation-problem-container-scrollable{
+  position: relative !important;
+}
+
+/* Divider line should sit ABOVE row cards but BELOW the equals glyphs */
+.equation-vertical-line-fixed{
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  height: auto !important; /* height is controlled by top/bottom; JS provides height as a fallback */
+  width: 3px !important;
+  background: #111 !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+}
+
+/* Make sure the equals column always sits above the divider */
+.equation-equals-col-centered,
+.equation-equals{
+  position: relative !important;
+  z-index: 10 !important;
+  color: #111 !important;
+}
+
+/* Lock the active work row grid so the equals column is truly centered */
+.equation-work-row .equation-row-3col{
+  grid-template-columns: 1fr 60px 1fr !important;
+}
+.equation-equals-col-centered{
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
