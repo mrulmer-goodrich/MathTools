@@ -3685,3 +3685,57 @@ cursor: not-allowed;
   pointer-events: none !important;
   background: #000000 !important;
 }
+
+/* ============================================
+   ALGEBRA EXPEDITION - APPEND ONLY FIX v2
+   Purpose: undo "absolute-check" side effects (button outside row),
+            keep 3-col for problem/completed, but 4-col for ACTIVE work row.
+   Drop this at VERY END of algebra.css (after prior append).
+   ============================================ */
+
+/* 1) Active work row: turn the grid into 4 columns so the check/submit button
+      lives INSIDE the bordered row (no absolute positioning needed). */
+.equation-work-area .equation-work-row-grid {
+  /* overrides .equation-row-3col */
+  grid-template-columns: 1fr 60px 1fr 140px !important;
+  column-gap: 1rem !important;
+  align-items: center !important;
+}
+
+/* 2) Make the "absolute-check" participate in the grid flow instead of
+      floating outside the container. */
+.equation-work-area .equation-work-row-grid .absolute-check {
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  transform: none !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  /* keeps spacing consistent even when button shows/hides */
+  min-height: 1px;
+}
+
+/* 3) If any earlier CSS injected extra right-padding to "reserve" space for the
+      absolute button, remove it so the grid centers correctly. */
+.equation-work-area .equation-work-row-grid {
+  padding-right: 0.75rem !important; /* keep same as other sides */
+}
+
+/* 4) Keep the problem/completed rows strictly 3 columns (guard rail) */
+.equation-problem-container-scrollable .equation-row-3col,
+.equation-problem-container-scrollable .equation-completed-row.equation-row-3col,
+.equation-problem-container-scrollable .equation-final-answer-highlight.equation-row-3col {
+  grid-template-columns: 1fr 60px 1fr !important;
+}
+
+/* 5) Optional: stabilize the scroll box so it doesn't feel "tiny" if a parent
+      is centering/auto-sizing. */
+.equation-problem-container-scrollable {
+  width: 100% !important;
+  max-width: 900px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
