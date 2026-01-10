@@ -279,7 +279,8 @@ const calculateLinePosition = () => {
     <div className="equation-mode-container">
       <div className="equation-content-wrapper-fixed" ref={wrapperRef}>
         
-        <div className="equation-stage" ref={stageRef}>{showVerticalLine && !showFinalAnswer && (
+        <div className="equation-stage" ref={stageRef}>
+          {showVerticalLine && !showFinalAnswer && (
           <div 
             className="equation-vertical-line-fixed" 
             style={{ 
@@ -409,6 +410,7 @@ const calculateLinePosition = () => {
             })}
           </div>
         )}
+        </div>
       </div>
 
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
