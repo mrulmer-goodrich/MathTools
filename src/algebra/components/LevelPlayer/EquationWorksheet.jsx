@@ -412,7 +412,6 @@ const calculateLinePosition = () => {
       </div>
 
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
-        </div>
 
         <div className="equation-term-bank">
           <div className="term-bank-label-territory">{currentRow.instruction || 'Select term to place:'}</div>
