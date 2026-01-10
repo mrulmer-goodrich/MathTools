@@ -15,9 +15,6 @@ const EquationWorksheet = ({
   const [selectedTerms, setSelectedTerms] = useState({});
   const [showVerticalLine, setShowVerticalLine] = useState(false);
   const [showFinalAnswer, setShowFinalAnswer] = useState(false);
-  const [linePosition, setLinePosition] = useState('50%');
-  const [lineHeight, setLineHeight] = useState('100%');
-  const [lineTop, setLineTop] = useState('0px');
 
   // Refs used to compute a single, continuous vertical divider that spans
   // the problem history + the active work row.
@@ -27,52 +24,6 @@ const EquationWorksheet = ({
   const wrapperRef = useRef(null);
   const scrollRef = useRef(null);
   const activeEqualsRef = useRef(null);
-
-  const calculateLinePosition = () => {
-    // Anchor the divider to the equals column inside the ACTIVE work row,
-    // and span from the top of the history container to the bottom of the active work container.
-    if (!stageRef.current || !problemContainerRef.current || !workAreaRef.current || !activeEqualsRef.current) return;
-
-    const stageRect = stageRef.current.getBoundingClientRect();
-    const problemRect = problemContainerRef.current.getBoundingClientRect();
-    const workRect = workAreaRef.current.getBoundingClientRect();
-    const eqRect = activeEqualsRef.current.getBoundingClientRect();
-
-    const x = Math.round((eqRect.left + eqRect.width / 2) - stageRect.left);
-    const top = Math.round(problemRect.top - stageRect.top);
-    const bottom = Math.round(workRect.bottom - stageRect.top);
-    const h = Math.max(0, bottom - top);
-
-    setLinePosition(`${x}px`);
-    setLineTop(`${top}px`);
-    setLineHeight(`${h}px`);
-  };
-
-  useEffect(() => {
-    calculateLinePosition();
-  }, [showVerticalLine, completedRows, currentRowIndex, selectedTerms]);
-
-  useEffect(() => {
-    if (!showVerticalLine) return;
-
-    calculateLinePosition();
-
-    const handleResize = () => calculateLinePosition();
-    const handleScroll = () => calculateLinePosition();
-
-    window.addEventListener("resize", handleResize);
-    scrollRef.current?.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      scrollRef.current?.removeEventListener("scroll", handleScroll);
-    };
-  }, [showVerticalLine, calculateLinePosition]);
-
-  useEffect(() => {
-    window.addEventListener('resize', calculateLinePosition);
-    return () => window.removeEventListener('resize', calculateLinePosition);
-  }, [showVerticalLine]);
 
   useEffect(() => {
     setCurrentRowIndex(0);
@@ -304,7 +255,7 @@ const EquationWorksheet = ({
           {showVerticalLine && !showFinalAnswer && (
             <div
               className="equation-vertical-line-overlay"
-              style={{ left: linePosition, top: lineTop, height: lineHeight }}
+              style={{ left: '50%', top: 0, height: '100%' }}
             />
           )}
           
