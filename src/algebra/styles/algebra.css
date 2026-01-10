@@ -3820,3 +3820,52 @@ cursor: not-allowed;
 .equation-work-area .equation-work-row-grid{
   padding: 0.75rem !important; /* match history padding */
 }
+
+/* algebra_APPEND_ONLY_FIX_v4.css
+   Purpose: Fix vertical center line drift by anchoring the line to a shared stage container.
+   Requires: EquationWorksheet_FIXED_STAGE_CENTER.jsx (adds .equation-stage wrapper).
+*/
+
+/* The shared stage: everything that the center line should align to. */
+.equation-stage{
+  position: relative !important;
+  width: min(720px, 100%) !important;
+  margin: 0 auto !important;
+}
+
+/* Ensure inner blocks use full stage width */
+.equation-stage .equation-problem-container-scrollable,
+.equation-stage .equation-work-area{
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* The center line is now positioned in px from the left INSIDE the stage */
+.equation-stage .equation-vertical-line-fixed{
+  position: absolute !important;
+  top: var(--eq-line-top, 0px);
+  /* left is provided inline via React state; keep transform for centering on that x */
+  transform: translateX(-50%) !important;
+  width: 3px !important;
+  background: #111 !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+/* Guarantee the equals column stays visually centered */
+.equation-row-3col{
+  grid-template-columns: 1fr 60px 1fr !important;
+}
+.equation-equals-col-centered{
+  justify-content: center !important;
+}
+
+/* Reduce accidental horizontal drift from padding/margins */
+.equation-problem-container-scrollable{
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+.equation-work-area{
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
