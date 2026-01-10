@@ -30,12 +30,10 @@ const calculateLinePosition = () => {
     const workRect = workAreaRef.current.getBoundingClientRect();
 
     const linePosX = Math.round(stageRect.width / 2); // center of stage (px inside stage)
-    const lineTop = 0; // start at top of stage
-    const lineHeight = Math.max(0, Math.round(workRect.bottom - stageRect.top)); // stop at end of work area
+        const localLineHeight = Math.max(0, Math.round(workRect.bottom - stageRect.top)); // stop at end of work area
 
-    setLineX(`${linePosX}px`);
-    setLineTop(`${lineTop}px`);
-    setLineHeight(`${lineHeight}px`);
+    setLinePosition(`${linePosX}px`);
+    setLineHeight(`${localLineHeight}px`);
   };
 
   useEffect(() => {
