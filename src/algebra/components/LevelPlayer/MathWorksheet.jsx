@@ -1,4 +1,4 @@
-// MathWorksheet.jsx - FIXED: Completed rows move to problem, term reuse, proper signs
+// MathWorksheet.jsx - FINAL: No duplication of final answer, proper highlighting
 // Location: src/algebra/components/LevelPlayer/MathWorksheet.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -167,9 +167,9 @@ const MathWorksheet = ({
           </div>
         ))}
         
-        {/* Final Answer - shown briefly before success overlay */}
+        {/* Final Answer - HIGHLIGHTED IN PLACE (no duplication) */}
         {showFinalAnswer && isFinalRow && (
-          <div className="worksheet-final-answer">
+          <div className="worksheet-final-answer-highlight">
             {currentSelections.map((term, i) => cleanDisplay(term, i === 0)).join(' ')}
           </div>
         )}
