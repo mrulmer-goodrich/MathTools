@@ -1,4 +1,5 @@
-// EquationWorksheet.jsx - QA EXPERT STRUCTURAL FIXES
+// EquationWorksheet.jsx - QA EXPERT STRUCTURAL FIXES 
+// version 8 from chatgpt was used to replace v9
 // All rows use same 3-column grid, check button absolutely positioned
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
