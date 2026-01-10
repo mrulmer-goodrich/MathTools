@@ -1,4 +1,4 @@
-// LevelPlayer.jsx - FIXED: Proper stats, Poppins font, no scroll
+// LevelPlayer.jsx - FIXED: Passes problem to FeedbackModal, proper stats tracking
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -76,8 +76,8 @@ const LevelPlayer = ({
       setShowFeedback(false);
       setShowSuccess(false);
       setSelectedAnswer(null);
-      setProblemStartTime(Date.now()); // Start timer
-      setProblemAttempts(0); // Reset attempts for new problem
+      setProblemStartTime(Date.now());
+      setProblemAttempts(0);
     } else {
       console.error(`No generator found for level ${levelId}`);
     }
@@ -127,8 +127,8 @@ const LevelPlayer = ({
     }, 1500);
   };
 
-  const handleProblemWrong = () => {
-    setProblemAttempts(prev => prev + 1); // Track attempts for first-try calculation
+  const handleProblemWrong = (feedbackData = {}) => {
+    setProblemAttempts(prev => prev + 1);
 
     // Track attempt in parent stats ONLY for staged problems
     // (non-staged problems already track in handleAnswerSubmit)
@@ -148,6 +148,12 @@ const LevelPlayer = ({
     }));
 
     setCorrectStreak(0);
+    
+    // Store feedback data if provided (for staged problems)
+    if (feedbackData.userAnswer) {
+      setSelectedAnswer(feedbackData.userAnswer);
+    }
+    
     setShowFeedback(true);
   };
 
@@ -307,32 +313,30 @@ const LevelPlayer = ({
 
       <div className="level-content">
         <ProgressTracker 
-  current={correctStreak} 
-  required={level.problemsRequired}
-  levelId={levelId}
-  levelName={level.name}
-  difficulty={difficulty}
-/>
+          current={correctStreak} 
+          required={level.problemsRequired}
+          levelId={levelId}
+          levelName={level.name}
+          difficulty={difficulty}
+        />
 
-
-
-{isStaged ? (
-  <>
-    {currentProblem.staged.mode === 'equation_solver' ? (
-      <EquationWorksheet
-        problem={currentProblem}
-        onComplete={handleProblemComplete}
-        onWrongAnswer={handleProblemWrong}
-      />
-    ) : (
-      <MathWorksheet
-        problem={currentProblem}
-        onComplete={handleProblemComplete}
-        onWrongAnswer={handleProblemWrong}
-      />
-    )}
-  </>
-) : (
+        {isStaged ? (
+          <>
+            {currentProblem.staged.mode === 'equation_solver' ? (
+              <EquationWorksheet
+                problem={currentProblem}
+                onComplete={handleProblemComplete}
+                onWrongAnswer={handleProblemWrong}
+              />
+            ) : (
+              <MathWorksheet
+                problem={currentProblem}
+                onComplete={handleProblemComplete}
+                onWrongAnswer={handleProblemWrong}
+              />
+            )}
+          </>
+        ) : (
           <>
             <ProblemDisplay problem={currentProblem} />
             {level.inputMethod === 'clickToSelect' && (
@@ -347,7 +351,6 @@ const LevelPlayer = ({
         )}
       </div>
 
-      
       {showSuccess && (
         <SuccessOverlay crystalsEarned={1} />
       )}
@@ -358,6 +361,7 @@ const LevelPlayer = ({
           onContinue={handleContinueFromFeedback}
           correctAnswer={currentProblem.answer}
           selectedAnswer={selectedAnswer}
+          problem={currentProblem}
         />
       )}
     </div>
