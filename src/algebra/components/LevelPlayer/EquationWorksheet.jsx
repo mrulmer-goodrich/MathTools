@@ -1,4 +1,4 @@
-// EquationWorksheet.jsx - FULLY FIXED: Alignment, padding, term reuse, font, pause, distribution
+// EquationWorksheet.jsx - FINAL: Region colors, anchored equals, black line, no duplication, organized bank
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -40,7 +40,6 @@ const EquationWorksheet = ({
   // Strip leading + for DISPLAY in completed rows and final answer (NOT in operation rows)
   const stripLeadingPlusForDisplay = (term) => {
     const str = String(term).trim();
-    // Only strip + if it's a simple term (not an operation like "+5" in "add 5 to both sides")
     if (str.startsWith('+') && !str.includes('×') && !str.includes('÷')) {
       return str.substring(1);
     }
@@ -209,24 +208,60 @@ const EquationWorksheet = ({
       });
   };
 
-  // Distribute term bank chips evenly across 2 rows
-  const distributeBankChips = (bank) => {
+  // Sort and organize term bank chips
+  const organizeBankChips = (bank) => {
     if (!bank || bank.length === 0) return { row1: [], row2: [] };
     
-    const half = Math.ceil(bank.length / 2);
+    // Separate by type
+    const additions = [];
+    const subtractions = [];
+    const multiplications = [];
+    const divisions = [];
+    const variables = [];
+    const compounds = [];
+    
+    bank.forEach(chip => {
+      const str = String(chip).trim();
+      if (str.includes('×')) {
+        multiplications.push(chip);
+      } else if (str.includes('÷')) {
+        divisions.push(chip);
+      } else if (str.includes(' ') || str.includes('+') && str.length > 2) {
+        compounds.push(chip);
+      } else if (str === 'x' || str === '-x') {
+        variables.push(chip);
+      } else if (str.startsWith('+') || (!str.startsWith('-') && !isNaN(parseFloat(str)))) {
+        additions.push(chip);
+      } else {
+        subtractions.push(chip);
+      }
+    });
+    
+    // Combine in logical order
+    const organized = [
+      ...additions.sort(),
+      ...subtractions.sort(),
+      ...multiplications.sort(),
+      ...divisions.sort(),
+      ...variables.sort(),
+      ...compounds.sort()
+    ];
+    
+    // Split evenly
+    const half = Math.ceil(organized.length / 2);
     return {
-      row1: bank.slice(0, half),
-      row2: bank.slice(half)
+      row1: organized.slice(0, half),
+      row2: organized.slice(half)
     };
   };
 
-  const bankDistribution = currentRow.bank ? distributeBankChips(currentRow.bank) : { row1: [], row2: [] };
+  const bankDistribution = currentRow.bank ? organizeBankChips(currentRow.bank) : { row1: [], row2: [] };
 
   return (
     <div className="equation-mode-container">
       {/* Wrapper for line + equation rows (excludes term bank) */}
       <div className="equation-content-wrapper">
-        {/* Vertical line */}
+        {/* Vertical line - BLACK, 4px */}
         {showVerticalLine && (
           <div className="equation-vertical-line" />
         )}
@@ -252,9 +287,9 @@ const EquationWorksheet = ({
             </div>
           ))}
           
-          {/* Final Answer - shown briefly before success overlay */}
+          {/* Final Answer - HIGHLIGHTED IN PLACE (no duplication) */}
           {showFinalAnswer && isFinalRow && (
-            <div className="equation-row-3col equation-final-answer">
+            <div className="equation-row-3col equation-final-answer-highlight">
               <div className="equation-left-side">
                 {currentSelections.slice(0, currentRow.leftBlanks || 0)
                   .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
@@ -287,14 +322,14 @@ const EquationWorksheet = ({
                   key={row.id}
                   className={`equation-work-row ${isActive ? 'active' : ''}`}
                 >
-                  {/* SINGLE CHOICE ROW (Draw a line) - COMPACT with padding */}
+                  {/* SINGLE CHOICE ROW (Draw a line) - Territory colors */}
                   {row.type === 'single_choice' && isActive && !isCompleted && (
-                    <div className="equation-single-choice-compact">
-                      <div className="equation-instruction">{row.instruction}</div>
+                    <div className="equation-single-choice-territory">
+                      <div className="equation-instruction-territory">{row.instruction}</div>
                       {row.choices.map((choice, idx) => (
                         <button
                           key={idx}
-                          className="equation-draw-line-btn"
+                          className="equation-draw-line-btn-territory"
                           onClick={handleDrawLine}
                         >
                           {choice}
@@ -323,7 +358,7 @@ const EquationWorksheet = ({
                         })}
                       </div>
                       
-                      {/* Equals sign column */}
+                      {/* Equals sign column - ANCHORED */}
                       <div className="equation-equals-col">=</div>
                       
                       {/* Right side blanks */}
@@ -364,10 +399,10 @@ const EquationWorksheet = ({
         )}
       </div>
 
-      {/* Term Bank OUTSIDE wrapper (line won't go through it) - EVENLY DISTRIBUTED */}
+      {/* Term Bank OUTSIDE wrapper - ORGANIZED 2 ROWS */}
       {!completedRows.includes(currentRow.id) && !showFinalAnswer && currentRow.bank && currentRow.bank.length > 0 && (
         <div className="equation-term-bank">
-          <div className="term-bank-label">{currentRow.instruction || 'Select term to place:'}</div>
+          <div className="term-bank-label-territory">{currentRow.instruction || 'Select term to place:'}</div>
           <div className="equation-term-bank-2rows">
             {/* Row 1 */}
             <div className="term-bank-row">
