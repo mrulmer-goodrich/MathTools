@@ -2612,3 +2612,405 @@ cursor: not-allowed;
   overflow-x: auto;
   line-height: 1.5;
 }
+
+/* ============================================ */
+/* FINAL FIXES - Line centered, stops properly */
+/* APPEND TO END OF algebra.css */
+/* ============================================ */
+
+/* ========================================
+   VERTICAL LINE - CENTERED ON EQUALS SIGN
+   Uses calc to account for grid positioning
+   ======================================== */
+
+.equation-vertical-line-centered {
+  position: absolute;
+  /* Center of container + adjust for grid layout */
+  left: calc(50% - 0px);
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #000000;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Territory colors for Level 17+ */
+.equation-single-choice-territory {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #E8F5E9;
+  border: 3px solid #4CAF50;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+}
+
+.equation-instruction-territory {
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  color: #1B5E20;
+  flex-shrink: 0;
+}
+
+.equation-draw-line-btn-territory {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.equation-draw-line-btn-territory:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+}
+
+.term-bank-label-territory {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1B5E20;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ========================================
+   PROBLEM DISPLAY - PROPER FONT/SIZE
+   ======================================== */
+
+.equation-problem-container {
+  position: relative;
+  z-index: 2;
+  background: white;
+  border: 3px solid #9CA3AF;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.equation-row-3col {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.equation-row-3col:last-child {
+  margin-bottom: 0;
+}
+
+.equation-left-side,
+.equation-right-side {
+  font-size: 1.75rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.equation-left-side {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.equation-right-side {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* EQUALS SIGN - ANCHORED, FIXED WIDTH */
+.equation-equals-col {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  color: #1F2937;
+  text-align: center;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   FINAL ANSWER - NO DUPLICATION, ONCE ONLY
+   ======================================== */
+
+.equation-final-answer-highlight {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border: 3px solid #10B981;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  margin-top: 0.75rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: pulseGreen 0.5s ease-in-out;
+}
+
+.worksheet-final-answer-highlight {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #059669;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border: 3px solid #10B981;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  animation: pulseGreen 0.5s ease-in-out;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ========================================
+   FEEDBACK MODAL - COMPACT, NO SCROLL
+   ======================================== */
+
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.feedback-modal-content-compact {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  max-width: 650px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 3px solid #EF4444;
+  font-family: 'Poppins', sans-serif;
+}
+
+.feedback-header-compact {
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-title-compact {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #DC2626;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+}
+
+.feedback-section-compact {
+  margin-bottom: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.feedback-original {
+  background: #F3F4F6;
+  border: 2px solid #9CA3AF;
+  text-align: center;
+}
+
+.feedback-rule {
+  background: #FFFBEB;
+  border: 2px solid #F59E0B;
+}
+
+.feedback-steps {
+  background: #F3F4F6;
+  border: 2px solid #9CA3AF;
+}
+
+.feedback-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.375rem;
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.feedback-section-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2937;
+  font-family: 'Poppins', sans-serif;
+}
+
+.feedback-section-icon-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Poppins', sans-serif;
+}
+
+.feedback-rule .feedback-section-icon-label {
+  color: #92400E;
+}
+
+.feedback-steps .feedback-section-icon-label {
+  color: #374151;
+}
+
+.feedback-section-text {
+  color: #78350F;
+  line-height: 1.5;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+}
+
+.feedback-answers-grid {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-answers-grid.two-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.feedback-answers-grid.one-col {
+  grid-template-columns: 1fr;
+}
+
+.feedback-answer-box {
+  border-radius: 0.5rem;
+  padding: 0.625rem;
+  text-align: center;
+}
+
+.feedback-answer-box.full-width {
+  grid-column: 1 / -1;
+}
+
+.feedback-wrong {
+  background: #FEE2E2;
+  border: 2px solid #EF4444;
+}
+
+.feedback-correct {
+  background: #D1FAE5;
+  border: 2px solid #10B981;
+}
+
+.feedback-answer-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  font-family: 'Poppins', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.feedback-wrong .feedback-answer-label {
+  color: #991B1B;
+}
+
+.feedback-correct .feedback-answer-label {
+  color: #065F46;
+}
+
+.feedback-answer-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.feedback-wrong .feedback-answer-value {
+  color: #DC2626;
+}
+
+.feedback-correct .feedback-answer-value {
+  color: #059669;
+}
+
+.feedback-continue-btn-compact {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 700;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.feedback-continue-btn-compact:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Stacked equation compact */
+.stacked-equations-container {
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-step {
+  margin-bottom: 0.75rem;
+}
+
+.equation-step:last-child {
+  margin-bottom: 0;
+}
+
+.step-description {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.375rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.step-work {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+  color: #1F2937;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
+}
