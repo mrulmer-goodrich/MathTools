@@ -3243,3 +3243,51 @@ cursor: not-allowed;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   animation: pulseGreen 0.5s ease-in-out;
 }
+
+/* ============================================ */
+/* QA FIXES - APPEND TO END OF algebra.css */
+/* Fixes: class mismatch, wrapper conflict, z-index, scroll */
+/* ============================================ */
+
+/* FIXED WRAPPER - no scroll, no padding conflict */
+.equation-content-wrapper-fixed {
+  position: relative;
+  margin-bottom: 1rem;
+  /* NO padding, NO overflow - keeps line calc simple */
+}
+
+/* FIXED VERTICAL LINE - proper z-index, visible overlay */
+.equation-vertical-line-fixed {
+  position: absolute;
+  top: 0;
+  /* left and height set by inline style */
+  width: 4px;
+  background: #000000;
+  transform: translateX(-50%);
+  z-index: 15; /* Above problem container (z-index: 2) */
+  pointer-events: none; /* Click through to content */
+}
+
+/* Ensure equation-equals-col-centered is properly defined */
+/* (Already exists at line 1147, but reinforcing here for clarity) */
+.equation-equals-col-centered {
+  text-align: center;
+  font-size: 2rem; /* Bigger for visibility */
+  font-weight: 700;
+  color: #1F2937;
+  min-width: 60px;
+  max-width: 60px;
+  width: 60px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10; /* In front of line */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Make sure 4-col uses centered version too */
+.equation-row-4col .equation-equals-col-centered {
+  font-size: 1.75rem; /* Slightly smaller in work rows */
+}
