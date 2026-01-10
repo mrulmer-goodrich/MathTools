@@ -3739,3 +3739,84 @@ cursor: not-allowed;
   margin-left: auto !important;
   margin-right: auto !important;
 }
+
+/* =========================================================
+   APPEND-ONLY OVERRIDES (v3) — FIXES REMAINING LAYOUT DRIFT
+   Goal:
+   1) Stop vertical-line drift across rows by locking line to grid center.
+   2) Make “history/problem” and “work row” share the same width.
+   3) Make history compact so it won’t turn into a tiny scrollbox after 2 rows.
+   Paste at VERY END of algebra.css (after any prior appends).
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1) Vertical line: ignore JS-computed left and lock to center
+      Because rows use: grid-template-columns: 1fr 60px 1fr
+      the equals column is centered. This is the most robust fix.
+   --------------------------------------------------------- */
+.equation-content-wrapper-fixed .equation-vertical-line-fixed{
+  left: 50% !important;
+}
+
+/* ---------------------------------------------------------
+   2) Ensure ALL equation blocks share the same stage width
+      (problem/history box AND active work area).
+   --------------------------------------------------------- */
+.equation-content-wrapper-fixed{
+  width: 100% !important;
+  max-width: 900px !important;   /* pick one consistent stage width */
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.equation-work-area{
+  width: 100% !important;
+  max-width: 900px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Make each row fill the stage width */
+.equation-row-3col,
+.equation-work-row-grid{
+  width: 100% !important;
+}
+
+/* ---------------------------------------------------------
+   3) History/progress box: don’t become “tiny” immediately
+      - Give it more height (relative to viewport)
+      - Remove excess padding + margins
+      - Reduce row min-heights and gaps inside history only
+   --------------------------------------------------------- */
+.equation-problem-container-scrollable{
+  max-height: 42vh !important;      /* scroll later (after ~4–6 rows) */
+  padding: 0.5rem 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Compact row spacing in the history box ONLY */
+.equation-problem-container-scrollable .equation-row-3col{
+  margin-bottom: 0.15rem !important;
+  min-height: 34px !important;
+  gap: 0.35rem !important;
+}
+
+/* Remove chunky “completed row” padding/background */
+.equation-problem-container-scrollable .equation-completed-row{
+  padding: 0.15rem 0 !important;
+  background: transparent !important;
+}
+
+/* Final answer highlight should not add huge vertical padding */
+.equation-problem-container-scrollable .equation-final-answer-highlight{
+  padding: 0.35rem 0.5rem !important;
+  margin-top: 0.25rem !important;
+}
+
+/* ---------------------------------------------------------
+   4) Active work row: keep it visually consistent with history
+      (prevents subtle perceived “shift”).
+   --------------------------------------------------------- */
+.equation-work-area .equation-work-row-grid{
+  padding: 0.75rem !important; /* match history padding */
+}
