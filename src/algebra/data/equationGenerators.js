@@ -1,6 +1,7 @@
 // ============================================
 // EQUATION GENERATORS - LEVELS 17+
 // One-step and multi-step equation solving
+// FIXED: Sides swapped bug, improved bank distribution
 // ============================================
 
 // ============================================
@@ -68,7 +69,7 @@ const formatOperation = (op, num) => {
 // LEVEL 1-17: ONE-STEP EQUATIONS (Add/Subtract)
 // Easy: 1-12, positive only, whole solutions
 // Hard: -25 to 25, decimals .5 only, whole solutions
-// 10 Skeletons with rotation
+// 8 Skeletons with rotation
 // ============================================
 
 export const generateOneStepAddSubtract = (difficulty) => {
@@ -90,6 +91,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
   const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
   
   let a, b, solution, problem, operationNeeded, operationValue;
+  let problemHasConstantOnLeft = false;
   
   if (difficulty === 'easy') {
     // Easy: 1-12, positive only
@@ -126,17 +128,20 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = x + ${a}`;
       operationNeeded = 'subtract';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=x-a') {
       solution = b + a;
       problem = `${b} = x - ${a}`;
       operationNeeded = 'add';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=a+x') {
       solution = b - a;
       if (solution < 1) { b = a + randomInt(1, 12); solution = b - a; }
       problem = `${b} = ${a} + x`;
       operationNeeded = 'subtract';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     }
   } else {
     // Hard: -25 to 25, decimals .5 only
@@ -201,6 +206,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = x + ${a}`;
       operationNeeded = 'subtract';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=x-a') {
       solution = b + a;
       if (solution !== Math.floor(solution)) {
@@ -210,6 +216,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = x - ${a}`;
       operationNeeded = 'add';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=a+x') {
       solution = b - a;
       if (solution !== Math.floor(solution)) {
@@ -219,15 +226,11 @@ export const generateOneStepAddSubtract = (difficulty) => {
       problem = `${b} = ${a} + x`;
       operationNeeded = 'subtract';
       operationValue = a;
+      problemHasConstantOnLeft = true;
     }
   }
   
-  // Determine left and right sides of original equation
-  const equationParts = problem.split('=');
-  const leftSide = equationParts[0].trim();
-  const rightSide = equationParts[1].trim();
-  
-  // Build Row 1 bank (operations to perform)
+  // Build Row 1 bank (operations to perform) - IMPROVED VARIETY
   const row1Bank = [
     formatWithSign(operationValue),
     formatWithSign(-operationValue),
@@ -237,8 +240,8 @@ export const generateOneStepAddSubtract = (difficulty) => {
     formatWithSign(-Math.abs(b)),
     `× ${Math.abs(a)}`,
     `÷ ${Math.abs(a)}`,
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`
+    formatWithSign(Math.abs(operationValue) + 1), // Near-miss distractor
+    formatWithSign(-(Math.abs(operationValue) + 1)) // Near-miss distractor
   ];
   
   // Expected operation (same on both sides)
@@ -246,29 +249,29 @@ export const generateOneStepAddSubtract = (difficulty) => {
     ? [formatWithSign(operationValue), formatWithSign(operationValue)]
     : [formatWithSign(-operationValue), formatWithSign(-operationValue)];
   
-  // Build Row 2 bank (final results)
-  // Left side should simplify to x or -x
-  // Right side should simplify to solution
+  // Build Row 2 bank (final results) - IMPROVED VARIETY
   const row2Bank = [
     'x',
     '-x',
-    formatWithSign(solution),
-    formatWithSign(-solution),
-    formatWithSign(solution + Math.abs(a)),
-    formatWithSign(solution - Math.abs(a)),
-    formatWithSign(Math.abs(a)),
-    formatWithSign(-Math.abs(a)),
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
-    `x + ${Math.abs(a)}`,
-    `x - ${Math.abs(a)}`,
-    `${Math.abs(b)} - x`,
-    `${Math.abs(a)} + x`
+    String(solution),
+    String(-solution),
+    String(solution + 1), // Off by 1
+    String(solution - 1), // Off by 1
+    String(Math.abs(a)),
+    String(-Math.abs(a)),
+    String(Math.abs(b)),
+    String(-Math.abs(b)),
+    `x + ${Math.abs(a)}`, // Didn't complete operation
+    `x - ${Math.abs(a)}`, // Didn't complete operation
+    String(a + b), // Added instead of subtracted
+    String(Math.abs(a - b)) // Wrong order
   ];
   
-  // Expected Row 2 (depends on skeleton structure)
-  // For problems where constant is on LEFT (b=x+a, b=a+x, b=x-a), final answer is flipped
-  const problemHasConstantOnLeft = problem.startsWith(`${b}`);
+  // FIXED: Row 2 expected (handles sides-swapped bug)
+  // For problems where constant is on LEFT (b=x+a, b=a+x, b=x-a)
+  // Left side = solution value, Right side = x
+  // For problems where variable is on LEFT (x+a=b, x-a=b, a+x=b)
+  // Left side = x, Right side = solution value
   
   const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
@@ -316,8 +319,18 @@ export const generateOneStepAddSubtract = (difficulty) => {
     explanation: {
       originalProblem: problem,
       steps: [
-        { description: `${operationNeeded === 'add' ? 'Add' : 'Subtract'} ${Math.abs(operationValue)} from both sides`, work: `` },
-        { description: 'Simplify', work: `x = ${solution}` }
+        { 
+          description: 'Original Problem:', 
+          work: problem 
+        },
+        { 
+          description: `Step 1: ${operationNeeded === 'add' ? 'Add' : 'Subtract'} ${Math.abs(operationValue)} from both sides`, 
+          work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
+        },
+        { 
+          description: 'Solution:', 
+          work: `x = ${solution}` 
+        }
       ],
       rule: `To isolate the variable, remove the lonely number by performing the opposite operation on both sides.`,
       finalAnswer: String(solution)
