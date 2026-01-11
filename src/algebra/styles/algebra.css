@@ -4237,3 +4237,98 @@ cursor: not-allowed;
   position: relative;
   z-index: 30 !important; /* stays below line (60) */
 }
+
+/* ===================================================== */
+/* FRACTION DISPLAY STYLES - Level 18+                   */
+/* Renders "/" as proper fraction with numerator/bar/denominator */
+/* ===================================================== */
+
+.fraction-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.15rem;
+  line-height: 1;
+}
+
+.fraction-num {
+  padding: 0 0.25rem;
+  line-height: 1.1;
+  font-size: 1.125rem;
+}
+
+.fraction-bar {
+  width: 100%;
+  min-width: 20px;
+  height: 2px;
+  background: currentColor;
+  margin: 3px 0;
+}
+
+.fraction-den {
+  padding: 0 0.25rem;
+  line-height: 1.1;
+  font-size: 1.125rem;
+}
+
+/* Fractions inside term chips */
+.term-chip .fraction-wrapper {
+  margin: 0 0.1rem;
+}
+
+.term-chip .fraction-num,
+.term-chip .fraction-den {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Fractions inside blanks */
+.equation-blank .fraction-wrapper {
+  margin: 0;
+}
+
+.equation-blank .fraction-num,
+.equation-blank .fraction-den {
+  font-size: 1.125rem;
+}
+
+/* Inline fraction expressions like (4)(x/4) */
+.fraction-expression {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.expression-separator {
+  display: inline-block;
+  width: 0.15rem;
+}
+
+/* Operation rows with fractions need slightly more vertical space */
+.has-fraction-operation {
+  padding: 0.5rem 0 !important;
+}
+
+/* ===================================================== */
+/* MULTIPLICATION SYMBOL STYLING                         */
+/* Make × symbol bold and blue to distinguish from variable x */
+/* ===================================================== */
+
+/* Style × in term bank chips */
+.term-chip {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Make × symbol stand out */
+.term-chip:has-text('×') {
+  font-weight: 700;
+}
+
+/* For inline × styling in expressions */
+.multiply-symbol {
+  font-weight: 700;
+  color: #2563EB;
+  font-size: 1.15em;
+}
+
