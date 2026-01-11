@@ -1164,7 +1164,7 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
           work: problem 
         },
         { 
-          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${absOpValue}`, 
+          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${Math.abs(operationValue)}`, 
           work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
         },
         { 
