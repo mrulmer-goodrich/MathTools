@@ -1144,3 +1144,284 @@ let p, q, k, b, solution, a;
   };
 };
 
+// ============================================
+// LEVEL 1-21: TWO-STEP EQUATIONS (ax + b = c)
+// Multiply then add: ax + b = c
+// Solve: subtract b, then divide by a
+// Easy: -12 to 12, times tables, whole numbers
+// Hard: Same range, introduce decimals/fractions
+// ============================================
+
+export const generateTwoStepMultiplyAdd = (difficulty) => {
+  const levelId = '1-21';
+  
+  // All 4 skeleton forms
+  const allSkeletons = [
+    'ax+b=c',
+    'c=ax+b',
+    'b+ax=c',
+    'c=b+ax'
+  ];
+  
+  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
+  
+  let a, b, c, solution, problem;
+  let problemHasConstantOnLeft = false;
+  
+  if (difficulty === 'easy') {
+    // Easy: -12 to 12, times tables, whole numbers
+    a = randomNonZeroInt(-12, 12);
+    b = randomNonZeroInt(-12, 12);
+    solution = randomNonZeroInt(-12, 12);
+    
+    // Calculate c: c = a*x + b
+    c = a * solution + b;
+    
+    // Build problem string based on skeleton
+    // CRITICAL: If b is negative, display as subtraction
+    if (skeleton === 'ax+b=c') {
+      problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+    } else if (skeleton === 'c=ax+b') {
+      problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+      problemHasConstantOnLeft = true;
+    } else if (skeleton === 'b+ax=c') {
+      problem = b < 0 ? `-${Math.abs(b)} + ${a}x = ${c}` : `${b} + ${a}x = ${c}`;
+    } else if (skeleton === 'c=b+ax') {
+      problem = b < 0 ? `${c} = -${Math.abs(b)} + ${a}x` : `${c} = ${b} + ${a}x`;
+      problemHasConstantOnLeft = true;
+    }
+    
+  } else {
+    // Hard: Same range but with occasional fractions/decimals
+    const useDecimal = Math.random() < 0.2;
+    const useFraction = !useDecimal && Math.random() < 0.2;
+    
+    if (useFraction) {
+      // Use fraction for coefficient a
+      const denoms = [2, 3, 4, 5];
+      const q = denoms[Math.floor(Math.random() * denoms.length)];
+      const p = randomNonZeroInt(-6, 6);
+      
+      // Pick solution that works cleanly
+      const k = randomNonZeroInt(-8, 8);
+      solution = q * k;  // Ensures clean result
+      
+      b = randomNonZeroInt(-12, 12);
+      c = p * k + b;  // c = (p/q)*solution + b
+      
+      const aDisplay = `(${p}/${q})`;  // For display
+      
+      if (skeleton === 'ax+b=c') {
+        problem = b < 0 ? `${aDisplay}x - ${Math.abs(b)} = ${c}` : `${aDisplay}x + ${b} = ${c}`;
+      } else if (skeleton === 'c=ax+b') {
+        problem = b < 0 ? `${c} = ${aDisplay}x - ${Math.abs(b)}` : `${c} = ${aDisplay}x + ${b}`;
+        problemHasConstantOnLeft = true;
+      } else if (skeleton === 'b+ax=c') {
+        problem = b < 0 ? `-${Math.abs(b)} + ${aDisplay}x = ${c}` : `${b} + ${aDisplay}x = ${c}`;
+      } else if (skeleton === 'c=b+ax') {
+        problem = b < 0 ? `${c} = -${Math.abs(b)} + ${aDisplay}x` : `${c} = ${b} + ${aDisplay}x`;
+        problemHasConstantOnLeft = true;
+      }
+      
+      a = p / q;  // Convert back to number for calculations
+      
+    } else if (useDecimal) {
+      // Decimals (.5 increments)
+      a = (randomNonZeroInt(-24, 24) / 2);
+      b = (randomNonZeroInt(-24, 24) / 2);
+      solution = randomNonZeroInt(-12, 12);
+      c = a * solution + b;
+      
+      if (skeleton === 'ax+b=c') {
+        problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+      } else if (skeleton === 'c=ax+b') {
+        problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+        problemHasConstantOnLeft = true;
+      } else if (skeleton === 'b+ax=c') {
+        problem = b < 0 ? `-${Math.abs(b)} + ${a}x = ${c}` : `${b} + ${a}x = ${c}`;
+      } else if (skeleton === 'c=b+ax') {
+        problem = b < 0 ? `${c} = -${Math.abs(b)} + ${a}x` : `${c} = ${b} + ${a}x`;
+        problemHasConstantOnLeft = true;
+      }
+      
+    } else {
+      // Regular integers
+      a = randomNonZeroInt(-12, 12);
+      b = randomNonZeroInt(-12, 12);
+      solution = randomNonZeroInt(-12, 12);
+      c = a * solution + b;
+      
+      if (skeleton === 'ax+b=c') {
+        problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+      } else if (skeleton === 'c=ax+b') {
+        problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+        problemHasConstantOnLeft = true;
+      } else if (skeleton === 'b+ax=c') {
+        problem = b < 0 ? `-${Math.abs(b)} + ${a}x = ${c}` : `${b} + ${a}x = ${c}`;
+      } else if (skeleton === 'c=b+ax') {
+        problem = b < 0 ? `${c} = -${Math.abs(b)} + ${a}x` : `${c} = ${b} + ${a}x`;
+        problemHasConstantOnLeft = true;
+      }
+    }
+  }
+  
+  // STEP 1: Subtract b from both sides
+  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${b}`;
+  const afterStep1 = c - b;
+  const afterStep1Left = problemHasConstantOnLeft ? String(afterStep1) : `${a}x`;
+  const afterStep1Right = problemHasConstantOnLeft ? `${a}x` : String(afterStep1);
+  
+  // STEP 2: Divide by a on both sides
+  const step2Operation = `÷ ${a}`;
+  const afterStep2Left = problemHasConstantOnLeft ? String(solution) : 'x';
+  const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
+  
+  // Build Row 1 bank (first operation: subtract b)
+  const row1Bank = [
+    step1Operation,  // Correct
+    b < 0 ? `- ${Math.abs(b)}` : `+ ${b}`,  // Wrong sign
+    `× ${Math.abs(b)}`,
+    `÷ ${Math.abs(b)}`,
+    formatWithSign(Math.abs(b)),
+    formatWithSign(-Math.abs(b)),
+    `× ${Math.abs(a)}`,
+    `÷ ${Math.abs(a)}`,
+    formatWithSign(c),
+    formatWithSign(-c)
+  ];
+  
+  const row1Expected = [step1Operation, step1Operation];
+  
+  // Build Row 2 bank (result after subtracting b)
+  const row2Bank = [
+    `${a}x`,
+    `-${a}x`,
+    String(afterStep1),
+    String(-afterStep1),
+    String(afterStep1 + 1),
+    String(afterStep1 - 1),
+    'x',
+    '-x',
+    String(solution),
+    String(-solution)
+  ];
+  
+  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [`${a}x`];
+  const row2ExpectedRight = problemHasConstantOnLeft ? [`${a}x`] : [String(afterStep1)];
+  
+  // Build Row 3 bank (operation: divide by a)
+  const row3Bank = [
+    `÷ ${a}`,  // Correct
+    `× ${a}`,  // Wrong operation
+    `÷ ${-a}`,  // Sign error
+    `× ${-a}`,
+    `÷ ${Math.abs(a) + 1}`,
+    `× ${Math.abs(a) + 1}`,
+    formatWithSign(a),
+    formatWithSign(-a),
+    formatWithSign(b),
+    formatWithSign(-b)
+  ];
+  
+  const row3Expected = [`÷ ${a}`, `÷ ${a}`];
+  
+  // Build Row 4 bank (final solution)
+  const row4Bank = [
+    'x',
+    '-x',
+    String(solution),
+    String(-solution),
+    String(solution + 1),
+    String(solution - 1),
+    String(a),
+    String(-a),
+    String(b),
+    String(-b)
+  ];
+  
+  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
+  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
+  
+  // Build staged structure (5 rows for two-step)
+  const staged = {
+    mode: 'equation_solver',
+    rows: [
+      {
+        id: 'row0_draw_line',
+        type: 'single_choice',
+        instruction: 'What do you do first?',
+        choices: ['Draw a line'],
+        expected: ['Draw a line']
+      },
+      {
+        id: 'row1_operation',
+        type: 'dual_box',
+        instruction: 'Remove the lonely number - what do we do to both sides?',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: [row1Expected[0]],
+        expectedRight: [row1Expected[1]],
+        bank: [...new Set(row1Bank)].sort()
+      },
+      {
+        id: 'row2_after_subtract',
+        type: 'dual_box',
+        instruction: 'Simplify each side',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: row2ExpectedLeft,
+        expectedRight: row2ExpectedRight,
+        bank: [...new Set(row2Bank)].sort()
+      },
+      {
+        id: 'row3_divide',
+        type: 'dual_box',
+        instruction: 'Unstick the sticky - what do we do to both sides?',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: [row3Expected[0]],
+        expectedRight: [row3Expected[1]],
+        bank: [...new Set(row3Bank)].sort()
+      },
+      {
+        id: 'row4_solution',
+        type: 'dual_box',
+        instruction: 'Simplify to solve',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: row4ExpectedLeft,
+        expectedRight: row4ExpectedRight,
+        bank: [...new Set(row4Bank)].sort()
+      }
+    ]
+  };
+  
+  const rule = 'Need to remove the lonely number before unsticking the sticky';
+  
+  return {
+    problem,
+    displayProblem: problem,
+    answer: String(solution),
+    choices: [String(solution)],
+    staged,
+    explanation: {
+      originalProblem: problem,
+      steps: [
+        { description: 'Original Problem:', work: problem },
+        {
+          description: `Step 1: ${step1Operation.startsWith('+') ? 'Add' : 'Subtract'} ${Math.abs(b)} to/from both sides`,
+          work: `    ${problem.split('=')[0].trim()}\n${step1Operation}   ${step1Operation}\n_____________\n    ${afterStep1Left} = ${afterStep1Right}`
+        },
+        {
+          description: `Step 2: Divide both sides by ${a}`,
+          work: `    ${afterStep1Left} = ${afterStep1Right}\n${step2Operation}   ${step2Operation}\n_____________\n    ${afterStep2Left} = ${afterStep2Right}`
+        },
+        { description: 'Solution:', work: `x = ${solution}` }
+      ],
+      rule,
+      finalAnswer: String(solution)
+    }
+  };
+};
+
+
