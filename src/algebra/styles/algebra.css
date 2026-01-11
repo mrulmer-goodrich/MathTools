@@ -4283,23 +4283,25 @@ cursor: not-allowed;
 
 /* Fractions inside term chips */
 .term-chip .fraction-wrapper {
-  margin: 0 0.1rem;
+  margin: 0 0.1rem !important;
 }
 
 .term-chip .fraction-num,
 .term-chip .fraction-den {
-  font-size: 1rem;
-  line-height: 1;
+  font-size: 1.125rem !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
 }
 
 /* Fractions inside blanks */
 .equation-blank .fraction-wrapper {
-  margin: 0;
+  margin: 0 !important;
 }
 
 .equation-blank .fraction-num,
 .equation-blank .fraction-den {
-  font-size: 1.125rem;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
 }
 
 /* Inline fraction expressions like (4)(x/4) */
