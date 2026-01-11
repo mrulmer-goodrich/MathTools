@@ -1067,22 +1067,22 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
     }
   }
   
-  // Build Row 1 bank - Enhanced for fractions and negatives
-  // CRITICAL: operationValue can be negative (e.g., -3x = -15 requires ÷ -3)
+ // Build Row 1 bank - Enhanced for fractions and negatives
+  // CRITICAL: First entries (correct answers) use signed operationValue
   const row1Bank = [
-    operationNeeded === 'multiply' ? `× ${operationValue}` : `÷ ${operationValue}`,
-    operationNeeded === 'multiply' ? `÷ ${operationValue}` : `× ${operationValue}`,
-    operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`,
-    `× ${Math.abs(operationValue) + 1}`,
-    `÷ ${Math.abs(operationValue) + 1}`,
-    formatWithSign(Math.abs(operationValue)),
-    formatWithSign(-Math.abs(operationValue)),
-    useFraction && aDen !== 1 ? `× ${formatFraction(aDen, Math.abs(aNum))}` : `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
+    operationNeeded === 'multiply' ? `× ${operationValue}` : `÷ ${operationValue}`, // CORRECT - signed
+    operationNeeded === 'multiply' ? `÷ ${operationValue}` : `× ${operationValue}`, // distractor - signed opposite
+    operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`, // distractor - negated
+    `× ${Math.abs(operationValue) + 1}`, // distractor
+    `÷ ${Math.abs(operationValue) + 1}`, // distractor
+    formatWithSign(Math.abs(operationValue)), // distractor
+    formatWithSign(-Math.abs(operationValue)), // distractor
+    useFraction && aDen !== 1 ? `× ${formatFraction(aDen, Math.abs(aNum))}` : `× ${Math.abs(b)}`, // distractor
+    `÷ ${Math.abs(b)}`, // distractor
+    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}` // distractor
   ];
   
-  // Expected operation - MUST match operationValue sign
+  // Expected operation - uses signed operationValue (NO Math.abs!)
   const row1Expected = operationNeeded === 'multiply' 
     ? [`× ${operationValue}`, `× ${operationValue}`]
     : [`÷ ${operationValue}`, `÷ ${operationValue}`];
