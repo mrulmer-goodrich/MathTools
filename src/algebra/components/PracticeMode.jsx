@@ -61,10 +61,10 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
       name: 'One-Step Equations',
       badge: '🌊',
       levels: [
-        { id: '1-17', name: 'River Crossing', skill: 'Addition equations: x + a = b' },
-        { id: '1-18', name: 'Bridge Building', skill: 'Multiplication equations: ax = b' },
-        { id: '1-19', name: 'Canyon Leap', skill: 'Variable on right: b = x + a' },
-        { id: '1-20', name: 'Waterfall', skill: 'Negative variable: -x + a = b' }
+        { id: '1-17', name: 'River Crossing', skill: 'One Step Equations Add/Sub' },
+        { id: '1-18', name: 'Bridge Building', skill: 'One Step Equations Mult/Div' },
+        { id: '1-19', name: 'Canyon Leap', skill: 'One Step Equations Add/Sub with Negatives' },
+        { id: '1-20', name: 'Waterfall', skill: 'One Step Equations Mult/Div with Negatives' }
       ]
     },
     {
