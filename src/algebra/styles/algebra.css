@@ -4241,35 +4241,44 @@ cursor: not-allowed;
 /* ===================================================== */
 /* FRACTION DISPLAY STYLES - Level 18+                   */
 /* Renders "/" as proper fraction with numerator/bar/denominator */
+/* SCOPED to equation worksheet to avoid conflicts with global .fraction */
 /* ===================================================== */
 
-.fraction-wrapper {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  vertical-align: middle;
-  margin: 0 0.15rem;
-  line-height: 1;
+.equation-stage .fraction-wrapper,
+.equation-work-area .fraction-wrapper,
+.equation-term-bank .fraction-wrapper {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+  margin: 0 0.15rem !important;
+  line-height: 1 !important;
 }
 
-.fraction-num {
-  padding: 0 0.25rem;
-  line-height: 1.1;
-  font-size: 1.125rem;
+.equation-stage .fraction-num,
+.equation-work-area .fraction-num,
+.equation-term-bank .fraction-num {
+  padding: 0 0.25rem !important;
+  line-height: 1.1 !important;
+  font-size: 1.125rem !important;
 }
 
-.fraction-bar {
-  width: 100%;
-  min-width: 20px;
-  height: 2px;
-  background: currentColor;
-  margin: 3px 0;
+.equation-stage .fraction-bar,
+.equation-work-area .fraction-bar,
+.equation-term-bank .fraction-bar {
+  width: 100% !important;
+  min-width: 20px !important;
+  height: 2px !important;
+  background: currentColor !important;
+  margin: 3px 0 !important;
 }
 
-.fraction-den {
-  padding: 0 0.25rem;
-  line-height: 1.1;
-  font-size: 1.125rem;
+.equation-stage .fraction-den,
+.equation-work-area .fraction-den,
+.equation-term-bank .fraction-den {
+  padding: 0 0.25rem !important;
+  line-height: 1.1 !important;
+  font-size: 1.125rem !important;
 }
 
 /* Fractions inside term chips */
