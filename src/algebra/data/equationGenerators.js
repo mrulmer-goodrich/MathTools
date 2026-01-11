@@ -1083,44 +1083,64 @@ let p, q, k, b, solution, a;
   const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
   
-  // Return problem object
-  return {
-    id: `${levelId}-${Date.now()}-${Math.random()}`,
-    problem,
-    solution,
+    // Build staged structure (matches Levels 17-19 format)
+  const staged = {
+    mode: 'equation_solver',
     rows: [
       {
-        id: 'row1',
+        id: 'row0_draw_line',
+        type: 'single_choice',
+        instruction: 'What do you do first?',
+        choices: ['Draw a line'],
+        expected: ['Draw a line']
+      },
+      {
+        id: 'row1_operation',
         type: 'dual_box',
         instruction: 'What do we do to both sides?',
         leftBlanks: 1,
         rightBlanks: 1,
-        bank: row1Bank,
-        correctLeft: row1Expected[0],
-        correctRight: row1Expected[1]
+        expectedLeft: [row1Expected[0]],
+        expectedRight: [row1Expected[1]],
+        bank: [...new Set(row1Bank)].sort()
       },
       {
-        id: 'row2',
+        id: 'row2_solution',
         type: 'dual_box',
         instruction: 'Simplify each side',
         leftBlanks: 1,
         rightBlanks: 1,
-        bank: row2Bank,
-        correctLeft: row2ExpectedLeft[0],
-        correctRight: row2ExpectedRight[0]
+        expectedLeft: row2ExpectedLeft,
+        expectedRight: row2ExpectedRight,
+        bank: [...new Set(row2Bank)].sort()
       }
-    ],
-    hints: {
+    ]
+  };
+
+  // Determine rule based on operation (same tone as Level 18)
+  const rule = operationNeeded === 'multiply'
+    ? 'To isolate the variable, clear the fence by multiplying both sides by the number across the fence.'
+    : 'To isolate the variable, unstick the sticky by dividing the sticky number on both sides.';
+
+  return {
+    problem,
+    displayProblem: problem,
+    answer: String(solution),
+    choices: [String(solution)],
+    staged,
+    explanation: {
       originalProblem: problem,
       steps: [
         { description: 'Original Problem:', work: problem },
-        { 
-          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${operationValueDisplay}`, 
+        {
+          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${operationValueDisplay}`,
           work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
         },
         { description: 'Solution:', work: `x = ${solution}` }
       ],
+      rule,
       finalAnswer: String(solution)
     }
   };
 };
+
