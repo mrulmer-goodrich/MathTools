@@ -835,257 +835,235 @@ export const generateOneStepAddSubtractNegatives = (difficulty) => {
 // 7 Skeletons (adds negative variants)
 // ============================================
 
+// LEVEL 20 GENERATOR - EXACT MATH VERSION
+// This replaces the Level 20 section in equationGenerators.js
+// Copy lines 835-1179 and replace with this
+
 export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
   const levelId = '1-20';
   
   // Format fraction for display with proper HTML structure
   const formatFraction = (num, den) => {
     if (den === 1) return String(num);
-    // Return fraction in format that UI can render with fraction bar
+    // Return fraction in format: (num/den)
     return `(${num}/${den})`;
   };
   
-  // All 7 skeletons - includes negatives
+  // All 7 skeletons
   const allSkeletons = [
-    'ax=b',
-    'x/a=b',
-    'b=ax',
-    'b=x/a',
-    'a=x/b',
-    '-ax=b',    // New: negative coefficient
-    'x/(-a)=b'  // New: negative in denominator
+    'ax=b',      // (p/q)x = b
+    'x/a=b',     // x/a = b
+    'b=ax',      // b = (p/q)x
+    'b=x/a',     // b = x/a
+    'a=x/b',     // a = x/b
+    '-ax=b',     // -(p/q)x = b
+    'x/(-a)=b'   // x/(-a) = b
   ];
   
-  // Get next skeleton from rotation
   const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
   
-  let a, b, solution, problem, operationNeeded, operationValue;
+  let problem, operationNeeded, operationValue;
   let problemHasConstantOnLeft = false;
-  let useFraction = false;
-  let aNum, aDen; // For fraction representation
+  let p, q, k, b, solution, a;
   
   if (difficulty === 'easy') {
-    // Easy: x ∈ {-12..12}, simple fractions (1/2, 1/3, 1/4)
-    solution = randomNonZeroInt(-12, 12);
-    useFraction = Math.random() < 0.25; // 25% chance of fraction
+    // EASY MODE: Exact construction
     
-    if (useFraction) {
-      // Use simple fractions: 1/2, 1/3, 1/4
-      const denominators = [2, 3, 4];
-      aDen = denominators[Math.floor(Math.random() * denominators.length)];
-      aNum = 1;
-      a = aNum / aDen;
-    } else {
-      a = randomNonZeroInt(-12, 12);
-      aNum = a;
-      aDen = 1;
-    }
-    
-    if (skeleton === 'ax=b') {
-      b = Math.round(a * solution);
-      if (useFraction) {
-        problem = `${formatFraction(aNum, aDen)}x = ${b}`;
+    if (skeleton === 'ax=b' || skeleton === 'b=ax') {
+      // Use coefficient form: (p/q)x = b
+      // Construction: Pick p, q, k; then x = q*k and b = p*k
+      const denominators = [2, 3, 4, 5];
+      q = denominators[Math.floor(Math.random() * denominators.length)];
+      p = randomNonZeroInt(-3, 3); // Small numerators
+      k = randomNonZeroInt(1, 6);   // Small multiplier
+      
+      solution = q * k;  // EXACT
+      b = p * k;         // EXACT
+      
+      if (skeleton === 'ax=b') {
+        problem = `(${p}/${q})x = ${b}`;
       } else {
-        problem = `${a}x = ${b}`;
+        problem = `${b} = (${p}/${q})x`;
+        problemHasConstantOnLeft = true;
       }
+      
       operationNeeded = 'divide';
-      operationValue = a;
-    } else if (skeleton === 'x/a=b') {
-      if (!useFraction) {
-        a = randomNonZeroInt(2, 12); // Avoid -1, 1 for division
-        b = Math.floor(solution / a);
-        solution = a * b;
-      } else {
-        b = Math.floor(solution * a);
-        solution = Math.floor(b / a);
-      }
-      if (useFraction) {
-        problem = `x/${formatFraction(aNum, aDen)} = ${b}`;
-      } else {
+      operationValue = p / q;  // Numeric value for calculations
+      operationValueDisplay = `(${p}/${q})`;  // Display string
+      
+    } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
+      // Division form: x/a = b
+      // Construction: Pick a, b; then x = a*b
+      a = randomNonZeroInt(2, 12);
+      b = randomNonZeroInt(-10, 10);
+      solution = a * b;  // EXACT
+      
+      if (skeleton === 'x/a=b') {
         problem = `x/${a} = ${b}`;
-      }
-      operationNeeded = 'multiply';
-      operationValue = a;
-    } else if (skeleton === 'b=ax') {
-      b = Math.round(a * solution);
-      if (useFraction) {
-        problem = `${b} = ${formatFraction(aNum, aDen)}x`;
-      } else {
-        problem = `${b} = ${a}x`;
-      }
-      operationNeeded = 'divide';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x/a') {
-      if (!useFraction) {
-        a = randomNonZeroInt(2, 12);
-        b = Math.floor(solution / a);
-        solution = a * b;
-      } else {
-        b = Math.floor(solution * a);
-        solution = Math.floor(b / a);
-      }
-      if (useFraction) {
-        problem = `${b} = x/${formatFraction(aNum, aDen)}`;
       } else {
         problem = `${b} = x/${a}`;
+        problemHasConstantOnLeft = true;
       }
+      
       operationNeeded = 'multiply';
       operationValue = a;
-      problemHasConstantOnLeft = true;
+      operationValueDisplay = String(a);
+      
     } else if (skeleton === 'a=x/b') {
+      // Form: a = x/b
       b = randomNonZeroInt(2, 12);
-      a = Math.floor(solution / b);
-      if (a === 0) a = 1;
-      solution = a * b;
+      a = randomNonZeroInt(-10, 10);
+      solution = a * b;  // EXACT
+      
       problem = `${a} = x/${b}`;
+      problemHasConstantOnLeft = true;
       operationNeeded = 'multiply';
       operationValue = b;
-      problemHasConstantOnLeft = true;
+      operationValueDisplay = String(b);
+      
     } else if (skeleton === '-ax=b') {
-      a = Math.abs(randomNonZeroInt(2, 12));
-      b = -a * solution;
-      problem = `−${a}x = ${b}`;
+      // Negative coefficient: -(p/q)x = b
+      q = [2, 3, 4][Math.floor(Math.random() * 3)];
+      p = randomNonZeroInt(1, 3);  // Positive p
+      k = randomNonZeroInt(1, 6);
+      
+      solution = -q * k;  // Negative solution
+      b = -p * k;         // EXACT
+      
+      problem = `(-${p}/${q})x = ${b}`;
       operationNeeded = 'divide';
-      operationValue = -a;
+      operationValue = -p / q;
+      operationValueDisplay = `(-${p}/${q})`;
+      
     } else if (skeleton === 'x/(-a)=b') {
-      a = Math.abs(randomNonZeroInt(2, 12));
-      b = Math.floor(solution / -a);
-      solution = -a * b;
-      problem = `x/(−${a}) = ${b}`;
+      // Negative divisor: x/(-a) = b (ASCII minus only!)
+      a = randomNonZeroInt(2, 8);
+      b = randomNonZeroInt(-8, 8);
+      solution = -a * b;  // EXACT
+      
+      problem = `x/(-${a}) = ${b}`;  // ASCII minus
       operationNeeded = 'multiply';
       operationValue = -a;
+      operationValueDisplay = `(-${a})`;
     }
+    
   } else {
-    // Hard: x ∈ {-20..20}, complex fractions, decimals
-    solution = randomNonZeroInt(-20, 20);
-    useFraction = Math.random() < 0.3; // 30% chance of fraction
-    const useDecimal = !useFraction && Math.random() < 0.3;
+    // HARD MODE: Exact construction with larger ranges
     
-    if (useFraction) {
-      // More complex fractions: 1/2, 1/3, 1/4, 1/5, 2/3, 3/4
-      const fractions = [
-        {n: 1, d: 2}, {n: 1, d: 3}, {n: 1, d: 4}, {n: 1, d: 5},
-        {n: 2, d: 3}, {n: 3, d: 4}, {n: 2, d: 5}, {n: 3, d: 5}
-      ];
-      const frac = fractions[Math.floor(Math.random() * fractions.length)];
-      aNum = frac.n;
-      aDen = frac.d;
-      a = aNum / aDen;
-      // Make negative sometimes
-      if (Math.random() < 0.3) {
-        aNum = -aNum;
-        a = -a;
+    if (skeleton === 'ax=b' || skeleton === 'b=ax') {
+      // Coefficient form with more complex fractions
+      const denominators = [2, 3, 4, 5, 6, 8, 10, 12];
+      q = denominators[Math.floor(Math.random() * denominators.length)];
+      p = randomNonZeroInt(-9, 9);  // Larger range
+      k = randomNonZeroInt(-12, 12);
+      
+      solution = q * k;  // EXACT
+      b = p * k;         // EXACT
+      
+      if (skeleton === 'ax=b') {
+        problem = `(${p}/${q})x = ${b}`;
+      } else {
+        problem = `${b} = (${p}/${q})x`;
+        problemHasConstantOnLeft = true;
       }
-    } else if (useDecimal) {
-      a = randomNonZeroInt(-40, 40) / 2;
-      aNum = a;
-      aDen = 1;
-    } else {
+      
+      operationNeeded = 'divide';
+      operationValue = p / q;
+      operationValueDisplay = `(${p}/${q})`;
+      
+    } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
       a = randomNonZeroInt(-12, 12);
-      aNum = a;
-      aDen = 1;
-    }
-    
-    if (skeleton === 'ax=b') {
-      b = Math.round(a * solution);
-      if (useFraction && aDen !== 1) {
-        problem = `${formatFraction(aNum, aDen)}x = ${b}`;
-      } else {
-        problem = `${a}x = ${b}`;
-      }
-      operationNeeded = 'divide';
-      operationValue = a;
-    } else if (skeleton === 'x/a=b') {
-      if (!useFraction) {
-        a = randomNonZeroInt(-12, 12);
-        if (a === 0) a = 2;
-        b = Math.floor(solution / a);
-        solution = a * b;
-      } else {
-        b = Math.floor(solution * a);
-        solution = Math.floor(b / a);
-      }
-      if (useFraction && aDen !== 1) {
-        problem = `x/${formatFraction(aNum, aDen)} = ${b}`;
-      } else {
+      b = randomNonZeroInt(-15, 15);
+      solution = a * b;  // EXACT
+      
+      if (skeleton === 'x/a=b') {
         problem = `x/${a} = ${b}`;
-      }
-      operationNeeded = 'multiply';
-      operationValue = a;
-    } else if (skeleton === 'b=ax') {
-      b = Math.round(a * solution);
-      if (useFraction && aDen !== 1) {
-        problem = `${b} = ${formatFraction(aNum, aDen)}x`;
-      } else {
-        problem = `${b} = ${a}x`;
-      }
-      operationNeeded = 'divide';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x/a') {
-      if (!useFraction) {
-        a = randomNonZeroInt(-12, 12);
-        if (a === 0) a = 2;
-        b = Math.floor(solution / a);
-        solution = a * b;
-      } else {
-        b = Math.floor(solution * a);
-        solution = Math.floor(b / a);
-      }
-      if (useFraction && aDen !== 1) {
-        problem = `${b} = x/${formatFraction(aNum, aDen)}`;
       } else {
         problem = `${b} = x/${a}`;
+        problemHasConstantOnLeft = true;
       }
+      
       operationNeeded = 'multiply';
       operationValue = a;
-      problemHasConstantOnLeft = true;
+      operationValueDisplay = String(a);
+      
     } else if (skeleton === 'a=x/b') {
       b = randomNonZeroInt(-12, 12);
-      if (b === 0) b = 3;
-      a = Math.floor(solution / b);
-      if (a === 0) a = b > 0 ? 1 : -1;
-      solution = a * b;
+      a = randomNonZeroInt(-15, 15);
+      solution = a * b;  // EXACT
+      
       problem = `${a} = x/${b}`;
+      problemHasConstantOnLeft = true;
       operationNeeded = 'multiply';
       operationValue = b;
-      problemHasConstantOnLeft = true;
+      operationValueDisplay = String(b);
+      
     } else if (skeleton === '-ax=b') {
-      a = Math.abs(randomNonZeroInt(2, 12));
-      b = -a * solution;
-      problem = `−${a}x = ${b}`;
+      q = [2, 3, 4, 5, 6, 8][Math.floor(Math.random() * 6)];
+      p = randomNonZeroInt(1, 9);
+      k = randomNonZeroInt(-12, 12);
+      
+      solution = -q * k;
+      b = -p * k;  // EXACT
+      
+      problem = `(-${p}/${q})x = ${b}`;
       operationNeeded = 'divide';
-      operationValue = -a;
+      operationValue = -p / q;
+      operationValueDisplay = `(-${p}/${q})`;
+      
     } else if (skeleton === 'x/(-a)=b') {
-      a = Math.abs(randomNonZeroInt(2, 12));
-      b = Math.floor(solution / -a);
-      solution = -a * b;
-      problem = `x/(−${a}) = ${b}`;
+      a = randomNonZeroInt(2, 12);
+      b = randomNonZeroInt(-15, 15);
+      solution = -a * b;  // EXACT
+      
+      problem = `x/(-${a}) = ${b}`;  // ASCII minus
       operationNeeded = 'multiply';
       operationValue = -a;
+      operationValueDisplay = `(-${a})`;
     }
   }
   
-  // Build Row 1 bank - Enhanced for fractions and negatives
-  // CRITICAL: operationValue can be negative (e.g., -3x = -15 requires ÷ -3)
-  const row1Bank = [
-    operationNeeded === 'multiply' ? `× ${operationValue}` : `÷ ${operationValue}`,
-    operationNeeded === 'multiply' ? `÷ ${operationValue}` : `× ${operationValue}`,
-    operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`,
-    `× ${Math.abs(operationValue) + 1}`,
-    `÷ ${Math.abs(operationValue) + 1}`,
-    formatWithSign(Math.abs(operationValue)),
-    formatWithSign(-Math.abs(operationValue)),
-    useFraction && aDen !== 1 ? `× ${formatFraction(aDen, Math.abs(aNum))}` : `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
-  ];
+  // Build Row 1 bank (operations)
+  // Use operationValueDisplay for all student-facing strings
+  const isFractionCoefficient = operationValueDisplay.includes('/');
   
-  // Expected operation - MUST match operationValue sign
+  let row1Bank;
+  if (isFractionCoefficient) {
+    // Fraction coefficient distractors - pedagogically meaningful
+    const [fullMatch, sign, num, den] = operationValueDisplay.match(/^\((-?)(\d+)\/(\d+)\)$/) || [null, '', '1', '1'];
+    const oppositeSign = sign === '-' ? '' : '-';
+    
+    row1Bank = [
+      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
+      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
+      operationNeeded === 'multiply' ? `× (${den}/${num})` : `÷ (${den}/${num})`, // Reciprocal
+      operationNeeded === 'multiply' ? `÷ (${den}/${num})` : `× (${den}/${num})`, // Reciprocal wrong op
+      operationNeeded === 'multiply' ? `× (${oppositeSign}${num}/${den})` : `÷ (${oppositeSign}${num}/${den})`, // Sign error
+      operationNeeded === 'multiply' ? `÷ (${oppositeSign}${num}/${den})` : `× (${oppositeSign}${num}/${den})`, // Sign + op error
+      `+ ${b}`, // Addition distractor
+      `- ${b}`, // Subtraction distractor
+      formatWithSign(b + 1),
+      formatWithSign(b - 1)
+    ];
+  } else {
+    // Integer distractors - existing logic works fine
+    row1Bank = [
+      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
+      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
+      operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`, // Sign error
+      `× ${Math.abs(operationValue) + 1}`,
+      `÷ ${Math.abs(operationValue) + 1}`,
+      formatWithSign(Math.abs(operationValue)),
+      formatWithSign(-Math.abs(operationValue)),
+      `× ${Math.abs(b)}`,
+      `÷ ${Math.abs(b)}`,
+      operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
+    ];
+  }
+  
   const row1Expected = operationNeeded === 'multiply' 
-    ? [`× ${operationValue}`, `× ${operationValue}`]
-    : [`÷ ${operationValue}`, `÷ ${operationValue}`];
+    ? [`× ${operationValueDisplay}`, `× ${operationValueDisplay}`]
+    : [`÷ ${operationValueDisplay}`, `÷ ${operationValueDisplay}`];
   
   // Build Row 2 bank
   const row2Bank = [
@@ -1095,84 +1073,52 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
     String(-solution),
     String(solution + 1),
     String(solution - 1),
-    String(Math.abs(solution)),
-    String(-Math.abs(solution)),
-    useFraction && aDen !== 1 ? `${formatFraction(aNum, aDen)}x` : `${Math.abs(a)}x`,
-    `x ÷ ${Math.abs(a)}`,
-    String(Math.round(b * a)),
-    String(Math.abs(Math.round(b / a))),
-    String(Math.abs(a)),
-    String(-Math.abs(a)),
+    String(Math.abs(operationValue)),
+    String(-Math.abs(operationValue)),
     String(Math.abs(b)),
     String(-Math.abs(b))
   ];
   
-  // Row 2 expected
   const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
   
-  // Build staged structure
-  const staged = {
-    mode: 'equation_solver',
+  // Return problem object
+  return {
+    id: `${levelId}-${Date.now()}-${Math.random()}`,
+    problem,
+    solution,
     rows: [
       {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
+        id: 'row1',
         type: 'dual_box',
         instruction: 'What do we do to both sides?',
         leftBlanks: 1,
         rightBlanks: 1,
-        expectedLeft: [row1Expected[0]],
-        expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
+        bank: row1Bank,
+        correctLeft: row1Expected[0],
+        correctRight: row1Expected[1]
       },
       {
-        id: 'row2_solution',
+        id: 'row2',
         type: 'dual_box',
         instruction: 'Simplify each side',
         leftBlanks: 1,
         rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: row2Bank,
+        correctLeft: row2ExpectedLeft[0],
+        correctRight: row2ExpectedRight[0]
       }
-    ]
-  };
-  
-  // Determine rule
-  const rule = operationNeeded === 'multiply' 
-    ? 'To isolate the variable, clear the fence by multiplying both sides by the number across the fence. When working with fractions, multiply by the reciprocal. When working with negatives, keep track of the sign.'
-    : 'To isolate the variable, unstick the sticky by dividing the sticky number on both sides. When working with fractions, divide by multiplying by the reciprocal. When working with negatives, keep track of the sign.';
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
+    ],
+    hints: {
       originalProblem: problem,
       steps: [
+        { description: 'Original Problem:', work: problem },
         { 
-          description: 'Original Problem:', 
-          work: problem 
-        },
-        { 
-          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${Math.abs(operationValue)}`, 
+          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${operationValueDisplay}`, 
           work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
         },
-        { 
-          description: 'Solution:', 
-          work: `x = ${solution}` 
-        }
+        { description: 'Solution:', work: `x = ${solution}` }
       ],
-      rule,
       finalAnswer: String(solution)
     }
   };
