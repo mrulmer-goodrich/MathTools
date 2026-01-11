@@ -48,6 +48,7 @@ const LevelPlayer = ({
   });
   const [problemStartTime, setProblemStartTime] = useState(null);
   const [problemAttempts, setProblemAttempts] = useState(0);
+  const [feedbackData, setFeedbackData] = useState(null);
 
   const level = levels[levelId];
 
@@ -155,7 +156,10 @@ const LevelPlayer = ({
 
     setCorrectStreak(0);
     
-    // Store feedback data if provided (for staged problems)
+   // Store the COMPLETE feedback data for staged problems
+    setFeedbackData(feedbackData);
+    
+    // Also store userAnswer for backward compatibility with non-staged
     if (feedbackData.userAnswer) {
       setSelectedAnswer(feedbackData.userAnswer);
     }
@@ -361,15 +365,20 @@ const LevelPlayer = ({
         <SuccessOverlay crystalsEarned={1} />
       )}
 
-      {showFeedback && (
-        <FeedbackModal
-          explanation={currentProblem.explanation}
-          onContinue={handleContinueFromFeedback}
-          correctAnswer={currentProblem.answer}
-          selectedAnswer={selectedAnswer}
-          problem={currentProblem}
-        />
-      )}
+{showFeedback && (
+  <FeedbackModal
+    explanation={currentProblem.explanation}
+    onContinue={handleContinueFromFeedback}
+    // For staged problems, use row-specific feedback data
+    // For non-staged, fall back to problem.answer
+    correctAnswer={feedbackData?.correctAnswer || currentProblem.answer}
+    selectedAnswer={feedbackData?.userAnswer || selectedAnswer}
+    problem={currentProblem}
+    // Pass additional context for staged problems
+    rowInstruction={feedbackData?.rowInstruction}
+    originalProblem={feedbackData?.originalProblem}
+  />
+)}
     </div>
   );
 };
