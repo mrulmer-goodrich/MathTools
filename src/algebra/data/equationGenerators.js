@@ -862,9 +862,10 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
   
   const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
   
-  let problem, operationNeeded, operationValue;
-  let problemHasConstantOnLeft = false;
-  let p, q, k, b, solution, a;
+ let problem, operationNeeded, operationValue, operationValueDisplay;
+let problemHasConstantOnLeft = false;
+let p, q, k, b, solution, a;
+
   
   if (difficulty === 'easy') {
     // EASY MODE: Exact construction
