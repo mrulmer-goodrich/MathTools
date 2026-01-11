@@ -71,16 +71,17 @@ const PracticeMode = ({ onSelectLevel, onBackToBaseCamp, completedLevels, player
       name: 'Two-Step Equations',
       badge: '⛰️',
       levels: [
-        { id: '1-21', name: 'Storm Passage', skill: 'Two-step with negative coefficients' },
-        { id: '1-22', name: 'Fraction Falls', skill: 'Two-step with fractions' },
-        { id: '1-23', name: 'Misty Decimals', skill: 'Two-step with decimals' }
+        { id: '1-21', name: 'Storm Passage', skill: 'Two Step Equations Mult/Add' },
+        { id: '1-22', name: 'Fraction Falls', skill: 'Two Step Equations Div/Add' },
+        { id: '1-23', name: 'Misty Decimals', skill: 'Two Step Equations Add/Div' },
+        { id: '1-24', name: 'Ancient Ruins', skill: 'Two Step Equations Mixed' }
       ]
     },
     {
       name: 'Multi-Step Equations',
       badge: '🏔️',
       levels: [
-        { id: '1-24', name: 'Ancient Ruins', skill: 'Distribution in equations' },
+,
         { id: '1-25', name: 'Complex Caverns', skill: 'Distribute, combine, then solve' }
       ]
     },
