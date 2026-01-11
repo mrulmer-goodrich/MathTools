@@ -351,7 +351,7 @@ export const levels = {
     module: 2,
     number: 17,
     name: "River Crossing",
-    skill: "One-step addition equations: x + a = b",
+    skill: "One-step add/sub equations",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
@@ -361,7 +361,7 @@ export const levels = {
     module: 2,
     number: 18,
     name: "Bridge Building",
-    skill: "One-step multiplication equations: ax = b",
+    skill: "One-step mult/div equations",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
@@ -371,7 +371,7 @@ export const levels = {
     module: 2,
     number: 19,
     name: "Canyon Leap",
-    skill: "Variable on right: b = x + a",
+    skill: "One-step add/sub equations with negatives",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
@@ -381,19 +381,19 @@ export const levels = {
     module: 2,
     number: 20,
     name: "Waterfall",
-    skill: "Negative variable: -x + a = b",
+    skill: "One-step mult/div equations with negatives",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: '🌊 Equations Expert'
   },
 
-  // LEVELS 21-25: Advanced Two-Step & Multi-Step
+  // LEVELS 21-24: Two-Step Equations
   '1-21': {
     id: '1-21',
     module: 1,
     number: 21,
     name: "Fraction Falls",
-    skill: "Two-step with fractions",
+    skill: "Two-step equations",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
@@ -403,7 +403,7 @@ export const levels = {
     module: 1,
     number: 22,
     name: "Misty Decimals",
-    skill: "Two-step with decimals",
+    skill: "Two-step equations",
     inputMethod: "clickToSelect",
     problemsRequired: 6,
     badge: null
