@@ -69,6 +69,12 @@ const EquationWorksheet = ({
 
   const formatTermBankDisplay = (term) => {
     const str = String(term).trim();
+    
+    // Handle operations with negative numbers: × -2 → × (-2)
+    if (str.includes('× -') || str.includes('÷ -')) {
+      return str.replace(/(×|÷)\s*(-\d+)/g, '$1 ($2)');
+    }
+    
     if (str.startsWith('+') || str.startsWith('-')) return str;
     if (str.includes(' ')) return str;
     if (str.includes('×') || str.includes('÷')) return str;
