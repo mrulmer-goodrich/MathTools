@@ -12,8 +12,8 @@ import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
 import { generateOneStepAddSubtract } from '../../data/equationGenerators';
 import { generateOneStepMultiplyDivide } from '../../data/equationGenerators';
-import {generateOneStepAddSubtractNegatives} from '../../data/equationGenerators';
-import {generateOneStepMultiplyDivideNegativesFractions} from '../../data/equationGenerators';
+import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerators';
+import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
 import EquationWorksheet from './EquationWorksheet';
 
