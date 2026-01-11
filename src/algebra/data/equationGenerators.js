@@ -1354,18 +1354,19 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   
   // Build Row 1 bank (first operation: subtract b)
   // SIGN-SAFE: Never produce + -5 or - -5
+  // CONSISTENT SPACING: Always "op space number" format
   const row1Bank = [
     step1Operation,  // Correct
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,  // Wrong sign
     `× ${Math.abs(b)}`,
     `÷ ${Math.abs(b)}`,
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
+    `+ ${Math.abs(b)}`,  // Distractor
+    `- ${Math.abs(b)}`,  // Distractor
     // Use aDisplay for string distractors
-    aDisplay.includes('/') ? `× ${aDisplay}` : (aNumeric < 0 ? `× ${Math.abs(aNumeric)}` : `× ${Math.abs(aNumeric)}`),
-    aDisplay.includes('/') ? `÷ ${aDisplay}` : (aNumeric < 0 ? `÷ ${Math.abs(aNumeric)}` : `÷ ${Math.abs(aNumeric)}`),
-    formatWithSign(c),
-    formatWithSign(-c)
+    aDisplay.includes('/') ? `× ${aDisplay}` : `× ${Math.abs(aNumeric)}`,
+    aDisplay.includes('/') ? `÷ ${aDisplay}` : `÷ ${Math.abs(aNumeric)}`,
+    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
+    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
   
   // Build Row 2 bank (result after subtracting b)
@@ -1388,21 +1389,22 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   const row2ExpectedRight = problemHasConstantOnLeft ? [axDisplay] : [String(afterStep1)];
   
   // Build Row 3 bank (operation: divide by a)
+  // CONSISTENT FORMATTING: Always use same spacing
   const row3Bank = [
     step2Operation,  // Correct
     aNumeric < 0 ? `× (${aDisplay})` : `× ${aDisplay}`,  // Wrong operation
     aDisplay.includes('/') ? 
       `÷ (${aDisplay.replace(/^\(-?/, '(-').replace(/^\(/, '(-')})` :
-      (aNumeric < 0 ? `÷ ${Math.abs(aNumeric)}` : `÷ (-${aNumeric})`),
+      (aNumeric < 0 ? `÷ ${Math.abs(aNumeric)}` : `÷ ${-aNumeric}`),
     aDisplay.includes('/') ? 
       `× (${aDisplay.replace(/^\(-?/, '(-').replace(/^\(/, '(-')})` :
-      (aNumeric < 0 ? `× ${Math.abs(aNumeric)}` : `× (-${aNumeric})`),
+      (aNumeric < 0 ? `× ${Math.abs(aNumeric)}` : `× ${-aNumeric}`),
     aDisplay.includes('/') ? `÷ (2/3)` : `÷ ${Math.abs(aNumeric) + 1}`,
     aDisplay.includes('/') ? `× (3/2)` : `× ${Math.abs(aNumeric) + 1}`,
-    formatWithSign(Math.floor(aNumeric)),
-    formatWithSign(-Math.floor(aNumeric)),
-    formatWithSign(b),
-    formatWithSign(-b)
+    aNumeric >= 0 ? `+ ${Math.floor(aNumeric)}` : `- ${Math.abs(Math.floor(aNumeric))}`,
+    aNumeric >= 0 ? `- ${Math.floor(aNumeric)}` : `+ ${Math.abs(Math.floor(aNumeric))}`,
+    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
+    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
   ];
   
   // Build Row 4 bank (final solution)
@@ -1615,17 +1617,18 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
   
   // Build Row 1 bank (first operation: subtract b)
+  // CONSISTENT SPACING
   const row1Bank = [
     step1Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
     `× ${Math.abs(b)}`,
     `÷ ${Math.abs(b)}`,
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
+    `+ ${Math.abs(b)}`,
+    `- ${Math.abs(b)}`,
     a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
     a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
-    formatWithSign(c),
-    formatWithSign(-c)
+    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
+    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
   
   // Build Row 2 bank (result after subtracting b)
@@ -1646,6 +1649,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   const row2ExpectedRight = problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)];
   
   // Build Row 3 bank (operation: multiply by a)
+  // CONSISTENT FORMATTING
   const row3Bank = [
     step2Operation,
     a < 0 ? `÷ (${a})` : `÷ ${a}`,
@@ -1653,10 +1657,10 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
     `× ${Math.abs(a) + 1}`,
     `÷ ${Math.abs(a) + 1}`,
-    formatWithSign(a),
-    formatWithSign(-a),
-    formatWithSign(b),
-    formatWithSign(-b)
+    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
+    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
+    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
+    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
   ];
   
   // Build Row 4 bank (final solution)
@@ -1872,6 +1876,7 @@ export const generateTwoStepAddDivide = (difficulty) => {
   const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
   
   // Build Row 1 bank (first operation: multiply by a)
+  // CONSISTENT FORMATTING
   const row1Bank = [
     step1Operation,
     a < 0 ? `÷ (${a})` : `÷ ${a}`,
@@ -1879,10 +1884,10 @@ export const generateTwoStepAddDivide = (difficulty) => {
     a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
     `× ${Math.abs(a) + 1}`,
     `÷ ${Math.abs(a) + 1}`,
-    formatWithSign(a),
-    formatWithSign(-a),
-    formatWithSign(b),
-    formatWithSign(-b)
+    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
+    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
+    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
+    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
   ];
   
   // Build Row 2 bank (result after multiplying by a)
@@ -1903,17 +1908,18 @@ export const generateTwoStepAddDivide = (difficulty) => {
   const row2ExpectedRight = problemHasConstantOnLeft ? [xPlusBTerm] : [String(afterStep1)];
   
   // Build Row 3 bank (operation: subtract b)
+  // CONSISTENT SPACING
   const row3Bank = [
     step2Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
     `× ${Math.abs(b)}`,
     `÷ ${Math.abs(b)}`,
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
+    `+ ${Math.abs(b)}`,
+    `- ${Math.abs(b)}`,
     a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
     a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
-    formatWithSign(c),
-    formatWithSign(-c)
+    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
+    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
   
   // Build Row 4 bank (final solution)
@@ -2014,4 +2020,3 @@ export const generateTwoStepAddDivide = (difficulty) => {
     }
   };
 };
-
