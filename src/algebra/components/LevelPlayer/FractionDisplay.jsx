@@ -18,6 +18,24 @@ const FractionDisplay = ({ expression }) => {
   
   const str = String(expression).trim();
   
+  // Check for coefficient fraction pattern: (n/d)x or (-n/d)x
+  const coefficientPattern = /^\((-?\d+)\s*\/\s*(\d+)\)\s*x$/;
+  const coeffMatch = str.match(coefficientPattern);
+  
+  if (coeffMatch) {
+    const [, numerator, denominator] = coeffMatch;
+    return (
+      <span className="coefficient-fraction-expression">
+        <div className="fraction-wrapper">
+          <div className="fraction-num">{numerator.trim()}</div>
+          <div className="fraction-bar"></div>
+          <div className="fraction-den">{denominator.trim()}</div>
+        </div>
+        <span className="variable-x">x</span>
+      </span>
+    );
+  }
+  
   // Check if contains "/" for fraction rendering
   if (!str.includes('/')) {
     // No fraction, render as text
