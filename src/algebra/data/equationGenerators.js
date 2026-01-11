@@ -393,7 +393,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       b = Math.floor(solution / a);
       if (b === 0) b = 1;
       solution = a * b;
-      problem = `${b} = x ÷ ${a}`;
+      problem = `${b} = x/${a}`;
       operationNeeded = 'multiply';
       operationValue = a;
       problemHasConstantOnLeft = true;
@@ -402,7 +402,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       a = Math.floor(solution / b);
       if (a === 0) a = 1;
       solution = a * b;
-      problem = `${a} = x ÷ ${b}`;
+      problem = `${a} = x/${b}`;
       operationNeeded = 'multiply';
       operationValue = b;
       problemHasConstantOnLeft = true;
@@ -437,7 +437,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       a = randomNonZeroInt(-12, 12);
       b = useDecimal ? (solution / 2) : Math.floor(solution / Math.abs(a));
       solution = b * a;
-      problem = `${b} = x ÷ ${a}`;
+      problem = `${b} = x/${a}`;
       operationNeeded = 'multiply';
       operationValue = a;
       problemHasConstantOnLeft = true;
@@ -446,7 +446,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       a = Math.floor(solution / Math.abs(b));
       if (a === 0) a = b > 0 ? 1 : -1;
       solution = a * b;
-      problem = `${a} = x ÷ ${b}`;
+      problem = `${a} = x/${b}`;
       operationNeeded = 'multiply';
       operationValue = b;
       problemHasConstantOnLeft = true;
