@@ -900,9 +900,9 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
         solution = Math.floor(b / a);
       }
       if (useFraction) {
-        problem = `x ÷ ${formatFraction(aNum, aDen)} = ${b}`;
+        problem = `x/${formatFraction(aNum, aDen)} = ${b}`;
       } else {
-        problem = `x ÷ ${a} = ${b}`;
+        problem = `x/${a} = ${b}`;
       }
       operationNeeded = 'multiply';
       operationValue = a;
@@ -926,9 +926,9 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
         solution = Math.floor(b / a);
       }
       if (useFraction) {
-        problem = `${b} = x ÷ ${formatFraction(aNum, aDen)}`;
+        problem = `${b} = x/${formatFraction(aNum, aDen)}`;
       } else {
-        problem = `${b} = x ÷ ${a}`;
+        problem = `${b} = x/${a}`;
       }
       operationNeeded = 'multiply';
       operationValue = a;
@@ -938,7 +938,7 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       a = Math.floor(solution / b);
       if (a === 0) a = 1;
       solution = a * b;
-      problem = `${a} = x ÷ ${b}`;
+      problem = `${a} = x/${b}`;
       operationNeeded = 'multiply';
       operationValue = b;
       problemHasConstantOnLeft = true;
@@ -952,7 +952,7 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       a = Math.abs(randomNonZeroInt(2, 12));
       b = Math.floor(solution / -a);
       solution = -a * b;
-      problem = `x ÷ (−${a}) = ${b}`;
+      problem = `x/(−${a}) = ${b}`;
       operationNeeded = 'multiply';
       operationValue = -a;
     }
@@ -1007,9 +1007,9 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
         solution = Math.floor(b / a);
       }
       if (useFraction && aDen !== 1) {
-        problem = `x ÷ ${formatFraction(aNum, aDen)} = ${b}`;
+        problem = `x/${formatFraction(aNum, aDen)} = ${b}`;
       } else {
-        problem = `x ÷ ${a} = ${b}`;
+        problem = `x/${a} = ${b}`;
       }
       operationNeeded = 'multiply';
       operationValue = a;
@@ -1034,9 +1034,9 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
         solution = Math.floor(b / a);
       }
       if (useFraction && aDen !== 1) {
-        problem = `${b} = x ÷ ${formatFraction(aNum, aDen)}`;
+        problem = `${b} = x/${formatFraction(aNum, aDen)}`;
       } else {
-        problem = `${b} = x ÷ ${a}`;
+        problem = `${b} = x/${a}`;
       }
       operationNeeded = 'multiply';
       operationValue = a;
@@ -1047,7 +1047,7 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       a = Math.floor(solution / b);
       if (a === 0) a = b > 0 ? 1 : -1;
       solution = a * b;
-      problem = `${a} = x ÷ ${b}`;
+      problem = `${a} = x/${b}`;
       operationNeeded = 'multiply';
       operationValue = b;
       problemHasConstantOnLeft = true;
@@ -1061,31 +1061,31 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       a = Math.abs(randomNonZeroInt(2, 12));
       b = Math.floor(solution / -a);
       solution = -a * b;
-      problem = `x ÷ (−${a}) = ${b}`;
+      problem = `x/(−${a}) = ${b}`;
       operationNeeded = 'multiply';
       operationValue = -a;
     }
   }
   
   // Build Row 1 bank - Enhanced for fractions and negatives
-  const absOpValue = Math.abs(operationValue);
+  // CRITICAL: operationValue can be negative (e.g., -3x = -15 requires ÷ -3)
   const row1Bank = [
-    operationNeeded === 'multiply' ? `× ${absOpValue}` : `÷ ${absOpValue}`,
-    operationNeeded === 'multiply' ? `÷ ${absOpValue}` : `× ${absOpValue}`,
-    operationNeeded === 'multiply' ? `× ${-absOpValue}` : `÷ ${-absOpValue}`,
-    `× ${absOpValue + 1}`,
-    `÷ ${absOpValue + 1}`,
-    formatWithSign(absOpValue),
-    formatWithSign(-absOpValue),
-    useFraction && aDen !== 1 ? `× ${formatFraction(aDen, Math.abs(aNum))}` : `× ${Math.abs(b)}`, // Reciprocal or confusion
+    operationNeeded === 'multiply' ? `× ${operationValue}` : `÷ ${operationValue}`,
+    operationNeeded === 'multiply' ? `÷ ${operationValue}` : `× ${operationValue}`,
+    operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`,
+    `× ${Math.abs(operationValue) + 1}`,
+    `÷ ${Math.abs(operationValue) + 1}`,
+    formatWithSign(Math.abs(operationValue)),
+    formatWithSign(-Math.abs(operationValue)),
+    useFraction && aDen !== 1 ? `× ${formatFraction(aDen, Math.abs(aNum))}` : `× ${Math.abs(b)}`,
     `÷ ${Math.abs(b)}`,
-    operationNeeded === 'multiply' ? `× ${absOpValue * 2}` : `÷ ${absOpValue * 2}` // Double error
+    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
   ];
   
-  // Expected operation
+  // Expected operation - MUST match operationValue sign
   const row1Expected = operationNeeded === 'multiply' 
-    ? [`× ${absOpValue}`, `× ${absOpValue}`]
-    : [`÷ ${absOpValue}`, `÷ ${absOpValue}`];
+    ? [`× ${operationValue}`, `× ${operationValue}`]
+    : [`÷ ${operationValue}`, `÷ ${operationValue}`];
   
   // Build Row 2 bank
   const row2Bank = [
