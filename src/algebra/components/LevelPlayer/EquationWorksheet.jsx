@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/algebra.css';
+import FractionDisplay from './FractionDisplay';
 
 const EquationWorksheet = ({ 
   problem,
@@ -54,8 +55,14 @@ const EquationWorksheet = ({
 
   const normalizeForComparison = (term) => {
     const str = String(term).trim();
+    // Remove leading +
     if (str.startsWith('+')) {
       return str.substring(1);
+    }
+    // For numeric values, parse and compare as numbers to handle negatives properly
+    const num = parseFloat(str);
+    if (!isNaN(num)) {
+      return String(num);
     }
     return str;
   };
@@ -193,10 +200,30 @@ const EquationWorksheet = ({
         
         const isOperationRow = row.id.includes('row1');
         
+        // Special handling for operation rows (row1) with multiply/divide on fractions
+        if (isOperationRow && (leftTerms[0]?.includes('×') || leftTerms[0]?.includes('÷'))) {
+          const hasFraction = problemParts.left.includes('/') || problemParts.right.includes('/');
+          
+          if (hasFraction) {
+            // Extract the operator value (e.g., "× 4" → "4")
+            const leftOp = leftTerms[0].replace('× ', '').replace('÷ ', '').trim();
+            const rightOp = rightTerms[0].replace('× ', '').replace('÷ ', '').trim();
+            
+            // Wrap the operation: (4)(x/4) = (4)(-4)
+            return {
+              left: `(${leftOp})(${problemParts.left})`,
+              right: `(${rightOp})(${problemParts.right})`,
+              isOperationRow: true,
+              hasFraction: true
+            };
+          }
+        }
+        
         return {
           left: leftTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
           right: rightTerms.map(t => isOperationRow ? t : stripLeadingPlusForDisplay(t)).join(' '),
-          isOperationRow
+          isOperationRow,
+          hasFraction: false
         };
       });
   };
@@ -217,7 +244,8 @@ const EquationWorksheet = ({
         multiplications.push(chip);
       } else if (str.includes('÷')) {
         divisions.push(chip);
-      } else if (str.includes(' ') || str.includes('+') && str.length > 2) {
+      } else if (str.includes(' ') && (str.includes('+') || str.includes('-'))) {
+        // TRUE compounds like "x + 3" or "2x - 5" (has space AND operator)
         compounds.push(chip);
       } else if (str === 'x' || str === '-x') {
         variables.push(chip);
@@ -270,32 +298,44 @@ const EquationWorksheet = ({
           >
 
           <div className="equation-row-3col">
-            <div className="equation-left-side">{problemParts.left}</div>
+            <div className="equation-left-side">
+              <FractionDisplay expression={problemParts.left} />
+            </div>
             <div className="equation-equals-col-centered">=</div>
-            <div className="equation-right-side">{problemParts.right}</div>
+            <div className="equation-right-side">
+              <FractionDisplay expression={problemParts.right} />
+            </div>
           </div>
 
 	          {getCompletedRowsDisplay().map((row, idx) => (
             <div 
               key={idx} 
-              className="equation-row-3col equation-completed-row"
+              className={`equation-row-3col equation-completed-row ${row.hasFraction ? 'has-fraction-operation' : ''}`}
             >
-              <div className="equation-left-side">{row.left}</div>
+              <div className="equation-left-side">
+                <FractionDisplay expression={row.left} />
+              </div>
 	              <div className="equation-equals-col-centered">=</div>
-              <div className="equation-right-side">{row.right}</div>
+              <div className="equation-right-side">
+                <FractionDisplay expression={row.right} />
+              </div>
             </div>
           ))}
           
           {showFinalAnswer && isFinalRow && (
             <div className="equation-row-3col equation-final-answer-highlight">
               <div className="equation-left-side">
-                {currentSelections.slice(0, currentRow.leftBlanks || 0)
-                  .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
+                <FractionDisplay 
+                  expression={currentSelections.slice(0, currentRow.leftBlanks || 0)
+                    .map(t => stripLeadingPlusForDisplay(t)).join(' ')} 
+                />
               </div>
               <div className="equation-equals-col-centered">=</div>
               <div className="equation-right-side">
-                {currentSelections.slice(currentRow.leftBlanks || 0)
-                  .map(t => stripLeadingPlusForDisplay(t)).join(' ')}
+                <FractionDisplay 
+                  expression={currentSelections.slice(currentRow.leftBlanks || 0)
+                    .map(t => stripLeadingPlusForDisplay(t)).join(' ')} 
+                />
               </div>
             </div>
           )}
@@ -338,13 +378,14 @@ const EquationWorksheet = ({
                         {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
                           const term = currentSelections[i];
                           const isOperationRow = row.id.includes('row1');
+                          const displayTerm = term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___';
                           return (
                             <button
                               key={`left-${i}`}
                               className={`equation-blank ${term ? 'filled' : 'empty'}`}
                               onClick={() => term && handleBlankClick(i)}
                             >
-                              {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                              {term ? <FractionDisplay expression={displayTerm} /> : '___'}
                             </button>
                           );
                         })}
@@ -357,13 +398,14 @@ const EquationWorksheet = ({
                           const leftBlanks = row.leftBlanks || 0;
                           const term = currentSelections[leftBlanks + i];
                           const isOperationRow = row.id.includes('row1');
+                          const displayTerm = term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___';
                           return (
                             <button
                               key={`right-${i}`}
                               className={`equation-blank ${term ? 'filled' : 'empty'}`}
                               onClick={() => term && handleBlankClick(leftBlanks + i)}
                             >
-                              {term ? (isOperationRow ? term : stripLeadingPlusForDisplay(term)) : '___'}
+                              {term ? <FractionDisplay expression={displayTerm} /> : '___'}
                             </button>
                           );
                         })}
@@ -404,7 +446,7 @@ const EquationWorksheet = ({
                     onClick={() => handleBankChipClick(chip)}
                     disabled={currentSelections.length >= totalBlanks}
                   >
-                    {formatTermBankDisplay(chip)}
+                    <FractionDisplay expression={formatTermBankDisplay(chip)} />
                     {timesUsed > 0 && <span className="use-badge">{timesUsed}</span>}
                   </button>
                 );
@@ -422,7 +464,7 @@ const EquationWorksheet = ({
                     onClick={() => handleBankChipClick(chip)}
                     disabled={currentSelections.length >= totalBlanks}
                   >
-                    {formatTermBankDisplay(chip)}
+                    <FractionDisplay expression={formatTermBankDisplay(chip)} />
                     {timesUsed > 0 && <span className="use-badge">{timesUsed}</span>}
                   </button>
                 );
