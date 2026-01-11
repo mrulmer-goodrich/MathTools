@@ -15,6 +15,7 @@ import { generateOneStepMultiplyDivide } from '../../data/equationGenerators';
 import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerators';
 import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
 import { generateTwoStepMultiplyAdd } from '../../data/equationGenerators';
+import { generateTwoStepDivideAdd } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
 import EquationWorksheet from './EquationWorksheet';
 
