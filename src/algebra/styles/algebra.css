@@ -1080,3168 +1080,329 @@ body {
 }
 
 /* ============================================
-   LEVEL 17 EQUATION WORKSHEET
-   ONLY CHANGES: Line is lighter + thinner
-   ============================================ */
 
-/* Main container */
+/* ============================================ */
+/* EQUATION WORKSHEET - COMPREHENSIVE FIX v10 */
+/* FIXES: Leading +, double parens, dividers, */
+/* spacing, term bank visibility, alignment   */
+/* ============================================ */
+
 .equation-mode-container {
-  position: relative;
-  padding: 0;
-  margin: 0;
-}
-
-/* Wrapper that contains line + equation rows (NOT term bank) */
-.equation-content-wrapper {
-  position: relative;
-  padding: 0;
-  margin: 0 0 1rem 0;
-}
-
-/* Vertical line - ONLY CHANGED: color (lighter) + width (thinner) */
-
-
-/* ============================================
-   3-COLUMN LAYOUT (left | = | right)
-   ============================================ */
-
-/* Problem + completed rows container */
-.equation-problem-container {
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  background: white;
-  border-radius: 0.5rem;
-}
-
-/* 3-column row layout */
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-/* First row (problem) */
-.equation-problem-container > .equation-row-3col:first-child {
-  margin-bottom: 0.75rem;
-}
-
-/* Last row - no margin bottom */
-.equation-problem-container > .equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-/* Left side of equation */
-.equation-left-side {
-  text-align: right;
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Equals sign - centered and BLACK */
-.equation-equals-col-centered {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #000000;
-  min-width: 30px;
-  position: relative;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Right side of equation */
-.equation-right-side {
-  text-align: left;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Completed rows - BLACK font same as problem */
-.equation-completed-row {
-  color: #000000;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
-}
-
-/* ============================================
-   WORK AREA (active row)
-   ============================================ */
-
-.equation-work-area {
-  padding: 0;
-  margin: 0;
-}
-
-.equation-work-row {
-  padding: 0.5rem 1rem;
-  margin: 0;
-}
-
-.equation-work-row.active {
-  background: rgba(209, 250, 229, 0.3);
-  border: 2px solid #10B981;
-  border-radius: 0.5rem;
-}
-
-/* Single choice (Draw a line) - COMPACT */
-.equation-single-choice-compact {
-  text-align: center;
-  padding: 0.75rem 0;
-}
-
-.equation-instruction {
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.equation-draw-line-btn {
-  padding: 0.75rem 1.5rem;
-  background: #10B981;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.equation-draw-line-btn:hover {
-  background: #059669;
-}
-
-/* Active working row - 4-column grid (left | = | right | button) */
-.equation-row-4col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-}
-
-/* Blanks */
-.equation-blank {
-  min-width: 70px;
-  padding: 0.5rem 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  border: 2px dashed #D1D5DB;
-  border-radius: 0.375rem;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.equation-blank.empty {
-  color: #9CA3AF;
-}
-
-.equation-blank.filled {
-  background: #D1FAE5;
-  border-color: #10B981;
-  border-style: solid;
-  color: #065F46;
-}
-
-.equation-blank:hover {
-  border-color: #10B981;
-}
-
-/* Check button in 4th column */
-.equation-check-col {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.equation-check-btn {
-  padding: 0.625rem 1rem;
-  background: #10B981;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.equation-check-btn:hover {
-  background: #059669;
-}
-
-/* ============================================
-   TERM BANK - Even distribution
-   ============================================ */
-
-.equation-term-bank {
-  padding: 1rem;
-  margin-top: 1rem;
-  background: white;
-  border-radius: 0.5rem;
-}
-
-.term-bank-label {
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  text-align: center;
-}
-
-/* Grid that evenly distributes regardless of count */
-.term-bank-grid-even {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 1.25rem;
   max-width: 900px;
+  width: 100%;
   margin: 0 auto;
 }
 
-.term-chip {
-  padding: 0.625rem 0.75rem;
-  min-height: 44px;
-  background: #F3F4F6;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.term-chip:hover:not(:disabled) {
-  background: #E5E7EB;
-  border-color: #9CA3AF;
-}
-
-.term-chip.selected {
-  background: #D1FAE5;
-  border-color: #10B981;
-  color: #065F46;
-}
-
-.term-chip:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 768px) {
-  .equation-row-3col,
-  .equation-row-4col {
-    font-size: 1.25rem;
-    gap: 0.5rem;
-  }
-  
-  .equation-equals-col-centered {
-    font-size: 1.5rem;
-  }
-  
-  .equation-blank {
-    min-width: 60px;
-    font-size: 1.125rem;
-  }
-  
-  /* On mobile, button goes below */
-  .equation-row-4col {
-    grid-template-columns: 1fr auto 1fr;
-    grid-template-rows: auto auto;
-  }
-  
-  .equation-check-col {
-    grid-column: 1 / -1;
-    justify-content: center;
-    margin-top: 0.5rem;
-  }
-  
-  .term-bank-grid-even {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  }
-}
-
-==========================================
-PART 1: CSS FIX - ADD TO END OF algebra.css
-==========================================
-
-/* ============================================ */
-/* EQUATION WORKSHEET - FIXED ALIGNMENT SYSTEM */
-/* Equal signs LOCKED in place, thick dark line */
-/* ============================================ */
-
-.equation-mode-container {
-width: 100%;
-height: 100%;
-display: flex;
-flex-direction: column;
-background: white;
-position: relative;
-overflow: hidden;
-}
-
-.equation-content-wrapper {
-flex: 1;
-display: flex;
-flex-direction: column;
-padding: 2rem;
-position: relative;
-overflow-y: auto;
-}
-
-/* VERTICAL LINE - THICK AND DARK */
-
-
-.equation-problem-container {
-margin-bottom: 1.5rem;
-}
-
-/* ============================================ */
-/* FIXED-WIDTH GRID SYSTEM - EQUAL SIGNS LOCKED */
-/* ============================================ */
-
-.equation-row-3col,
-.equation-row-4col {
-display: grid;
-grid-template-columns: 1fr 60px 1fr;
-align-items: center;
-gap: 1rem;
-padding: 0.75rem 0;
-position: relative;
-}
-
-.equation-row-4col {
-grid-template-columns: 1fr 60px 1fr 120px;
-}
-
-.equation-left-side {
-text-align: right;
-padding-right: 1rem;
-font-size: 1.5rem;
-font-weight: 500;
-display: flex;
-align-items: center;
-justify-content: flex-end;
-gap: 0.5rem;
-flex-wrap: wrap;
-}
-
-.equation-equals-col-centered {
-width: 60px;
-text-align: center;
-font-size: 1.5rem;
-font-weight: 600;
-color: #1F2937;
-flex-shrink: 0;
-}
-
-.equation-right-side {
-text-align: left;
-padding-left: 1rem;
-font-size: 1.5rem;
-font-weight: 500;
-display: flex;
-align-items: center;
-justify-content: flex-start;
-gap: 0.5rem;
-flex-wrap: wrap;
-}
-
-.equation-check-col {
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-/* ============================================ */
-/* COMPLETED ROWS */
-/* ============================================ */
-
-.equation-completed-row {
-color: #6B7280;
-font-size: 1.25rem;
-}
-
-.equation-completed-row.operation-row {
-color: #9CA3AF;
-font-size: 1.125rem;
-}
-
-.equation-completed-row.solution-row {
-color: #4B5563;
-}
-
-/* ============================================ */
-/* WORK AREA */
-/* ============================================ */
-
-.equation-work-area {
-margin-top: 1rem;
-}
-
-.equation-work-row {
-opacity: 0.3;
-pointer-events: none;
-transition: opacity 0.2s;
-}
-
-.equation-work-row.active {
-opacity: 1;
-pointer-events: all;
-}
-
-/* ============================================ */
-/* SINGLE CHOICE (Draw Line) */
-/* ============================================ */
-
-.equation-single-choice-compact {
-display: flex;
-align-items: center;
-gap: 1rem;
-padding: 1rem;
-background: #F3F4F6;
-border-radius: 0.5rem;
-margin-bottom: 1rem;
-}
-
-.equation-instruction {
-font-size: 1rem;
-color: #4B5563;
-font-weight: 500;
-}
-
-.equation-draw-line-btn {
-padding: 0.5rem 1.5rem;
-background: white;
-border: 2px solid #D1D5DB;
-border-radius: 0.5rem;
-font-size: 1rem;
-font-weight: 500;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-.equation-draw-line-btn:hover {
-background: #4F46E5;
-color: white;
-border-color: #4F46E5;
-transform: translateY(-2px);
-}
-
-/* ============================================ */
-/* BLANKS (Input Boxes) */
-/* ============================================ */
-
-.equation-blank {
-min-width: 80px;
-height: 48px;
-padding: 0 0.75rem;
-border: 2px solid #D1D5DB;
-border-radius: 0.5rem;
-background: white;
-font-size: 1.25rem;
-font-weight: 500;
-cursor: pointer;
-transition: all 0.2s;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-}
-
-.equation-blank.empty {
-color: #9CA3AF;
-border-style: dashed;
-}
-
-.equation-blank.filled {
-background: #EEF2FF;
-border-color: #818CF8;
-color: #312E81;
-}
-
-.equation-blank.filled:hover {
-background: #FEE2E2;
-border-color: #EF4444;
-}
-
-/* ============================================ */
-/* CHECK BUTTON */
-/* ============================================ */
-
-.equation-check-btn {
-padding: 0.75rem 1.5rem;
-background: #10B981;
-color: white;
-border: none;
-border-radius: 0.5rem;
-font-size: 1rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.equation-check-btn:hover {
-background: #059669;
-transform: translateY(-2px);
-box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ============================================ */
-/* TERM BANK */
-/* ============================================ */
-
-.equation-term-bank {
-background: #F9FAFB;
-border-top: 2px solid #E5E7EB;
-padding: 1.5rem;
-margin-top: auto;
-}
-
-.term-bank-label {
-font-size: 1rem;
-color: #4B5563;
-font-weight: 600;
-margin-bottom: 1rem;
-}
-
-.term-bank-grid-even {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-gap: 0.75rem;
-max-width: 800px;
-}
-
-.term-chip {
-padding: 0.75rem 1rem;
-background: white;
-border: 2px solid #D1D5DB;
-border-radius: 0.5rem;
-font-size: 1.125rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s;
-color: #1F2937;
-}
-
-.term-chip:hover:not(:disabled) {
-background: #EEF2FF;
-border-color: #818CF8;
-transform: translateY(-2px);
-}
-
-.term-chip.selected {
-opacity: 0.3;
-pointer-events: none;
-}
-
-.term-chip:disabled {
-opacity: 0.5;
-cursor: not-allowed;
-}
-
-/* ============================================
-   LEVEL 17 EQUATION WORKSHEET - FINAL CSS
-   All 7 fixes implemented
-   ============================================ */
-
-/* Main container */
-.equation-mode-container {
-  position: relative;
-  padding: 0;
-  margin: 0;
-}
-
-/* FIX #2: Wrapper that contains line + equation rows (NOT term bank) */
-.equation-content-wrapper {
-  position: relative;
-  padding: 0;
-  margin: 0 0 1rem 0;
-}
-
-/* FIX #2: Vertical line - GRAY, thinner, stops at bottom of wrapper */
-
-
-/* ============================================
-   3-COLUMN LAYOUT (left | = | right)
-   ============================================ */
-
-/* Problem + completed rows container */
-.equation-problem-container {
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  background: white;
-  border-radius: 0.5rem;
-}
-
-/* 3-column row layout */
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-/* First row (problem) */
-.equation-problem-container > .equation-row-3col:first-child {
-  margin-bottom: 0.75rem;
-}
-
-/* Last row - no margin bottom */
-.equation-problem-container > .equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-/* Left side of equation */
-.equation-left-side {
-  text-align: right;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* FIX #1: Equals sign BLACK everywhere */
-.equation-equals-col {
-  text-align: center;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #000000; /* BLACK not green */
-  min-width: 30px;
-  position: relative;
-  z-index: 10;
-}
-
-/* Right side of equation */
-.equation-right-side {
-  text-align: left;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* FIX #1: Completed rows - BLACK font same as problem */
-.equation-completed-row {
-  color: #000000;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
-}
-
-/* ============================================
-   WORK AREA (active row)
-   ============================================ */
-
-.equation-work-area {
-  padding: 0;
-  margin: 0;
-}
-
-.equation-work-row {
-  padding: 0.5rem 1rem;
-  margin: 0;
-}
-
-.equation-work-row.active {
-  background: rgba(209, 250, 229, 0.3);
-  border: 2px solid #10B981;
-  border-radius: 0.5rem;
-}
-
-/* FIX #1: Single choice (Draw a line) - COMPACT no giant box */
-.equation-single-choice-compact {
-  text-align: center;
-  padding: 0.75rem 0;
-}
-
-.equation-instruction {
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.equation-draw-line-btn {
-  padding: 0.75rem 1.5rem;
-  background: #10B981;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.equation-draw-line-btn:hover {
-  background: #059669;
-}
-
-/* FIX #4: Active working row - 4-column grid (left | = | right | button) */
-.equation-row-4col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto;
-  align-items: center;
-  gap: 1rem;
-  position: relative;
-}
-
-/* Blanks */
-.equation-blank {
-  min-width: 70px;
-  padding: 0.5rem 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  border: 2px dashed #D1D5DB;
-  border-radius: 0.375rem;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.equation-blank.empty {
-  color: #9CA3AF;
-}
-
-.equation-blank.filled {
-  background: #D1FAE5;
-  border-color: #10B981;
-  border-style: solid;
-  color: #065F46;
-}
-
-.equation-blank:hover {
-  border-color: #10B981;
-}
-
-/* FIX #4: Check button in 4th column (not absolute positioned) */
-.equation-check-col {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.equation-check-btn {
-  padding: 0.625rem 1rem;
-  background: #10B981;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
-}
-
-.equation-check-btn:hover {
-  background: #059669;
-}
-
-/* ============================================
-   TERM BANK (outside wrapper, line won't go through it)
-   ============================================ */
-
-.equation-term-bank {
-  padding: 1rem;
-  margin-top: 1rem;
-  background: white;
-  border-radius: 0.5rem;
-}
-
-.term-bank-label {
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  text-align: center;
-}
-
-/* FIX #6: Dynamic grid for even distribution */
-.term-bank-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.5rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.term-chip {
-  padding: 0.625rem 0.75rem;
-  min-height: 44px;
-  background: #F3F4F6;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.term-chip:hover:not(:disabled) {
-  background: #E5E7EB;
-  border-color: #9CA3AF;
-}
-
-.term-chip.selected {
-  background: #D1FAE5;
-  border-color: #10B981;
-  color: #065F46;
-}
-
-.term-chip:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 768px) {
-  .equation-row-3col,
-  .equation-row-4col {
-    font-size: 1.25rem;
-    gap: 0.5rem;
-  }
-  
-  .equation-equals-col {
-    font-size: 1.5rem;
-  }
-  
-  .equation-blank {
-    min-width: 60px;
-    font-size: 1.125rem;
-  }
-  
-  /* On mobile, button goes below */
-  .equation-row-4col {
-    grid-template-columns: 1fr auto 1fr;
-    grid-template-rows: auto auto;
-  }
-  
-  .equation-check-col {
-    grid-column: 1 / -1;
-    justify-content: center;
-    margin-top: 0.5rem;
-  }
-  
-  .term-bank-grid {
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  }
-}
-
-/* ============================================ */
-/* FIXES FOR LEVELS 13-17 - APPEND TO END OF CSS */
-/* Date: 2025-01-10 */
-/* ============================================ */
-
-/* GLOBAL FONT ENFORCEMENT - Update existing * selector */
-/* FIND the existing * selector and ensure it has: */
-/*
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-*/
-
-/* ========================================
-   WORKSHEET FIXES (Levels 13-16)
-   ======================================== */
-
-/* Update .worksheet-completed-row to show in problem container */
-.worksheet-completed-row {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1F2937;
-  font-family: 'Poppins', sans-serif;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #E5E7EB;
-  border-radius: 0.5rem;
-}
-
-.worksheet-final-answer {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #059669;
-  font-family: 'Poppins', sans-serif;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #D1FAE5;
-  border: 2px solid #10B981;
-  border-radius: 0.5rem;
-}
-
-/* Add use badge for term reuse */
-.term-chip .use-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #3B82F6;
-  color: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ========================================
-   EQUATION WORKSHEET FIXES (Level 17+)
-   ======================================== */
-
-/* Vertical line - lighter and thinner */
-
-
-/* Compact single choice with proper padding */
-.equation-single-choice-compact {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: #FFFBEB;
-  border: 2px solid #F59E0B;
-  border-radius: 0.75rem;
-}
-
-.equation-instruction {
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  color: #92400E;
-  flex-shrink: 0;
-}
-
-/* 3-COLUMN LAYOUT for equations - ensure alignment */
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-family: 'Poppins', sans-serif;
-}
-
-.equation-left-side,
-.equation-right-side {
-  font-size: 1.25rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.equation-left-side {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.equation-right-side {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.equation-equals-col {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  color: #1F2937;
-  text-align: center;
-  width: 40px;
-  flex-shrink: 0;
-}
-
-.equation-completed-row {
-  color: #1F2937;
-  background: #E5E7EB;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.equation-final-answer {
-  color: #059669;
-  background: #D1FAE5;
-  border: 2px solid #10B981;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-/* 4-COLUMN LAYOUT for dual-box rows */
-.equation-row-4col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  background: white;
-  padding: 1rem;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.75rem;
-}
-
-.equation-check-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Term Bank for Equations - EVENLY DISTRIBUTED 2 ROWS */
-.equation-term-bank-2rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.term-bank-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* ========================================
-   FEEDBACK MODAL FIXES
-   ======================================== */
-
-/* Ensure all feedback elements use Poppins */
-.stacked-equations-container {
-  font-family: 'Poppins', sans-serif;
-}
-
-.step-description {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ========================================
-   PROBLEM DISPLAY FIXES (Levels 1-12)
-   ======================================== */
-
-.problem-display {
-  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
-  border: 4px solid #9CA3AF;
-  border-radius: 1rem;
-  padding: 2rem;
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  color: #1F2937;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-/* ============================================ */
-/* FINAL FIXES - APPEND TO END OF algebra.css */
-/* Date: 2025-01-10 - Level 17 + Feedback fixes */
-/* ============================================ */
-
-/* ========================================
-   EQUATION MODE - TERRITORY COLORS (17-31)
-   ======================================== */
-
-/* Step 0 - Territory green colors, centered, compact */
-.equation-single-choice-territory {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  background: #E8F5E9;
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
-}
-
-.equation-instruction-territory {
-  font-size: 1.125rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  color: #1B5E20;
-  flex-shrink: 0;
-}
-
-.equation-draw-line-btn-territory {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
-
-.equation-draw-line-btn-territory:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
-}
-
-/* Term bank label - Territory colors */
-.term-bank-label-territory {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #1B5E20;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ========================================
-   VERTICAL LINE - BLACK, 4PX THICK
-   ======================================== */
-
-
-
-/* ========================================
-   PROBLEM DISPLAY - PROPER FONT/SIZE
-   ======================================== */
-
-.equation-problem-container {
-  position: relative;
-  z-index: 2;
-  background: white;
-  border: 3px solid #9CA3AF;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Problem text - Poppins, proper size */
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-.equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-.equation-left-side,
-.equation-right-side {
-  font-size: 1.75rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.equation-left-side {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.equation-right-side {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-/* EQUALS SIGN - ANCHORED, FIXED WIDTH */
-.equation-equals-col {
-  font-size: 2rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  color: #1F2937;
-  text-align: center;
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ========================================
-   FINAL ANSWER - NO DUPLICATION
-   ======================================== */
-
-/* For EquationWorksheet - highlighted in place */
-.equation-final-answer-highlight {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  margin-top: 0.75rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.5s ease-in-out;
-}
-
-/* For MathWorksheet - highlighted in place */
-.worksheet-final-answer-highlight {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #059669;
-  font-family: 'Poppins', sans-serif;
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.5s ease-in-out;
-}
-
-@keyframes pulseGreen {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
-
-/* ========================================
-   FEEDBACK MODAL - COMPACT, NO SCROLL
-   ======================================== */
-
-.feedback-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.feedback-modal-content-compact {
-  background: white;
-  border-radius: 1rem;
-  padding: 1rem;
-  max-width: 650px;
-  width: 100%;
-  max-height: 92vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-  border: 3px solid #EF4444;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-header-compact {
-  text-align: center;
-  margin-bottom: 0.75rem;
-}
-
-.feedback-title-compact {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #DC2626;
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-}
-
-.feedback-section-compact {
-  margin-bottom: 0.75rem;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-}
-
-.feedback-original {
-  background: #F3F4F6;
-  border: 2px solid #9CA3AF;
-  text-align: center;
-}
-
-.feedback-rule {
-  background: #FFFBEB;
-  border: 2px solid #F59E0B;
-}
-
-.feedback-steps {
-  background: #F3F4F6;
-  border: 2px solid #9CA3AF;
-}
-
-.feedback-section-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 0.375rem;
-  font-family: 'Poppins', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.feedback-section-value {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1F2937;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-section-icon-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-rule .feedback-section-icon-label {
-  color: #92400E;
-}
-
-.feedback-steps .feedback-section-icon-label {
-  color: #374151;
-}
-
-.feedback-section-text {
-  color: #78350F;
-  line-height: 1.5;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.95rem;
-}
-
-.feedback-answers-grid {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.feedback-answers-grid.two-col {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.feedback-answers-grid.one-col {
-  grid-template-columns: 1fr;
-}
-
-.feedback-answer-box {
-  border-radius: 0.5rem;
-  padding: 0.625rem;
-  text-align: center;
-}
-
-.feedback-answer-box.full-width {
-  grid-column: 1 / -1;
-}
-
-.feedback-wrong {
-  background: #FEE2E2;
-  border: 2px solid #EF4444;
-}
-
-.feedback-correct {
-  background: #D1FAE5;
-  border: 2px solid #10B981;
-}
-
-.feedback-answer-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-  font-family: 'Poppins', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.feedback-wrong .feedback-answer-label {
-  color: #991B1B;
-}
-
-.feedback-correct .feedback-answer-label {
-  color: #065F46;
-}
-
-.feedback-answer-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-wrong .feedback-answer-value {
-  color: #DC2626;
-}
-
-.feedback-correct .feedback-answer-value {
-  color: #059669;
-}
-
-.feedback-continue-btn-compact {
-  width: 100%;
-  padding: 0.875rem;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 700;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-}
-
-.feedback-continue-btn-compact:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
-}
-
-/* Stacked equation compact spacing */
-.stacked-equations-container {
-  font-family: 'Poppins', sans-serif;
-}
-
-.equation-step {
-  margin-bottom: 0.75rem;
-}
-
-.equation-step:last-child {
-  margin-bottom: 0;
-}
-
-.step-description {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.375rem;
-  font-family: 'Poppins', sans-serif;
-}
-
-.step-work {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-family: 'Courier New', monospace;
-  color: #1F2937;
-  white-space: pre;
-  overflow-x: auto;
-  line-height: 1.5;
-}
-
-/* ============================================ */
-/* FINAL FIXES - Line centered, stops properly */
-/* APPEND TO END OF algebra.css */
-/* ============================================ */
-
-/* ========================================
-   VERTICAL LINE - CENTERED ON EQUALS SIGN
-   Uses calc to account for grid positioning
-   ======================================== */
-
-
-
-/* Territory colors for Level 17+ */
-.equation-single-choice-territory {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  background: #E8F5E9;
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
-}
-
-.equation-instruction-territory {
-  font-size: 1.125rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  color: #1B5E20;
-  flex-shrink: 0;
-}
-
-.equation-draw-line-btn-territory {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
-
-.equation-draw-line-btn-territory:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
-}
-
-.term-bank-label-territory {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #1B5E20;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* ========================================
-   PROBLEM DISPLAY - PROPER FONT/SIZE
-   ======================================== */
-
-.equation-problem-container {
-  position: relative;
-  z-index: 2;
-  background: white;
-  border: 3px solid #9CA3AF;
-  border-radius: 0.75rem;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-.equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-.equation-left-side,
-.equation-right-side {
-  font-size: 1.75rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.equation-left-side {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.equation-right-side {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-/* EQUALS SIGN - ANCHORED, FIXED WIDTH */
-.equation-equals-col {
-  font-size: 2rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  color: #1F2937;
-  text-align: center;
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ========================================
-   FINAL ANSWER - NO DUPLICATION, ONCE ONLY
-   ======================================== */
-
-.equation-final-answer-highlight {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  margin-top: 0.75rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.5s ease-in-out;
-}
-
-.worksheet-final-answer-highlight {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #059669;
-  font-family: 'Poppins', sans-serif;
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.5s ease-in-out;
-}
-
-@keyframes pulseGreen {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
-
-/* ========================================
-   FEEDBACK MODAL - COMPACT, NO SCROLL
-   ======================================== */
-
-.feedback-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.feedback-modal-content-compact {
-  background: white;
-  border-radius: 1rem;
-  padding: 1rem;
-  max-width: 650px;
-  width: 100%;
-  max-height: 92vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-  border: 3px solid #EF4444;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-header-compact {
-  text-align: center;
-  margin-bottom: 0.75rem;
-}
-
-.feedback-title-compact {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #DC2626;
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-}
-
-.feedback-section-compact {
-  margin-bottom: 0.75rem;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-}
-
-.feedback-original {
-  background: #F3F4F6;
-  border: 2px solid #9CA3AF;
-  text-align: center;
-}
-
-.feedback-rule {
-  background: #FFFBEB;
-  border: 2px solid #F59E0B;
-}
-
-.feedback-steps {
-  background: #F3F4F6;
-  border: 2px solid #9CA3AF;
-}
-
-.feedback-section-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 0.375rem;
-  font-family: 'Poppins', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.feedback-section-value {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1F2937;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-section-icon-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-rule .feedback-section-icon-label {
-  color: #92400E;
-}
-
-.feedback-steps .feedback-section-icon-label {
-  color: #374151;
-}
-
-.feedback-section-text {
-  color: #78350F;
-  line-height: 1.5;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.95rem;
-}
-
-.feedback-answers-grid {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.feedback-answers-grid.two-col {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.feedback-answers-grid.one-col {
-  grid-template-columns: 1fr;
-}
-
-.feedback-answer-box {
-  border-radius: 0.5rem;
-  padding: 0.625rem;
-  text-align: center;
-}
-
-.feedback-answer-box.full-width {
-  grid-column: 1 / -1;
-}
-
-.feedback-wrong {
-  background: #FEE2E2;
-  border: 2px solid #EF4444;
-}
-
-.feedback-correct {
-  background: #D1FAE5;
-  border: 2px solid #10B981;
-}
-
-.feedback-answer-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-  font-family: 'Poppins', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.feedback-wrong .feedback-answer-label {
-  color: #991B1B;
-}
-
-.feedback-correct .feedback-answer-label {
-  color: #065F46;
-}
-
-.feedback-answer-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-}
-
-.feedback-wrong .feedback-answer-value {
-  color: #DC2626;
-}
-
-.feedback-correct .feedback-answer-value {
-  color: #059669;
-}
-
-.feedback-continue-btn-compact {
-  width: 100%;
-  padding: 0.875rem;
-  font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 700;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-}
-
-.feedback-continue-btn-compact:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
-}
-
-/* Stacked equation compact */
-.stacked-equations-container {
-  font-family: 'Poppins', sans-serif;
-}
-
-.equation-step {
-  margin-bottom: 0.75rem;
-}
-
-.equation-step:last-child {
-  margin-bottom: 0;
-}
-
-.step-description {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.375rem;
-  font-family: 'Poppins', sans-serif;
-}
-
-.step-work {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-family: 'Courier New', monospace;
-  color: #1F2937;
-  white-space: pre;
-  overflow-x: auto;
-  line-height: 1.5;
-}
-
-/* ============================================ */
-/* EQUATION MODE - CLEAN FINAL VERSION */
-/* ============================================ */
-
-.equation-mode-container {
-  font-family: 'Poppins', sans-serif;
-  padding: 0.5rem;
-  max-width: 950px;
-  margin: 0 auto;
-}
-
-.equation-content-wrapper {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-.equation-vertical-line-centered {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #000000;
-  transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.equation-problem-container {
-  position: relative;
-  z-index: 2;
-  background: white;
-  border: 3px solid #9CA3AF;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr 60px 1fr;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-family: 'Poppins', sans-serif;
-  min-height: 50px;
-}
-
-.equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-.equation-left-side,
-.equation-right-side {
-  font-size: 2rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  line-height: 1.2;
-}
-
-.equation-left-side {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.equation-right-side {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.equation-equals-col {
-  font-size: 2.25rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-  color: #1F2937;
-  text-align: center;
-  width: 60px;
-  min-width: 60px;
-  max-width: 60px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.equation-completed-row {
-  color: #4B5563;
-  background: #F3F4F6;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.equation-completed-row .equation-left-side,
-.equation-completed-row .equation-right-side {
-  font-size: 1.75rem;
-}
-
-.equation-final-answer-highlight {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  margin-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.6s ease-in-out;
-}
-
-.equation-final-answer-highlight .equation-left-side,
-.equation-final-answer-highlight .equation-right-side {
-  font-size: 2rem;
-  color: #065F46;
-}
-
-@keyframes pulseGreen {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-}
-
-.equation-work-area {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 1rem;
-}
-
-.equation-work-row {
-  margin-bottom: 0.75rem;
-}
-
-.equation-single-choice-territory {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.equation-instruction-territory {
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  color: #1B5E20;
-  flex-shrink: 0;
-}
-
-.equation-draw-line-btn-territory {
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(76, 175, 80, 0.3);
-}
-
-.equation-draw-line-btn-territory:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(76, 175, 80, 0.4);
-}
-
-.equation-row-4col {
-  display: grid;
-  grid-template-columns: 1fr 60px 1fr auto;
-  gap: 0.5rem;
-  align-items: center;
-  background: white;
-  padding: 0.75rem;
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.15);
-}
-
-.equation-blank {
-  min-width: 70px;
-  padding: 0.5rem 0.75rem;
-  border: 3px solid #D1D5DB;
-  border-radius: 0.5rem;
-  background: white;
-  font-size: 1.25rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.equation-blank.filled {
-  background: #DBEAFE;
-  border-color: #3B82F6;
-  color: #1E40AF;
-}
-
-.equation-blank.empty {
-  background: #F9FAFB;
-  color: #9CA3AF;
-}
-
-.equation-blank:hover:not(.empty) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.equation-check-col {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.equation-check-btn {
-  padding: 0.625rem 1rem;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-  white-space: nowrap;
-}
-
-.equation-check-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
-}
-
-.equation-term-bank {
-  margin-top: 1rem;
-  background: white;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-}
-
-.term-bank-label-territory {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #1B5E20;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-  text-align: center;
-}
-
-.equation-term-bank-2rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.term-bank-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.worksheet-final-answer-highlight {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #059669;
-  font-family: 'Poppins', sans-serif;
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.5s ease-in-out;
-}
-
-/* ============================================ */
-/* QA FIXES - APPEND TO END OF algebra.css */
-/* Fixes: class mismatch, wrapper conflict, z-index, scroll */
-/* ============================================ */
-
-/* FIXED WRAPPER - no scroll, no padding conflict */
 .equation-content-wrapper-fixed {
   position: relative;
-  margin-bottom: 1rem;
-  /* NO padding, NO overflow - keeps line calc simple */
-}
-
-/* FIXED VERTICAL LINE - proper z-index, visible overlay */
-.equation-vertical-line-fixed {
-  position: absolute;
-  top: 0;
-  /* left and height set by inline style */
-  width: 4px;
-  background: #000000;
-  transform: translateX(-50%);
-  z-index: 15; /* Above problem container (z-index: 2) */
-  pointer-events: none; /* Click through to content */
-}
-
-/* Ensure equation-equals-col-centered is properly defined */
-/* (Already exists at line 1147, but reinforcing here for clarity) */
-.equation-equals-col-centered {
-  text-align: center;
-  font-size: 2rem; /* Bigger for visibility */
-  font-weight: 700;
-  color: #1F2937;
-  min-width: 60px;
-  max-width: 60px;
-  width: 60px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10; /* In front of line */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* Make sure 4-col uses centered version too */
-.equation-row-4col .equation-equals-col-centered {
-  font-size: 1.75rem; /* Slightly smaller in work rows */
-}
-
-/* ============================================ */
-/* QA EXPERT STRUCTURAL FIXES - APPEND TO END */
-/* ONE TRUE GRID + SCROLLABLE CONTAINER + ABSOLUTE CHECK */
-/* ============================================ */
-
-/* ONE TRUE GRID FOR ALL EQUATION ROWS */
-.equation-row-3col {
-  display: grid;
-  grid-template-columns: 1fr 60px 1fr;
-  gap: 0.5rem;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-family: 'Poppins', sans-serif;
-  min-height: 50px;
-}
-
-.equation-row-3col:last-child {
-  margin-bottom: 0;
-}
-
-/* Active work rows use the SAME grid */
-.equation-work-row-grid {
-  position: relative; /* For absolute check button */
-  background: white;
-  padding: 0.75rem;
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.15);
-}
-
-/* Active row - no extra vertical space */
-.equation-work-row.active {
-  margin: 0;
-  padding: 0.75rem 0;
-}
-
-/* CHECK BUTTON - ABSOLUTELY POSITIONED OUTSIDE GRID FLOW */
-.absolute-check {
-  position: absolute;
-  right: -88px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* SCROLLABLE PROBLEM CONTAINER - prevents UI push */
-.equation-problem-container-scrollable {
-  position: relative;
-  z-index: 2;
-  background: white;
-  border: 3px solid #9CA3AF;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1rem;
-  max-height: 40vh;
-  overflow-y: auto;
-}
-
-/* FIXED WRAPPER - no padding/scroll conflict */
-.equation-content-wrapper-fixed {
-  position: relative;
-  margin-bottom: 1rem;
-}
-
-/* FIXED VERTICAL LINE - proper z-index overlay */
-.equation-vertical-line-fixed {
-  position: absolute;
-  top: 0;
-  width: 4px;
-  background: #000000;
-  transform: translateX(-50%);
-  z-index: 15;
-  pointer-events: none;
-}
-
-/* EQUALS COLUMN - hard-locked width */
-.equation-equals-col-centered {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1F2937;
-  min-width: 60px;
-  max-width: 60px;
-  width: 60px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* Left and right sides */
-.equation-left-side,
-.equation-right-side {
-  font-size: 2rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  line-height: 1.2;
-}
-
-.equation-left-side {
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.equation-right-side {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-/* Completed row styling */
-.equation-completed-row {
-  color: #4B5563;
-  background: #F3F4F6;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.equation-completed-row .equation-left-side,
-.equation-completed-row .equation-right-side {
-  font-size: 1.75rem;
-}
-
-/* Final answer highlight */
-.equation-final-answer-highlight {
-  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
-  border: 3px solid #10B981;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  margin-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  animation: pulseGreen 0.6s ease-in-out;
-}
-
-.equation-final-answer-highlight .equation-left-side,
-.equation-final-answer-highlight .equation-right-side {
-  font-size: 2rem;
-  color: #065F46;
-}
-
-@keyframes pulseGreen {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-}
-
-/* Work area */
-.equation-work-area {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 1rem;
-}
-
-/* Territory colors */
-.equation-single-choice-territory {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
-  border: 3px solid #4CAF50;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
-  max-width: 600px;
+  width: 100%;
+  max-width: 860px;
   margin: 0 auto;
 }
 
-.equation-instruction-territory {
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  color: #1B5E20;
-  flex-shrink: 0;
-}
-
-.equation-draw-line-btn-territory {
-  padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(76, 175, 80, 0.3);
-}
-
-.equation-draw-line-btn-territory:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(76, 175, 80, 0.4);
-}
-
-/* Blanks */
-.equation-blank {
-  min-width: 70px;
-  padding: 0.5rem 0.75rem;
-  border: 3px solid #D1D5DB;
-  border-radius: 0.5rem;
-  background: white;
-  font-size: 1.25rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.equation-blank.filled {
-  background: #DBEAFE;
-  border-color: #3B82F6;
-  color: #1E40AF;
-}
-
-.equation-blank.empty {
-  background: #F9FAFB;
-  color: #9CA3AF;
-}
-
-.equation-blank:hover:not(.empty) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Check button */
-.equation-check-btn {
-  padding: 0.625rem 1rem;
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-  white-space: nowrap;
-}
-
-.equation-check-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
-}
-
-/* Term Bank */
-.equation-term-bank {
-  margin-top: 1rem;
-  background: white;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-}
-
-.term-bank-label-territory {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #1B5E20;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: 'Poppins', sans-serif;
-  text-align: center;
-}
-
-.equation-term-bank-2rows {
+.equation-stage {
+  position: relative !important;
+  max-width: 860px !important;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
-.term-bank-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.term-chip {
-  position: relative;
-  padding: 0.5rem 0.875rem;
-  background: white;
-  border: 2px solid #D1D5DB;
-  border-radius: 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 60px;
-  text-align: center;
-}
-
-.term-chip:hover:not(:disabled) {
-  transform: translateY(-2px);
-  border-color: #10B981;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
-}
-
-.term-chip.used {
-  background: #E5E7EB;
-  border-color: #9CA3AF;
-  color: #6B7280;
-}
-
-.term-chip:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.term-chip .use-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #3B82F6;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* =========================================================
-   APPEND-ONLY OVERRIDES (no replacements required)
-   Purpose:
-   - Visually center/stabilize active row by keeping ✓ button inside row
-   - Reduce padding bloat and keep header + term bank on screen as rows accumulate
-   - Compact completed rows for multi-step scalability
-   Notes:
-   - Append this at the END of algebra.css
-   - Uses higher specificity + !important to safely override earlier rules
-   ========================================================= */
-
-/* ---------- 1) Active row: keep ✓ button INSIDE the green row ---------- */
-
-/* Reserve space on the right so terms never collide with the ✓ button */
-.equation-work-row .equation-work-row-grid,
-.equation-work-row-grid {
-  padding-right: 110px !important; /* space for check button */
-}
-
-/* If your check column uses absolute positioning, pull it INSIDE the row */
-.equation-check-col.absolute-check {
-  right: 16px !important;          /* inside the row */
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-}
-
-/* Optional: ensure the active row doesn't add extra vertical "bounce" */
-.equation-work-row.active {
-  margin: 0 !important;
-  padding: 0.75rem 0 !important;
-}
-
-/* ---------- 2) Problem/completed scrollbox: reduce bloat + enforce scrolling ---------- */
-
+/* IMPROVED: Tighter spacing */
 .equation-problem-container-scrollable {
-  padding: 0.75rem 1rem !important;     /* less bloat */
-  margin-bottom: 0.5rem !important;     /* less vertical push */
-  max-height: 32vh !important;          /* keeps header + bank visible */
-  overflow-y: auto !important;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 0.75rem;
+  padding: 0.75rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-height: 45vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 30 !important;
 }
 
-/* ---------- 3) Completed rows: compact styling so multi-step doesn't balloon ---------- */
-
-.equation-problem-container-scrollable .equation-completed-row,
-.equation-completed-row {
-  background: transparent !important;   /* removes chunky gray blocks */
+/* TIGHTENED: Reduced row spacing */
+.equation-row-3col {
+  display: grid !important;
+  grid-template-columns: 1fr 60px 1fr !important;
+  gap: 0.75rem !important;
+  align-items: center !important;
+  margin-bottom: 0.25rem !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  min-height: 42px !important;
   padding: 0.25rem 0 !important;
-  border-radius: 0 !important;
-  margin-top: 0.15rem !important;
 }
 
-/* ---------- 4) Safety: keep the vertical line visible above backgrounds ---------- */
-
-.equation-vertical-line-fixed,
-.equation-vertical-line-centered {
-  z-index: 15 !important;
-  pointer-events: none !important;
-  background: #000000 !important;
+.equation-left-side,
+.equation-right-side {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  min-height: 36px;
 }
 
-/* ============================================
-   ALGEBRA EXPEDITION - APPEND ONLY FIX v2
-   Purpose: undo "absolute-check" side effects (button outside row),
-            keep 3-col for problem/completed, but 4-col for ACTIVE work row.
-   Drop this at VERY END of algebra.css (after prior append).
-   ============================================ */
-
-/* 1) Active work row: turn the grid into 4 columns so the check/submit button
-      lives INSIDE the bordered row (no absolute positioning needed). */
-.equation-work-area .equation-work-row-grid {
-  /* overrides .equation-row-3col */
-  grid-template-columns: 1fr 60px 1fr 140px !important;
-  column-gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* 2) Make the "absolute-check" participate in the grid flow instead of
-      floating outside the container. */
-.equation-work-area .equation-work-row-grid .absolute-check {
-  position: static !important;
-  right: auto !important;
-  top: auto !important;
-  transform: none !important;
-
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-
-  /* keeps spacing consistent even when button shows/hides */
-  min-height: 1px;
-}
-
-/* 3) If any earlier CSS injected extra right-padding to "reserve" space for the
-      absolute button, remove it so the grid centers correctly. */
-.equation-work-area .equation-work-row-grid {
-  padding-right: 0.75rem !important; /* keep same as other sides */
-}
-
-/* 4) Keep the problem/completed rows strictly 3 columns (guard rail) */
-.equation-problem-container-scrollable .equation-row-3col,
-.equation-problem-container-scrollable .equation-completed-row.equation-row-3col,
-.equation-problem-container-scrollable .equation-final-answer-highlight.equation-row-3col {
-  grid-template-columns: 1fr 60px 1fr !important;
-}
-
-/* 5) Optional: stabilize the scroll box so it doesn't feel "tiny" if a parent
-      is centering/auto-sizing. */
-.equation-problem-container-scrollable {
-  width: 100% !important;
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* =========================================================
-   APPEND-ONLY OVERRIDES (v3) — FIXES REMAINING LAYOUT DRIFT
-   Goal:
-   1) Stop vertical-line drift across rows by locking line to grid center.
-   2) Make “history/problem” and “work row” share the same width.
-   3) Make history compact so it won’t turn into a tiny scrollbox after 2 rows.
-   Paste at VERY END of algebra.css (after any prior appends).
-   ========================================================= */
-
-/* ---------------------------------------------------------
-   1) Vertical line: ignore JS-computed left and lock to center
-      Because rows use: grid-template-columns: 1fr 60px 1fr
-      the equals column is centered. This is the most robust fix.
-   --------------------------------------------------------- */
-.equation-content-wrapper-fixed .equation-vertical-line-fixed{
-  left: 50% !important;
-}
-
-/* ---------------------------------------------------------
-   2) Ensure ALL equation blocks share the same stage width
-      (problem/history box AND active work area).
-   --------------------------------------------------------- */
-.equation-content-wrapper-fixed{
-  width: 100% !important;
-  max-width: 900px !important;   /* pick one consistent stage width */
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.equation-work-area{
-  width: 100% !important;
-  max-width: 900px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* Make each row fill the stage width */
-.equation-row-3col,
-.equation-work-row-grid{
-  width: 100% !important;
-}
-
-/* ---------------------------------------------------------
-   3) History/progress box: don’t become “tiny” immediately
-      - Give it more height (relative to viewport)
-      - Remove excess padding + margins
-      - Reduce row min-heights and gaps inside history only
-   --------------------------------------------------------- */
-.equation-problem-container-scrollable{
-  max-height: 42vh !important;      /* scroll later (after ~4–6 rows) */
-  padding: 0.5rem 0.75rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-/* Compact row spacing in the history box ONLY */
-.equation-problem-container-scrollable .equation-row-3col{
-  margin-bottom: 0.15rem !important;
-  min-height: 34px !important;
-  gap: 0.35rem !important;
-}
-
-/* Remove chunky “completed row” padding/background */
-.equation-problem-container-scrollable .equation-completed-row{
-  padding: 0.15rem 0 !important;
-  background: transparent !important;
-}
-
-/* Final answer highlight should not add huge vertical padding */
-.equation-problem-container-scrollable .equation-final-answer-highlight{
-  padding: 0.35rem 0.5rem !important;
-  margin-top: 0.25rem !important;
-}
-
-/* ---------------------------------------------------------
-   4) Active work row: keep it visually consistent with history
-      (prevents subtle perceived “shift”).
-   --------------------------------------------------------- */
-.equation-work-area .equation-work-row-grid{
-  padding: 0.75rem !important; /* match history padding */
-}
-
-/* algebra_APPEND_ONLY_FIX_v4.css
-   Purpose: Fix vertical center line drift by anchoring the line to a shared stage container.
-   Requires: EquationWorksheet_FIXED_STAGE_CENTER.jsx (adds .equation-stage wrapper).
-*/
-
-/* The shared stage: everything that the center line should align to. */
-.equation-stage{
-  position: relative !important;
-  width: min(720px, 100%) !important;
-  margin: 0 auto !important;
-}
-
-/* Ensure inner blocks use full stage width */
-.equation-stage .equation-problem-container-scrollable,
-.equation-stage .equation-work-area{
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* The center line is now positioned in px from the left INSIDE the stage */
-.equation-stage .equation-vertical-line-fixed{
-  position: absolute !important;
-  top: var(--eq-line-top, 0px);
-  /* left is provided inline via React state; keep transform for centering on that x */
-  transform: translateX(-50%) !important;
-  width: 3px !important;
-  background: #111 !important;
-  z-index: 2 !important;
-  pointer-events: none !important;
-}
-
-/* Guarantee the equals column stays visually centered */
-.equation-row-3col{
-  grid-template-columns: 1fr 60px 1fr !important;
-}
-.equation-equals-col-centered{
-  justify-content: center !important;
-}
-
-/* Reduce accidental horizontal drift from padding/margins */
-.equation-problem-container-scrollable{
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-}
-.equation-work-area{
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-}
-
-/* ===================================================== */
-/* FINAL FIX — VERTICAL LINE LAYER + ALIGNMENT LOCK       */
-/* This resolves the overlay + alignment permanently     */
-/* ===================================================== */
-
-/* 1️⃣ Force the equation wrapper to create a stacking context */
-.equation-content-wrapper {
-  position: relative;
-  z-index: 3; /* ABOVE the region fade overlay */
-}
-
-/* 2️⃣ Force the vertical line ABOVE the overlay and BELOW text */
-.equation-vertical-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 3px;
-  background: #000000;
-  z-index: 2; /* BELOW text (z:3), ABOVE overlay (z:1) */
-  pointer-events: none;
-}
-
-/* 3️⃣ Lock all equation rows to the same stacking plane */
-.equation-row-3col,
-.equation-row-4col {
-  position: relative;
-  z-index: 3;
-}
-
-/* ===========================
-   APPEND-ONLY FIX v5
-   Goal:
-   - Force vertical center line ABOVE stage content (not behind cards)
-   - Make '=' glyphs render black by default
-   - Keep line non-interactive
-   =========================== */
-
-/* Ensure a predictable stacking context */
-.equation-stage { position: relative; }
-
-/* Put stage content on a known layer */
-.equation-problem-container-scrollable,
-.equation-work-area { position: relative; z-index: 1; }
-
-/* Bring the vertical line to the very top of the stage */
-.equation-stage .equation-vertical-line {
-  z-index: 9999 !important;
-  pointer-events: none;
-}
-
-/* Keep equals signs neutral/black (other tokens may still go green) */
-.equation-equals-col-centered,
-.equation-equals { color: #111 !important; }
-
-
-/* ===========================
-   APPEND-ONLY FIX v5
-   Goal:
-   - Force vertical center line ABOVE stage content (not behind cards)
-   - Make '=' glyphs render black by default
-   - Keep line non-interactive
-   =========================== */
-
-/* Ensure a predictable stacking context */
-.equation-stage { position: relative; }
-
-/* Put stage content on a known layer */
-.equation-problem-container-scrollable,
-.equation-work-area { position: relative; z-index: 1; }
-
-/* Bring the vertical line to the very top of the stage */
-.equation-stage .equation-vertical-line {
-  z-index: 9999 !important;
-  pointer-events: none;
-}
-
-/* Keep equals signs neutral/black (other tokens may still go green) */
-.equation-equals-col-centered,
-.equation-equals { color: #111 !important; }
-
-
-/* =========================
-   v6: Divider line + equals alignment hard overrides
-   ========================= */
-
-/* Ensure the scrollable history container is the positioning context for the divider */
-.equation-problem-container-scrollable{
-  position: relative !important;
-}
-
-/* Divider line should sit ABOVE row cards but BELOW the equals glyphs */
-.equation-vertical-line-fixed{
-  position: absolute !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  height: auto !important; /* height is controlled by top/bottom; JS provides height as a fallback */
-  width: 3px !important;
-  background: #111 !important;
-  z-index: 6 !important;
-  pointer-events: none !important;
-}
-
-/* Make sure the equals column always sits above the divider */
-.equation-equals-col-centered,
-.equation-equals{
-  position: relative !important;
-  z-index: 10 !important;
-  color: #111 !important;
-}
-
-/* Lock the active work row grid so the equals column is truly centered */
-.equation-work-row .equation-row-3col{
-  grid-template-columns: 1fr 60px 1fr !important;
-}
-.equation-equals-col-centered{
-  width: 60px !important;
-  min-width: 60px !important;
-  max-width: 60px !important;
-  justify-content: center !important;
-  text-align: center !important;
-}
-
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
-.equation-stage {
-  position: relative !important;
-}
-
-/* One continuous vertical divider that spans problem history + active row */
-.equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
 .equation-equals-col-centered,
 .equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
-.equation-stage {
-  position: relative !important;
-}
-
-/* One continuous vertical divider that spans problem history + active row */
-.equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
-.equation-equals-col-centered,
-.equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* v8: lock vertical line to stage center + widen stage to prevent button wrap */
-.equation-stage {
-  max-width: 860px !important;
-}
-
-.equation-vertical-line-overlay {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  top: 0 !important;
-  height: 100% !important;
-  z-index: 5 !important;
-}
-
-/* ============================
-   Algebra Expedition — APPEND ONLY FIX v7
-   Goal: One continuous vertical divider spanning BOTH containers
-         + keep Check/Submit buttons on one line.
-   ============================ */
-
-/* Stage must be a positioning context for the overlay line */
-.equation-stage {
-  position: relative !important;
-}
-
-/* One continuous vertical divider that spans problem history + active row */
-.equation-vertical-line-overlay {
-  position: absolute;
-  width: 4px;
-  background: #111;
-  border-radius: 2px;
-  transform: translateX(-50%);
-  pointer-events: none;
-  z-index: 25;
-}
-
-/* Ensure the white cards don't cover the overlay line */
-.equation-problem-container-scrollable,
-.equation-work-area {
-  position: relative;
-  z-index: 10;
-}
-
-/* Keep equals sign above the divider line */
-.equation-equals-col-centered,
-.equation-equals {
-  position: relative;
-  z-index: 30;
-}
-
-/* Active row: 4-column layout so the button is always in its own column */
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 1rem !important;
-  align-items: center !important;
-}
-
-/* Prevent the action button from wrapping */
-.equation-check-btn,
-.equation-submit-btn {
-  white-space: nowrap !important;
-  min-width: 140px;
-}
-
-/* Give the row enough room so the button doesn't force a wrap on smaller widths */
-.equation-work-row-container {
-  min-width: 520px;
-}
-
-@media (max-width: 768px) {
-  .equation-work-row-container {
-    min-width: 0;
-  }
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-  }
-}
-
-/* v8: lock vertical line to stage center + widen stage to prevent button wrap */
-.equation-stage {
-  max-width: 860px !important;
-}
-
-.equation-vertical-line-overlay {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  top: 0 !important;
-  height: 100% !important;
-  z-index: 5 !important;
-}
-
-
-/* v9: Ensure vertical line renders ABOVE cards/containers but BELOW equals sign */
-.equation-vertical-line-overlay{
-  z-index: 60 !important;
-  pointer-events: none !important;
-}
-
-/* Keep equals sign above the vertical line so it reads cleanly */
-.equation-equals-col-centered,
-.equation-equals{
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   z-index: 70 !important;
 }
 
-/* Scrollable container should not cover the overlay line */
-.equation-problem-container-scrollable{
+/* ADDED: Horizontal step dividers */
+.equation-step-divider {
+  height: 4px;
+  background: #111;
+  margin: 0.4rem 0;
+  border-radius: 2px;
+  width: 100%;
+}
+
+.equation-completed-row {
+  opacity: 1;
+  color: #374151;
+}
+
+.equation-final-answer-highlight {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(34, 197, 94, 0.08));
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.5rem !important;
+  font-weight: 700 !important;
+  animation: finalAnswerPulse 0.6s ease-out;
+}
+
+@keyframes finalAnswerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.equation-work-area {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 30 !important; /* stays below line (60) */
+  z-index: 10;
+}
+
+.equation-work-row {
+  margin-bottom: 0.75rem;
+}
+
+.equation-work-row.active {
+  background: rgba(245, 158, 11, 0.06);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 2px solid rgba(245, 158, 11, 0.2);
+}
+
+.equation-row-4col {
+  display: grid !important;
+  grid-template-columns: 1fr 60px 1fr auto !important;
+  gap: 0.75rem !important;
+  align-items: center !important;
+}
+
+.equation-blank {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #D1D5DB;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 70px;
+  min-height: 42px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-blank.filled {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #111;
+}
+
+.equation-blank.filled:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.equation-blank.empty {
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+.equation-check-btn,
+.equation-submit-btn {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap !important;
+  min-width: 140px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-check-btn:hover,
+.equation-submit-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.equation-single-choice-territory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.equation-instruction-territory {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-draw-line-btn-territory {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-draw-line-btn-territory:hover {
+  background: linear-gradient(135deg, #357ABD, #2868A8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* IMPROVED: Term bank with better visibility */
+.equation-term-bank {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.term-bank-label-territory {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4B5563;
+  margin-bottom: 0.75rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.equation-term-bank-2rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.term-bank-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+/* IMPROVED: Larger, more visible term chips */
+.term-chip {
+  background: rgba(59, 130, 246, 0.08);
+  border: 2px solid rgba(59, 130, 246, 0.25);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.7rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-width: 65px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: 'Poppins', sans-serif;
+  color: #111;
+}
+
+.term-chip:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.term-chip.used {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.term-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.use-badge {
+  background: rgba(245, 158, 11, 0.9);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+/* FIXED: Vertical line properly positioned */
+.equation-vertical-line-overlay {
+  position: absolute;
+  width: 4px;
+  background: #111;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 60 !important;
+  left: 50% !important;
+  top: 0 !important;
+  height: 100% !important;
 }
 
 /* ===================================================== */
 /* FRACTION DISPLAY STYLES - Level 18+                   */
-/* Renders "/" as proper fraction with numerator/bar/denominator */
-/* SCOPED to equation worksheet to avoid conflicts with global .fraction */
 /* ===================================================== */
 
 .equation-stage .fraction-wrapper,
@@ -4281,7 +1442,6 @@ cursor: not-allowed;
   font-size: 1.125rem !important;
 }
 
-/* Fractions inside term chips */
 .term-chip .fraction-wrapper {
   margin: 0 0.1rem !important;
 }
@@ -4290,10 +1450,9 @@ cursor: not-allowed;
 .term-chip .fraction-den {
   font-size: 1.125rem !important;
   line-height: 1 !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
-/* Fractions inside blanks */
 .equation-blank .fraction-wrapper {
   margin: 0 !important;
 }
@@ -4304,7 +1463,6 @@ cursor: not-allowed;
   font-weight: 600 !important;
 }
 
-/* Inline fraction expressions like (4)(x/4) */
 .fraction-expression {
   display: inline-flex;
   align-items: center;
@@ -4316,35 +1474,17 @@ cursor: not-allowed;
   width: 0.15rem;
 }
 
-/* Operation rows with fractions need slightly more vertical space */
 .has-fraction-operation {
   padding: 0.5rem 0 !important;
 }
 
-/* ===================================================== */
-/* MULTIPLICATION SYMBOL STYLING                         */
-/* Make × symbol bold and blue to distinguish from variable x */
-/* ===================================================== */
-
-/* Style × in term bank chips */
-.term-chip {
-  font-family: 'Poppins', sans-serif;
-}
-
-/* Make × symbol stand out */
-.term-chip:has-text('×') {
-  font-weight: 700;
-}
-
-/* For inline × styling in expressions */
+/* MULTIPLICATION SYMBOL STYLING */
 .multiply-symbol {
   font-weight: 700;
   color: #2563EB;
   font-size: 1.15em;
 }
 
-
-/* Coefficient fraction expressions like (1/3)x */
 .coefficient-fraction-expression {
   display: inline-flex !important;
   align-items: center !important;
@@ -4354,4 +1494,27 @@ cursor: not-allowed;
 .coefficient-fraction-expression .variable-x {
   font-style: italic !important;
   margin-left: 0.1rem !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .equation-stage {
+    max-width: 100%;
+  }
+  
+  .equation-check-btn,
+  .equation-submit-btn {
+    min-width: 120px;
+    font-size: 0.95rem;
+  }
+  
+  .term-chip {
+    font-size: 1rem !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+  
+  .equation-row-3col,
+  .equation-row-4col {
+    gap: 0.5rem !important;
+  }
 }
