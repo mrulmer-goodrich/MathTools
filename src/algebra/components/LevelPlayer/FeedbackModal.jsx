@@ -1,8 +1,9 @@
-// FeedbackModal.jsx - FINAL: Compact layout, no scroll, efficient spacing ALL levels
+// FeedbackModal.jsx - v14 FINAL: Fractions, minimal padding, no scroll
 // Location: src/algebra/components/FeedbackModal.jsx
 
 import React from 'react';
 import StackedEquation from '../StackedEquation';
+import FractionDisplay from './LevelPlayer/FractionDisplay';
 import '../../styles/algebra.css';
 
 const FeedbackModal = ({ 
@@ -54,6 +55,32 @@ const FeedbackModal = ({
   const showAnswerComparison = correctAnswer !== null && correctAnswer !== undefined;
   const showSelectedAnswer = selectedAnswer !== null && selectedAnswer !== undefined;
 
+  // FIXED v14: Helper to render answer with fractions
+  const renderAnswerValue = (value) => {
+    if (!value) return null;
+    const strValue = String(value);
+    
+    // Check if value contains fraction notation
+    if (strValue.includes('/')) {
+      return <FractionDisplay expression={strValue} />;
+    }
+    
+    return strValue;
+  };
+
+  // FIXED v14: Helper to render problem with fractions
+  const renderProblemValue = (value) => {
+    if (!value) return null;
+    const strValue = String(value);
+    
+    // Check if value contains fraction notation
+    if (strValue.includes('/')) {
+      return <FractionDisplay expression={strValue} />;
+    }
+    
+    return strValue;
+  };
+
   return (
     <div className="feedback-modal-overlay">
       <div className="feedback-modal-content-compact">
@@ -62,27 +89,33 @@ const FeedbackModal = ({
           <h2 className="feedback-title-compact">Not Quite!</h2>
         </div>
 
-        {/* Original Problem - COMPACT */}
+        {/* Original Problem - COMPACT with fractions */}
         {originalProblem && (
           <div className="feedback-section-compact feedback-original">
             <div className="feedback-section-label">ORIGINAL PROBLEM</div>
-            <div className="feedback-section-value">{originalProblem}</div>
+            <div className="feedback-section-value">
+              {renderProblemValue(originalProblem)}
+            </div>
           </div>
         )}
 
-        {/* Answer Comparison - COMPACT GRID */}
+        {/* Answer Comparison - COMPACT GRID with fractions */}
         {showAnswerComparison && (
           <div className={`feedback-answers-grid ${showSelectedAnswer ? 'two-col' : 'one-col'}`}>
             {showSelectedAnswer && (
               <div className="feedback-answer-box feedback-wrong">
                 <div className="feedback-answer-label">YOUR ANSWER</div>
-                <div className="feedback-answer-value">{selectedAnswer}</div>
+                <div className="feedback-answer-value">
+                  {renderAnswerValue(selectedAnswer)}
+                </div>
               </div>
             )}
 
             <div className={`feedback-answer-box feedback-correct ${!showSelectedAnswer ? 'full-width' : ''}`}>
               <div className="feedback-answer-label">CORRECT ANSWER</div>
-              <div className="feedback-answer-value">{correctAnswer}</div>
+              <div className="feedback-answer-value">
+                {renderAnswerValue(correctAnswer)}
+              </div>
             </div>
           </div>
         )}
