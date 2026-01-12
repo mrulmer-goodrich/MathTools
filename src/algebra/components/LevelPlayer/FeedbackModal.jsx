@@ -3,7 +3,7 @@
 
 import React from 'react';
 import StackedEquation from '../StackedEquation';
-import FractionDisplay from './LevelPlayer/FractionDisplay';
+import FractionDisplay from './FractionDisplay';
 import '../../styles/algebra.css';
 
 const FeedbackModal = ({ 
