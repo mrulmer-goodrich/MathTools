@@ -5,6 +5,7 @@ import { generateOneStepMultiplyDivideNegativesFractions } from './equationGener
 import { generateTwoStepMultiplyAdd } from './equationGenerators';
 import { generateTwoStepDivideAdd } from './equationGenerators';
 import { generateTwoStepAddDivide } from './equationGenerators';
+import { generateTwoStepMixedReview } from './equationGenerators';
 
 // ============================================
 // GLOBAL NaN PROTECTION
@@ -4438,7 +4439,9 @@ export const problemGenerators = {
   '1-21': generateTwoStepMultiplyAdd,
   '1-22': generateTwoStepDivideAdd,
   '1-23': generateTwoStepAddDivide,
-  '1-24': generateTwoStepDivideSubtractProblem,
+  '1-24': generateTwoStepMixedReview,
+
+  
   '1-25': generateVariablesBothSidesProblem,
   '1-26': generateDistributeEquationProblem,
   '1-27': generateCombineSolveProblem,
