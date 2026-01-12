@@ -2020,3 +2020,389 @@ export const generateTwoStepAddDivide = (difficulty) => {
     }
   };
 };
+
+// ============================================
+// LEVEL 1-24: TWO-STEP MIXED REVIEW
+// Mixes levels 21-23: ax+b=c, ax-b=c, x/a+b=c
+// Requires 2 unique skeletons from each level
+// Standard: 6 total problems (2 from each level type)
+// Advanced: Same mix but with more complex numbers
+// ============================================
+
+export const generateTwoStepMixedReview = (difficulty) => {
+  const levelId = '1-24';
+  
+  // Track which problems have been seen this session
+  const sessionKey = `${levelId}-${difficulty}-session`;
+  let sessionProblems = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+  
+  // Define problem types with their level origins
+  const problemTypes = [
+    { type: 'multiply_add', level: 21, skeletons: ['ax+b=c', 'c=ax+b'] },
+    { type: 'multiply_subtract', level: 22, skeletons: ['ax-b=c', 'c=ax-b'] },
+    { type: 'divide_add', level: 23, skeletons: ['x/a+b=c', 'c=x/a+b'] }
+  ];
+  
+  // Ensure we've seen at least 2 from each type
+  const typeCounts = {
+    'multiply_add': sessionProblems.filter(p => p.startsWith('multiply_add')).length,
+    'multiply_subtract': sessionProblems.filter(p => p.startsWith('multiply_subtract')).length,
+    'divide_add': sessionProblems.filter(p => p.startsWith('divide_add')).length
+  };
+  
+  // Pick a type that hasn't reached 2 yet, or random if all have
+  let selectedType;
+  const needMoreTypes = problemTypes.filter(pt => typeCounts[pt.type] < 2);
+  
+  if (needMoreTypes.length > 0) {
+    selectedType = needMoreTypes[Math.floor(Math.random() * needMoreTypes.length)];
+  } else {
+    // Reset session if all types completed
+    sessionProblems = [];
+    sessionStorage.setItem(sessionKey, JSON.stringify([]));
+    selectedType = problemTypes[Math.floor(Math.random() * problemTypes.length)];
+  }
+  
+  // Pick a skeleton from the selected type that hasn't been used yet
+  const usedSkeletons = sessionProblems.filter(p => p.startsWith(selectedType.type));
+  const availableSkeletons = selectedType.skeletons.filter(sk => 
+    !usedSkeletons.includes(`${selectedType.type}-${sk}`)
+  );
+  
+  const skeleton = availableSkeletons.length > 0 
+    ? availableSkeletons[Math.floor(Math.random() * availableSkeletons.length)]
+    : selectedType.skeletons[Math.floor(Math.random() * selectedType.skeletons.length)];
+  
+  // Record this problem
+  sessionProblems.push(`${selectedType.type}-${skeleton}`);
+  sessionStorage.setItem(sessionKey, JSON.stringify(sessionProblems));
+  
+  // Generate based on type
+  if (selectedType.type === 'multiply_add') {
+    return generateMultiplyAdd(skeleton, difficulty);
+  } else if (selectedType.type === 'multiply_subtract') {
+    return generateMultiplySubtract(skeleton, difficulty);
+  } else {
+    return generateDivideAdd(skeleton, difficulty);
+  }
+};
+
+// ============================================
+// HELPER: Generate ax + b = c type
+// ============================================
+const generateMultiplyAdd = (skeleton, difficulty) => {
+  let a, b, c, solution, problem;
+  let problemHasConstantOnLeft = false;
+  
+  if (difficulty === 'easy') {
+    // Easy: positive/negative, -12 to 12
+    a = randomNonZeroInt(-12, 12);
+    b = randomNonZeroInt(-12, 12);
+    solution = randomNonZeroInt(-12, 12);
+    c = a * solution + b;
+    
+    if (skeleton === 'ax+b=c') {
+      problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+    } else if (skeleton === 'c=ax+b') {
+      problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  } else {
+    // Hard: Include decimals (.5 increments), harder numbers
+    const useDecimal = Math.random() < 0.3;
+    
+    if (useDecimal) {
+      a = randomNonZeroInt(-24, 24) / 2;
+      b = randomNonZeroInt(-24, 24) / 2;
+      solution = randomNonZeroInt(-24, 24) / 2;
+      c = a * solution + b;
+    } else {
+      a = randomNonZeroInt(-15, 15);
+      b = randomNonZeroInt(-15, 15);
+      solution = randomNonZeroInt(-15, 15);
+      c = a * solution + b;
+    }
+    
+    if (skeleton === 'ax+b=c') {
+      problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+    } else if (skeleton === 'c=ax+b') {
+      problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  }
+  
+  // Build staged structure
+  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
+  const afterStep1 = c - b;
+  const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
+  
+  const row1Bank = [
+    step1Operation,
+    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
+    `× ${Math.abs(b)}`,
+    `÷ ${Math.abs(b)}`,
+    `× ${Math.abs(a)}`,
+    `÷ ${Math.abs(a)}`,
+    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
+    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
+  ];
+  
+  const row2Bank = [
+    `${a}x`,
+    `${-a}x`,
+    String(afterStep1),
+    String(-afterStep1),
+    String(afterStep1 + 1),
+    String(afterStep1 - 1),
+    'x',
+    '-x',
+    String(solution),
+    String(-solution)
+  ];
+  
+  const row3Bank = [
+    step2Operation,
+    a < 0 ? `× (${a})` : `× ${a}`,
+    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
+    `× ${Math.abs(a) + 1}`,
+    `÷ ${Math.abs(a) + 1}`,
+    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
+    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
+  ];
+  
+  const row4Bank = [
+    'x',
+    '-x',
+    String(solution),
+    String(-solution),
+    String(solution + 1),
+    String(solution - 1),
+    String(a),
+    String(-a),
+    String(b),
+    String(-b)
+  ];
+  
+  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [`${a}x`];
+  const row2ExpectedRight = problemHasConstantOnLeft ? [`${a}x`] : [String(afterStep1)];
+  
+  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
+  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
+  
+  const staged = {
+    mode: 'equation_solver',
+    rows: [
+      {
+        id: 'row0_draw_line',
+        type: 'single_choice',
+        instruction: 'What do you do first?',
+        choices: ['Draw a line'],
+        expected: ['Draw a line']
+      },
+      {
+        id: 'row1_operation',
+        type: 'dual_box',
+        instruction: 'What do we do to both sides?',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: [step1Operation],
+        expectedRight: [step1Operation],
+        bank: [...new Set(row1Bank)].sort()
+      },
+      {
+        id: 'row2_after_subtract',
+        type: 'dual_box',
+        instruction: 'Simplify each side',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: row2ExpectedLeft,
+        expectedRight: row2ExpectedRight,
+        bank: [...new Set(row2Bank)].sort()
+      },
+      {
+        id: 'row3_divide',
+        type: 'dual_box',
+        instruction: 'What do we do to both sides?',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: [step2Operation],
+        expectedRight: [step2Operation],
+        bank: [...new Set(row3Bank)].sort()
+      },
+      {
+        id: 'row4_solution',
+        type: 'dual_box',
+        instruction: 'Simplify to solve',
+        leftBlanks: 1,
+        rightBlanks: 1,
+        expectedLeft: row4ExpectedLeft,
+        expectedRight: row4ExpectedRight,
+        bank: [...new Set(row4Bank)].sort()
+      }
+    ]
+  };
+  
+  return {
+    problem,
+    displayProblem: problem,
+    answer: String(solution),
+    choices: [String(solution)],
+    staged,
+    explanation: {
+      rule: 'For ax + b = c, first clear the lonely number, then clear the fence',
+      steps: [
+        { description: 'Original Problem:', work: problem },
+        { 
+          description: `Step 1: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)} to/from both sides`,
+          work: `${problem}\n${step1Operation}   ${step1Operation}\n${'_'.repeat(problem.length)}\n${a}x = ${afterStep1}`
+        },
+        {
+          description: `Step 2: Divide both sides by ${a}`,
+          work: `${a}x = ${afterStep1}\n${'_'.repeat(3)}   ${'_'.repeat(String(afterStep1).length)}\n ${a}     ${a}\n\nx = ${solution}`
+        }
+      ]
+    }
+  };
+};
+
+// ============================================
+// HELPER: Generate ax - b = c type  
+// ============================================
+const generateMultiplySubtract = (skeleton, difficulty) => {
+  // Similar structure to multiply_add but with subtraction
+  // Implementation similar to above with b always positive in display
+  let a, b, c, solution, problem;
+  let problemHasConstantOnLeft = false;
+  
+  if (difficulty === 'easy') {
+    a = randomNonZeroInt(-12, 12);
+    b = randomInt(1, 12); // Always positive for subtraction
+    solution = randomNonZeroInt(-12, 12);
+    c = a * solution - b;
+    
+    if (skeleton === 'ax-b=c') {
+      problem = `${a}x - ${b} = ${c}`;
+    } else if (skeleton === 'c=ax-b') {
+      problem = `${c} = ${a}x - ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  } else {
+    const useDecimal = Math.random() < 0.3;
+    
+    if (useDecimal) {
+      a = randomNonZeroInt(-24, 24) / 2;
+      b = randomInt(1, 24) / 2;
+      solution = randomNonZeroInt(-24, 24) / 2;
+      c = a * solution - b;
+    } else {
+      a = randomNonZeroInt(-15, 15);
+      b = randomInt(1, 15);
+      solution = randomNonZeroInt(-15, 15);
+      c = a * solution - b;
+    }
+    
+    if (skeleton === 'ax-b=c') {
+      problem = `${a}x - ${b} = ${c}`;
+    } else if (skeleton === 'c=ax-b') {
+      problem = `${c} = ${a}x - ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  }
+  
+  const step1Operation = `+ ${b}`;
+  const afterStep1 = c + b;
+  const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
+  
+  // Bank construction similar to multiply_add
+  const staged = {
+    mode: 'equation_solver',
+    rows: [
+      { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
+      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [step1Operation, `- ${b}`, `× ${b}`, `÷ ${b}`] },
+      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`${a}x`], expectedRight: problemHasConstantOnLeft ? [`${a}x`] : [String(afterStep1)], bank: [`${a}x`, String(afterStep1), 'x', String(solution)] },
+      { id: 'row3_divide', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [step2Operation, `× ${Math.abs(a)}`] },
+      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: ['x', String(solution)] }
+    ]
+  };
+  
+  return {
+    problem, displayProblem: problem, answer: String(solution), choices: [String(solution)], staged,
+    explanation: { rule: 'For ax - b = c, add b first, then divide by a', steps: [] }
+  };
+};
+
+// ============================================
+// HELPER: Generate x/a + b = c type
+// ============================================
+const generateDivideAdd = (skeleton, difficulty) => {
+  let a, b, c, solution, problem;
+  let problemHasConstantOnLeft = false;
+  
+  if (difficulty === 'easy') {
+    a = randomNonZeroInt(-12, 12);
+    b = randomNonZeroInt(-12, 12);
+    const quotient = randomNonZeroInt(-12, 12);
+    solution = a * quotient;
+    c = quotient + b;
+    
+    if (skeleton === 'x/a+b=c') {
+      problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
+    } else if (skeleton === 'c=x/a+b') {
+      problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  } else {
+    const useDecimal = Math.random() < 0.3;
+    
+    if (useDecimal) {
+      a = randomNonZeroInt(-24, 24) / 2;
+      b = randomNonZeroInt(-24, 24) / 2;
+      const quotient = randomNonZeroInt(-24, 24) / 2;
+      solution = a * quotient;
+      c = quotient + b;
+    } else {
+      a = randomNonZeroInt(-15, 15);
+      b = randomNonZeroInt(-15, 15);
+      const quotient = randomNonZeroInt(-15, 15);
+      solution = a * quotient;
+      c = quotient + b;
+    }
+    
+    if (skeleton === 'x/a+b=c') {
+      problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
+    } else if (skeleton === 'c=x/a+b') {
+      problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
+      problemHasConstantOnLeft = true;
+    }
+  }
+  
+  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
+  const afterStep1 = c - b;
+  const step2Operation = a < 0 ? `× (${a})` : `× ${a}`;
+  
+  const staged = {
+    mode: 'equation_solver',
+    rows: [
+      { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
+      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [step1Operation, `× ${Math.abs(b)}`, `÷ ${Math.abs(b)}`] },
+      { id: 'row2_after_subtract', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`x/${a}`], expectedRight: problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)], bank: [`x/${a}`, String(afterStep1), 'x', String(solution)] },
+      { id: 'row3_multiply', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [step2Operation, `÷ ${Math.abs(a)}`] },
+      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: ['x', String(solution)] }
+    ]
+  };
+  
+  return {
+    problem, displayProblem: problem, answer: String(solution), choices: [String(solution)], staged,
+    explanation: { rule: 'For x/a + b = c, subtract b first, then multiply by a', steps: [] }
+  };
+};
+
+// Helper functions
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomNonZeroInt = (min, max) => {
+  let val;
+  do {
+    val = Math.floor(Math.random() * (max - min + 1)) + min;
+  } while (val === 0);
+  return val;
+};
