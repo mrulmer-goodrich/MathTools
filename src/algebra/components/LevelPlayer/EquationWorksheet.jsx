@@ -1,13 +1,10 @@
-// EquationWorksheet.jsx - COMPREHENSIVE FIX v10
-// Fixes Applied:
-// 1. Removed stripLeadingPlusForDisplay() - ALL displays now preserve leading +
-// 2. Fixed double parentheses in formatTermBankDisplay() 
-// 3. Added horizontal dividers after action/simplified rows
-// 4. Improved final answer display (no scroll container)
-// 5. Tightened row spacing in problem container
-// 6. Increased term bank font size and improved visibility
-// 7. Fixed vertical line alignment (uses activeEqualsRef properly)
-// 8. Consistent term bank sorting
+// EquationWorksheet.jsx - COMPREHENSIVE FIX v11
+// ALL QA ISSUES RESOLVED:
+// 1. Vertical line alignment fixed (Check button moved outside grid)
+// 2. Horizontal dividers fixed (smart logic, no duplicates)
+// 3. Multiplication shows (previous) × (factor) format
+// 4. Final answer no longer in tiny scroll container
+// 5. All typography/spacing issues addressed
 // Location: src/algebra/components/LevelPlayer/EquationWorksheet.jsx
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -50,12 +47,8 @@ const EquationWorksheet = ({
   const isFinalRow = currentRowIndex === rows.length - 1;
   const currentSelections = selectedTerms[currentRow.id] || [];
 
-  // REMOVED: stripLeadingPlusForDisplay()
-  // All displays now preserve the original term format including leading +
-
   const normalizeForComparison = (term) => {
     const str = String(term).trim();
-    // Remove leading + for comparison only
     if (str.startsWith('+')) {
       return str.substring(1);
     }
@@ -70,7 +63,6 @@ const EquationWorksheet = ({
     const str = String(term).trim();
     
     // FIXED: Only wrap if NOT already wrapped
-    // Handle operations with negative numbers: × -2 → × (-2)
     if ((str.includes('× -') || str.includes('÷ -')) && !str.includes('(-')) {
       return str.replace(/(×|÷)\s*(-[\d.]+)/g, '$1 ($2)');
     }
@@ -191,58 +183,104 @@ const EquationWorksheet = ({
     return false;
   };
 
+  // IMPROVED: Smart divider logic - only after simplified rows
   const getCompletedRowsDisplay = () => {
-    return rows
-      .filter((row, idx) => {
-        if (!completedRows.includes(row.id)) return false;
-        if (showFinalAnswer && idx === rows.length - 1) return false;
-        return idx > 0;
-      })
-      .map((row, arrayIdx) => {
-        const rowSelections = selectedTerms[row.id] || [];
-        const leftBlanks = row.leftBlanks || 0;
-        const leftTerms = rowSelections.slice(0, leftBlanks);
-        const rightTerms = rowSelections.slice(leftBlanks);
-        
-        const isOperationRow = row.id.includes('row1') || row.id.includes('row3');
-        const isSimplifiedRow = row.id.includes('row2') || row.id.includes('row4');
-        
-        // FIXED: Preserve leading + signs for ALL rows
-        // Only operation rows (row1, row3) show operations with their signs
-        // Other rows show simplified expressions with their signs preserved
-        const leftDisplay = leftTerms.map(t => String(t)).join(' ');
-        const rightDisplay = rightTerms.map(t => String(t)).join(' ');
-        
-        const hasFraction = leftDisplay.includes('/') || rightDisplay.includes('/');
-        
-        return {
-          left: leftDisplay,
-          right: rightDisplay,
-          hasFraction,
-          isOperationRow,
-          isSimplifiedRow,
-          needsDividerAfter: isOperationRow || isSimplifiedRow
-        };
+    const completedRowData = rows
+      .map((row, idx) => ({
+        row,
+        idx,
+        isCompleted: completedRows.includes(row.id),
+        isFinal: idx === rows.length - 1
+      }))
+      .filter(({ isCompleted, isFinal, idx }) => {
+        if (!isCompleted) return false;
+        if (showFinalAnswer && isFinal) return false;
+        return idx > 0; // Skip initial problem row
       });
+
+    return completedRowData.map(({ row, idx }, arrayIdx) => {
+      const rowSelections = selectedTerms[row.id] || [];
+      const leftBlanks = row.leftBlanks || 0;
+      const leftTerms = rowSelections.slice(0, leftBlanks);
+      const rightTerms = rowSelections.slice(leftBlanks);
+      
+      const isOperationRow = row.id.includes('row1') || row.id.includes('row3');
+      const isSimplifiedRow = row.id.includes('row2') || row.id.includes('row4');
+      
+      // FIXED: For multiply/divide operations, show (previous) × (factor) format
+      let leftDisplay, rightDisplay;
+      
+      if (isOperationRow && leftTerms.length > 0) {
+        const operation = leftTerms[0];
+        
+        // Get previous row's content (the expression being operated on)
+        const prevRowData = arrayIdx > 0 ? completedRowData[arrayIdx - 1] : null;
+        let prevLeft = problemParts.left;
+        let prevRight = problemParts.right;
+        
+        if (prevRowData) {
+          const prevSelections = selectedTerms[prevRowData.row.id] || [];
+          const prevLeftBlanks = prevRowData.row.leftBlanks || 0;
+          prevLeft = prevSelections.slice(0, prevLeftBlanks).join(' ') || prevLeft;
+          prevRight = prevSelections.slice(prevLeftBlanks).join(' ') || prevRight;
+        }
+        
+        // If operation is multiply or divide, show full format
+        if (operation.includes('×') || operation.includes('÷')) {
+          // Wrap previous expression if it contains operators or spaces
+          const needsParens = (expr) => expr.includes('+') || expr.includes('-') || 
+                                        expr.includes(' ') || expr.includes('/');
+          
+          const formatWithPrevious = (prev, op) => {
+            if (needsParens(prev)) {
+              return `(${prev}) ${op}`;
+            }
+            return `${prev} ${op}`;
+          };
+          
+          leftDisplay = formatWithPrevious(prevLeft, operation);
+          rightDisplay = formatWithPrevious(prevRight, operation);
+        } else {
+          // Addition/subtraction - just show the operation
+          leftDisplay = leftTerms.map(t => String(t)).join(' ');
+          rightDisplay = rightTerms.map(t => String(t)).join(' ');
+        }
+      } else {
+        // Simplified rows - show as-is
+        leftDisplay = leftTerms.map(t => String(t)).join(' ');
+        rightDisplay = rightTerms.map(t => String(t)).join(' ');
+      }
+      
+      const hasFraction = leftDisplay.includes('/') || rightDisplay.includes('/');
+      
+      // FIXED: Only show divider AFTER simplified rows (not after operation rows)
+      const needsDividerAfter = isSimplifiedRow;
+      
+      return {
+        left: leftDisplay,
+        right: rightDisplay,
+        hasFraction,
+        isOperationRow,
+        isSimplifiedRow,
+        needsDividerAfter
+      };
+    });
   };
 
-  // IMPROVED: Consistent term bank sorting
+  // Consistent term bank sorting
   const organizeBankChips = (bank) => {
     if (!bank || bank.length === 0) return { row1: [], row2: [] };
     
-    // Sort by: operations first (+, -, ×, ÷), then numbers, then variables
     const sorted = [...bank].sort((a, b) => {
       const aStr = String(a);
       const bStr = String(b);
       
-      // Operations first
       const aHasOp = aStr.includes('×') || aStr.includes('÷');
       const bHasOp = bStr.includes('×') || bStr.includes('÷');
       
       if (aHasOp && !bHasOp) return -1;
       if (!aHasOp && bHasOp) return 1;
       
-      // Then sort alphabetically
       return aStr.localeCompare(bStr);
     });
     
@@ -261,7 +299,7 @@ const EquationWorksheet = ({
         
         <div className="equation-stage" ref={stageRef}>
 
-          {/* FIXED: Vertical divider now properly aligned */}
+          {/* Vertical divider - now stable because Check button is outside grid */}
           {showVerticalLine && !showFinalAnswer && (
             <div
               className="equation-vertical-line-overlay"
@@ -269,9 +307,9 @@ const EquationWorksheet = ({
             />
           )}
           
-          {/* IMPROVED: Tighter spacing, better final answer display */}
+          {/* IMPROVED: Final answer mode increases height */}
           <div
-            className="equation-problem-container-scrollable"
+            className={`equation-problem-container-scrollable ${showFinalAnswer ? 'equation-final-state' : ''}`}
             ref={(el) => {
               scrollRef.current = el;
               problemContainerRef.current = el;
@@ -302,14 +340,14 @@ const EquationWorksheet = ({
                 </div>
               </div>
               
-              {/* ADDED: Horizontal divider after action/simplified rows */}
+              {/* FIXED: Only after simplified rows */}
               {row.needsDividerAfter && (
                 <div className="equation-step-divider" />
               )}
             </React.Fragment>
           ))}
           
-          {/* IMPROVED: Final answer display without scroll container */}
+          {/* Final answer display */}
           {showFinalAnswer && isFinalRow && (
             <>
               <div className="equation-row-3col equation-final-answer-highlight">
@@ -359,48 +397,50 @@ const EquationWorksheet = ({
                     </div>
                   )}
 
-                  {/* FIXED: Blanks now preserve leading + signs */}
+                  {/* FIXED: Check button now OUTSIDE the 3-column grid */}
                   {row.type === 'dual_box' && isActive && !isCompleted && (
-                    <div className="equation-row-4col equation-work-row-grid">
-                      <div className="equation-left-side">
-                        {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
-                          const term = currentSelections[i];
-                          // All terms display as-is, preserving signs
-                          const displayTerm = term || '___';
-                          return (
-                            <button
-                              key={`left-${i}`}
-                              className={`equation-blank ${term ? 'filled' : 'empty'}`}
-                              onClick={() => term && handleBlankClick(i)}
-                            >
-                              {term ? <FractionDisplay expression={displayTerm} /> : '___'}
-                            </button>
-                          );
-                        })}
+                    <div className="equation-active-row-container">
+                      <div className="equation-row-3col equation-work-row-grid">
+                        <div className="equation-left-side">
+                          {Array.from({ length: row.leftBlanks || 0 }).map((_, i) => {
+                            const term = currentSelections[i];
+                            const displayTerm = term || '___';
+                            return (
+                              <button
+                                key={`left-${i}`}
+                                className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                                onClick={() => term && handleBlankClick(i)}
+                              >
+                                {term ? <FractionDisplay expression={displayTerm} /> : '___'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        <div className="equation-equals-col-centered" ref={activeEqualsRef}>=</div>
+                        
+                        <div className="equation-right-side">
+                          {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
+                            const leftBlanks = row.leftBlanks || 0;
+                            const term = currentSelections[leftBlanks + i];
+                            const displayTerm = term || '___';
+                            return (
+                              <button
+                                key={`right-${i}`}
+                                className={`equation-blank ${term ? 'filled' : 'empty'}`}
+                                onClick={() => term && handleBlankClick(leftBlanks + i)}
+                              >
+                                {term ? <FractionDisplay expression={displayTerm} /> : '___'}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                       
-                      <div className="equation-equals-col-centered" ref={activeEqualsRef}>=</div>
-                      
-                      <div className="equation-right-side">
-                        {Array.from({ length: row.rightBlanks || 0 }).map((_, i) => {
-                          const leftBlanks = row.leftBlanks || 0;
-                          const term = currentSelections[leftBlanks + i];
-                          const displayTerm = term || '___';
-                          return (
-                            <button
-                              key={`right-${i}`}
-                              className={`equation-blank ${term ? 'filled' : 'empty'}`}
-                              onClick={() => term && handleBlankClick(leftBlanks + i)}
-                            >
-                              {term ? <FractionDisplay expression={displayTerm} /> : '___'}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      
+                      {/* Check button positioned outside the grid */}
                       {isRowFilled() && (
                         <button
-                          className="equation-check-btn"
+                          className="equation-check-btn-external"
                           onClick={handleCheckRow}
                         >
                           {isFinalRow ? '✓ Submit' : '✓ Check'}
