@@ -593,8 +593,11 @@ export const generateOneStepAddSubtractNegatives = (difficulty) => {
   
   if (difficulty === 'easy') {
     // Easy: -12 to 12, whole numbers only, allow negatives
-    a = randomNonZeroInt(-12, 12);
+    // NOTE: Keep denominator positive to avoid fraction-bar rendering bugs (e.g., x/(-1) displaying as (-1+x)/-1)
+    // and ensure it stays a true 2-step equation.
+    a = randomInt(2, 12); // positive, avoids ±1
     b = randomNonZeroInt(-12, 12);
+    while (Math.abs(b) < 2) b = randomNonZeroInt(-12, 12); // avoid ±1 (degenerate/too easy)
     
     if (skeleton === 'x+a=b') {
       solution = b - a;
@@ -1253,8 +1256,10 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
       
     } else if (useDecimal) {
       // Decimals (.5 increments only - no long decimals)
-      a = (randomNonZeroInt(-24, 24) / 2);
+      // Keep denominator positive to avoid fraction-bar rendering bugs
+      a = (randomInt(2, 24) / 2); // 1.0 to 12.0, positive
       b = (randomNonZeroInt(-24, 24) / 2);
+      while (Math.abs(b) < 1) b = (randomNonZeroInt(-24, 24) / 2); // avoid ±0.5
       solution = randomNonZeroInt(-12, 12);
       c = a * solution + b;
       aDisplay = String(a);
@@ -2116,8 +2121,10 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
       solution = randomNonZeroInt(-24, 24) / 2;
       c = a * solution + b;
     } else {
-      a = randomNonZeroInt(-15, 15);
+      // Keep denominator positive to avoid fraction-bar rendering bugs
+      a = randomInt(2, 15); // positive, avoids ±1
       b = randomNonZeroInt(-15, 15);
+      while (Math.abs(b) < 2) b = randomNonZeroInt(-15, 15);
       solution = randomNonZeroInt(-15, 15);
       c = a * solution + b;
     }
@@ -2271,10 +2278,16 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
   let problemHasConstantOnLeft = false;
   
   if (difficulty === 'easy') {
-    a = randomNonZeroInt(-12, 12);
-    b = randomInt(1, 12);
-    solution = randomNonZeroInt(-12, 12);
-    c = a * solution - b;
+    // Ensure it's a true 2-step problem (avoid a = ±1 and tiny b)
+    let attempts = 0;
+    while (attempts < 100) {
+      a = randomNonZeroInt(-12, 12);
+      if (Math.abs(a) === 1) { attempts++; continue; }
+      b = randomInt(2, 12);
+      solution = randomNonZeroInt(-12, 12);
+      c = a * solution - b;
+      break;
+    }
     
     if (skeleton === 'ax-b=c') {
       problem = `${a}x - ${b} = ${c}`;
@@ -2286,15 +2299,27 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
     const useDecimal = Math.random() < 0.3;
     
     if (useDecimal) {
-      a = randomNonZeroInt(-24, 24) / 2;
-      b = randomInt(1, 24) / 2;
-      solution = randomNonZeroInt(-24, 24) / 2;
-      c = a * solution - b;
+      // Ensure it's a true 2-step problem (avoid a = ±1.0 and tiny b)
+      let attempts = 0;
+      while (attempts < 100) {
+        a = randomNonZeroInt(-24, 24) / 2;
+        if (Math.abs(a) === 1) { attempts++; continue; }
+        b = randomInt(2, 24) / 2;
+        solution = randomNonZeroInt(-24, 24) / 2;
+        c = a * solution - b;
+        break;
+      }
     } else {
-      a = randomNonZeroInt(-15, 15);
-      b = randomInt(1, 15);
-      solution = randomNonZeroInt(-15, 15);
-      c = a * solution - b;
+      // Ensure it's a true 2-step problem (avoid a = ±1 and tiny b)
+      let attempts = 0;
+      while (attempts < 100) {
+        a = randomNonZeroInt(-15, 15);
+        if (Math.abs(a) === 1) { attempts++; continue; }
+        b = randomInt(2, 15);
+        solution = randomNonZeroInt(-15, 15);
+        c = a * solution - b;
+        break;
+      }
     }
     
     if (skeleton === 'ax-b=c') {
