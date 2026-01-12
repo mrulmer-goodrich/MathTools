@@ -1080,11 +1080,9 @@ body {
 }
 
 /* ============================================
-
 /* ============================================ */
-/* EQUATION WORKSHEET - COMPREHENSIVE FIX v10 */
-/* FIXES: Leading +, double parens, dividers, */
-/* spacing, term bank visibility, alignment   */
+/* EQUATION WORKSHEET v11 - ALL QA FIXES */
+/* Including region theming, alignment, typography */
 /* ============================================ */
 
 .equation-mode-container {
@@ -1099,51 +1097,89 @@ body {
 .equation-content-wrapper-fixed {
   position: relative;
   width: 100%;
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .equation-stage {
   position: relative !important;
-  max-width: 860px !important;
+  max-width: 900px !important;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* IMPROVED: Tighter spacing */
+/* IMPROVED: Tighter spacing + final state support */
 .equation-problem-container-scrollable {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 0.75rem;
-  padding: 0.75rem !important;
+  padding: 0.6rem !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   max-height: 45vh;
   overflow-y: auto;
   position: relative;
   z-index: 30 !important;
+  /* ADDED: Region theming */
+  border: 3px solid var(--color-success);
 }
 
-/* TIGHTENED: Reduced row spacing */
+/* ADDED: Final state increases height */
+.equation-problem-container-scrollable.equation-final-state {
+  max-height: 60vh;
+}
+
+/* ADDED: Region theming for equation containers */
+.level-player[data-region="base-camp"] .equation-problem-container-scrollable,
+.level-player[data-region="base-camp"] .equation-work-area,
+.level-player[data-region="base-camp"] .equation-term-bank {
+  border-color: var(--region-basecamp-border);
+  box-shadow: 0 4px 6px -1px var(--region-basecamp-glow);
+}
+
+.level-player[data-region="territory"] .equation-problem-container-scrollable,
+.level-player[data-region="territory"] .equation-work-area,
+.level-player[data-region="territory"] .equation-term-bank {
+  border-color: var(--region-territory-border);
+  box-shadow: 0 4px 6px -1px var(--region-territory-glow);
+}
+
+.level-player[data-region="frontier"] .equation-problem-container-scrollable,
+.level-player[data-region="frontier"] .equation-work-area,
+.level-player[data-region="frontier"] .equation-term-bank {
+  border-color: var(--region-frontier-border);
+  box-shadow: 0 4px 6px -1px var(--region-frontier-glow);
+}
+
+/* FIXED: Increased font size, tightened spacing */
 .equation-row-3col {
   display: grid !important;
   grid-template-columns: 1fr 60px 1fr !important;
-  gap: 0.75rem !important;
+  gap: 0.6rem !important;
   align-items: center !important;
-  margin-bottom: 0.25rem !important;
-  font-size: 1.25rem !important;
+  margin-bottom: 0.2rem !important;
+  font-size: 1.375rem !important;
   font-weight: 600 !important;
   min-height: 42px !important;
-  padding: 0.25rem 0 !important;
+  padding: 0.2rem 0 !important;
 }
 
-.equation-left-side,
+/* FIXED: Left side hugs center, right side stays left */
+.equation-left-side {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end !important;
+  min-height: 36px;
+}
+
 .equation-right-side {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: flex-start !important;
   min-height: 36px;
 }
 
@@ -1160,18 +1196,21 @@ body {
   z-index: 70 !important;
 }
 
-/* ADDED: Horizontal step dividers */
+/* Horizontal step dividers */
 .equation-step-divider {
   height: 4px;
   background: #111;
-  margin: 0.4rem 0;
+  margin: 0.35rem 0;
   border-radius: 2px;
   width: 100%;
 }
 
+/* FIXED: Consistent typography for completed rows */
 .equation-completed-row {
   opacity: 1;
   color: #374151;
+  font-size: 1.375rem !important;
+  font-weight: 600 !important;
 }
 
 .equation-final-answer-highlight {
@@ -1180,6 +1219,7 @@ body {
   border-radius: 0.5rem;
   padding: 0.5rem !important;
   font-weight: 700 !important;
+  font-size: 1.375rem !important;
   animation: finalAnswerPulse 0.6s ease-out;
 }
 
@@ -1191,28 +1231,33 @@ body {
 .equation-work-area {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 0.75rem;
-  padding: 1rem;
+  padding: 0.8rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 10;
+  border: 3px solid var(--color-success);
 }
 
 .equation-work-row {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .equation-work-row.active {
   background: rgba(245, 158, 11, 0.06);
   border-radius: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.6rem;
   border: 2px solid rgba(245, 158, 11, 0.2);
 }
 
-.equation-row-4col {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 1fr auto !important;
-  gap: 0.75rem !important;
-  align-items: center !important;
+/* FIXED: Check button now external to grid */
+.equation-active-row-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.equation-work-row-grid {
+  flex: 1;
 }
 
 .equation-blank {
@@ -1222,7 +1267,7 @@ body {
   padding: 0.5rem 0.75rem;
   min-width: 70px;
   min-height: 42px;
-  font-size: 1.125rem;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1249,25 +1294,25 @@ body {
   font-style: italic;
 }
 
-.equation-check-btn,
-.equation-submit-btn {
+/* FIXED: External check button (no longer in grid) */
+.equation-check-btn-external {
   background: linear-gradient(135deg, #10B981, #059669);
   color: white;
   border: none;
   border-radius: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  white-space: nowrap !important;
-  min-width: 140px;
+  white-space: nowrap;
+  min-width: 120px;
   font-family: 'Poppins', sans-serif;
+  flex-shrink: 0;
 }
 
-.equation-check-btn:hover,
-.equation-submit-btn:hover {
+.equation-check-btn-external:hover {
   background: linear-gradient(135deg, #059669, #047857);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -1307,42 +1352,46 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* IMPROVED: Term bank with better visibility */
+/* IMPROVED: Term bank with better visibility and centering */
 .equation-term-bank {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 0.75rem;
-  padding: 1rem;
+  padding: 0.8rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 3px solid var(--color-success);
 }
 
+/* FIXED: Centered prompt */
 .term-bank-label-territory {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #4B5563;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
   font-family: 'Poppins', sans-serif;
+  text-align: center !important;
+  width: 100%;
 }
 
 .equation-term-bank-2rows {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .term-bank-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.5rem;
   justify-content: center;
 }
 
-/* IMPROVED: Larger, more visible term chips */
+/* IMPROVED: Larger term chips, less padding */
 .term-chip {
   background: rgba(59, 130, 246, 0.08);
   border: 2px solid rgba(59, 130, 246, 0.25);
   border-radius: 0.5rem;
-  padding: 0.45rem 0.7rem !important;
-  font-size: 1.1rem !important;
+  padding: 0.4rem 0.65rem !important;
+  font-size: 1.15rem !important;
   font-weight: 700 !important;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1351,7 +1400,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   font-family: 'Poppins', sans-serif;
   color: #111;
 }
@@ -1384,10 +1433,10 @@ body {
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 700;
-  margin-left: 0.25rem;
+  margin-left: 0.2rem;
 }
 
-/* FIXED: Vertical line properly positioned */
+/* FIXED: Vertical line now stable (Check button outside grid) */
 .equation-vertical-line-overlay {
   position: absolute;
   width: 4px;
@@ -1401,10 +1450,7 @@ body {
   height: 100% !important;
 }
 
-/* ===================================================== */
-/* FRACTION DISPLAY STYLES - Level 18+                   */
-/* ===================================================== */
-
+/* Fraction display styles */
 .equation-stage .fraction-wrapper,
 .equation-work-area .fraction-wrapper,
 .equation-term-bank .fraction-wrapper {
@@ -1421,7 +1467,7 @@ body {
 .equation-term-bank .fraction-num {
   padding: 0 0.25rem !important;
   line-height: 1.1 !important;
-  font-size: 1.125rem !important;
+  font-size: 1.2rem !important;
 }
 
 .equation-stage .fraction-bar,
@@ -1439,7 +1485,7 @@ body {
 .equation-term-bank .fraction-den {
   padding: 0 0.25rem !important;
   line-height: 1.1 !important;
-  font-size: 1.125rem !important;
+  font-size: 1.2rem !important;
 }
 
 .term-chip .fraction-wrapper {
@@ -1448,7 +1494,7 @@ body {
 
 .term-chip .fraction-num,
 .term-chip .fraction-den {
-  font-size: 1.125rem !important;
+  font-size: 1.15rem !important;
   line-height: 1 !important;
   font-weight: 700 !important;
 }
@@ -1459,7 +1505,7 @@ body {
 
 .equation-blank .fraction-num,
 .equation-blank .fraction-den {
-  font-size: 1.125rem !important;
+  font-size: 1.2rem !important;
   font-weight: 600 !important;
 }
 
@@ -1478,7 +1524,6 @@ body {
   padding: 0.5rem 0 !important;
 }
 
-/* MULTIPLICATION SYMBOL STYLING */
 .multiply-symbol {
   font-weight: 700;
   color: #2563EB;
@@ -1502,19 +1547,18 @@ body {
     max-width: 100%;
   }
   
-  .equation-check-btn,
-  .equation-submit-btn {
-    min-width: 120px;
-    font-size: 0.95rem;
+  .equation-check-btn-external {
+    min-width: 100px;
+    font-size: 0.9rem;
   }
   
   .term-chip {
     font-size: 1rem !important;
-    padding: 0.4rem 0.6rem !important;
+    padding: 0.35rem 0.55rem !important;
   }
   
-  .equation-row-3col,
-  .equation-row-4col {
+  .equation-row-3col {
     gap: 0.5rem !important;
+    font-size: 1.2rem !important;
   }
 }
