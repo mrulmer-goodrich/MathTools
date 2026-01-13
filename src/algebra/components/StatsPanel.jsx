@@ -117,7 +117,8 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
         attempted: data.attempted,
         correct: data.correct,
         accuracy: levelAccuracy,
-        time: avgTime
+        time: avgTime,
+        mode: data.mode || 'unknown'  // ✅ ADDED: Include mode
       });
     });
     
@@ -205,6 +206,9 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <th onClick={() => handleSort('difficulty')} style={{ cursor: 'pointer' }}>
                         Route {sortConfig.key === 'difficulty' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
+                      <th onClick={() => handleSort('mode')} style={{ cursor: 'pointer' }}>
+                        Mode {sortConfig.key === 'mode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th onClick={() => handleSort('attempted')} style={{ cursor: 'pointer' }}>
                         Attempted {sortConfig.key === 'attempted' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
@@ -224,6 +228,13 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <tr key={`${row.level}-${row.difficulty}-${index}`}>
                         <td className="level-cell">{row.level}</td>
                         <td className="difficulty-cell">{row.difficulty}</td>
+                        <td className="mode-cell" style={{ 
+                          color: row.mode === 'practice' ? '#10B981' : '#3B82F6',
+                          fontWeight: 600,
+                          textTransform: 'capitalize'
+                        }}>
+                          {row.mode === 'practice' ? '🎯 Practice' : '🎮 Game'}
+                        </td>
                         <td>{row.attempted}</td>
                         <td>{row.correct}</td>
                         <td className={row.accuracy >= 70 ? 'acc-good' : row.accuracy >= 50 ? 'acc-ok' : 'acc-poor'}>
