@@ -404,7 +404,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationNeeded = 'divide';
       operationValue = a;
     } else if (skeleton === 'x/a=b') {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomInt(2, 12);
+      while (a === 0 || a < 2) {
+        a = randomInt(2, 12);
+      }
       b = Math.floor(solution / a); // Ensure clean division
       if (b === 0) b = 1;
       solution = a * b; // Recalculate to ensure integer solution
@@ -419,7 +423,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationValue = a;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=x/a') {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomInt(2, 12);
+      while (a === 0 || a < 2) {
+        a = randomInt(2, 12);
+      }
       b = Math.floor(solution / a);
       if (b === 0) b = 1;
       solution = a * b;
@@ -428,7 +436,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationValue = a;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'a=x/b') {
+      // CRITICAL: Ensure b is never 0 (division by zero)
       b = randomInt(2, 12);
+      while (b === 0 || b < 2) {
+        b = randomInt(2, 12);
+      }
       a = Math.floor(solution / b);
       if (a === 0) a = 1;
       solution = a * b;
@@ -449,7 +461,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationNeeded = 'divide';
       operationValue = a;
     } else if (skeleton === 'x/a=b') {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomNonZeroInt(-12, 12);
+      while (a === 0 || Math.abs(a) < 2) {
+        a = randomNonZeroInt(-12, 12);
+      }
       b = useDecimal ? (solution / 2) : Math.floor(solution / Math.abs(a));
       // Ensure clean result
       solution = b * a;
@@ -464,7 +480,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationValue = a;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'b=x/a') {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomNonZeroInt(-12, 12);
+      while (a === 0 || Math.abs(a) < 2) {
+        a = randomNonZeroInt(-12, 12);
+      }
       b = useDecimal ? (solution / 2) : Math.floor(solution / Math.abs(a));
       solution = b * a;
       problem = `${b} = x/${a}`;
@@ -472,7 +492,11 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
       operationValue = a;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'a=x/b') {
+      // CRITICAL: Ensure b is never 0 (division by zero)
       b = randomNonZeroInt(-12, 12);
+      while (b === 0 || Math.abs(b) < 2) {
+        b = randomNonZeroInt(-12, 12);
+      }
       a = Math.floor(solution / Math.abs(b));
       if (a === 0) a = b > 0 ? 1 : -1;
       solution = a * b;
@@ -2452,7 +2476,12 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
   let problemHasConstantOnLeft = false;
   
   if (difficulty === 'easy') {
+    // CRITICAL: Ensure a is never 0 (division by zero)
     a = randomNonZeroInt(-12, 12);
+    while (a === 0 || Math.abs(a) < 2) {
+      a = randomNonZeroInt(-12, 12);
+    }
+    
     b = randomNonZeroInt(-12, 12);
     const quotient = randomNonZeroInt(-12, 12);
     solution = a * quotient;
@@ -2468,13 +2497,23 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
     const useDecimal = Math.random() < 0.3;
     
     if (useDecimal) {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomNonZeroInt(-24, 24) / 2;
+      while (a === 0 || Math.abs(a) < 1) {
+        a = randomNonZeroInt(-24, 24) / 2;
+      }
+      
       b = randomNonZeroInt(-24, 24) / 2;
       const quotient = randomNonZeroInt(-24, 24) / 2;
       solution = a * quotient;
       c = quotient + b;
     } else {
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomNonZeroInt(-15, 15);
+      while (a === 0 || Math.abs(a) < 2) {
+        a = randomNonZeroInt(-15, 15);
+      }
+      
       b = randomNonZeroInt(-15, 15);
       const quotient = randomNonZeroInt(-15, 15);
       solution = a * quotient;
@@ -2493,41 +2532,60 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
   const afterStep1 = c - b;
   const step2Operation = a < 0 ? `× (${a})` : `× ${a}`;
   
+  // FIX: Comprehensive row1Bank matching Level 22 structure
   const row1Bank = [
     step1Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
     `× ${Math.abs(b)}`,
     `÷ ${Math.abs(b)}`,
-    `× ${Math.abs(a)}`,
-    `÷ ${Math.abs(a)}`
+    `+ ${Math.abs(b)}`,
+    `- ${Math.abs(b)}`,
+    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
+    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
+    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
+    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
   
+  // FIX: Comprehensive row2Bank matching Level 22 structure
   const row2Bank = [
     `x/${a}`,
     a < 0 ? `x/${-a}` : `-x/${a}`,
     String(afterStep1),
     String(-afterStep1),
+    String(afterStep1 + 1),
+    String(afterStep1 - 1),
     'x',
     '-x',
     String(solution),
     String(-solution)
   ];
   
+  // FIX: Comprehensive row3Bank - THIS WAS THE BUG!
   const row3Bank = [
     step2Operation,
     a < 0 ? `÷ (${a})` : `÷ ${a}`,
     a < 0 ? `× ${-a}` : `× (${-a})`,
+    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
     `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`
+    `÷ ${Math.abs(a) + 1}`,
+    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
+    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
+    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
+    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
   ];
   
+  // FIX: Comprehensive row4Bank matching Level 22 structure
   const row4Bank = [
     'x',
     '-x',
     String(solution),
     String(-solution),
     String(solution + 1),
-    String(solution - 1)
+    String(solution - 1),
+    String(a),
+    String(-a),
+    String(b),
+    String(-b)
   ];
   
   const staged = {
