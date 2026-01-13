@@ -266,6 +266,10 @@ export const generateOneStepAddSubtract = (difficulty) => {
     formatWithSign(-Math.abs(b)),
     `× ${Math.abs(a)}`,
     `÷ ${Math.abs(a)}`,
+    `× x`,  // Operation on variable distractor
+    `÷ x`,  // Operation on variable distractor
+    `+ x`,  // Adding variable distractor
+    `- x`,  // Subtracting variable distractor
     formatWithSign(Math.abs(operationValue) + 1), // Near-miss distractor
     formatWithSign(-(Math.abs(operationValue) + 1)) // Near-miss distractor
   ];
@@ -1563,7 +1567,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   
   if (difficulty === 'easy') {
     // Easy: -12 to 12, times tables, whole numbers
+    // CRITICAL: Ensure a is never 0 (division by zero)
     a = randomNonZeroInt(-12, 12);
+    while (a === 0 || Math.abs(a) < 2) {
+      a = randomNonZeroInt(-12, 12);
+    }
+    
     b = randomNonZeroInt(-12, 12);
     
     // Pick solution such that x/a is a whole number (mental math friendly)
@@ -1593,7 +1602,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     
     if (useDecimal) {
       // Decimals (.5 increments only)
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = (randomNonZeroInt(-24, 24) / 2);
+      while (a === 0 || Math.abs(a) < 1) {
+        a = (randomNonZeroInt(-24, 24) / 2);
+      }
+      
       b = (randomNonZeroInt(-24, 24) / 2);
       
       // Pick solution such that x/a is whole or half
@@ -1615,7 +1629,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       
     } else {
       // Regular integers
+      // CRITICAL: Ensure a is never 0 (division by zero)
       a = randomNonZeroInt(-12, 12);
+      while (a === 0 || Math.abs(a) < 2) {
+        a = randomNonZeroInt(-12, 12);
+      }
+      
       b = randomNonZeroInt(-12, 12);
       
       const quotient = randomNonZeroInt(-12, 12);
