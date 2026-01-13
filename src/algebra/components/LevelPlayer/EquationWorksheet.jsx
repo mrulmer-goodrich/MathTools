@@ -241,33 +241,43 @@ const EquationWorksheet = ({
           prevRight = prevSelections.slice(prevLeftBlanks).join(' ') || prevRight;
         }
         
-        // FIXED v13: Detect operation type and format accordingly
+        // FIXED CRITICAL: Proper mathematical notation for operations
         if (operation.includes('×')) {
-          // MULTIPLICATION: Show (expression) (factor)
-          const match = operation.match(/×\s*\(?([-\d.]+)\)?/);
+          // MULTIPLICATION: Show (expression)(factor) with NO SPACE or use · notation
+          const match = operation.match(/×\s*\(?([-\d./.]+)\)?/);
           if (match) {
             const factor = match[1];
             const wrapIfNeeded = (expr) => {
-              if (expr.includes(' ') || expr.includes('+') || expr.includes('-') || expr.includes('/')) {
+              // Always wrap if it's a complex expression
+              if (expr.includes(' ') || expr.includes('+') || expr.includes('-') || expr.includes('/') || expr.length > 3) {
                 return `(${expr})`;
               }
               return expr;
             };
             
-            leftDisplay = `${wrapIfNeeded(prevLeft)} (${factor})`;
-            rightDisplay = `${wrapIfNeeded(prevRight)} (${factor})`;
+            // Format: (expression)(factor) NO SPACE between parentheses
+            leftDisplay = `(${wrapIfNeeded(prevLeft)})(${factor})`;
+            rightDisplay = `(${wrapIfNeeded(prevRight)})(${factor})`;
           } else {
             leftDisplay = leftTerms.join(' ');
             rightDisplay = rightTerms.join(' ');
           }
         } else if (operation.includes('÷')) {
-          // DIVISION: Show as FRACTION - numerator/divisor
-          const match = operation.match(/÷\s*\(?([-\d.]+)\)?/);
+          // DIVISION: Show as FRACTION - (numerator)/(divisor)
+          const match = operation.match(/÷\s*\(?([-\d./.]+)\)?/);
           if (match) {
             const divisor = match[1];
-            // CRITICAL: Format as fraction using / notation
-            leftDisplay = `${prevLeft}/${divisor}`;
-            rightDisplay = `${prevRight}/${divisor}`;
+            const wrapIfNeeded = (expr) => {
+              // Wrap complex expressions in parentheses for clarity
+              if (expr.includes(' ') || expr.includes('+') || expr.includes('-') || expr.length > 3) {
+                return `(${expr})`;
+              }
+              return expr;
+            };
+            
+            // CRITICAL: Format as fraction (numerator)/(divisor)
+            leftDisplay = `(${wrapIfNeeded(prevLeft)})/(${divisor})`;
+            rightDisplay = `(${wrapIfNeeded(prevRight)})/(${divisor})`;
           } else {
             leftDisplay = leftTerms.join(' ');
             rightDisplay = rightTerms.join(' ');
