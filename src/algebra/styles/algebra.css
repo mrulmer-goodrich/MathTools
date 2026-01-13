@@ -1243,11 +1243,19 @@ body {
 
 .equation-active-row-wrapper {
   position: relative;
-  padding-right: 140px;
+  /* REMOVED: padding-right - let grid use full width for proper centering */
 }
 
 .equation-work-row-grid {
   width: 100%;
+  /* Grid now uses FULL width, so equals is truly centered */
+}
+
+/* Alternative: Make equals align with completed rows by adjusting grid */
+.equation-active-row-wrapper .equation-row-3col {
+  /* Ensure this grid matches the completed rows grid exactly */
+  width: 100%;
+  max-width: none;  /* Override any max-width */
 }
 
 .equation-blank {
