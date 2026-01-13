@@ -542,7 +542,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
     String(-solution),
     String(solution + 1), // Off by 1
     String(solution - 1), // Off by 1
-    `${Math.abs(a)}x`, // Didn't complete operation
+    `${formatCoefficient(Math.abs(a))}x`, // Didn't complete operation - FIXED with formatCoefficient
     `x ÷ ${Math.abs(a)}`, // Didn't complete operation
     String(b * a), // Wrong operation (multiplied instead of divided)
     String(Math.abs(b / a)).includes('.') ? String(Math.floor(b / a)) : String(b / a), // Wrong operation
@@ -1408,12 +1408,17 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   const afterStep1 = c - b;
   
   // FIX: For display, handle negative a properly in ax term
+  // FIXED: Use formatCoefficient to match problem display
   let afterStep1LeftDisplay, afterStep1RightDisplay;
   if (problemHasConstantOnLeft) {
     afterStep1LeftDisplay = String(afterStep1);
-    afterStep1RightDisplay = aDisplay.includes('/') ? `${aDisplay}x` : (aNumeric < 0 ? `-${Math.abs(aNumeric)}x` : `${aDisplay}x`);
+    afterStep1RightDisplay = aDisplay.includes('/') 
+      ? `${aDisplay}x` 
+      : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
   } else {
-    afterStep1LeftDisplay = aDisplay.includes('/') ? `${aDisplay}x` : (aNumeric < 0 ? `-${Math.abs(aNumeric)}x` : `${aDisplay}x`);
+    afterStep1LeftDisplay = aDisplay.includes('/') 
+      ? `${aDisplay}x` 
+      : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
     afterStep1RightDisplay = String(afterStep1);
   }
   
@@ -1441,10 +1446,13 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   ];
   
   // Build Row 2 bank (result after subtracting b)
-  const axDisplay = aDisplay.includes('/') ? `${aDisplay}x` : (aNumeric < 0 ? `-${Math.abs(aNumeric)}x` : `${aDisplay}x`);
+  // FIXED: Use formatCoefficient to ensure bank matches display
+  const axDisplay = aDisplay.includes('/') 
+    ? `${aDisplay}x` 
+    : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
   const row2Bank = [
     axDisplay,
-    aNumeric < 0 ? `${Math.abs(aNumeric)}x` : `-${aDisplay}x`,
+    aNumeric < 0 ? `${formatCoefficient(Math.abs(aNumeric))}x` : `-${formatCoefficient(Math.abs(aNumeric))}x`,
     String(afterStep1),
     String(-afterStep1),
     String(afterStep1 + 1),
@@ -2228,6 +2236,10 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
   const afterStep1 = c - b;
   const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
   
+  // FIXED: Build axTerm with formatCoefficient for consistency
+  const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+  const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
+  
   const row1Bank = [
     step1Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
@@ -2240,8 +2252,8 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
   ];
   
   const row2Bank = [
-    `${a}x`,
-    `${-a}x`,
+    axTerm,
+    negAxTerm,
     String(afterStep1),
     String(-afterStep1),
     String(afterStep1 + 1),
@@ -2275,8 +2287,8 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
     String(-b)
   ];
   
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [`${a}x`];
-  const row2ExpectedRight = problemHasConstantOnLeft ? [`${a}x`] : [String(afterStep1)];
+  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm];
+  const row2ExpectedRight = problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)];
   
   const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
@@ -2427,6 +2439,10 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
   const afterStep1 = c + b;
   const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
   
+  // FIXED: Build axTerm with formatCoefficient for consistency
+  const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+  const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
+  
   const row1Bank = [
     step1Operation,
     `- ${b}`,
@@ -2437,8 +2453,8 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
   ];
   
   const row2Bank = [
-    `${a}x`,
-    `${-a}x`,
+    axTerm,
+    negAxTerm,
     String(afterStep1),
     String(-afterStep1),
     'x',
@@ -2469,7 +2485,7 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
     rows: [
       { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
       { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [...new Set(row1Bank)].sort() },
-      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`${a}x`], expectedRight: problemHasConstantOnLeft ? [`${a}x`] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
+      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm], expectedRight: problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
       { id: 'row3_divide', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [...new Set(row3Bank)].sort() },
       { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: [...new Set(row4Bank)].sort() }
     ]
