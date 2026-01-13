@@ -30,6 +30,19 @@ export const validateAndFilterChoices = (choices, correctAnswer) => {
 };
 
 // ============================================
+// SHUFFLE ARRAY (Bank Randomization)
+// ============================================
+
+export const shuffleArray = (array) => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// ============================================
 // ANTI-REPEAT SYSTEM (Levels 1-8 only)
 // ============================================
 
@@ -1742,14 +1755,14 @@ const makeStagedSpec = ({ row1Terms, row2Answer, row1Bank, row2Choices }) => ({
       prompt: 'Distribute (expand) first.',
       blanks: row1Terms.length,
       expected: row1Terms,
-      bank: row1Bank
+      bank: shuffleArray(row1Bank)  // ✅ FIXED: Shuffle bank
     },
     {
       id: 'row2_combine',
       prompt: 'Now combine like terms to finish.',
       blanks: 1,
       expected: [row2Answer],
-      choices: row2Choices
+      choices: shuffleArray(row2Choices)  // ✅ FIXED: Shuffle choices
     }
   ]
 });
@@ -1871,9 +1884,9 @@ export const generateDistributeCombineProblem = (difficulty) => {
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
-            formatCoefficient(outside, 'x'),
+            formatCoefficient(outside, variable),  // ✅ FIXED: Use actual variable
             String(insideTerm),
-            formatCoefficient(standaloneTerm + outside, 'x'),
+            formatCoefficient(standaloneTerm + outside, variable),  // ✅ FIXED: Use actual variable
             String(distributedConstant + (trailingConst || 0))
           ],
           padTo: 12
