@@ -74,18 +74,39 @@ const simplifyDenominator = (denominator) => {
   return str;
 };
 
-// Format with explicit sign (for equation banks)
+// Utility: Format with explicit sign (for equation banks)
 const formatWithSign = (num) => {
   if (num === 0) return '0';
   if (num > 0) return `+${num}`;
   return String(num);
 };
 
-// Format coefficient for display (hide 1, show -1 as just minus)
+// Utility: Format coefficient for display (hide 1, show -1 as just minus)
 const formatCoefficient = (coef) => {
   if (coef === 1) return '';
   if (coef === -1) return '-';
   return String(coef);
+};
+
+// Utility: Shuffle array for randomizing banks
+const shuffleArray = (array) => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// Utility: Validate that expected values are in bank
+const validateBank = (bank, expected, levelId, rowId) => {
+  const missing = expected.filter(exp => !bank.includes(exp));
+  if (missing.length > 0) {
+    console.error(`CRITICAL: Expected values missing from ${levelId} ${rowId} bank:`, missing);
+    // Force add missing values
+    missing.forEach(val => bank.unshift(val));
+  }
+  return bank;
 };
 
 // Format operation for display
@@ -1238,6 +1259,11 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   if (difficulty === 'easy') {
     // Easy: -12 to 12, times tables, whole numbers
     a = randomNonZeroInt(-12, 12);
+    // VALIDATION: Avoid coefficient = ±1 for true two-step problems
+    while (Math.abs(a) === 1) {
+      a = randomNonZeroInt(-12, 12);
+    }
+    
     b = randomNonZeroInt(-12, 12);
     solution = randomNonZeroInt(-12, 12);
     
@@ -1363,6 +1389,11 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
     } else {
       // Regular integers
       a = randomNonZeroInt(-12, 12);
+      // VALIDATION: Avoid coefficient = ±1 for true two-step problems
+      while (Math.abs(a) === 1) {
+        a = randomNonZeroInt(-12, 12);
+      }
+      
       b = randomNonZeroInt(-12, 12);
       solution = randomNonZeroInt(-12, 12);
       c = a * solution + b;
@@ -1618,6 +1649,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     }
     
     b = randomNonZeroInt(-12, 12);
+    while (b === 0 || Math.abs(b) < 2) {
+      b = randomNonZeroInt(-12, 12);
+    }
     
     // Pick solution such that x/a is a whole number (mental math friendly)
     const quotient = randomNonZeroInt(-12, 12);
@@ -1653,6 +1687,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       }
       
       b = (randomNonZeroInt(-24, 24) / 2);
+      while (b === 0 || Math.abs(b) < 1) {
+        b = (randomNonZeroInt(-24, 24) / 2);
+      }
       
       // Pick solution such that x/a is whole or half
       const quotient = (randomNonZeroInt(-24, 24) / 2);
@@ -1680,6 +1717,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       }
       
       b = randomNonZeroInt(-12, 12);
+      while (b === 0 || Math.abs(b) < 2) {
+        b = randomNonZeroInt(-12, 12);
+      }
       
       const quotient = randomNonZeroInt(-12, 12);
       solution = a * quotient;
