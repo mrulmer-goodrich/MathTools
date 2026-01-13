@@ -48,6 +48,32 @@ const randomNonZeroInt = (min, max) => {
   return val;
 };
 
+// FIX BUG #2: Helper to simplify denominators - NEVER show "x/(7+12)", always show "x/19"
+const simplifyDenominator = (denominator) => {
+  // If it's a number, return as-is
+  if (typeof denominator === 'number') return denominator;
+  
+  // If it's a string that looks like arithmetic, evaluate it
+  const str = String(denominator).trim();
+  
+  // Check if it contains arithmetic operations
+  if (str.includes('+') || str.includes('-') || str.includes('*') || str.includes('/')) {
+    try {
+      // Safely evaluate simple arithmetic (only numbers and basic operators)
+      const sanitized = str.replace(/[^0-9+\-*/().\s]/g, '');
+      if (sanitized === str) {
+        // eslint-disable-next-line no-eval
+        const result = eval(sanitized);
+        return Number.isFinite(result) ? result : str;
+      }
+    } catch (e) {
+      console.warn('Could not simplify denominator:', str);
+    }
+  }
+  
+  return str;
+};
+
 // Format with explicit sign (for equation banks)
 const formatWithSign = (num) => {
   if (num === 0) return '0';
