@@ -194,7 +194,8 @@ const Algebra = () => {
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now()
+        lastPlayed: Date.now(),
+        mode: playMode || 'play'  // ✅ ADDED: Track mode
       };
 
       return {
@@ -204,7 +205,8 @@ const Algebra = () => {
           [levelKey]: {
             ...existingLevel,
             attempted: existingLevel.attempted + 1,
-            lastPlayed: Date.now()
+            lastPlayed: Date.now(),
+            mode: playMode || 'play'  // ✅ ADDED: Update mode
           }
         },
         problemsAttempted: prev.problemsAttempted + 1
@@ -228,7 +230,8 @@ const Algebra = () => {
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now()
+        lastPlayed: Date.now(),
+        mode: playMode || 'play'  // ✅ ADDED: Track mode
       };
 
       return {
@@ -242,7 +245,8 @@ const Algebra = () => {
             firstTryCorrect: existingLevel.firstTryCorrect + (isFirstTry ? 1 : 0),
             totalSolved: existingLevel.totalSolved + 1,
             totalTime: existingLevel.totalTime + (timeSpent || 0),
-            lastPlayed: Date.now()
+            lastPlayed: Date.now(),
+            mode: playMode || 'play'  // ✅ ADDED: Update mode
           }
         },
         problemsAttempted: prev.problemsAttempted + 1,
