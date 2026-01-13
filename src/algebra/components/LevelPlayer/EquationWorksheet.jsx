@@ -61,6 +61,28 @@ const EquationWorksheet = ({
     return str;
   };
 
+  // FIXED BUG #1: Check if two equation sides are equivalent (handles commutative property)
+  // Accepts "x = 5" and "5 = x" as equivalent, "-7 = x" and "x = -7" as equivalent
+  const areEquationSidesEquivalent = (leftSelected, rightSelected, leftExpected, rightExpected) => {
+    const leftMatch = leftSelected.every((term, idx) => term === leftExpected[idx]);
+    const rightMatch = rightSelected.every((term, idx) => term === rightExpected[idx]);
+    
+    // Check standard order: left matches left AND right matches right
+    if (leftMatch && rightMatch) {
+      return true;
+    }
+    
+    // Check reversed order (commutative property): left matches right AND right matches left
+    const leftReversedMatch = leftSelected.every((term, idx) => term === rightExpected[idx]);
+    const rightReversedMatch = rightSelected.every((term, idx) => term === leftExpected[idx]);
+    
+    if (leftReversedMatch && rightReversedMatch) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const formatTermBankDisplay = (term) => {
     const str = String(term).trim();
     
@@ -128,15 +150,10 @@ const EquationWorksheet = ({
       const leftExpected = currentRow.expectedLeft.map(normalizeForComparison);
       const rightExpected = currentRow.expectedRight.map(normalizeForComparison);
       
-      const leftCorrect = 
-        leftSelected.length === leftExpected.length &&
-        leftSelected.every((term, idx) => term === leftExpected[idx]);
+      // FIXED BUG #1: Use equivalence checker that handles commutative property
+      const isCorrect = areEquationSidesEquivalent(leftSelected, rightSelected, leftExpected, rightExpected);
       
-      const rightCorrect = 
-        rightSelected.length === rightExpected.length &&
-        rightSelected.every((term, idx) => term === rightExpected[idx]);
-      
-      if (leftCorrect && rightCorrect) {
+      if (isCorrect) {
         setCompletedRows(prev => [...prev, rowId]);
         
         if (isFinalRow) {
