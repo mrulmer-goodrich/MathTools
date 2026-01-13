@@ -241,9 +241,16 @@ const EquationWorksheet = ({
           prevRight = prevSelections.slice(prevLeftBlanks).join(' ') || prevRight;
         }
         
+        // Helper to strip unnecessary double parentheses
+        const stripDoubleParens = (str) => {
+          // Replace ((...)) with (...) - remove outer parens if inner exists
+          // But keep ((...)) if it's actually needed (like nested fractions)
+          return str.replace(/\(\(([^()]+)\)\)/g, '($1)');
+        };
+        
         // FIXED CRITICAL: Proper mathematical notation for operations
         if (operation.includes('×')) {
-          // MULTIPLICATION: Show (expression)(factor) with NO SPACE or use · notation
+          // MULTIPLICATION: Show (expression)(factor) with NO SPACE
           const match = operation.match(/×\s*\(?([-\d./.]+)\)?/);
           if (match) {
             const factor = match[1];
@@ -256,8 +263,8 @@ const EquationWorksheet = ({
             };
             
             // Format: (expression)(factor) NO SPACE between parentheses
-            leftDisplay = `(${wrapIfNeeded(prevLeft)})(${factor})`;
-            rightDisplay = `(${wrapIfNeeded(prevRight)})(${factor})`;
+            leftDisplay = stripDoubleParens(`(${wrapIfNeeded(prevLeft)})(${factor})`);
+            rightDisplay = stripDoubleParens(`(${wrapIfNeeded(prevRight)})(${factor})`);
           } else {
             leftDisplay = leftTerms.join(' ');
             rightDisplay = rightTerms.join(' ');
@@ -276,8 +283,8 @@ const EquationWorksheet = ({
             };
             
             // CRITICAL: Format as fraction (numerator)/(divisor)
-            leftDisplay = `(${wrapIfNeeded(prevLeft)})/(${divisor})`;
-            rightDisplay = `(${wrapIfNeeded(prevRight)})/(${divisor})`;
+            leftDisplay = stripDoubleParens(`(${wrapIfNeeded(prevLeft)})/(${divisor})`);
+            rightDisplay = stripDoubleParens(`(${wrapIfNeeded(prevRight)})/(${divisor})`);
           } else {
             leftDisplay = leftTerms.join(' ');
             rightDisplay = rightTerms.join(' ');
