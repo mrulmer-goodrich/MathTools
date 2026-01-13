@@ -81,6 +81,13 @@ const formatWithSign = (num) => {
   return String(num);
 };
 
+// Format coefficient for display (hide 1, show -1 as just minus)
+const formatCoefficient = (coef) => {
+  if (coef === 1) return '';
+  if (coef === -1) return '-';
+  return String(coef);
+};
+
 // Format operation for display
 const formatOperation = (op, num) => {
   const absNum = Math.abs(num);
@@ -400,7 +407,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
     if (skeleton === 'ax=b') {
       a = randomInt(2, 12);
       b = a * solution;
-      problem = `${a}x = ${b}`;
+      problem = `${formatCoefficient(a)}x = ${b}`;
       operationNeeded = 'divide';
       operationValue = a;
     } else if (skeleton === 'x/a=b') {
@@ -418,7 +425,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
     } else if (skeleton === 'b=ax') {
       a = randomInt(2, 12);
       b = a * solution;
-      problem = `${b} = ${a}x`;
+      problem = `${b} = ${formatCoefficient(a)}x`;
       operationNeeded = 'divide';
       operationValue = a;
       problemHasConstantOnLeft = true;
@@ -457,7 +464,8 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
     if (skeleton === 'ax=b') {
       a = useDecimal ? (randomNonZeroInt(-40, 40) / 2) : randomNonZeroInt(-12, 12);
       b = a * solution;
-      problem = `${a}x = ${b}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = axTerm + ` = ${b}`;
       operationNeeded = 'divide';
       operationValue = a;
     } else if (skeleton === 'x/a=b') {
@@ -475,7 +483,8 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
     } else if (skeleton === 'b=ax') {
       a = useDecimal ? (randomNonZeroInt(-40, 40) / 2) : randomNonZeroInt(-12, 12);
       b = a * solution;
-      problem = `${b} = ${a}x`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = `${b} = ` + axTerm;
       operationNeeded = 'divide';
       operationValue = a;
       problemHasConstantOnLeft = true;
@@ -1239,36 +1248,37 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
     
     // Build problem string based on skeleton
     // CRITICAL: Handle negative coefficients properly to avoid + -7x
+    // FIXED: Hide coefficient of 1 or -1 (1x → x, -1x → -x)
     if (skeleton === 'ax+b=c') {
       // ax + b = c form
-      const axTerm = a < 0 ? `-${Math.abs(a)}x` : `${a}x`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
       problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
     } else if (skeleton === 'c=ax+b') {
       // c = ax + b form
-      const axTerm = a < 0 ? `-${Math.abs(a)}x` : `${a}x`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
       problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'b+ax=c') {
       // b + ax = c form - FIX: Handle negative a properly
       if (b < 0 && a < 0) {
-        problem = `-${Math.abs(b)} - ${Math.abs(a)}x = ${c}`;
+        problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
       } else if (b < 0 && a > 0) {
-        problem = `-${Math.abs(b)} + ${a}x = ${c}`;
+        problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
       } else if (b > 0 && a < 0) {
-        problem = `${b} - ${Math.abs(a)}x = ${c}`;
+        problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
       } else {
-        problem = `${b} + ${a}x = ${c}`;
+        problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
       }
     } else if (skeleton === 'c=b+ax') {
       // c = b + ax form - FIX: Handle negative a properly
       if (b < 0 && a < 0) {
-        problem = `${c} = -${Math.abs(b)} - ${Math.abs(a)}x`;
+        problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
       } else if (b < 0 && a > 0) {
-        problem = `${c} = -${Math.abs(b)} + ${a}x`;
+        problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
       } else if (b > 0 && a < 0) {
-        problem = `${c} = ${b} - ${Math.abs(a)}x`;
+        problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
       } else {
-        problem = `${c} = ${b} + ${a}x`;
+        problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
       }
       problemHasConstantOnLeft = true;
     }
@@ -1319,7 +1329,8 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
       aDisplay = String(a);
       aNumeric = a;
       
-      const axTerm = a < 0 ? `-${Math.abs(a)}x` : `${a}x`;
+      // FIXED: Use formatCoefficient to hide 1.0
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
       
       if (skeleton === 'ax+b=c') {
         problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
@@ -1328,23 +1339,23 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         problemHasConstantOnLeft = true;
       } else if (skeleton === 'b+ax=c') {
         if (b < 0 && a < 0) {
-          problem = `-${Math.abs(b)} - ${Math.abs(a)}x = ${c}`;
+          problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
         } else if (b < 0 && a > 0) {
-          problem = `-${Math.abs(b)} + ${a}x = ${c}`;
+          problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
         } else if (b > 0 && a < 0) {
-          problem = `${b} - ${Math.abs(a)}x = ${c}`;
+          problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
         } else {
-          problem = `${b} + ${a}x = ${c}`;
+          problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
         }
       } else if (skeleton === 'c=b+ax') {
         if (b < 0 && a < 0) {
-          problem = `${c} = -${Math.abs(b)} - ${Math.abs(a)}x`;
+          problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
         } else if (b < 0 && a > 0) {
-          problem = `${c} = -${Math.abs(b)} + ${a}x`;
+          problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
         } else if (b > 0 && a < 0) {
-          problem = `${c} = ${b} - ${Math.abs(a)}x`;
+          problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
         } else {
-          problem = `${c} = ${b} + ${a}x`;
+          problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
         }
         problemHasConstantOnLeft = true;
       }
@@ -1358,7 +1369,8 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
       aDisplay = String(a);
       aNumeric = a;
       
-      const axTerm = a < 0 ? `-${Math.abs(a)}x` : `${a}x`;
+      // FIXED: Use formatCoefficient to hide 1 and -1
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
       
       if (skeleton === 'ax+b=c') {
         problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
@@ -1367,23 +1379,23 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         problemHasConstantOnLeft = true;
       } else if (skeleton === 'b+ax=c') {
         if (b < 0 && a < 0) {
-          problem = `-${Math.abs(b)} - ${Math.abs(a)}x = ${c}`;
+          problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
         } else if (b < 0 && a > 0) {
-          problem = `-${Math.abs(b)} + ${a}x = ${c}`;
+          problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
         } else if (b > 0 && a < 0) {
-          problem = `${b} - ${Math.abs(a)}x = ${c}`;
+          problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
         } else {
-          problem = `${b} + ${a}x = ${c}`;
+          problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
         }
       } else if (skeleton === 'c=b+ax') {
         if (b < 0 && a < 0) {
-          problem = `${c} = -${Math.abs(b)} - ${Math.abs(a)}x`;
+          problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
         } else if (b < 0 && a > 0) {
-          problem = `${c} = -${Math.abs(b)} + ${a}x`;
+          problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
         } else if (b > 0 && a < 0) {
-          problem = `${c} = ${b} - ${Math.abs(a)}x`;
+          problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
         } else {
-          problem = `${c} = ${b} + ${a}x`;
+          problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
         }
         problemHasConstantOnLeft = true;
       }
@@ -2175,10 +2187,13 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
     solution = randomNonZeroInt(-12, 12);
     c = a * solution + b;
     
+    // FIXED: Use formatCoefficient to hide 1 and -1
     if (skeleton === 'ax+b=c') {
-      problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
     } else {
-      problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
       problemHasConstantOnLeft = true;
     }
   } else {
@@ -2198,10 +2213,13 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
       c = a * solution + b;
     }
     
+    // FIXED: Use formatCoefficient to hide 1 and -1
     if (skeleton === 'ax+b=c') {
-      problem = b < 0 ? `${a}x - ${Math.abs(b)} = ${c}` : `${a}x + ${b} = ${c}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
     } else {
-      problem = b < 0 ? `${c} = ${a}x - ${Math.abs(b)}` : `${c} = ${a}x + ${b}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
       problemHasConstantOnLeft = true;
     }
   }
@@ -2358,10 +2376,13 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
       break;
     }
     
+    // FIXED: Use formatCoefficient (though this already avoids a=±1)
     if (skeleton === 'ax-b=c') {
-      problem = `${a}x - ${b} = ${c}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = `${axTerm} - ${b} = ${c}`;
     } else {
-      problem = `${c} = ${a}x - ${b}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = `${c} = ${axTerm} - ${b}`;
       problemHasConstantOnLeft = true;
     }
   } else {
@@ -2391,10 +2412,13 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
       }
     }
     
+    // FIXED: Use formatCoefficient (though this already avoids a=±1)
     if (skeleton === 'ax-b=c') {
-      problem = `${a}x - ${b} = ${c}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = `${axTerm} - ${b} = ${c}`;
     } else {
-      problem = `${c} = ${a}x - ${b}`;
+      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
+      problem = `${c} = ${axTerm} - ${b}`;
       problemHasConstantOnLeft = true;
     }
   }
