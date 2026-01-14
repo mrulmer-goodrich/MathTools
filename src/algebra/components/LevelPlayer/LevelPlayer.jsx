@@ -108,14 +108,11 @@ const LevelPlayer = ({
     }
 
     setCurrentProblem(problem);
-      setShowFeedback(false);
-      setShowSuccess(false);
-      setSelectedAnswer(null);
-      setProblemStartTime(Date.now());
-      setProblemAttempts(0);
-    } else {
-      console.error(`No generator found for level ${levelId}`);
-    }
+    setShowFeedback(false);
+    setShowSuccess(false);
+    setSelectedAnswer(null);
+    setProblemStartTime(Date.now());
+    setProblemAttempts(0);
   };
 
   const handleProblemComplete = () => {
