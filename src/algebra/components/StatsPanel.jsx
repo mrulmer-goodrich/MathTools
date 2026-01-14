@@ -1,4 +1,5 @@
 // StatsPanel.jsx - COMPLETE FIX: All morning notes addressed
+// VERSION: 2025-01-14_03 (Mode key parsing, nuclear clear)
 // Location: src/algebra/components/StatsPanel.jsx
 
 import React, { useMemo, useState } from 'react';
