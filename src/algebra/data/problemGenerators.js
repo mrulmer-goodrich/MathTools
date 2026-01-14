@@ -1911,7 +1911,7 @@ export const generateDistributeCombineProblem = (difficulty) => {
       const variable = randomFrom(HARD_VARIABLES);
       
       const useDecimal = Math.random() < 0.3;
-      const outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
+      let outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
       const insideTerm = randomNonZeroInt(1, 12);
       const standaloneMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
       
@@ -1942,11 +1942,15 @@ export const generateDistributeCombineProblem = (difficulty) => {
           formatCoefficient(standaloneMag, variable)
         ];
       } else if (skeleton.type === '-a(v+b)+cv') {
+        // This skeleton explicitly has a negative outside factor.
+        // Force the effective outside coefficient to be negative so the
+        // distributed terms and answer match what is rendered.
         insideOp = '+';
         const outsideMag = Math.abs(outside);
+        outside = -outsideMag;
         standaloneCoef = standaloneMag;
         problemParts = [
-          formatParenExpression(-outsideMag, variable, insideTerm, '+'),
+          formatParenExpression(outside, variable, insideTerm, '+'),
           formatCoefficient(standaloneMag, variable)
         ];
       } else {
@@ -2152,11 +2156,14 @@ export const generateDistributeSubtractProblem = (difficulty) => {
           formatCoefficient(-Math.abs(standaloneMag), variable)
         ];
       } else {
+        // This final skeleton branch renders a negative outside factor.
+        // Ensure the effective outside coefficient is negative to keep math consistent.
         insideOp = '-';
         const outsideMag = Math.abs(outside);
+        outside = -outsideMag;
         standaloneCoef = standaloneMag;
         problemParts = [
-          formatParenExpression(-outsideMag, variable, insideTerm, '-'),
+          formatParenExpression(outside, variable, insideTerm, '-'),
           formatCoefficient(standaloneMag, variable)
         ];
       }
@@ -2249,9 +2256,10 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       } else {
         insideOp = '+';
         standaloneCoef = standaloneTerm;
+        outside = -outsideMag;
         problemParts = [
           formatCoefficient(standaloneTerm, 'x'),
-          formatParenExpression(-outsideMag, 'x', insideTerm, '+')
+          formatParenExpression(outside, 'x', insideTerm, '+')
         ];
       }
       
@@ -2321,11 +2329,16 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
           formatCoefficient(standaloneMag, variable)
         ];
       } else if (skeleton.type === 'cv-a(v+b)') {
+        // IMPORTANT: This skeleton represents subtraction: cv - a(v+b).
+        // We render it as "+ cv" plus a negative parentheses term.
+        // If we force the parentheses negative, we MUST also force the effective outside coefficient negative,
+        // otherwise the distributed terms (row1Terms / answer) will have the wrong sign.
         insideOp = '+';
         standaloneCoef = standaloneMag;
+        outside = -outsideMag;
         problemParts = [
           formatCoefficient(standaloneMag, variable),
-          formatParenExpression(-outsideMag, variable, insideTerm, '+')
+          formatParenExpression(outside, variable, insideTerm, '+')
         ];
       } else if (skeleton.type === '-a(v+b)-cv') {
         insideOp = '+';
