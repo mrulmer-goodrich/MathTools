@@ -1,3 +1,5 @@
+// problemGenerators.js
+// VERSION: 2025-01-14_02 (Day 2 Fixes: Variable fix, bank shuffle)
 import { generateOneStepAddSubtract } from './equationGenerators';
 import { generateOneStepMultiplyDivide } from './equationGenerators';
 import { generateOneStepAddSubtractNegatives } from './equationGenerators';
