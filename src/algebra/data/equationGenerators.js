@@ -1,5 +1,6 @@
 // ============================================
 // EQUATION GENERATORS - LEVELS 17+
+// VERSION: 2025-01-14_02 (Day 2 Fixes: Bank shuffle, validations, coefficient fixes)
 // One-step and multi-step equation solving
 // FIXED: Sides swapped bug, improved bank distribution
 // ============================================
@@ -74,18 +75,39 @@ const simplifyDenominator = (denominator) => {
   return str;
 };
 
-// Format with explicit sign (for equation banks)
+// Utility: Format with explicit sign (for equation banks)
 const formatWithSign = (num) => {
   if (num === 0) return '0';
   if (num > 0) return `+${num}`;
   return String(num);
 };
 
-// Format coefficient for display (hide 1, show -1 as just minus)
+// Utility: Format coefficient for display (hide 1, show -1 as just minus)
 const formatCoefficient = (coef) => {
   if (coef === 1) return '';
   if (coef === -1) return '-';
   return String(coef);
+};
+
+// Utility: Shuffle array for randomizing banks
+const shuffleArray = (array) => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+// Utility: Validate that expected values are in bank
+const validateBank = (bank, expected, levelId, rowId) => {
+  const missing = expected.filter(exp => !bank.includes(exp));
+  if (missing.length > 0) {
+    console.error(`CRITICAL: Expected values missing from ${levelId} ${rowId} bank:`, missing);
+    // Force add missing values
+    missing.forEach(val => bank.unshift(val));
+  }
+  return bank;
 };
 
 // Format operation for display
@@ -1238,6 +1260,11 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   if (difficulty === 'easy') {
     // Easy: -12 to 12, times tables, whole numbers
     a = randomNonZeroInt(-12, 12);
+    // VALIDATION: Avoid coefficient = ±1 for true two-step problems
+    while (Math.abs(a) === 1) {
+      a = randomNonZeroInt(-12, 12);
+    }
+    
     b = randomNonZeroInt(-12, 12);
     solution = randomNonZeroInt(-12, 12);
     
@@ -1292,12 +1319,7 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
       // Use fraction for coefficient a
       const denoms = [2, 3, 4, 5];
       const q = denoms[Math.floor(Math.random() * denoms.length)];
-      let p = randomNonZeroInt(-6, 6);
-      
-      // CRITICAL: Prevent p = q (e.g., 3/3 = 1)
-      while (Math.abs(p) === q) {
-        p = randomNonZeroInt(-6, 6);
-      }
+      const p = randomNonZeroInt(-6, 6);
       
       // Pick solution that works cleanly
       const k = randomNonZeroInt(-8, 8);
@@ -1368,6 +1390,11 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
     } else {
       // Regular integers
       a = randomNonZeroInt(-12, 12);
+      // VALIDATION: Avoid coefficient = ±1 for true two-step problems
+      while (Math.abs(a) === 1) {
+        a = randomNonZeroInt(-12, 12);
+      }
+      
       b = randomNonZeroInt(-12, 12);
       solution = randomNonZeroInt(-12, 12);
       c = a * solution + b;
@@ -1623,6 +1650,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     }
     
     b = randomNonZeroInt(-12, 12);
+    while (b === 0 || Math.abs(b) < 2) {
+      b = randomNonZeroInt(-12, 12);
+    }
     
     // Pick solution such that x/a is a whole number (mental math friendly)
     const quotient = randomNonZeroInt(-12, 12);
@@ -1633,17 +1663,6 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     
     // Build problem string based on skeleton
     // CRITICAL: If b is negative, display as subtraction
-    // SPECIAL CASE: If b=0, don't show it (would be one-step)
-    if (b === 0) {
-      // This shouldn't happen due to validation, but handle anyway
-      console.error('Level 22: b=0 detected, regenerating...');
-      b = randomNonZeroInt(-12, 12);
-      while (b === 0 || Math.abs(b) < 2) {
-        b = randomNonZeroInt(-12, 12);
-      }
-      c = quotient + b;  // Recalculate c
-    }
-    
     if (skeleton === 'x/a+b=c') {
       problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
     } else if (skeleton === 'c=x/a+b') {
@@ -1669,6 +1688,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       }
       
       b = (randomNonZeroInt(-24, 24) / 2);
+      while (b === 0 || Math.abs(b) < 1) {
+        b = (randomNonZeroInt(-24, 24) / 2);
+      }
       
       // Pick solution such that x/a is whole or half
       const quotient = (randomNonZeroInt(-24, 24) / 2);
@@ -1696,6 +1718,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       }
       
       b = randomNonZeroInt(-12, 12);
+      while (b === 0 || Math.abs(b) < 2) {
+        b = randomNonZeroInt(-12, 12);
+      }
       
       const quotient = randomNonZeroInt(-12, 12);
       solution = a * quotient;
