@@ -53,30 +53,49 @@ const FractionDisplay = ({ expression }) => {
     );
   }
   
-  // CRITICAL FIX 2025-01-14: Smart split that respects operator precedence
-  // "x/3 - 12" should be "(x/3) - 12" NOT "x/(3-12)"
-  // Only take denominator up to next operator (space + or space -)
+  // CRITICAL FIX 2025-01-14: Smart split that identifies ONLY the fraction term
+  // "-6 + x/-2" should be "-6 + (x/-2)" NOT "(-6+x)/-2"
+  // We need to find the term IMMEDIATELY before the /, not everything before it
   const smartFractionSplit = (str) => {
     const slashIndex = str.indexOf('/');
     if (slashIndex === -1) return null;
     
-    const numerator = str.substring(0, slashIndex);
+    // Find the START of the fraction numerator by looking backwards from /
+    // Stop at: space followed by operator, or start of string
+    let numeratorStart = 0;
+    for (let i = slashIndex - 1; i >= 0; i--) {
+      const char = str[i];
+      const prevChar = i > 0 ? str[i-1] : '';
+      
+      // If we hit a space followed by + or -, that's where the fraction term starts
+      if (char === ' ' && i > 0 && /[\+\-]/.test(prevChar)) {
+        numeratorStart = i + 1; // Start after the space
+        break;
+      }
+    }
+    
+    const beforeFraction = str.substring(0, numeratorStart).trim();
+    const numerator = str.substring(numeratorStart, slashIndex).trim();
     const afterSlash = str.substring(slashIndex + 1);
     
-    // Find the end of the denominator (stop at space + operator or space - operator)
-    // But NOT if the - is part of a negative number immediately after /
+    // Find the end of the denominator (stop at space + operator)
     let denominatorEnd = afterSlash.length;
-    
-    // Match pattern: whitespace followed by + or -
     const operatorMatch = afterSlash.match(/\s+[\+\-]/);
     if (operatorMatch) {
       denominatorEnd = operatorMatch.index;
     }
     
     const denominator = afterSlash.substring(0, denominatorEnd).trim();
-    const remainder = afterSlash.substring(denominatorEnd).trim();
+    const afterFraction = afterSlash.substring(denominatorEnd).trim();
     
-    return { numerator: numerator.trim(), denominator, remainder };
+    return { 
+      beforeFraction, 
+      numerator, 
+      denominator, 
+      afterFraction,
+      hasBefore: beforeFraction.length > 0,
+      hasAfter: afterFraction.length > 0
+    };
   };
   
   // Check if contains "/" for fraction rendering
@@ -87,16 +106,17 @@ const FractionDisplay = ({ expression }) => {
   
   // Try smart split first
   const smartSplit = smartFractionSplit(str);
-  if (smartSplit && smartSplit.remainder) {
-    // This is something like "x/3 - 12" -> render as fraction + remainder
+  if (smartSplit && (smartSplit.hasBefore || smartSplit.hasAfter)) {
+    // This is something like "-6 + x/-2" or "x/3 - 12"
     return (
       <span>
+        {smartSplit.hasBefore && <span>{smartSplit.beforeFraction} </span>}
         <div className="fraction-wrapper" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
           <div className="fraction-num">{smartSplit.numerator}</div>
           <div className="fraction-bar"></div>
           <div className="fraction-den">{smartSplit.denominator}</div>
         </div>
-        <span> {smartSplit.remainder}</span>
+        {smartSplit.hasAfter && <span> {smartSplit.afterFraction}</span>}
       </span>
     );
   }
