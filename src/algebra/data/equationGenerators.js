@@ -1,5 +1,6 @@
 // ============================================
 // EQUATION GENERATORS - LEVELS 17+
+// VERSION: 2025-01-14_03 (Fraction n/n prevention, Level 22 b=0 fix)
 // One-step and multi-step equation solving
 // FIXED: Sides swapped bug, improved bank distribution
 // ============================================
