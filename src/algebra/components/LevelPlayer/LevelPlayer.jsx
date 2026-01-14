@@ -17,8 +17,13 @@ import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerato
 import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
 import { generateTwoStepMultiplyAdd } from '../../data/equationGenerators';
 import { generateTwoStepDivideAdd } from '../../data/equationGenerators';
+import { generateTwoStepAddDivide } from '../../data/equationGenerators';
+import { generateTwoStepMixedReview } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
+
+
 import EquationWorksheet from './EquationWorksheet';
+
 
 
 const LevelPlayer = ({ 
