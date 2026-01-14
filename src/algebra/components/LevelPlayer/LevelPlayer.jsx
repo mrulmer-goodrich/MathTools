@@ -1,5 +1,4 @@
 // LevelPlayer.jsx - FIXED: Passes problem to FeedbackModal, proper stats tracking
-// VERSION: 2025-01-14_02 (Day 2 Fixes: Practice navigation)
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +10,12 @@ import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
+import { generateOneStepAddSubtract } from '../../data/equationGenerators';
+import { generateOneStepMultiplyDivide } from '../../data/equationGenerators';
+import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerators';
+import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
+import { generateTwoStepMultiplyAdd } from '../../data/equationGenerators';
+import { generateTwoStepDivideAdd } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
 import EquationWorksheet from './EquationWorksheet';
 
@@ -71,19 +76,18 @@ const LevelPlayer = ({
   }, [showIntro]);
 
   const generateNewProblem = () => {
-    // Registry-only generator resolution. Levels should be keyed by levelId (e.g., '1-21').
-    // Support both named-export object and nested export shapes defensively.
-    const generatorMap = (problemGenerators && typeof problemGenerators === 'object')
-      ? (problemGenerators.problemGenerators || problemGenerators)
-      : {};
-
-    const generator = generatorMap[levelId];
-    if (!generator || typeof generator !== 'function') {
+    const generator = problemGenerators[levelId];
+    if (generator) {
+      const problem = generator(difficulty);
+      setCurrentProblem(problem);
+      setShowFeedback(false);
+      setShowSuccess(false);
+      setSelectedAnswer(null);
+      setProblemStartTime(Date.now());
+      setProblemAttempts(0);
+    } else {
       console.error(`No generator found for level ${levelId}`);
-      return;
     }
-
-  
   };
 
   const handleProblemComplete = () => {
@@ -313,11 +317,8 @@ const LevelPlayer = ({
 
   return (
     <div className="level-player" data-region={region}>
-      <button 
-        className="btn-back-base" 
-        onClick={playMode === 'practice' ? onBackToPractice : onReturnToMenu}
-      >
-        ← {playMode === 'practice' ? 'Back to Practice' : 'Back to Base Camp'}
+      <button className="btn-back-base" onClick={onReturnToMenu}>
+        ← Back to Base Camp
       </button>
 
       <div className="level-content">
