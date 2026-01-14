@@ -1651,9 +1651,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
       problemHasConstantOnLeft = true;
     } else if (skeleton === 'b+x/a=c') {
-      problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
+      problem = b < 0 ? `-${Math.abs(b)} + (x/${a}) = ${c}` : `${b} + (x/${a}) = ${c}`;
     } else if (skeleton === 'c=b+x/a') {
-      problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
+      problem = b < 0 ? `${c} = -${Math.abs(b)} + (x/${a})` : `${c} = ${b} + (x/${a})`;
       problemHasConstantOnLeft = true;
     }
     
@@ -1682,9 +1682,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
         problemHasConstantOnLeft = true;
       } else if (skeleton === 'b+x/a=c') {
-        problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
+        problem = b < 0 ? `-${Math.abs(b)} + (x/${a}) = ${c}` : `${b} + (x/${a}) = ${c}`;
       } else if (skeleton === 'c=b+x/a') {
-        problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
+        problem = b < 0 ? `${c} = -${Math.abs(b)} + (x/${a})` : `${c} = ${b} + (x/${a})`;
         problemHasConstantOnLeft = true;
       }
       
@@ -1708,9 +1708,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
         problemHasConstantOnLeft = true;
       } else if (skeleton === 'b+x/a=c') {
-        problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
+        problem = b < 0 ? `-${Math.abs(b)} + (x/${a}) = ${c}` : `${b} + (x/${a}) = ${c}`;
       } else if (skeleton === 'c=b+x/a') {
-        problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
+        problem = b < 0 ? `${c} = -${Math.abs(b)} + (x/${a})` : `${c} = ${b} + (x/${a})`;
         problemHasConstantOnLeft = true;
       }
     }
