@@ -1,5 +1,7 @@
-// FeedbackModal.jsx - v14 FINAL: Fractions, minimal padding, no scroll
+// FeedbackModal.jsx - v15 SURGICAL FIX: Equations with fractions in feedback
 // Location: src/algebra/components/FeedbackModal.jsx
+// FIX: renderProblemValue now splits equations on = before passing to FractionDisplay
+// This fixes "(4+x)/12" displaying incorrectly in step-by-step solutions
 
 import React from 'react';
 import StackedEquation from '../StackedEquation';
@@ -68,12 +70,30 @@ const FeedbackModal = ({
     return strValue;
   };
 
-  // FIXED v14: Helper to render problem with fractions
+  // FIXED v15: Helper to render problem with fractions - HANDLES EQUATIONS
   const renderProblemValue = (value) => {
     if (!value) return null;
     const strValue = String(value);
     
-    // Check if value contains fraction notation
+    // CRITICAL FIX: Check if this is an equation (contains =)
+    // Must split equation BEFORE passing to FractionDisplay
+    // Bug: "(4+x)/12" in equation "8 = (4+x)/12" was being passed as whole string
+    if (strValue.includes('=')) {
+      const parts = strValue.split('=');
+      if (parts.length === 2) {
+        const left = parts[0].trim();
+        const right = parts[1].trim();
+        return (
+          <>
+            {left.includes('/') ? <FractionDisplay expression={left} /> : left}
+            {' = '}
+            {right.includes('/') ? <FractionDisplay expression={right} /> : right}
+          </>
+        );
+      }
+    }
+    
+    // Single expression (no equals) - check for fraction notation
     if (strValue.includes('/')) {
       return <FractionDisplay expression={strValue} />;
     }
