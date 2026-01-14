@@ -1343,15 +1343,38 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   const afterStep1LeftDisplay = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
 
   const staged = {
-    mode: 'two_step_linear',
-    meta: { levelId, difficulty, skeleton, a, b, c, solution, problemHasConstantOnLeft },
-    steps: [
-      { id: 'step0', prompt: 'Solve the equation.', display: problem },
-      { id: 'step1', prompt: 'Undo the constant term first.', expected: step1Operation },
-      { id: 'step2', prompt: 'Undo the coefficient.', expected: `÷ ${aDisplay}` }
-    ]
-  };
-
+  mode: 'equation_solver',
+  rows: [
+    {
+      id: 'row0_draw_line',
+      type: 'single_choice',
+      instruction: 'What do you do first?',
+      choices: ['Draw a line'],
+      expected: ['Draw a line']
+    },
+    {
+      id: 'row1_operation',
+      type: 'dual_box',
+      instruction: 'What do we do to both sides?',
+      leftBlanks: 1,
+      rightBlanks: 1,
+      expectedLeft: [row1Expected[0]],
+      expectedRight: [row1Expected[1]],
+      bank: [...new Set(row1Bank)].sort()
+    },
+    {
+      id: 'row2_solution',
+      type: 'dual_box',
+      instruction: 'Simplify each side',
+      leftBlanks: 1,
+      rightBlanks: 1,
+      expectedLeft: row2ExpectedLeft,
+      expectedRight: row2ExpectedRight,
+      bank: [...new Set(row2Bank)].sort()
+    }
+  ]
+};
+  
   const rule = 'Need to remove the lonely number before unsticking the sticky';
 
   return {
