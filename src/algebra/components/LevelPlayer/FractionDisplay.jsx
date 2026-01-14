@@ -1,5 +1,9 @@
-// FractionDisplay.jsx - Renders fractions from "/" notation
+// FractionDisplay.jsx - SURGICAL FIX: Compound numerator handling
 // Location: src/algebra/components/LevelPlayer/FractionDisplay.jsx
+// 
+// CRITICAL FIX: Added pattern matching for (expression)/denominator BEFORE greedy split
+// This ensures "(4+x)/12" renders with parentheses intact, not as "4 + x/12"
+// VERSION: 2025-01-14-SURGICAL
 
 import React from 'react';
 
@@ -10,8 +14,11 @@ import React from 'react';
  * CRITICAL: All denominators MUST be simplified before reaching this component.
  * Never pass "x/(7+12)" - always pass "x/19"
  * 
+ * NEW: Now handles compound numerators like (4+x)/12, (x-3)/7, etc.
+ * 
  * Examples:
  *   "x/4" → renders with x on top, bar, 4 on bottom
+ *   "(4+x)/12" → renders with (4+x) on top, bar, 12 on bottom [NEW FIX]
  *   "(4)(x/4)" → renders "(4)" then fraction, handles wrapping
  *   "12" → renders as "12"
  *   "3x" → renders as "3x"
@@ -65,6 +72,24 @@ const FractionDisplay = ({ expression }) => {
   if (!str.includes('/')) {
     // No fraction, render as text
     return <span>{str}</span>;
+  }
+  
+  // CRITICAL FIX: Check for (expression)/denominator pattern BEFORE greedy split
+  // Defense-in-depth for cases like "(4+x)/12", "(x-3)/7", "(-5+x)/8"
+  // This pattern catches compound numerators that should stay grouped
+  const compoundNumeratorPattern = /^\(([^)]+)\)\s*\/\s*(.+)$/;
+  const compoundMatch = str.match(compoundNumeratorPattern);
+  
+  if (compoundMatch) {
+    const [, numerator, denominator] = compoundMatch;
+    // Keep the numerator expression intact with parentheses
+    return (
+      <div className="fraction-wrapper">
+        <div className="fraction-num">({numerator.trim()})</div>
+        <div className="fraction-bar"></div>
+        <div className="fraction-den">{denominator.trim()}</div>
+      </div>
+    );
   }
   
   // Handle wrapped expressions like "(4)(x/4)"
