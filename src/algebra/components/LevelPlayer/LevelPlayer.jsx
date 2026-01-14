@@ -17,13 +17,8 @@ import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerato
 import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
 import { generateTwoStepMultiplyAdd } from '../../data/equationGenerators';
 import { generateTwoStepDivideAdd } from '../../data/equationGenerators';
-import { generateTwoStepAddDivide } from '../../data/equationGenerators';
-import { generateTwoStepMixedReview } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
-
-
 import EquationWorksheet from './EquationWorksheet';
-
 
 
 const LevelPlayer = ({ 
@@ -83,9 +78,36 @@ const LevelPlayer = ({
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
-    if (generator) {
-      const problem = generator(difficulty);
-      setCurrentProblem(problem);
+
+    if (!generator) {
+      console.error(`No generator found for levelId: ${levelId}`);
+      setCurrentProblem(null);
+      return;
+    }
+
+    // Some generators can legitimately fail to produce a problem if constraints are too tight.
+    // Retry a handful of times before giving up so students never see a blank worksheet shell.
+    let problem = null;
+    const maxTries = 25;
+    for (let i = 0; i < maxTries; i++) {
+      try {
+        const candidate = generator(difficulty);
+        if (candidate) {
+          problem = candidate;
+          break;
+        }
+      } catch (err) {
+        console.error(`Generator threw for levelId=${levelId}, difficulty=${difficulty} (try ${i + 1}/${maxTries})`, err);
+      }
+    }
+
+    if (!problem) {
+      console.error(`Generator returned no problem for levelId=${levelId}, difficulty=${difficulty} after ${maxTries} tries`);
+      setCurrentProblem(null);
+      return;
+    }
+
+    setCurrentProblem(problem);
       setShowFeedback(false);
       setShowSuccess(false);
       setSelectedAnswer(null);
