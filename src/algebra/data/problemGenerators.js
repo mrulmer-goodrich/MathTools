@@ -1679,9 +1679,6 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
     // Normalize for duplicate detection (remove leading +)
     const normalized = s.replace(/^\+/, '');
     
-    // CRITICAL FIX: Reject zero-coefficient variable terms (e.g., +0x-15), which should simplify to a constant only
-    if (/[^\d]0\s*[a-zA-Z]/.test(` ${normalized}`)) return;
-    
     // Check for exact duplicates first
     if (seen.has(normalized)) return;
     
