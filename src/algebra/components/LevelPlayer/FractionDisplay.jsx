@@ -28,26 +28,12 @@ const FractionDisplay = ({ expression }) => {
   
   const str = String(expression).trim();
   
-  // FIX BUG #2: If we somehow get an unsimplified denominator, try to simplify it
-  const simplifyIfNeeded = (value) => {
-    const v = String(value).trim();
-    // If contains arithmetic, evaluate it (safety check)
-    if (v.includes('+') || (v.includes('-') && v.length > 2)) {
-      try {
-        const sanitized = v.replace(/[^0-9+\-*/().\s]/g, '');
-        if (sanitized === v && sanitized.length > 0) {
-          const result = eval(sanitized);
-          if (Number.isFinite(result)) {
-            console.warn(`FractionDisplay received unsimplified denominator: ${v}, simplified to: ${result}`);
-            return String(result);
-          }
-        }
-      } catch (e) {
-        // If eval fails, return original
-      }
-    }
-    return v;
-  };
+  // REMOVED 2025-01-14: This function was CAUSING bugs, not fixing them!
+  // It was evaluating denominators like "3-12" to "-9", causing mismatch with term banks
+  // The generator should NEVER create unsimplified denominators in the first place
+  // const simplifyIfNeeded = (value) => {
+  //   return String(value).trim();
+  // };
   
   // Check for coefficient fraction pattern: (n/d)x or (-n/d)x
   const coefficientPattern = /^\((-?\d+)\s*\/\s*(\d+)\)\s*x$/;
@@ -55,23 +41,64 @@ const FractionDisplay = ({ expression }) => {
   
   if (coeffMatch) {
     const [, numerator, denominator] = coeffMatch;
-    const simplifiedDen = simplifyIfNeeded(denominator);
     return (
       <span className="coefficient-fraction-expression">
         <div className="fraction-wrapper">
           <div className="fraction-num">{numerator.trim()}</div>
           <div className="fraction-bar"></div>
-          <div className="fraction-den">{simplifiedDen}</div>
+          <div className="fraction-den">{denominator.trim()}</div>
         </div>
         <span className="variable-x">x</span>
       </span>
     );
   }
   
+  // CRITICAL FIX 2025-01-14: Smart split that respects operator precedence
+  // "x/3 - 12" should be "(x/3) - 12" NOT "x/(3-12)"
+  // Only take denominator up to next operator (space + or space -)
+  const smartFractionSplit = (str) => {
+    const slashIndex = str.indexOf('/');
+    if (slashIndex === -1) return null;
+    
+    const numerator = str.substring(0, slashIndex);
+    const afterSlash = str.substring(slashIndex + 1);
+    
+    // Find the end of the denominator (stop at space + operator or space - operator)
+    // But NOT if the - is part of a negative number immediately after /
+    let denominatorEnd = afterSlash.length;
+    
+    // Match pattern: whitespace followed by + or -
+    const operatorMatch = afterSlash.match(/\s+[\+\-]/);
+    if (operatorMatch) {
+      denominatorEnd = operatorMatch.index;
+    }
+    
+    const denominator = afterSlash.substring(0, denominatorEnd).trim();
+    const remainder = afterSlash.substring(denominatorEnd).trim();
+    
+    return { numerator: numerator.trim(), denominator, remainder };
+  };
+  
   // Check if contains "/" for fraction rendering
   if (!str.includes('/')) {
     // No fraction, render as text
     return <span>{str}</span>;
+  }
+  
+  // Try smart split first
+  const smartSplit = smartFractionSplit(str);
+  if (smartSplit && smartSplit.remainder) {
+    // This is something like "x/3 - 12" -> render as fraction + remainder
+    return (
+      <span>
+        <div className="fraction-wrapper" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+          <div className="fraction-num">{smartSplit.numerator}</div>
+          <div className="fraction-bar"></div>
+          <div className="fraction-den">{smartSplit.denominator}</div>
+        </div>
+        <span> {smartSplit.remainder}</span>
+      </span>
+    );
   }
   
   // CRITICAL FIX: Check for (expression)/denominator pattern BEFORE greedy split
@@ -104,7 +131,6 @@ const FractionDisplay = ({ expression }) => {
           
           if (cleanPart.includes('/')) {
             const [num, den] = cleanPart.split('/');
-            const simplifiedDen = simplifyIfNeeded(den);
             return (
               <React.Fragment key={idx}>
                 {idx > 0 && <span className="expression-separator"></span>}
@@ -112,7 +138,7 @@ const FractionDisplay = ({ expression }) => {
                 <div className="fraction-wrapper">
                   <div className="fraction-num">{num.trim()}</div>
                   <div className="fraction-bar"></div>
-                  <div className="fraction-den">{simplifiedDen}</div>
+                  <div className="fraction-den">{den.trim()}</div>
                 </div>
                 <span>)</span>
               </React.Fragment>
@@ -132,13 +158,12 @@ const FractionDisplay = ({ expression }) => {
   
   // Simple fraction: split and render
   const [numerator, denominator] = str.split('/');
-  const simplifiedDen = simplifyIfNeeded(denominator);
   
   return (
     <div className="fraction-wrapper">
       <div className="fraction-num">{numerator.trim()}</div>
       <div className="fraction-bar"></div>
-      <div className="fraction-den">{simplifiedDen}</div>
+      <div className="fraction-den">{denominator.trim()}</div>
     </div>
   );
 };
