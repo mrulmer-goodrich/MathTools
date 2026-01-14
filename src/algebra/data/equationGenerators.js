@@ -1344,6 +1344,10 @@ const afterStep1Right = c - b;
 const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
 const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
 
+// Display strings used in explanation panel (standardized orientation)
+const afterStep1LeftDisplay = axTerm;
+const afterStep1RightDisplay = String(afterStep1Right);
+
 const row1Bank = [
   step1Operation,
   b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
@@ -1543,7 +1547,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   let problem = '';
   let problemHasConstantOnLeft = false;
 
-  let fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+  const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 
   if (skeleton === 'x/a+b=c') {
     problem = b < 0 ? `${fracTerm} - ${Math.abs(b)} = ${c}` : `${fracTerm} + ${b} = ${c}`;
@@ -1559,7 +1563,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
 const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
 const afterStep1Right = c - b;
 
-fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 const negFracTerm = `-(x/${a})`;
 
 const row1Bank = [
