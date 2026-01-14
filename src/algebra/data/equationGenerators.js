@@ -1,5 +1,6 @@
 // ============================================
 // EQUATION GENERATORS - LEVELS 17+
+// VERSION: 2025-01-14_02 (Day 2 Fixes: Bank shuffle, validations, coefficient fixes)
 // One-step and multi-step equation solving
 // FIXED: Sides swapped bug, improved bank distribution
 // ============================================
