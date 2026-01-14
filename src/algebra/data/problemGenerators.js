@@ -1,3 +1,5 @@
+// problemGenerators.js
+// VERSION: 2025-01-14_03 (Level 13 bank enhanced distractors)
 import { generateOneStepAddSubtract } from './equationGenerators';
 import { generateOneStepMultiplyDivide } from './equationGenerators';
 import { generateOneStepAddSubtractNegatives } from './equationGenerators';
@@ -102,14 +104,18 @@ const formatCoefficient = (coefficient, variable) => {
 // If problem was a(b + x), answer is ab + ax (NOT ax + ab)
 // constantFirst = true means constant came first in original problem
 const canonicalizeExpression = (coefficient, variable, constant, constantFirst = false) => {
+  // CRITICAL FIX: Eliminate zero-coefficient terms
+  if (Math.abs(coefficient) < 0.0001) {
+    // No variable term, return constant only
+    return String(constant);
+  }
+  
   // Handle coefficient display
   let varPart = formatCoefficient(coefficient, variable);
   
   // Handle constant
   if (coefficient === 0 && constant === 0) {
     return '0';
-  } else if (coefficient === 0) {
-    return String(constant);
   } else if (constant === 0) {
     return varPart;
   } else if (constantFirst) {
@@ -222,6 +228,20 @@ const uniqueChoices = (choices) => {
 
 // Helper to format expressions consistently (used by Levels 9+)
 const formatAnswer = (coefficient, variable, constant) => {
+  // CRITICAL FIX: Eliminate zero-coefficient terms (e.g., 0z - 15 → -15)
+  if (Math.abs(coefficient) < 0.0001) {
+    // No variable term remains, return constant only
+    return String(constant);
+  }
+  
+  // Zero constant, return variable term only
+  if (Math.abs(constant) < 0.0001) {
+    return coefficient === -1 ? `-${variable}` : 
+           coefficient === 1 ? variable :
+           `${coefficient}${variable}`;
+  }
+  
+  // Both terms present
   const varPart = coefficient === -1 ? `-${variable}` : 
                   coefficient === 1 ? variable :
                   `${coefficient}${variable}`;
@@ -1659,6 +1679,9 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
     // Normalize for duplicate detection (remove leading +)
     const normalized = s.replace(/^\+/, '');
     
+    // CRITICAL FIX: Reject zero-coefficient variable terms (e.g., +0x-15), which should simplify to a constant only
+    if (/[^\d]0\s*[a-zA-Z]/.test(` ${normalized}`)) return;
+    
     // Check for exact duplicates first
     if (seen.has(normalized)) return;
     
@@ -1909,7 +1932,7 @@ export const generateDistributeCombineProblem = (difficulty) => {
       const variable = randomFrom(HARD_VARIABLES);
       
       const useDecimal = Math.random() < 0.3;
-      const outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
+      let outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
       const insideTerm = randomNonZeroInt(1, 12);
       const standaloneMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
       
@@ -1940,11 +1963,15 @@ export const generateDistributeCombineProblem = (difficulty) => {
           formatCoefficient(standaloneMag, variable)
         ];
       } else if (skeleton.type === '-a(v+b)+cv') {
+        // This skeleton explicitly has a negative outside factor.
+        // Force the effective outside coefficient to be negative so the
+        // distributed terms and answer match what is rendered.
         insideOp = '+';
         const outsideMag = Math.abs(outside);
+        outside = -outsideMag;
         standaloneCoef = standaloneMag;
         problemParts = [
-          formatParenExpression(-outsideMag, variable, insideTerm, '+'),
+          formatParenExpression(outside, variable, insideTerm, '+'),
           formatCoefficient(standaloneMag, variable)
         ];
       } else {
@@ -1983,9 +2010,14 @@ export const generateDistributeCombineProblem = (difficulty) => {
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
-            formatCoefficient(outside, variable),
-            String(insideTerm),
-            String(distributedConstant)
+            formatCoefficient(Math.abs(outside), variable),  // Wrong: positive version of distributed coef
+            formatCoefficient(-Math.abs(outside), variable), // Wrong: negative version
+            String(insideTerm),  // Just the inside constant
+            String(-insideTerm), // Negated inside constant
+            String(distributedConstant),  // The distributed constant
+            String(-distributedConstant), // Wrong sign
+            formatCoefficient(Math.abs(standaloneCoef), variable), // Wrong sign of standalone
+            formatCoefficient(-Math.abs(standaloneCoef), variable)  // Negated standalone
           ],
           padTo: 14
         });
@@ -2145,11 +2177,14 @@ export const generateDistributeSubtractProblem = (difficulty) => {
           formatCoefficient(-Math.abs(standaloneMag), variable)
         ];
       } else {
+        // This final skeleton branch renders a negative outside factor.
+        // Ensure the effective outside coefficient is negative to keep math consistent.
         insideOp = '-';
         const outsideMag = Math.abs(outside);
+        outside = -outsideMag;
         standaloneCoef = standaloneMag;
         problemParts = [
-          formatParenExpression(-outsideMag, variable, insideTerm, '-'),
+          formatParenExpression(outside, variable, insideTerm, '-'),
           formatCoefficient(standaloneMag, variable)
         ];
       }
@@ -2242,9 +2277,10 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       } else {
         insideOp = '+';
         standaloneCoef = standaloneTerm;
+        outside = -outsideMag;
         problemParts = [
           formatCoefficient(standaloneTerm, 'x'),
-          formatParenExpression(-outsideMag, 'x', insideTerm, '+')
+          formatParenExpression(outside, 'x', insideTerm, '+')
         ];
       }
       
@@ -2292,7 +2328,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       
       const useDecimal = Math.random() < 0.4;
       const outsideMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(2, 12);
-      const outside = -outsideMag;
+      let outside = -outsideMag; // Changed to 'let' to allow reassignment in skeleton branches
       const insideTerm = randomNonZeroInt(1, 12);
       const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(-12, 12);
       
@@ -2314,11 +2350,16 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
           formatCoefficient(standaloneMag, variable)
         ];
       } else if (skeleton.type === 'cv-a(v+b)') {
+        // IMPORTANT: This skeleton represents subtraction: cv - a(v+b).
+        // We render it as "+ cv" plus a negative parentheses term.
+        // If we force the parentheses negative, we MUST also force the effective outside coefficient negative,
+        // otherwise the distributed terms (row1Terms / answer) will have the wrong sign.
         insideOp = '+';
         standaloneCoef = standaloneMag;
+        outside = -outsideMag;
         problemParts = [
           formatCoefficient(standaloneMag, variable),
-          formatParenExpression(-outsideMag, variable, insideTerm, '+')
+          formatParenExpression(outside, variable, insideTerm, '+')
         ];
       } else if (skeleton.type === '-a(v+b)-cv') {
         insideOp = '+';
