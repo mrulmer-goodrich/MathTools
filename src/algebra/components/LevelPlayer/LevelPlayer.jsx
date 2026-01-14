@@ -92,7 +92,7 @@ const LevelPlayer = ({
       setProblemStartTime(Date.now());
       setProblemAttempts(0);
     } catch (err) {
-      console.error('[LevelPlayer] Generator error:', err);
+      console.error('[LevelPlayer] Generator error:');
     }
   };
 
