@@ -1,5 +1,4 @@
 // Algebra.jsx - ModulePlayer removed, direct LevelPlayer integration
-// VERSION: 2025-01-14_03 (Fraction validation, Level 13 bank, Level 22 b=0, mode tracking)
 import React, { useState, useEffect } from 'react';
 import AvatarSelection from './components/AvatarSelection';
 import StoryIntro from './components/StoryIntro';
@@ -12,32 +11,7 @@ import MapDisplay from './components/MapDisplay';
 import BadgeCollection from './components/BadgeCollection';
 import './styles/algebra.css';
 
-// VERSION TRACKING - Visible in DevTools
-const APP_VERSION = {
-  version: '2025-01-14_03',
-  name: 'Fraction & Mode Fixes',
-  build: Date.now(),
-  features: [
-    'Prevent fraction (n/n)',
-    'Level 13 bank fix',
-    'Level 22 b=0 prevention',
-    'Mode tracking per level'
-  ]
-};
-
 const Algebra = () => {
-  // Log version on mount
-  useEffect(() => {
-    console.log('%c🎮 ALGEBRA EXPEDITION', 'font-size: 20px; font-weight: bold; color: #10B981');
-    console.log('%cVersion:', 'font-weight: bold', APP_VERSION.version);
-    console.log('%cBuild:', 'font-weight: bold', new Date(APP_VERSION.build).toLocaleString());
-    console.log('%cFeatures:', 'font-weight: bold', APP_VERSION.features.join(', '));
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #10B981');
-    
-    // Make version globally accessible
-    window.ALGEBRA_VERSION = APP_VERSION;
-  }, []);
-  
   const [showAvatarSelection, setShowAvatarSelection] = useState(!localStorage.getItem('algebra_player_name'));
   const [showStory, setShowStory] = useState(!localStorage.getItem('algebra_story_seen'));
   const [gameState, setGameState] = useState('baseCamp');
@@ -213,16 +187,14 @@ const Algebra = () => {
     // Track attempted problems (including wrong answers)
     setStats(prev => {
       const diffKey = difficulty || 'easy';
-      const modeKey = playMode || 'play';
-      const levelKey = `${levelId}-${diffKey}-${modeKey}`;  // ✅ FIXED: Include mode in key
+      const levelKey = `${levelId}-${diffKey}`;
       const existingLevel = prev.levelStats[levelKey] || {
         attempted: 0,
         correct: 0,
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now(),
-        mode: modeKey  // Store mode
+        lastPlayed: Date.now()
       };
 
       return {
@@ -232,8 +204,7 @@ const Algebra = () => {
           [levelKey]: {
             ...existingLevel,
             attempted: existingLevel.attempted + 1,
-            lastPlayed: Date.now(),
-            mode: modeKey  // Update mode
+            lastPlayed: Date.now()
           }
         },
         problemsAttempted: prev.problemsAttempted + 1
@@ -250,16 +221,14 @@ const Algebra = () => {
     // Enhanced stats tracking per level and difficulty
     setStats(prev => {
       const diffKey = difficulty || 'easy';
-      const modeKey = playMode || 'play';
-      const levelKey = `${levelId}-${diffKey}-${modeKey}`;  // ✅ FIXED: Include mode in key
+      const levelKey = `${levelId}-${diffKey}`;
       const existingLevel = prev.levelStats[levelKey] || {
         attempted: 0,
         correct: 0,
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now(),
-        mode: modeKey
+        lastPlayed: Date.now()
       };
 
       return {
@@ -273,8 +242,7 @@ const Algebra = () => {
             firstTryCorrect: existingLevel.firstTryCorrect + (isFirstTry ? 1 : 0),
             totalSolved: existingLevel.totalSolved + 1,
             totalTime: existingLevel.totalTime + (timeSpent || 0),
-            lastPlayed: Date.now(),
-            mode: modeKey
+            lastPlayed: Date.now()
           }
         },
         problemsAttempted: prev.problemsAttempted + 1,
