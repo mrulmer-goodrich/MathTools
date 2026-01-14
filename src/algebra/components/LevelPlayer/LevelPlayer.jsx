@@ -1,4 +1,5 @@
 // LevelPlayer.jsx - FIXED: Passes problem to FeedbackModal, proper stats tracking
+// VERSION: 2025-01-14_02 (Day 2 Fixes: Practice navigation)
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
