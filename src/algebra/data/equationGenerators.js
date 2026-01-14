@@ -1,42 +1,70 @@
-// ============================================
-// EQUATION GENERATORS - LEVELS 17+
-// One-step and multi-step equation solving
-// FIXED: Sides swapped bug, improved bank distribution
-// ============================================
+import { generateOneStepAddSubtract } from './equationGenerators';
+import { generateOneStepMultiplyDivide } from './equationGenerators';
+import { generateOneStepAddSubtractNegatives } from './equationGenerators';
+import { generateOneStepMultiplyDivideNegativesFractions } from './equationGenerators';
+import { generateTwoStepMultiplyAdd } from './equationGenerators';
+import { generateTwoStepDivideAdd } from './equationGenerators';
+import { generateTwoStepAddDivide } from './equationGenerators';
+import { generateTwoStepMixedReview } from './equationGenerators';
 
 // ============================================
-// SKELETON ROTATION SYSTEM
-// Ensures no skeleton repeats until all have been seen
+// GLOBAL NaN PROTECTION
 // ============================================
 
-const skeletonHistory = {
-  // Format: { '1-17-easy': ['x+a=b', 'x-a=b', ...] }
+export const validateAndFilterChoices = (choices, correctAnswer) => {
+  const validChoices = choices.filter(choice => {
+    if (choice === null || choice === undefined) return false;
+    const str = String(choice);
+    if (str.includes('NaN') || str.includes('undefined') || str.includes('null')) {
+      console.error('Invalid choice detected:', choice);
+      return false;
+    }
+    return true;
+  });
+  
+  if (!validChoices.includes(correctAnswer)) {
+    validChoices.unshift(correctAnswer);
+  }
+  
+  return [...new Set(validChoices)];
 };
 
-const resetSkeletonPool = (levelId, difficulty, allSkeletons) => {
+// ============================================
+// ANTI-REPEAT SYSTEM (Levels 1-8 only)
+// ============================================
+
+const problemHistory = {
+  // Format: { '1-1-easy': [sig1, sig2, ...], '1-2-hard': [...] }
+};
+
+const MAX_HISTORY = 20;
+const MAX_RETRIES = 8;
+
+export const clearProblemHistory = () => {
+  Object.keys(problemHistory).forEach(key => delete problemHistory[key]);
+};
+
+const generateSignature = (levelId, difficulty, params) => {
+  return JSON.stringify({ levelId, difficulty, ...params });
+};
+
+const isRecentDuplicate = (levelId, difficulty, signature) => {
   const key = `${levelId}-${difficulty}`;
-  skeletonHistory[key] = [...allSkeletons];
-  // Shuffle the pool
-  for (let i = skeletonHistory[key].length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [skeletonHistory[key][i], skeletonHistory[key][j]] = [skeletonHistory[key][j], skeletonHistory[key][i]];
+  if (!problemHistory[key]) return false;
+  return problemHistory[key].includes(signature);
+};
+
+const recordProblem = (levelId, difficulty, signature) => {
+  const key = `${levelId}-${difficulty}`;
+  if (!problemHistory[key]) problemHistory[key] = [];
+  problemHistory[key].push(signature);
+  if (problemHistory[key].length > MAX_HISTORY) {
+    problemHistory[key].shift();
   }
 };
 
-const getNextSkeleton = (levelId, difficulty, allSkeletons) => {
-  const key = `${levelId}-${difficulty}`;
-  
-  // Initialize pool if empty or doesn't exist
-  if (!skeletonHistory[key] || skeletonHistory[key].length === 0) {
-    resetSkeletonPool(levelId, difficulty, allSkeletons);
-  }
-  
-  // Pop from pool
-  return skeletonHistory[key].pop();
-};
-
 // ============================================
-// HELPER FUNCTIONS
+// UTILITY FUNCTIONS
 // ============================================
 
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -47,2611 +75,4388 @@ const randomNonZeroInt = (min, max) => {
   } while (val === 0);
   return val;
 };
+const randomFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const randomDecimal = () => randomFrom([0.5, 0.25, 0.75, 1.5, 2.5, 0.2, 0.4, 0.6, 0.8]);
 
-// FIX BUG #2: Helper to simplify denominators - NEVER show "x/(7+12)", always show "x/19"
-const simplifyDenominator = (denominator) => {
-  // If it's a number, return as-is
-  if (typeof denominator === 'number') return denominator;
-  
-  // If it's a string that looks like arithmetic, evaluate it
-  const str = String(denominator).trim();
-  
-  // Check if it contains arithmetic operations
-  if (str.includes('+') || str.includes('-') || str.includes('*') || str.includes('/')) {
-    try {
-      // Safely evaluate simple arithmetic (only numbers and basic operators)
-      const sanitized = str.replace(/[^0-9+\-*/().\s]/g, '');
-      if (sanitized === str) {
-        // eslint-disable-next-line no-eval
-        const result = eval(sanitized);
-        return Number.isFinite(result) ? result : str;
-      }
-    } catch (e) {
-      console.warn('Could not simplify denominator:', str);
-    }
-  }
-  
-  return str;
-};
+// Variable pools
+const EASY_VARIABLE = 'x';
+const HARD_VARIABLES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z'];
 
-// Format with explicit sign (for equation banks)
-const formatWithSign = (num) => {
-  if (num === 0) return '0';
-  if (num > 0) return `+${num}`;
-  return String(num);
-};
-
-// Format coefficient for display (hide 1, show -1 as just minus)
-const formatCoefficient = (coef) => {
-  if (coef === 1) return '';
-  if (coef === -1) return '-';
-  return String(coef);
-};
-
-// Format operation for display
-const formatOperation = (op, num) => {
-  const absNum = Math.abs(num);
-  if (op === 'add') return formatWithSign(absNum);
-  if (op === 'subtract') return formatWithSign(-absNum);
-  if (op === 'multiply') return `× ${absNum}`;
-  if (op === 'divide') return `÷ ${absNum}`;
-  return String(num);
+const getVariable = (difficulty) => {
+  return difficulty === 'easy' ? EASY_VARIABLE : randomFrom(HARD_VARIABLES);
 };
 
 // ============================================
-// LEVEL 1-17: ONE-STEP EQUATIONS (Add/Subtract)
-// Easy: 1-12, positive only, whole solutions
-// Hard: -25 to 25, decimals .5 only, whole solutions
-// 8 Skeletons with rotation
+// CANONICALIZATION SYSTEM
 // ============================================
 
-export const generateOneStepAddSubtract = (difficulty) => {
-  const levelId = '1-17';
-  
-  // All 8 skeletons (ONE STEP ONLY)
-  const allSkeletons = [
-    'x+a=b',
-    'x-a=b',
-    'a+x=b',
-    'x+a=-b',
-    'x-a=-b',
-    'b=x+a',
-    'b=x-a',
-    'b=a+x'
-  ];
-  
-  // Get next skeleton from rotation
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, solution, problem, operationNeeded, operationValue;
-  let problemHasConstantOnLeft = false;
-  
-  if (difficulty === 'easy') {
-    // Easy: 1-12, positive only
-    a = randomInt(1, 12);
-    b = randomInt(1, 12);
-    
-    // Ensure solution is positive and whole
-    if (skeleton === 'x+a=b') {
-      solution = b - a;
-      if (solution < 1) { b = a + randomInt(1, 12); solution = b - a; }
-      problem = `x + ${a} = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-    } else if (skeleton === 'x-a=b') {
-      solution = b + a;
-      problem = `x - ${a} = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    } else if (skeleton === 'a+x=b') {
-      solution = b - a;
-      if (solution < 1) { b = a + randomInt(1, 12); solution = b - a; }
-      problem = `${a} + x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-    } else if (skeleton === 'x+a=-b') {
-      // Skip in easy mode, regenerate
-      return generateOneStepAddSubtract(difficulty);
-    } else if (skeleton === 'x-a=-b') {
-      // Skip in easy mode, regenerate
-      return generateOneStepAddSubtract(difficulty);
-    } else if (skeleton === 'b=x+a') {
-      solution = b - a;
-      if (solution < 1) { b = a + randomInt(1, 12); solution = b - a; }
-      problem = `${b} = x + ${a}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x-a') {
-      solution = b + a;
-      problem = `${b} = x - ${a}`;
-      operationNeeded = 'add';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=a+x') {
-      solution = b - a;
-      if (solution < 1) { b = a + randomInt(1, 12); solution = b - a; }
-      problem = `${b} = ${a} + x`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    }
-  } else {
-    // Hard: -25 to 25, decimals .5 only
-    const useDecimal = Math.random() < 0.3;
-    a = useDecimal ? (randomInt(-50, 50) / 2) : randomNonZeroInt(-25, 25);
-    b = useDecimal ? (randomInt(-50, 50) / 2) : randomNonZeroInt(-25, 25);
-    
-    // Ensure solution is WHOLE number
-    if (skeleton === 'x+a=b') {
-      solution = b - a;
-      if (solution !== Math.floor(solution)) {
-        b = a + randomNonZeroInt(-25, 25);
-        solution = b - a;
-      }
-      problem = `x + ${a} = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-    } else if (skeleton === 'x-a=b') {
-      solution = b + a;
-      if (solution !== Math.floor(solution)) {
-        b = randomNonZeroInt(-25, 25) - a;
-        solution = b + a;
-      }
-      problem = `x - ${a} = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    } else if (skeleton === 'a+x=b') {
-      solution = b - a;
-      if (solution !== Math.floor(solution)) {
-        b = a + randomNonZeroInt(-25, 25);
-        solution = b - a;
-      }
-      problem = `${a} + x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-    } else if (skeleton === 'x+a=-b') {
-      b = Math.abs(b);
-      solution = -b - a;
-      if (solution !== Math.floor(solution)) {
-        a = randomNonZeroInt(-25, 25);
-        solution = -b - a;
-      }
-      problem = `x + ${a} = ${-b}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-    } else if (skeleton === 'x-a=-b') {
-      b = Math.abs(b);
-      solution = -b + a;
-      if (solution !== Math.floor(solution)) {
-        a = randomNonZeroInt(-25, 25);
-        solution = -b + a;
-      }
-      problem = `x - ${a} = ${-b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    } else if (skeleton === 'b=x+a') {
-      solution = b - a;
-      if (solution !== Math.floor(solution)) {
-        b = a + randomNonZeroInt(-25, 25);
-        solution = b - a;
-      }
-      problem = `${b} = x + ${a}`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x-a') {
-      solution = b + a;
-      if (solution !== Math.floor(solution)) {
-        b = randomNonZeroInt(-25, 25) - a;
-        solution = b + a;
-      }
-      problem = `${b} = x - ${a}`;
-      operationNeeded = 'add';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=a+x') {
-      solution = b - a;
-      if (solution !== Math.floor(solution)) {
-        b = a + randomNonZeroInt(-25, 25);
-        solution = b - a;
-      }
-      problem = `${b} = ${a} + x`;
-      operationNeeded = 'subtract';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    }
-  }
-  
-  // Build Row 1 bank (operations to perform) - IMPROVED VARIETY
-  const row1Bank = [
-    formatWithSign(operationValue),
-    formatWithSign(-operationValue),
-    formatWithSign(Math.abs(a)),
-    formatWithSign(-Math.abs(a)),
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
-    `× ${Math.abs(a)}`,
-    `÷ ${Math.abs(a)}`,
-    `× x`,  // Operation on variable distractor
-    `÷ x`,  // Operation on variable distractor
-    `+ x`,  // Adding variable distractor
-    `- x`,  // Subtracting variable distractor
-    formatWithSign(Math.abs(operationValue) + 1), // Near-miss distractor
-    formatWithSign(-(Math.abs(operationValue) + 1)) // Near-miss distractor
-  ];
-  
-  // Expected operation (same on both sides)
-  const row1Expected = operationNeeded === 'add' 
-    ? [formatWithSign(operationValue), formatWithSign(operationValue)]
-    : [formatWithSign(-operationValue), formatWithSign(-operationValue)];
-  
-  // Build Row 2 bank (final results) - IMPROVED VARIETY
-  const row2Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1), // Off by 1
-    String(solution - 1), // Off by 1
-    String(Math.abs(a)),
-    String(-Math.abs(a)),
-    String(Math.abs(b)),
-    String(-Math.abs(b)),
-    `x + ${Math.abs(a)}`, // Didn't complete operation
-    `x - ${Math.abs(a)}`, // Didn't complete operation
-    String(a + b), // Added instead of subtracted
-    String(Math.abs(a - b)) // Wrong order
-  ];
-  
-  // FIXED: Row 2 expected (handles sides-swapped bug)
-  // For problems where constant is on LEFT (b=x+a, b=a+x, b=x-a)
-  // Left side = solution value, Right side = x
-  // For problems where variable is on LEFT (x+a=b, x-a=b, a+x=b)
-  // Left side = x, Right side = solution value
-  
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [row1Expected[0]],
-        expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_solution',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      }
-    ]
-  };
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)], // For compatibility
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { 
-          description: 'Original Problem:', 
-          work: problem 
-        },
-        { 
-          description: `Step 1: ${operationNeeded === 'add' ? 'Add' : 'Subtract'} ${Math.abs(operationValue)} from both sides`, 
-          work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
-        },
-        { 
-          description: 'Solution:', 
-          work: `x = ${solution}` 
-        }
-      ],
-      rule: `To isolate the variable, remove the lonely number by performing the opposite operation on both sides.`,
-      finalAnswer: String(solution)
-    }
-  };
+// GLOBAL RULE: Hide coefficient 1 and -1 everywhere
+const formatCoefficient = (coefficient, variable) => {
+  if (coefficient === 0) return '';
+  if (coefficient === 1) return variable;
+  if (coefficient === -1) return `-${variable}`;
+  return `${coefficient}${variable}`;
 };
 
-// ============================================
-// LEVEL 1-18: ONE-STEP EQUATIONS (Multiply/Divide)
-// Easy: x ∈ {2..12}, a derived, whole solutions
-// Hard: x ∈ {-20..20}, negative allowed, decimals .5 optional
-// 5 Skeletons with rotation
-// ============================================
-
-export const generateOneStepMultiplyDivide = (difficulty) => {
-  const levelId = '1-18';
+// Format expressions preserving ORIGINAL TERM ORDER
+// If problem was a(b + x), answer is ab + ax (NOT ax + ab)
+// constantFirst = true means constant came first in original problem
+const canonicalizeExpression = (coefficient, variable, constant, constantFirst = false) => {
+  // Handle coefficient display
+  let varPart = formatCoefficient(coefficient, variable);
   
-  // All 5 skeletons (ONE STEP ONLY - multiply/divide)
-  const allSkeletons = [
-    'ax=b',      // a*x = b
-    'x/a=b',     // x ÷ a = b
-    'b=ax',      // b = a*x
-    'b=x/a',     // b = x ÷ a
-    'a=x/b'      // a = x ÷ b
-  ];
-  
-  // Get next skeleton from rotation
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, solution, problem, operationNeeded, operationValue;
-  let problemHasConstantOnLeft = false;
-  
-  if (difficulty === 'easy') {
-    // Easy: Choose x first (2-12), then derive a and b
-    solution = randomInt(2, 12);
-    
-    if (skeleton === 'ax=b') {
-      a = randomInt(2, 12);
-      b = a * solution;
-      problem = `${formatCoefficient(a)}x = ${b}`;
-      operationNeeded = 'divide';
-      operationValue = a;
-    } else if (skeleton === 'x/a=b') {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomInt(2, 12);
-      while (a === 0 || a < 2) {
-        a = randomInt(2, 12);
-      }
-      b = Math.floor(solution / a); // Ensure clean division
-      if (b === 0) b = 1;
-      solution = a * b; // Recalculate to ensure integer solution
-      problem = `x/${a} = ${b}`;
-      operationNeeded = 'multiply';
-      operationValue = a;
-    } else if (skeleton === 'b=ax') {
-      a = randomInt(2, 12);
-      b = a * solution;
-      problem = `${b} = ${formatCoefficient(a)}x`;
-      operationNeeded = 'divide';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x/a') {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomInt(2, 12);
-      while (a === 0 || a < 2) {
-        a = randomInt(2, 12);
-      }
-      b = Math.floor(solution / a);
-      if (b === 0) b = 1;
-      solution = a * b;
-      problem = `${b} = x/${a}`;
-      operationNeeded = 'multiply';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'a=x/b') {
-      // CRITICAL: Ensure b is never 0 (division by zero)
-      b = randomInt(2, 12);
-      while (b === 0 || b < 2) {
-        b = randomInt(2, 12);
-      }
-      a = Math.floor(solution / b);
-      if (a === 0) a = 1;
-      solution = a * b;
-      problem = `${a} = x/${b}`;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      problemHasConstantOnLeft = true;
-    }
-  } else {
-    // Hard: x ∈ {-20..20}, x ≠ 0, optional decimals
-    solution = randomNonZeroInt(-20, 20);
-    const useDecimal = Math.random() < 0.3;
-    
-    if (skeleton === 'ax=b') {
-      a = useDecimal ? (randomNonZeroInt(-40, 40) / 2) : randomNonZeroInt(-12, 12);
-      b = a * solution;
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = axTerm + ` = ${b}`;
-      operationNeeded = 'divide';
-      operationValue = a;
-    } else if (skeleton === 'x/a=b') {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomNonZeroInt(-12, 12);
-      while (a === 0 || Math.abs(a) < 2) {
-        a = randomNonZeroInt(-12, 12);
-      }
-      b = useDecimal ? (solution / 2) : Math.floor(solution / Math.abs(a));
-      // Ensure clean result
-      solution = b * a;
-      problem = `x/${a} = ${b}`;
-      operationNeeded = 'multiply';
-      operationValue = a;
-    } else if (skeleton === 'b=ax') {
-      a = useDecimal ? (randomNonZeroInt(-40, 40) / 2) : randomNonZeroInt(-12, 12);
-      b = a * solution;
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = `${b} = ` + axTerm;
-      operationNeeded = 'divide';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x/a') {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomNonZeroInt(-12, 12);
-      while (a === 0 || Math.abs(a) < 2) {
-        a = randomNonZeroInt(-12, 12);
-      }
-      b = useDecimal ? (solution / 2) : Math.floor(solution / Math.abs(a));
-      solution = b * a;
-      problem = `${b} = x/${a}`;
-      operationNeeded = 'multiply';
-      operationValue = a;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'a=x/b') {
-      // CRITICAL: Ensure b is never 0 (division by zero)
-      b = randomNonZeroInt(-12, 12);
-      while (b === 0 || Math.abs(b) < 2) {
-        b = randomNonZeroInt(-12, 12);
-      }
-      a = Math.floor(solution / Math.abs(b));
-      if (a === 0) a = b > 0 ? 1 : -1;
-      solution = a * b;
-      problem = `${a} = x/${b}`;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      problemHasConstantOnLeft = true;
-    }
-  }
-  
-  // Build Row 1 bank (operations to perform) - MULTIPLY/DIVIDE DISTRACTORS
-  const row1Bank = [
-    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue)}` : `÷ ${Math.abs(operationValue)}`,
-    operationNeeded === 'multiply' ? `÷ ${Math.abs(operationValue)}` : `× ${Math.abs(operationValue)}`, // Wrong inverse
-    operationNeeded === 'multiply' ? `× ${-Math.abs(operationValue)}` : `÷ ${-Math.abs(operationValue)}`, // Sign error
-    `× ${Math.abs(operationValue) + 1}`, // Near-miss
-    `÷ ${Math.abs(operationValue) + 1}`, // Near-miss
-    formatWithSign(operationValue), // Carryover confusion from Level 17
-    formatWithSign(-operationValue), // Carryover confusion
-    `× ${Math.abs(b)}`, // Number confusion
-    `÷ ${Math.abs(b)}` // Number confusion
-  ];
-  
-  // Expected operation (same on both sides)
-  const row1Expected = operationNeeded === 'multiply' 
-    ? [`× ${Math.abs(operationValue)}`, `× ${Math.abs(operationValue)}`]
-    : [`÷ ${Math.abs(operationValue)}`, `÷ ${Math.abs(operationValue)}`];
-  
-  // Build Row 2 bank (final results) - MULTIPLY/DIVIDE RESULTS
-  const row2Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1), // Off by 1
-    String(solution - 1), // Off by 1
-    `${formatCoefficient(Math.abs(a))}x`, // Didn't complete operation - FIXED with formatCoefficient
-    `x ÷ ${Math.abs(a)}`, // Didn't complete operation
-    String(b * a), // Wrong operation (multiplied instead of divided)
-    String(Math.abs(b / a)).includes('.') ? String(Math.floor(b / a)) : String(b / a), // Wrong operation
-    String(Math.abs(a)),
-    String(-Math.abs(a)),
-    String(Math.abs(b)),
-    String(-Math.abs(b))
-  ];
-  
-  // Row 2 expected (handles sides-swapped)
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [row1Expected[0]],
-        expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_solution',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      }
-    ]
-  };
-  
-  // Determine rule based on operation
-  const rule = operationNeeded === 'multiply' 
-    ? 'To isolate the variable, clear the fence by multiplying both sides by the number across the fence.'
-    : 'To isolate the variable, unstick the sticky by dividing the sticky number on both sides.';
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { 
-          description: 'Original Problem:', 
-          work: problem 
-        },
-        { 
-          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${Math.abs(operationValue)}`, 
-          work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
-        },
-        { 
-          description: 'Solution:', 
-          work: `x = ${solution}` 
-        }
-      ],
-      rule,
-      finalAnswer: String(solution)
-    }
-  };
-};
-
-// ============================================
-// LEVEL 1-19: ONE-STEP EQUATIONS (Add/Subtract with Negatives)
-// Same as Level 17 but expands into negative numbers
-// Easy: -12 to 12, whole solutions, negatives allowed
-// Hard: -25 to 25, decimals .5, negatives allowed
-// 10 Skeletons (adds negative variants)
-// ============================================
-
-export const generateOneStepAddSubtractNegatives = (difficulty) => {
-  const levelId = '1-19';
-  
-  // All 10 skeletons - adds negative-b and negative-a variants
-  const allSkeletons = [
-    'x+a=b',
-    'x-a=b',
-    'a+x=b',
-    'x+a=-b',   // Now included in easy
-    'x-a=-b',   // Now included in easy
-    'b=x+a',
-    'b=x-a',
-    'b=a+x',
-    '-a+x=b',   // New: negative coefficient on constant
-    'x+(-a)=b'  // New: explicit negative in parentheses
-  ];
-  
-  // Get next skeleton from rotation
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, solution, problem, operationNeeded, operationValue;
-  let problemHasConstantOnLeft = false;
-  
-  if (difficulty === 'easy') {
-    // Easy: -12 to 12, whole numbers only, allow negatives
-    // NOTE: Keep denominator positive to avoid fraction-bar rendering bugs (e.g., x/(-1) displaying as (-1+x)/-1)
-    // and ensure it stays a true 2-step equation.
-    a = randomInt(2, 12); // positive, avoids ±1
-    b = randomNonZeroInt(-12, 12);
-    while (Math.abs(b) < 2) b = randomNonZeroInt(-12, 12); // avoid ±1 (degenerate/too easy)
-    
-    if (skeleton === 'x+a=b') {
-      solution = b - a;
-      problem = a >= 0 ? `x + ${a} = ${b}` : `x − ${Math.abs(a)} = ${b}`;
-      operationNeeded = a >= 0 ? 'subtract' : 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x-a=b') {
-      solution = b + a;
-      problem = `x − ${Math.abs(a)} = ${b}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'a+x=b') {
-      solution = b - a;
-      problem = a >= 0 ? `${a} + x = ${b}` : `${a} + x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x+a=-b') {
-      b = Math.abs(b);
-      solution = -b - a;
-      problem = a >= 0 ? `x + ${a} = ${-b}` : `x − ${Math.abs(a)} = ${-b}`;
-      operationNeeded = a >= 0 ? 'subtract' : 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x-a=-b') {
-      b = Math.abs(b);
-      solution = -b + a;
-      problem = `x − ${Math.abs(a)} = ${-b}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'b=x+a') {
-      solution = b - a;
-      problem = a >= 0 ? `${b} = x + ${a}` : `${b} = x − ${Math.abs(a)}`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x-a') {
-      solution = b + a;
-      problem = `${b} = x − ${Math.abs(a)}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=a+x') {
-      solution = b - a;
-      problem = `${b} = ${a} + x`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === '-a+x=b') {
-      a = Math.abs(a);
-      solution = b + a;
-      problem = `−${a} + x = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    } else if (skeleton === 'x+(-a)=b') {
-      a = Math.abs(a);
-      solution = b + a;
-      problem = `x + (−${a}) = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    }
-  } else {
-    // Hard: -25 to 25, decimals .5 only, allow negatives
-    const useDecimal = Math.random() < 0.3;
-    a = useDecimal ? (randomNonZeroInt(-50, 50) / 2) : randomNonZeroInt(-25, 25);
-    b = useDecimal ? (randomNonZeroInt(-50, 50) / 2) : randomNonZeroInt(-25, 25);
-    
-    if (skeleton === 'x+a=b') {
-      solution = b - a;
-      problem = a >= 0 ? `x + ${a} = ${b}` : `x − ${Math.abs(a)} = ${b}`;
-      operationNeeded = a >= 0 ? 'subtract' : 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x-a=b') {
-      solution = b + a;
-      problem = `x − ${Math.abs(a)} = ${b}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'a+x=b') {
-      solution = b - a;
-      problem = `${a} + x = ${b}`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x+a=-b') {
-      b = Math.abs(b);
-      solution = -b - a;
-      problem = a >= 0 ? `x + ${a} = ${-b}` : `x − ${Math.abs(a)} = ${-b}`;
-      operationNeeded = a >= 0 ? 'subtract' : 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'x-a=-b') {
-      b = Math.abs(b);
-      solution = -b + a;
-      problem = `x − ${Math.abs(a)} = ${-b}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-    } else if (skeleton === 'b=x+a') {
-      solution = b - a;
-      problem = a >= 0 ? `${b} = x + ${a}` : `${b} = x − ${Math.abs(a)}`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=x-a') {
-      solution = b + a;
-      problem = `${b} = x − ${Math.abs(a)}`;
-      operationNeeded = 'add';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b=a+x') {
-      solution = b - a;
-      problem = `${b} = ${a} + x`;
-      operationNeeded = 'subtract';
-      operationValue = Math.abs(a);
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === '-a+x=b') {
-      a = Math.abs(a);
-      solution = b + a;
-      problem = `−${a} + x = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    } else if (skeleton === 'x+(-a)=b') {
-      a = Math.abs(a);
-      solution = b + a;
-      problem = `x + (−${a}) = ${b}`;
-      operationNeeded = 'add';
-      operationValue = a;
-    }
-  }
-  
-  // Build Row 1 bank - Enhanced for negative number operations
-  const row1Bank = [
-    formatWithSign(operationValue),
-    formatWithSign(-operationValue),
-    formatWithSign(Math.abs(a)),
-    formatWithSign(-Math.abs(a)),
-    formatWithSign(Math.abs(b)),
-    formatWithSign(-Math.abs(b)),
-    `× ${Math.abs(a)}`,
-    `÷ ${Math.abs(a)}`,
-    formatWithSign(Math.abs(operationValue) + 1),
-    formatWithSign(-(Math.abs(operationValue) + 1)),
-    formatWithSign(operationValue * 2), // Double the operation (sign error)
-  ];
-  
-  // Expected operation
-  const row1Expected = operationNeeded === 'add' 
-    ? [formatWithSign(operationValue), formatWithSign(operationValue)]
-    : [formatWithSign(-operationValue), formatWithSign(-operationValue)];
-  
-  // Build Row 2 bank - Enhanced for negative results
-  const row2Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(Math.abs(solution)), // Absolute value error
-    String(-Math.abs(solution)),
-    String(Math.abs(a)),
-    String(-Math.abs(a)),
-    String(Math.abs(b)),
-    String(-Math.abs(b)),
-    `x + ${Math.abs(a)}`,
-    `x − ${Math.abs(a)}`,
-    String(a + b),
-    String(a - b),
-    String(b - a)
-  ];
-  
-  // Row 2 expected
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [row1Expected[0]],
-        expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_solution',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      }
-    ]
-  };
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { 
-          description: 'Original Problem:', 
-          work: problem 
-        },
-        { 
-          description: `Step 1: ${operationNeeded === 'add' ? 'Add' : 'Subtract'} ${Math.abs(operationValue)} ${operationNeeded === 'add' ? 'to' : 'from'} both sides`, 
-          work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
-        },
-        { 
-          description: 'Solution:', 
-          work: `x = ${solution}` 
-        }
-      ],
-      rule: `To isolate the variable, remove the lonely number by performing the opposite operation on both sides. When working with negative numbers, remember that subtracting a negative is the same as adding a positive.`,
-      finalAnswer: String(solution)
-    }
-  };
-};
-
-// ============================================
-// LEVEL 1-20: ONE-STEP EQUATIONS (Multiply/Divide with Negatives & Fractions)
-// Same as Level 18 but expands with negatives and proper fractions
-// Easy: x ∈ {-12..12}, negatives allowed, simple fractions
-// Hard: x ∈ {-20..20}, negatives, decimals, complex fractions
-// 7 Skeletons (adds negative variants)
-// ============================================
-
-// LEVEL 20 GENERATOR - EXACT MATH VERSION
-// This replaces the Level 20 section in equationGenerators.js
-// Copy lines 835-1179 and replace with this
-
-export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
-  const levelId = '1-20';
-  
-  // Format fraction for display with proper HTML structure
-  const formatFraction = (num, den) => {
-    if (den === 1) return String(num);
-    // Return fraction in format: (num/den)
-    return `(${num}/${den})`;
-  };
-  
-  // All 7 skeletons
-  const allSkeletons = [
-    'ax=b',      // (p/q)x = b
-    'x/a=b',     // x/a = b
-    'b=ax',      // b = (p/q)x
-    'b=x/a',     // b = x/a
-    'a=x/b',     // a = x/b
-    '-ax=b',     // -(p/q)x = b
-    'x/(-a)=b'   // x/(-a) = b
-  ];
-  
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
- let problem, operationNeeded, operationValue, operationValueDisplay;
-let problemHasConstantOnLeft = false;
-let p, q, k, b, solution, a;
-
-  
-  if (difficulty === 'easy') {
-    // EASY MODE: Exact construction
-    
-    if (skeleton === 'ax=b' || skeleton === 'b=ax') {
-      // Use coefficient form: (p/q)x = b
-      // Construction: Pick p, q, k; then x = q*k and b = p*k
-      const denominators = [2, 3, 4, 5];
-      q = denominators[Math.floor(Math.random() * denominators.length)];
-      p = randomNonZeroInt(-3, 3); // Small numerators
-      k = randomNonZeroInt(1, 6);   // Small multiplier
-      
-      solution = q * k;  // EXACT
-      b = p * k;         // EXACT
-      
-      if (skeleton === 'ax=b') {
-        problem = `(${p}/${q})x = ${b}`;
-      } else {
-        problem = `${b} = (${p}/${q})x`;
-        problemHasConstantOnLeft = true;
-      }
-      
-      operationNeeded = 'divide';
-      operationValue = p / q;  // Numeric value for calculations
-      operationValueDisplay = `(${p}/${q})`;  // Display string
-      
-    } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
-      // Division form: x/a = b
-      // Construction: Pick a, b; then x = a*b
-      a = randomNonZeroInt(2, 12);
-      b = randomNonZeroInt(-10, 10);
-      solution = a * b;  // EXACT
-      
-      if (skeleton === 'x/a=b') {
-        problem = `x/${a} = ${b}`;
-      } else {
-        problem = `${b} = x/${a}`;
-        problemHasConstantOnLeft = true;
-      }
-      
-      operationNeeded = 'multiply';
-      operationValue = a;
-      operationValueDisplay = String(a);
-      
-    } else if (skeleton === 'a=x/b') {
-      // Form: a = x/b
-      b = randomNonZeroInt(2, 12);
-      a = randomNonZeroInt(-10, 10);
-      solution = a * b;  // EXACT
-      
-      problem = `${a} = x/${b}`;
-      problemHasConstantOnLeft = true;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      operationValueDisplay = String(b);
-      
-    } else if (skeleton === '-ax=b') {
-      // Negative coefficient: -(p/q)x = b
-      q = [2, 3, 4][Math.floor(Math.random() * 3)];
-      p = randomNonZeroInt(1, 3);  // Positive p
-      k = randomNonZeroInt(1, 6);
-      
-      solution = -q * k;  // Negative solution
-      b = -p * k;         // EXACT
-      
-      problem = `(-${p}/${q})x = ${b}`;
-      operationNeeded = 'divide';
-      operationValue = -p / q;
-      operationValueDisplay = `(-${p}/${q})`;
-      
-    } else if (skeleton === 'x/(-a)=b') {
-      // Negative divisor: x/(-a) = b (ASCII minus only!)
-      a = randomNonZeroInt(2, 8);
-      b = randomNonZeroInt(-8, 8);
-      solution = -a * b;  // EXACT
-      
-      problem = `x/(-${a}) = ${b}`;  // ASCII minus
-      operationNeeded = 'multiply';
-      operationValue = -a;
-      operationValueDisplay = `(-${a})`;
-    }
-    
-  } else {
-    // HARD MODE: Exact construction with larger ranges
-    
-    if (skeleton === 'ax=b' || skeleton === 'b=ax') {
-      // Coefficient form with more complex fractions
-      const denominators = [2, 3, 4, 5, 6, 8, 10, 12];
-      q = denominators[Math.floor(Math.random() * denominators.length)];
-      p = randomNonZeroInt(-9, 9);  // Larger range
-      k = randomNonZeroInt(-12, 12);
-      
-      solution = q * k;  // EXACT
-      b = p * k;         // EXACT
-      
-      if (skeleton === 'ax=b') {
-        problem = `(${p}/${q})x = ${b}`;
-      } else {
-        problem = `${b} = (${p}/${q})x`;
-        problemHasConstantOnLeft = true;
-      }
-      
-      operationNeeded = 'divide';
-      operationValue = p / q;
-      operationValueDisplay = `(${p}/${q})`;
-      
-    } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
-      a = randomNonZeroInt(-12, 12);
-      b = randomNonZeroInt(-15, 15);
-      solution = a * b;  // EXACT
-      
-      if (skeleton === 'x/a=b') {
-        problem = `x/${a} = ${b}`;
-      } else {
-        problem = `${b} = x/${a}`;
-        problemHasConstantOnLeft = true;
-      }
-      
-      operationNeeded = 'multiply';
-      operationValue = a;
-      operationValueDisplay = String(a);
-      
-    } else if (skeleton === 'a=x/b') {
-      b = randomNonZeroInt(-12, 12);
-      a = randomNonZeroInt(-15, 15);
-      solution = a * b;  // EXACT
-      
-      problem = `${a} = x/${b}`;
-      problemHasConstantOnLeft = true;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      operationValueDisplay = String(b);
-      
-    } else if (skeleton === '-ax=b') {
-      q = [2, 3, 4, 5, 6, 8][Math.floor(Math.random() * 6)];
-      p = randomNonZeroInt(1, 9);
-      k = randomNonZeroInt(-12, 12);
-      
-      solution = -q * k;
-      b = -p * k;  // EXACT
-      
-      problem = `(-${p}/${q})x = ${b}`;
-      operationNeeded = 'divide';
-      operationValue = -p / q;
-      operationValueDisplay = `(-${p}/${q})`;
-      
-    } else if (skeleton === 'x/(-a)=b') {
-      a = randomNonZeroInt(2, 12);
-      b = randomNonZeroInt(-15, 15);
-      solution = -a * b;  // EXACT
-      
-      problem = `x/(-${a}) = ${b}`;  // ASCII minus
-      operationNeeded = 'multiply';
-      operationValue = -a;
-      operationValueDisplay = `(-${a})`;
-    }
-  }
-  
-  // Build Row 1 bank (operations)
-  // Use operationValueDisplay for all student-facing strings
-  const isFractionCoefficient = operationValueDisplay.includes('/');
-  
-  let row1Bank;
-  if (isFractionCoefficient) {
-    // Fraction coefficient distractors - pedagogically meaningful
-    const [fullMatch, sign, num, den] = operationValueDisplay.match(/^\((-?)(\d+)\/(\d+)\)$/) || [null, '', '1', '1'];
-    const oppositeSign = sign === '-' ? '' : '-';
-    
-    row1Bank = [
-      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
-      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
-      operationNeeded === 'multiply' ? `× (${den}/${num})` : `÷ (${den}/${num})`, // Reciprocal
-      operationNeeded === 'multiply' ? `÷ (${den}/${num})` : `× (${den}/${num})`, // Reciprocal wrong op
-      operationNeeded === 'multiply' ? `× (${oppositeSign}${num}/${den})` : `÷ (${oppositeSign}${num}/${den})`, // Sign error
-      operationNeeded === 'multiply' ? `÷ (${oppositeSign}${num}/${den})` : `× (${oppositeSign}${num}/${den})`, // Sign + op error
-      `+ ${b}`, // Addition distractor
-      `- ${b}`, // Subtraction distractor
-      formatWithSign(b + 1),
-      formatWithSign(b - 1)
-    ];
-  } else {
-    // Integer distractors - existing logic works fine
-    row1Bank = [
-      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
-      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
-      operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`, // Sign error
-      `× ${Math.abs(operationValue) + 1}`,
-      `÷ ${Math.abs(operationValue) + 1}`,
-      formatWithSign(Math.abs(operationValue)),
-      formatWithSign(-Math.abs(operationValue)),
-      `× ${Math.abs(b)}`,
-      `÷ ${Math.abs(b)}`,
-      operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
-    ];
-  }
-  
-  const row1Expected = operationNeeded === 'multiply' 
-    ? [`× ${operationValueDisplay}`, `× ${operationValueDisplay}`]
-    : [`÷ ${operationValueDisplay}`, `÷ ${operationValueDisplay}`];
-  
-  // Build Row 2 bank
-  const row2Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(Math.abs(operationValue)),
-    String(-Math.abs(operationValue)),
-    String(Math.abs(b)),
-    String(-Math.abs(b))
-  ];
-  
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-    // Build staged structure (matches Levels 17-19 format)
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [row1Expected[0]],
-        expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_solution',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      }
-    ]
-  };
-
-  // Determine rule based on operation (same tone as Level 18)
-  const rule = operationNeeded === 'multiply'
-    ? 'To isolate the variable, clear the fence by multiplying both sides by the number across the fence.'
-    : 'To isolate the variable, unstick the sticky by dividing the sticky number on both sides.';
-
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        {
-          description: `Step 1: ${operationNeeded === 'multiply' ? 'Multiply' : 'Divide'} both sides by ${operationValueDisplay}`,
-          work: `    ${problem.split('=')[0].trim()}\n${row1Expected[0]}   ${row1Expected[1]}\n_____________\n    ${row2ExpectedLeft[0]} = ${row2ExpectedRight[0]}`
-        },
-        { description: 'Solution:', work: `x = ${solution}` }
-      ],
-      rule,
-      finalAnswer: String(solution)
-    }
-  };
-};
-
-// ============================================
-// LEVEL 1-21: TWO-STEP EQUATIONS (ax + b = c)
-// Multiply then add: ax + b = c
-// Solve: subtract b, then divide by a
-// Easy: -12 to 12, times tables, whole numbers
-// Hard: Same range, introduce decimals/fractions
-// ============================================
-
-export const generateTwoStepMultiplyAdd = (difficulty) => {
-  const levelId = '1-21';
-  
-  // All 4 skeleton forms
-  const allSkeletons = [
-    'ax+b=c',
-    'c=ax+b',
-    'b+ax=c',
-    'c=b+ax'
-  ];
-  
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
-  let aDisplay, aNumeric;
-  
-  if (difficulty === 'easy') {
-    // Easy: -12 to 12, times tables, whole numbers
-    a = randomNonZeroInt(-12, 12);
-    b = randomNonZeroInt(-12, 12);
-    solution = randomNonZeroInt(-12, 12);
-    
-    // Calculate c: c = a*x + b
-    c = a * solution + b;
-    aDisplay = String(a);
-    aNumeric = a;
-    
-    // Build problem string based on skeleton
-    // CRITICAL: Handle negative coefficients properly to avoid + -7x
-    // FIXED: Hide coefficient of 1 or -1 (1x → x, -1x → -x)
-    if (skeleton === 'ax+b=c') {
-      // ax + b = c form
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
-    } else if (skeleton === 'c=ax+b') {
-      // c = ax + b form
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b+ax=c') {
-      // b + ax = c form - FIX: Handle negative a properly
-      if (b < 0 && a < 0) {
-        problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-      } else if (b < 0 && a > 0) {
-        problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
-      } else if (b > 0 && a < 0) {
-        problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-      } else {
-        problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
-      }
-    } else if (skeleton === 'c=b+ax') {
-      // c = b + ax form - FIX: Handle negative a properly
-      if (b < 0 && a < 0) {
-        problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
-      } else if (b < 0 && a > 0) {
-        problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
-      } else if (b > 0 && a < 0) {
-        problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
-      } else {
-        problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
-      }
-      problemHasConstantOnLeft = true;
-    }
-    
-  } else {
-    // Hard: Same range but with occasional fractions/decimals
-    const useDecimal = Math.random() < 0.2;
-    const useFraction = !useDecimal && Math.random() < 0.2;
-    
-    if (useFraction) {
-      // Use fraction for coefficient a
-      const denoms = [2, 3, 4, 5];
-      const q = denoms[Math.floor(Math.random() * denoms.length)];
-      const p = randomNonZeroInt(-6, 6);
-      
-      // Pick solution that works cleanly
-      const k = randomNonZeroInt(-8, 8);
-      solution = q * k;  // Ensures clean result
-      
-      b = randomNonZeroInt(-12, 12);
-      c = p * k + b;  // c = (p/q)*solution + b
-      
-      aDisplay = `(${p}/${q})`;  // Keep as fraction string
-      aNumeric = p / q;  // For calculations only
-      
-      if (skeleton === 'ax+b=c') {
-        problem = b < 0 ? `${aDisplay}x - ${Math.abs(b)} = ${c}` : `${aDisplay}x + ${b} = ${c}`;
-      } else if (skeleton === 'c=ax+b') {
-        problem = b < 0 ? `${c} = ${aDisplay}x - ${Math.abs(b)}` : `${c} = ${aDisplay}x + ${b}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === 'b+ax=c') {
-        problem = b < 0 ? `-${Math.abs(b)} + ${aDisplay}x = ${c}` : `${b} + ${aDisplay}x = ${c}`;
-      } else if (skeleton === 'c=b+ax') {
-        problem = b < 0 ? `${c} = -${Math.abs(b)} + ${aDisplay}x` : `${c} = ${b} + ${aDisplay}x`;
-        problemHasConstantOnLeft = true;
-      }
-      
-      a = aNumeric;  // For calculations
-      
-    } else if (useDecimal) {
-      // Decimals (.5 increments only - no long decimals)
-      // Keep denominator positive to avoid fraction-bar rendering bugs
-      a = (randomInt(2, 24) / 2); // 1.0 to 12.0, positive
-      b = (randomNonZeroInt(-24, 24) / 2);
-      while (Math.abs(b) < 1) b = (randomNonZeroInt(-24, 24) / 2); // avoid ±0.5
-      solution = randomNonZeroInt(-12, 12);
-      c = a * solution + b;
-      aDisplay = String(a);
-      aNumeric = a;
-      
-      // FIXED: Use formatCoefficient to hide 1.0
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      
-      if (skeleton === 'ax+b=c') {
-        problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
-      } else if (skeleton === 'c=ax+b') {
-        problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === 'b+ax=c') {
-        if (b < 0 && a < 0) {
-          problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-        } else if (b < 0 && a > 0) {
-          problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
-        } else if (b > 0 && a < 0) {
-          problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-        } else {
-          problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
-        }
-      } else if (skeleton === 'c=b+ax') {
-        if (b < 0 && a < 0) {
-          problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
-        } else if (b < 0 && a > 0) {
-          problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
-        } else if (b > 0 && a < 0) {
-          problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
-        } else {
-          problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
-        }
-        problemHasConstantOnLeft = true;
-      }
-      
+  // Handle constant
+  if (coefficient === 0 && constant === 0) {
+    return '0';
+  } else if (coefficient === 0) {
+    return String(constant);
+  } else if (constant === 0) {
+    return varPart;
+  } else if (constantFirst) {
+    // Constant came first: return "c ± ax" format
+    if (coefficient > 0) {
+      return `${constant} + ${varPart}`;
+    } else if (coefficient < 0) {
+      return `${constant} - ${varPart.replace('-', '')}`;
     } else {
-      // Regular integers
-      a = randomNonZeroInt(-12, 12);
-      b = randomNonZeroInt(-12, 12);
-      solution = randomNonZeroInt(-12, 12);
-      c = a * solution + b;
-      aDisplay = String(a);
-      aNumeric = a;
-      
-      // FIXED: Use formatCoefficient to hide 1 and -1
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      
-      if (skeleton === 'ax+b=c') {
-        problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
-      } else if (skeleton === 'c=ax+b') {
-        problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === 'b+ax=c') {
-        if (b < 0 && a < 0) {
-          problem = `-${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-        } else if (b < 0 && a > 0) {
-          problem = `-${Math.abs(b)} + ${formatCoefficient(a)}x = ${c}`;
-        } else if (b > 0 && a < 0) {
-          problem = `${b} - ${formatCoefficient(Math.abs(a))}x = ${c}`;
-        } else {
-          problem = `${b} + ${formatCoefficient(a)}x = ${c}`;
-        }
-      } else if (skeleton === 'c=b+ax') {
-        if (b < 0 && a < 0) {
-          problem = `${c} = -${Math.abs(b)} - ${formatCoefficient(Math.abs(a))}x`;
-        } else if (b < 0 && a > 0) {
-          problem = `${c} = -${Math.abs(b)} + ${formatCoefficient(a)}x`;
-        } else if (b > 0 && a < 0) {
-          problem = `${c} = ${b} - ${formatCoefficient(Math.abs(a))}x`;
-        } else {
-          problem = `${c} = ${b} + ${formatCoefficient(a)}x`;
-        }
-        problemHasConstantOnLeft = true;
-      }
+      return String(constant);
     }
-  }
-  
-  // STEP 1: Subtract b from both sides (inverse operation)
-  // Sign-safe formatting: never concatenate sign with negative number
-  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
-  const afterStep1 = c - b;
-  
-  // FIX: For display, handle negative a properly in ax term
-  // FIXED: Use formatCoefficient to match problem display
-  let afterStep1LeftDisplay, afterStep1RightDisplay;
-  if (problemHasConstantOnLeft) {
-    afterStep1LeftDisplay = String(afterStep1);
-    afterStep1RightDisplay = aDisplay.includes('/') 
-      ? `${aDisplay}x` 
-      : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
   } else {
-    afterStep1LeftDisplay = aDisplay.includes('/') 
-      ? `${aDisplay}x` 
-      : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
-    afterStep1RightDisplay = String(afterStep1);
-  }
-  
-  // STEP 2: Divide by a on both sides
-  // Consistent formatting: use parentheses for negative numbers
-  const step2Operation = aNumeric < 0 ? `÷ (${aDisplay})` : `÷ ${aDisplay}`;
-  const afterStep2Left = problemHasConstantOnLeft ? String(solution) : 'x';
-  const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
-  
-  // Build Row 1 bank (first operation: subtract b)
-  // SIGN-SAFE: Never produce + -5 or - -5
-  // CONSISTENT SPACING: Always "op space number" format
-  const row1Bank = [
-    step1Operation,  // Correct
-    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,  // Wrong sign
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    `+ ${Math.abs(b)}`,  // Distractor
-    `- ${Math.abs(b)}`,  // Distractor
-    // Use aDisplay for string distractors
-    aDisplay.includes('/') ? `× ${aDisplay}` : `× ${Math.abs(aNumeric)}`,
-    aDisplay.includes('/') ? `÷ ${aDisplay}` : `÷ ${Math.abs(aNumeric)}`,
-    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
-    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
-  ];
-  
-  // Build Row 2 bank (result after subtracting b)
-  // FIXED: Use formatCoefficient to ensure bank matches display
-  const axDisplay = aDisplay.includes('/') 
-    ? `${aDisplay}x` 
-    : (aNumeric < 0 ? `-${formatCoefficient(Math.abs(aNumeric))}x` : `${formatCoefficient(aNumeric)}x`);
-  const row2Bank = [
-    axDisplay,
-    aNumeric < 0 ? `${formatCoefficient(Math.abs(aNumeric))}x` : `-${formatCoefficient(Math.abs(aNumeric))}x`,
-    String(afterStep1),
-    String(-afterStep1),
-    String(afterStep1 + 1),
-    String(afterStep1 - 1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
-  
-  // FIX: Use display versions for expected values
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [axDisplay];
-  const row2ExpectedRight = problemHasConstantOnLeft ? [axDisplay] : [String(afterStep1)];
-  
-  // Build Row 3 bank (operation: divide by a)
-  // CONSISTENT FORMATTING: Always use same spacing
-  const row3Bank = [
-    step2Operation,  // Correct
-    aNumeric < 0 ? `× (${aDisplay})` : `× ${aDisplay}`,  // Wrong operation
-    aDisplay.includes('/') ? 
-      `÷ (${aDisplay.replace(/^\(-?/, '(-').replace(/^\(/, '(-')})` :
-      (aNumeric < 0 ? `÷ ${Math.abs(aNumeric)}` : `÷ ${-aNumeric}`),
-    aDisplay.includes('/') ? 
-      `× (${aDisplay.replace(/^\(-?/, '(-').replace(/^\(/, '(-')})` :
-      (aNumeric < 0 ? `× ${Math.abs(aNumeric)}` : `× ${-aNumeric}`),
-    aDisplay.includes('/') ? `÷ (2/3)` : `÷ ${Math.abs(aNumeric) + 1}`,
-    aDisplay.includes('/') ? `× (3/2)` : `× ${Math.abs(aNumeric) + 1}`,
-    aNumeric >= 0 ? `+ ${Math.floor(aNumeric)}` : `- ${Math.abs(Math.floor(aNumeric))}`,
-    aNumeric >= 0 ? `- ${Math.floor(aNumeric)}` : `+ ${Math.abs(Math.floor(aNumeric))}`,
-    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
-    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
-  ];
-  
-  // Build Row 4 bank (final solution)
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(Math.floor(aNumeric)),
-    String(-Math.floor(aNumeric)),
-    String(b),
-    String(-b)
-  ];
-  
-  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure (5 rows for two-step)
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step1Operation],
-        expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_after_subtract',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      },
-      {
-        id: 'row3_divide',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step2Operation],
-        expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
-      },
-      {
-        id: 'row4_solution',
-        type: 'dual_box',
-        instruction: 'Simplify to solve',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row4ExpectedLeft,
-        expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
-      }
-    ]
-  };
-  
-  const rule = 'Need to remove the lonely number before unsticking the sticky';
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        {
-          description: `Step 1: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)} to/from both sides`,
-          work: `    ${problem.split('=')[0].trim()}\n${step1Operation}   ${step1Operation}\n_____________\n    ${afterStep1LeftDisplay} = ${afterStep1RightDisplay}`
-        },
-        {
-          description: `Step 2: Divide both sides by ${aDisplay}`,
-          work: `    ${afterStep1LeftDisplay} = ${afterStep1RightDisplay}\n${step2Operation}   ${step2Operation}\n_____________\n    ${afterStep2Left} = ${afterStep2Right}`
-        },
-        { description: 'Solution:', work: `x = ${solution}` }
-      ],
-      rule,
-      finalAnswer: String(solution)
-    }
-  };
-};
-
-// ============================================
-// LEVEL 1-22: TWO-STEP EQUATIONS (x/a + b = c)
-// Divide then add: x/a + b = c
-// Solve: subtract b, then multiply by a
-// Easy: -12 to 12, times tables, whole numbers
-// Hard: Same range, introduce decimals/fractions
-// ============================================
-
-export const generateTwoStepDivideAdd = (difficulty) => {
-  const levelId = '1-22';
-  
-  // All 4 skeleton forms
-  const allSkeletons = [
-    'x/a+b=c',
-    'c=x/a+b',
-    'b+x/a=c',
-    'c=b+x/a'
-  ];
-  
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
-  
-  if (difficulty === 'easy') {
-    // Easy: -12 to 12, times tables, whole numbers
-    // CRITICAL: Ensure a is never 0 (division by zero)
-    a = randomNonZeroInt(-12, 12);
-    while (a === 0 || Math.abs(a) < 2) {
-      a = randomNonZeroInt(-12, 12);
-    }
-    
-    b = randomNonZeroInt(-12, 12);
-    
-    // Pick solution such that x/a is a whole number (mental math friendly)
-    const quotient = randomNonZeroInt(-12, 12);
-    solution = a * quotient;  // Ensures x/a = quotient (whole number)
-    
-    // Calculate c: c = x/a + b = quotient + b
-    c = quotient + b;
-    
-    // Build problem string based on skeleton
-    // CRITICAL: If b is negative, display as subtraction
-    if (skeleton === 'x/a+b=c') {
-      problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
-    } else if (skeleton === 'c=x/a+b') {
-      problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === 'b+x/a=c') {
-      problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
-    } else if (skeleton === 'c=b+x/a') {
-      problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
-      problemHasConstantOnLeft = true;
-    }
-    
-  } else {
-    // Hard: Same range but with occasional decimals
-    const useDecimal = Math.random() < 0.2;
-    
-    if (useDecimal) {
-      // Decimals (.5 increments only)
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = (randomNonZeroInt(-24, 24) / 2);
-      while (a === 0 || Math.abs(a) < 1) {
-        a = (randomNonZeroInt(-24, 24) / 2);
-      }
-      
-      b = (randomNonZeroInt(-24, 24) / 2);
-      
-      // Pick solution such that x/a is whole or half
-      const quotient = (randomNonZeroInt(-24, 24) / 2);
-      solution = a * quotient;
-      c = quotient + b;
-      
-      if (skeleton === 'x/a+b=c') {
-        problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
-      } else if (skeleton === 'c=x/a+b') {
-        problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === 'b+x/a=c') {
-        problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
-      } else if (skeleton === 'c=b+x/a') {
-        problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
-        problemHasConstantOnLeft = true;
-      }
-      
+    // Variable came first: return "ax ± c" format
+    if (constant > 0) {
+      return `${varPart} + ${constant}`;
     } else {
-      // Regular integers
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomNonZeroInt(-12, 12);
-      while (a === 0 || Math.abs(a) < 2) {
-        a = randomNonZeroInt(-12, 12);
-      }
-      
-      b = randomNonZeroInt(-12, 12);
-      
-      const quotient = randomNonZeroInt(-12, 12);
-      solution = a * quotient;
-      c = quotient + b;
-      
-      if (skeleton === 'x/a+b=c') {
-        problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
-      } else if (skeleton === 'c=x/a+b') {
-        problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === 'b+x/a=c') {
-        problem = b < 0 ? `-${Math.abs(b)} + x/${a} = ${c}` : `${b} + x/${a} = ${c}`;
-      } else if (skeleton === 'c=b+x/a') {
-        problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
-        problemHasConstantOnLeft = true;
-      }
+      return `${varPart} - ${Math.abs(constant)}`;
     }
   }
-  
-  // STEP 1: Subtract b from both sides (inverse operation)
-  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
-  const afterStep1 = c - b;  // This is the quotient x/a
-  const afterStep1Left = problemHasConstantOnLeft ? String(afterStep1) : `x/${a}`;
-  const afterStep1Right = problemHasConstantOnLeft ? `x/${a}` : String(afterStep1);
-  
-  // STEP 2: Multiply by a on both sides
-  const step2Operation = a < 0 ? `× (${a})` : `× ${a}`;
-  const afterStep2Left = problemHasConstantOnLeft ? String(solution) : 'x';
-  const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
-  
-  // Build Row 1 bank (first operation: subtract b)
-  // CONSISTENT SPACING
-  const row1Bank = [
-    step1Operation,
-    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    `+ ${Math.abs(b)}`,
-    `- ${Math.abs(b)}`,
-    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
-    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
-    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
-    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
-  ];
-  
-  // Build Row 2 bank (result after subtracting b)
-  const row2Bank = [
-    `x/${a}`,
-    a < 0 ? `x/${-a}` : `-x/${a}`,
-    String(afterStep1),
-    String(-afterStep1),
-    String(afterStep1 + 1),
-    String(afterStep1 - 1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
-  
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [`x/${a}`];
-  const row2ExpectedRight = problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)];
-  
-  // Build Row 3 bank (operation: multiply by a)
-  // CONSISTENT FORMATTING
-  const row3Bank = [
-    step2Operation,
-    a < 0 ? `÷ (${a})` : `÷ ${a}`,
-    a < 0 ? `× ${-a}` : `× (${-a})`,
-    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
-    `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`,
-    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
-    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
-    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
-    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
-  ];
-  
-  // Build Row 4 bank (final solution)
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(a),
-    String(-a),
-    String(b),
-    String(-b)
-  ];
-  
-  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure (5 rows for two-step)
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step1Operation],
-        expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_after_subtract',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      },
-      {
-        id: 'row3_multiply',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step2Operation],
-        expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
-      },
-      {
-        id: 'row4_solution',
-        type: 'dual_box',
-        instruction: 'Simplify to solve',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row4ExpectedLeft,
-        expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
-      }
-    ]
-  };
-  
-  const rule = 'Need to remove the lonely number before clearing the fence';
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        {
-          description: `Step 1: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)} to/from both sides`,
-          work: `    ${problem.split('=')[0].trim()}\n${step1Operation}   ${step1Operation}\n_____________\n    ${afterStep1Left} = ${afterStep1Right}`
-        },
-        {
-          description: `Step 2: Multiply both sides by ${a}`,
-          work: `    ${afterStep1Left} = ${afterStep1Right}\n${step2Operation}   ${step2Operation}\n_____________\n    ${afterStep2Left} = ${afterStep2Right}`
-        },
-        { description: 'Solution:', work: `x = ${solution}` }
-      ],
-      rule,
-      finalAnswer: String(solution)
-    }
-  };
 };
 
-// ============================================
-// LEVEL 1-23: TWO-STEP EQUATIONS ((x + b)/a = c)
-// Add then divide: (x + b)/a = c
-// Solve: multiply by a, then subtract b
-// Easy: -12 to 12, times tables, whole numbers
-// Hard: Same range, introduce decimals/fractions
-// FIX: Ensure c is ALWAYS clean (no long decimals)
-// FIX: Avoid double parentheses in display
-// ============================================
-
-export const generateTwoStepAddDivide = (difficulty) => {
-  const levelId = '1-23';
+// ENHANCED: Parse expression into components for algebraic equivalence
+const parseExpression = (expr) => {
+  if (!expr || typeof expr !== 'string') return null;
   
-  // All 4 skeleton forms
-  const allSkeletons = [
-    '(x+b)/a=c',
-    'c=(x+b)/a',
-    '(b+x)/a=c',
-    'c=(b+x)/a'
+  const trimmed = expr.trim();
+  
+  // Try to parse format: "ax + b" or "b + ax" or just "ax" or just "b"
+  // Handle: x, -x, 2x, -2x, x + 3, 2x - 5, 5 + 2x, etc.
+  
+  // Match patterns like: (coef)(var) + (const) or (const) + (coef)(var)
+  const patterns = [
+    /^([+-]?\d*\.?\d*)\s*([a-z])\s*([+-])\s*(\d+\.?\d*)$/i,  // ax ± c
+    /^(\d+\.?\d*)\s*([+-])\s*([+-]?\d*\.?\d*)\s*([a-z])$/i,   // c ± ax
+    /^([+-]?\d*\.?\d*)\s*([a-z])$/i,                          // ax only
+    /^(\d+\.?\d*)$/,                                           // constant only
   ];
   
-  const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
-  
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
-  
-  if (difficulty === 'easy') {
-    // Easy: -12 to 12, times tables, whole numbers
-    // FIX: Pick c first to ensure clean division
-    a = randomNonZeroInt(-12, 12);
-    b = randomNonZeroInt(-12, 12);
-    c = randomNonZeroInt(-12, 12);  // c is always whole number
-    
-    // Calculate solution: (x + b)/a = c → x + b = ac → x = ac - b
-    solution = a * c - b;
-    
-    // Build problem string based on skeleton
-    // CRITICAL: If b is negative, display as subtraction inside parentheses
-    if (skeleton === '(x+b)/a=c') {
-      problem = b < 0 ? `(x - ${Math.abs(b)})/${a} = ${c}` : `(x + ${b})/${a} = ${c}`;
-    } else if (skeleton === 'c=(x+b)/a') {
-      problem = b < 0 ? `${c} = (x - ${Math.abs(b)})/${a}` : `${c} = (x + ${b})/${a}`;
-      problemHasConstantOnLeft = true;
-    } else if (skeleton === '(b+x)/a=c') {
-      problem = b < 0 ? `(-${Math.abs(b)} + x)/${a} = ${c}` : `(${b} + x)/${a} = ${c}`;
-    } else if (skeleton === 'c=(b+x)/a') {
-      problem = b < 0 ? `${c} = (-${Math.abs(b)} + x)/${a}` : `${c} = (${b} + x)/${a}`;
-      problemHasConstantOnLeft = true;
-    }
-    
-  } else {
-    // Hard: Same range but with occasional decimals
-    const useDecimal = Math.random() < 0.2;
-    
-    if (useDecimal) {
-      // Decimals (.5 increments only)
-      a = (randomNonZeroInt(-24, 24) / 2);
-      b = (randomNonZeroInt(-24, 24) / 2);
-      c = (randomNonZeroInt(-24, 24) / 2);  // c is clean decimal
-      
-      // Calculate solution
-      solution = a * c - b;
-      
-      if (skeleton === '(x+b)/a=c') {
-        problem = b < 0 ? `(x - ${Math.abs(b)})/${a} = ${c}` : `(x + ${b})/${a} = ${c}`;
-      } else if (skeleton === 'c=(x+b)/a') {
-        problem = b < 0 ? `${c} = (x - ${Math.abs(b)})/${a}` : `${c} = (x + ${b})/${a}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === '(b+x)/a=c') {
-        problem = b < 0 ? `(-${Math.abs(b)} + x)/${a} = ${c}` : `(${b} + x)/${a} = ${c}`;
-      } else if (skeleton === 'c=(b+x)/a') {
-        problem = b < 0 ? `${c} = (-${Math.abs(b)} + x)/${a}` : `${c} = (${b} + x)/${a}`;
-        problemHasConstantOnLeft = true;
-      }
-      
-    } else {
-      // Regular integers
-      a = randomNonZeroInt(-12, 12);
-      b = randomNonZeroInt(-12, 12);
-      c = randomNonZeroInt(-12, 12);  // c is whole number
-      
-      // Calculate solution
-      solution = a * c - b;
-      
-      if (skeleton === '(x+b)/a=c') {
-        problem = b < 0 ? `(x - ${Math.abs(b)})/${a} = ${c}` : `(x + ${b})/${a} = ${c}`;
-      } else if (skeleton === 'c=(x+b)/a') {
-        problem = b < 0 ? `${c} = (x - ${Math.abs(b)})/${a}` : `${c} = (x + ${b})/${a}`;
-        problemHasConstantOnLeft = true;
-      } else if (skeleton === '(b+x)/a=c') {
-        problem = b < 0 ? `(-${Math.abs(b)} + x)/${a} = ${c}` : `(${b} + x)/${a} = ${c}`;
-      } else if (skeleton === 'c=(b+x)/a') {
-        problem = b < 0 ? `${c} = (-${Math.abs(b)} + x)/${a}` : `${c} = (${b} + x)/${a}`;
-        problemHasConstantOnLeft = true;
-      }
-    }
+  // Try pattern 1: ax ± c
+  let match = trimmed.match(patterns[0]);
+  if (match) {
+    const coef = match[1] === '' ? 1 : match[1] === '-' ? -1 : parseFloat(match[1]);
+    const variable = match[2];
+    const sign = match[3];
+    const constant = sign === '+' ? parseFloat(match[4]) : -parseFloat(match[4]);
+    return { coefficient: coef, variable, constant };
   }
   
-  // STEP 1: Multiply by a on both sides (clear the fence first)
-  // FIX: Don't over-parenthesize - just use number, no extra parens
-  const step1Operation = a < 0 ? `× (${a})` : `× ${a}`;
-  const afterStep1 = c * a;  // This is (x + b) - just the NUMBER, not wrapped in parens
+  // Try pattern 2: c ± ax
+  match = trimmed.match(patterns[1]);
+  if (match) {
+    const constant = parseFloat(match[1]);
+    const sign = match[2];
+    const coef = match[3] === '' ? 1 : match[3] === '-' ? -1 : parseFloat(match[3]);
+    const variable = match[4];
+    const actualCoef = sign === '+' ? coef : -coef;
+    return { coefficient: actualCoef, variable, constant };
+  }
   
-  // FIX: For display after multiplying, show the algebraic expression without double parens
-  const xPlusBTerm = b < 0 ? `x - ${Math.abs(b)}` : `x + ${b}`;
-  const afterStep1Left = problemHasConstantOnLeft ? String(afterStep1) : xPlusBTerm;
-  const afterStep1Right = problemHasConstantOnLeft ? xPlusBTerm : String(afterStep1);
+  // Try pattern 3: ax only
+  match = trimmed.match(patterns[2]);
+  if (match) {
+    const coef = match[1] === '' ? 1 : match[1] === '-' ? -1 : parseFloat(match[1]);
+    const variable = match[2];
+    return { coefficient: coef, variable, constant: 0 };
+  }
   
-  // STEP 2: Subtract b from both sides
-  const step2Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
-  const afterStep2Left = problemHasConstantOnLeft ? String(solution) : 'x';
-  const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
+  // Try pattern 4: constant only
+  match = trimmed.match(patterns[3]);
+  if (match) {
+    return { coefficient: 0, variable: '', constant: parseFloat(match[1]) };
+  }
   
-  // Build Row 1 bank (first operation: multiply by a)
-  // CONSISTENT FORMATTING
-  const row1Bank = [
-    step1Operation,
-    a < 0 ? `÷ (${a})` : `÷ ${a}`,
-    a < 0 ? `× ${-a}` : `× (${-a})`,
-    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
-    `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`,
-    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
-    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
-    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
-    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
-  ];
-  
-  // Build Row 2 bank (result after multiplying by a)
-  const row2Bank = [
-    xPlusBTerm,
-    b < 0 ? `-x - ${Math.abs(b)}` : `-x + ${b}`,
-    String(afterStep1),
-    String(-afterStep1),
-    String(afterStep1 + 1),
-    String(afterStep1 - 1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
-  
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [xPlusBTerm];
-  const row2ExpectedRight = problemHasConstantOnLeft ? [xPlusBTerm] : [String(afterStep1)];
-  
-  // Build Row 3 bank (operation: subtract b)
-  // CONSISTENT SPACING
-  const row3Bank = [
-    step2Operation,
-    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    `+ ${Math.abs(b)}`,
-    `- ${Math.abs(b)}`,
-    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
-    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
-    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
-    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
-  ];
-  
-  // Build Row 4 bank (final solution)
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(a),
-    String(-a),
-    String(b),
-    String(-b)
-  ];
-  
-  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  // Build staged structure (5 rows for two-step)
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step1Operation],
-        expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_after_multiply',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      },
-      {
-        id: 'row3_subtract',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step2Operation],
-        expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
-      },
-      {
-        id: 'row4_solution',
-        type: 'dual_box',
-        instruction: 'Simplify to solve',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row4ExpectedLeft,
-        expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
-      }
-    ]
-  };
-  
-  const rule = 'Need to clear the fence first, to protect the x grouped with the lonely number';
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      originalProblem: problem,
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        {
-          description: `Step 1: Multiply both sides by ${a}`,
-          work: `    ${problem.split('=')[0].trim()}\n${step1Operation}   ${step1Operation}\n_____________\n    ${afterStep1Left} = ${afterStep1Right}`
-        },
-        {
-          description: `Step 2: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)} to/from both sides`,
-          work: `    ${afterStep1Left} = ${afterStep1Right}\n${step2Operation}   ${step2Operation}\n_____________\n    ${afterStep2Left} = ${afterStep2Right}`
-        },
-        { description: 'Solution:', work: `x = ${solution}` }
-      ],
-      rule,
-      finalAnswer: String(solution)
-    }
-  };
+  return null;
 };
 
-// ============================================
-// LEVEL 1-24: TWO-STEP MIXED REVIEW
-// Mixes levels 21-23: ax+b=c, ax-b=c, x/a+b=c
-// Requires 2 unique skeletons from each level
-// Standard: 6 total problems (2 from each level type)
-// Advanced: Same mix but with more complex numbers
-// NOTE: Add this to equationGenerators.js, uses existing helper functions
-// ============================================
-
-export const generateTwoStepMixedReview = (difficulty) => {
-  const levelId = '1-24';
+// Check if two expressions are algebraically equivalent (not just string equal)
+const areEquivalent = (expr1, expr2) => {
+  // String equality first (fastest check)
+  if (expr1 === expr2) return true;
   
-  // Track which problems have been seen this session
-  const sessionKey = `${levelId}-${difficulty}-session`;
-  let sessionProblems = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+  // Parse both expressions
+  const parsed1 = parseExpression(expr1);
+  const parsed2 = parseExpression(expr2);
   
-  // Define problem types with their level origins
-  const problemTypes = [
-    { type: 'multiply_add', level: 21, skeletons: ['ax+b=c', 'c=ax+b'] },
-    { type: 'multiply_subtract', level: 22, skeletons: ['ax-b=c', 'c=ax-b'] },
-    { type: 'divide_add', level: 23, skeletons: ['x/a+b=c', 'c=x/a+b'] }
-  ];
+  // If either couldn't parse, fall back to string comparison
+  if (!parsed1 || !parsed2) return expr1 === expr2;
   
-  // Ensure we've seen at least 2 from each type
-  const typeCounts = {
-    'multiply_add': sessionProblems.filter(p => p.startsWith('multiply_add')).length,
-    'multiply_subtract': sessionProblems.filter(p => p.startsWith('multiply_subtract')).length,
-    'divide_add': sessionProblems.filter(p => p.startsWith('divide_add')).length
-  };
-  
-  // Pick a type that hasn't reached 2 yet, or random if all have
-  let selectedType;
-  const needMoreTypes = problemTypes.filter(pt => typeCounts[pt.type] < 2);
-  
-  if (needMoreTypes.length > 0) {
-    selectedType = needMoreTypes[Math.floor(Math.random() * needMoreTypes.length)];
-  } else {
-    // Reset session if all types completed
-    sessionProblems = [];
-    sessionStorage.setItem(sessionKey, JSON.stringify([]));
-    selectedType = problemTypes[Math.floor(Math.random() * problemTypes.length)];
-  }
-  
-  // Pick a skeleton from the selected type that hasn't been used yet
-  const usedSkeletons = sessionProblems.filter(p => p.startsWith(selectedType.type));
-  const availableSkeletons = selectedType.skeletons.filter(sk => 
-    !usedSkeletons.includes(`${selectedType.type}-${sk}`)
+  // Check algebraic equivalence
+  // Must have same coefficient, same variable, same constant
+  return (
+    Math.abs(parsed1.coefficient - parsed2.coefficient) < 0.0001 &&
+    parsed1.variable === parsed2.variable &&
+    Math.abs(parsed1.constant - parsed2.constant) < 0.0001
   );
+};
+
+// Remove duplicates by equivalence (ENHANCED to catch rearrangements)
+const uniqueChoices = (choices) => {
+  const unique = [];
+  for (const choice of choices) {
+    // Check if this choice is equivalent to any already in unique array
+    const isDuplicate = unique.some(existing => areEquivalent(choice, existing));
+    if (!isDuplicate) {
+      unique.push(choice);
+    }
+  }
+  return unique;
+};
+
+// Helper to format expressions consistently (used by Levels 9+)
+const formatAnswer = (coefficient, variable, constant) => {
+  const varPart = coefficient === -1 ? `-${variable}` : 
+                  coefficient === 1 ? variable :
+                  `${coefficient}${variable}`;
   
-  const skeleton = availableSkeletons.length > 0 
-    ? availableSkeletons[Math.floor(Math.random() * availableSkeletons.length)]
-    : selectedType.skeletons[Math.floor(Math.random() * selectedType.skeletons.length)];
-  
-  // Record this problem
-  sessionProblems.push(`${selectedType.type}-${skeleton}`);
-  sessionStorage.setItem(sessionKey, JSON.stringify(sessionProblems));
-  
-  // Generate based on type - uses existing generators!
-  if (selectedType.type === 'multiply_add') {
-    return generateLevel24MultiplyAdd(skeleton, difficulty);
-  } else if (selectedType.type === 'multiply_subtract') {
-    return generateLevel24MultiplySubtract(skeleton, difficulty);
+  if (constant >= 0) {
+    return `${varPart} + ${constant}`;
   } else {
-    return generateLevel24DivideAdd(skeleton, difficulty);
+    return `${varPart} - ${Math.abs(constant)}`;
   }
 };
 
-// ============================================
-// HELPER: Generate ax + b = c type (Level 21 style)
-// ============================================
-const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
+// Helper to ensure exactly 4 unique choices
+// problemGenerators.js - COMPREHENSIVE FIX for ensureFourChoices
+// Location: Replace lines 221-233
+
+// Helper: Create canonical form for comparison
+const canonicalForm = (expr) => {
+  if (!expr) return '';
   
-  if (difficulty === 'easy') {
-    a = randomNonZeroInt(-12, 12);
-    b = randomNonZeroInt(-12, 12);
-    solution = randomNonZeroInt(-12, 12);
-    c = a * solution + b;
-    
-    // FIXED: Use formatCoefficient to hide 1 and -1
-    if (skeleton === 'ax+b=c') {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
+  // Parse the expression
+  const parsed = parseExpression(String(expr));
+  
+  // If parsing failed, use normalized string
+  if (!parsed) {
+    return String(expr)
+      .replace(/\s+/g, '')  // Remove all whitespace
+      .replace(/\+\-/g, '-')  // Normalize +- to -
+      .replace(/^\+/, '');     // Remove leading +
+  }
+  
+  // Create canonical string from parsed form
+  const { coefficient, variable, constant } = parsed;
+  
+  // Build canonical form: always "ax+b" format (never "b+ax")
+  let canonical = '';
+  
+  // Variable term (if exists)
+  if (coefficient !== 0 && variable) {
+    if (coefficient === 1) {
+      canonical = variable;
+    } else if (coefficient === -1) {
+      canonical = '-' + variable;
     } else {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
-      problemHasConstantOnLeft = true;
-    }
-  } else {
-    const useDecimal = Math.random() < 0.3;
-    
-    if (useDecimal) {
-      a = randomNonZeroInt(-24, 24) / 2;
-      b = randomNonZeroInt(-24, 24) / 2;
-      solution = randomNonZeroInt(-24, 24) / 2;
-      c = a * solution + b;
-    } else {
-      // Keep denominator positive to avoid fraction-bar rendering bugs
-      a = randomInt(2, 15); // positive, avoids ±1
-      b = randomNonZeroInt(-15, 15);
-      while (Math.abs(b) < 2) b = randomNonZeroInt(-15, 15);
-      solution = randomNonZeroInt(-15, 15);
-      c = a * solution + b;
-    }
-    
-    // FIXED: Use formatCoefficient to hide 1 and -1
-    if (skeleton === 'ax+b=c') {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${axTerm} - ${Math.abs(b)} = ${c}` : `${axTerm} + ${b} = ${c}`;
-    } else {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = b < 0 ? `${c} = ${axTerm} - ${Math.abs(b)}` : `${c} = ${axTerm} + ${b}`;
-      problemHasConstantOnLeft = true;
+      canonical = coefficient + variable;
     }
   }
   
-  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
-  const afterStep1 = c - b;
-  const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
+  // Constant term (if exists)
+  if (constant !== 0) {
+    if (canonical) {
+      // We have a variable term, add constant
+      canonical += (constant > 0 ? '+' + constant : constant);
+    } else {
+      // Only constant, no variable
+      canonical = String(constant);
+    }
+  }
   
-  // FIXED: Build axTerm with formatCoefficient for consistency
-  const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-  const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
+  // Edge case: if both are 0
+  if (!canonical) {
+    canonical = '0';
+  }
   
-  const row1Bank = [
-    step1Operation,
-    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    `× ${Math.abs(a)}`,
-    `÷ ${Math.abs(a)}`,
-    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
-    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
-  ];
+  return canonical;
+};
+
+// Helper: Validate that a distractor is actually incorrect
+const isActuallyWrong = (distractor, correctAnswer) => {
+  const distractorCanonical = canonicalForm(distractor);
+  const correctCanonical = canonicalForm(correctAnswer);
   
-  const row2Bank = [
-    axTerm,
-    negAxTerm,
-    String(afterStep1),
-    String(-afterStep1),
-    String(afterStep1 + 1),
-    String(afterStep1 - 1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
+  // Must be different in canonical form
+  return distractorCanonical !== correctCanonical;
+};
+
+// Main function: Ensure exactly 4 unique, valid choices
+const ensureFourChoices = (choices, answer) => {
+  const MAX_ATTEMPTS = 20;
+  const canonicalSet = new Set();
+  const uniqueChoices = [];
   
-  const row3Bank = [
-    step2Operation,
-    a < 0 ? `× (${a})` : `× ${a}`,
-    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
-    `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`,
-    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
-    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
-  ];
+  // Step 1: Add the correct answer first (guaranteed inclusion)
+  const answerCanonical = canonicalForm(answer);
+  canonicalSet.add(answerCanonical);
+  uniqueChoices.push(answer);
   
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(a),
-    String(-a),
-    String(b),
-    String(-b)
-  ];
+  // Step 2: Process provided choices (distractors)
+  for (const choice of choices) {
+    if (uniqueChoices.length >= 4) break;
+    
+    const canonical = canonicalForm(choice);
+    
+    // Skip if duplicate OR if actually correct
+    if (canonicalSet.has(canonical)) continue;
+    if (!isActuallyWrong(choice, answer)) continue;
+    
+    canonicalSet.add(canonical);
+    uniqueChoices.push(choice);
+  }
   
-  const row2ExpectedLeft = problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm];
-  const row2ExpectedRight = problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)];
+  // Step 3: Generate additional distractors if needed
+  let attempts = 0;
+  const parsed = parseExpression(String(answer));
   
-  const row4ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
-  const row4ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
-  
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      {
-        id: 'row0_draw_line',
-        type: 'single_choice',
-        instruction: 'What do you do first?',
-        choices: ['Draw a line'],
-        expected: ['Draw a line']
-      },
-      {
-        id: 'row1_operation',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step1Operation],
-        expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
-      },
-      {
-        id: 'row2_after_subtract',
-        type: 'dual_box',
-        instruction: 'Simplify each side',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row2ExpectedLeft,
-        expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
-      },
-      {
-        id: 'row3_divide',
-        type: 'dual_box',
-        instruction: 'What do we do to both sides?',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: [step2Operation],
-        expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
-      },
-      {
-        id: 'row4_solution',
-        type: 'dual_box',
-        instruction: 'Simplify to solve',
-        leftBlanks: 1,
-        rightBlanks: 1,
-        expectedLeft: row4ExpectedLeft,
-        expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
-      }
-    ]
-  };
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      rule: 'For ax + b = c, first clear the lonely number, then clear the fence',
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        { 
-          description: `Step 1: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)}`,
-          work: `${problem}\n${step1Operation}   ${step1Operation}\n${'_'.repeat(problem.length)}\n${a}x = ${afterStep1}`
+  while (uniqueChoices.length < 4 && attempts < MAX_ATTEMPTS) {
+    let filler;
+    
+    if (parsed && parsed.variable) {
+      // Generate algebraically plausible distractors
+      const strategies = [
+        // Strategy 1: Wrong coefficient
+        () => {
+          const wrongCoef = parsed.coefficient + randomFrom([-3, -2, -1, 1, 2, 3]);
+          return formatAnswer(wrongCoef, parsed.variable, parsed.constant);
         },
-        {
-          description: `Step 2: Divide by ${a}`,
-          work: `${a}x = ${afterStep1}\n${'_'.repeat(3)}   ${'_'.repeat(String(afterStep1).length)}\n ${a}     ${a}\n\nx = ${solution}`
+        // Strategy 2: Wrong constant
+        () => {
+          const wrongConst = parsed.constant + randomFrom([-5, -3, -2, -1, 1, 2, 3, 5]);
+          return formatAnswer(parsed.coefficient, parsed.variable, wrongConst);
+        },
+        // Strategy 3: Sign flip on coefficient
+        () => {
+          return formatAnswer(-parsed.coefficient, parsed.variable, parsed.constant);
+        },
+        // Strategy 4: Sign flip on constant
+        () => {
+          return formatAnswer(parsed.coefficient, parsed.variable, -parsed.constant);
+        },
+        // Strategy 5: Both wrong
+        () => {
+          const wrongCoef = parsed.coefficient + randomFrom([-2, -1, 1, 2]);
+          const wrongConst = parsed.constant + randomFrom([-3, -1, 1, 3]);
+          return formatAnswer(wrongCoef, parsed.variable, wrongConst);
         }
-      ]
+      ];
+      
+      // Pick random strategy
+      const strategy = randomFrom(strategies);
+      filler = strategy();
+    } else {
+      // For pure numbers, use simple offset
+      const numAnswer = typeof answer === 'number' ? answer : parseFloat(answer);
+      if (isNaN(numAnswer)) {
+        // If we can't parse, just use a random number
+        filler = randomInt(-20, 20);
+      } else {
+        const offset = randomFrom([-5, -3, -2, -1, 1, 2, 3, 5]);
+        filler = numAnswer + offset;
+      }
     }
+    
+    const fillerCanonical = canonicalForm(filler);
+    
+    // Validate: must be unique AND actually wrong
+    if (!canonicalSet.has(fillerCanonical) && isActuallyWrong(filler, answer)) {
+      canonicalSet.add(fillerCanonical);
+      uniqueChoices.push(filler);
+    }
+    
+    attempts++;
+  }
+  
+  // Step 4: Fallback if we still don't have 4
+  // Use pre-validated safe distractors
+  const fallbackDistractors = [-99, -88, -77, 999, 888, 777];
+  
+  for (const fallback of fallbackDistractors) {
+    if (uniqueChoices.length >= 4) break;
+    
+    const fallbackCanonical = canonicalForm(fallback);
+    
+    if (!canonicalSet.has(fallbackCanonical) && isActuallyWrong(fallback, answer)) {
+      canonicalSet.add(fallbackCanonical);
+      uniqueChoices.push(fallback);
+    }
+  }
+  
+  // Step 5: Absolute failsafe - ensure we have exactly 4
+  // If we STILL don't have 4, pad with obviously wrong values
+  while (uniqueChoices.length < 4) {
+    const desperate = 9999 + uniqueChoices.length;
+    uniqueChoices.push(desperate);
+  }
+  
+  // Step 6: Shuffle (Fisher-Yates)
+  const finalChoices = uniqueChoices.slice(0, 4);
+  for (let i = finalChoices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [finalChoices[i], finalChoices[j]] = [finalChoices[j], finalChoices[i]];
+  }
+  
+  return finalChoices;
+};
+
+// CRITICAL VALIDATION (for testing only - remove in production)
+// After calling ensureFourChoices, validate the result:
+const validateChoices = (choices, answer) => {
+  if (choices.length !== 4) {
+    console.error('ensureFourChoices: Did not return exactly 4 choices!', choices);
+    return false;
+  }
+  
+  const canonicals = choices.map(c => canonicalForm(c));
+  const uniqueCanonicals = new Set(canonicals);
+  
+  if (uniqueCanonicals.size !== 4) {
+    console.error('ensureFourChoices: Duplicate choices detected!', choices, canonicals);
+    return false;
+  }
+  
+  const answerCanonical = canonicalForm(answer);
+  if (!canonicals.includes(answerCanonical)) {
+    console.error('ensureFourChoices: Correct answer not in choices!', answer, choices);
+    return false;
+  }
+  
+  return true;
+};
+
+// ============================================
+// FORMATTING HELPER FOR INTEGER OPERATIONS
+// ============================================
+
+/**
+ * Format integer operations with proper parentheses for negative in second position
+ * Examples: 8 × (-6), -5 ÷ (-3)
+ */
+const formatIntegerOperation = (num1, op, num2) => {
+  if (num2 < 0 && (op === '×' || op === '÷')) {
+    return `${num1} ${op} (${num2})`;
+  }
+  return `${num1} ${op} ${num2}`;
+};
+
+
+// ============================================
+// LEVEL 1-1: ADDITION (REBUILT)
+// ============================================
+
+export const generateAdditionProblem = (difficulty) => {
+  const levelId = '1-1';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // Sign patterns: posNeg, negPos, negNeg (NO posPos per spec)
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
+    let num1, num2, answer;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 20);
+      num2 = -randomInt(1, 20);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 20);
+      num2 = randomInt(1, 20);
+    } else { // negNeg
+      num1 = -randomInt(1, 20);
+      num2 = -randomInt(1, 20);
+    }
+    
+    answer = num1 + num2;
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
+      
+      // Misconception-based distractors
+      const misconceptions = [
+        answer,                              // Correct
+        -answer,                            // Wrong sign on result
+        Math.abs(num1) + Math.abs(num2),    // Added absolute values (ignored signs)
+        -(Math.abs(num1) + Math.abs(num2)), // Added absolute values then negated
+        Math.abs(num1 - num2),              // Subtracted instead of added
+      ];
+      
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem: problem,
+        displayProblem: `${problem} = ?`,
+        answer: answer,
+        choices: choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: num2 >= 0 ? `Start at ${num1}, move ${num2} right` : `Start at ${num1}, move ${Math.abs(num2)} left`, work: `Result: ${answer}` }
+          ],
+          rule: num1 >= 0 && num2 >= 0 ? "Adding positives: add normally" : 
+                num1 < 0 && num2 < 0 ? "Adding negatives: add and keep negative sign" :
+                "Different signs: subtract and take sign of larger magnitude",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  // If we hit max retries, generate one more without checking
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') {
+    num1 = randomInt(1, 20);
+    num2 = -randomInt(1, 20);
+  } else if (skeleton === 'negPos') {
+    num1 = -randomInt(1, 20);
+    num2 = randomInt(1, 20);
+  } else {
+    num1 = -randomInt(1, 20);
+    num2 = -randomInt(1, 20);
+  }
+  const answer = num1 + num2;
+  const problem = `${num1} + ${num2 >= 0 ? num2 : `(${num2})`}`;
+  const misconceptions = [answer, -answer, Math.abs(num1) + Math.abs(num2), -(Math.abs(num1) + Math.abs(num2))];
+  const choices = ensureFourChoices(misconceptions, answer);
+  return {
+    problem, displayProblem: `${problem} = ?`, answer, choices,
+    explanation: { originalProblem: problem, steps: [{ description: `Problem: ${problem}`, work: `` }], rule: "Integer addition", finalAnswer: answer }
   };
 };
 
 // ============================================
-// HELPER: Generate ax - b = c type (Level 22 style)
+// LEVEL 1-2: SUBTRACTION (REBUILT)
 // ============================================
-const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
+
+export const generateSubtractionProblem = (difficulty) => {
+  const levelId = '1-2';
   
-  if (difficulty === 'easy') {
-    // Ensure it's a true 2-step problem (avoid a = ±1 and tiny b)
-    let attempts = 0;
-    while (attempts < 100) {
-      a = randomNonZeroInt(-12, 12);
-      if (Math.abs(a) === 1) { attempts++; continue; }
-      b = randomInt(2, 12);
-      solution = randomNonZeroInt(-12, 12);
-      c = a * solution - b;
-      break;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
+    let num1, num2, answer;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 20);
+      num2 = -randomInt(1, 20);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 20);
+      num2 = randomInt(1, 20);
+    } else {
+      num1 = -randomInt(1, 20);
+      num2 = -randomInt(1, 20);
     }
     
-    // FIXED: Use formatCoefficient (though this already avoids a=±1)
-    if (skeleton === 'ax-b=c') {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = `${axTerm} - ${b} = ${c}`;
-    } else {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = `${c} = ${axTerm} - ${b}`;
-      problemHasConstantOnLeft = true;
-    }
-  } else {
-    const useDecimal = Math.random() < 0.3;
+    answer = num1 - num2;
     
-    if (useDecimal) {
-      // Ensure it's a true 2-step problem (avoid a = ±1.0 and tiny b)
-      let attempts = 0;
-      while (attempts < 100) {
-        a = randomNonZeroInt(-24, 24) / 2;
-        if (Math.abs(a) === 1) { attempts++; continue; }
-        b = randomInt(2, 24) / 2;
-        solution = randomNonZeroInt(-24, 24) / 2;
-        c = a * solution - b;
-        break;
-      }
-    } else {
-      // Ensure it's a true 2-step problem (avoid a = ±1 and tiny b)
-      let attempts = 0;
-      while (attempts < 100) {
-        a = randomNonZeroInt(-15, 15);
-        if (Math.abs(a) === 1) { attempts++; continue; }
-        b = randomInt(2, 15);
-        solution = randomNonZeroInt(-15, 15);
-        c = a * solution - b;
-        break;
-      }
-    }
-    
-    // FIXED: Use formatCoefficient (though this already avoids a=±1)
-    if (skeleton === 'ax-b=c') {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = `${axTerm} - ${b} = ${c}`;
-    } else {
-      const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-      problem = `${c} = ${axTerm} - ${b}`;
-      problemHasConstantOnLeft = true;
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
+      const isSubtractingNegative = num2 < 0;
+      
+      const misconceptions = [answer, -answer, num1 + num2, num2 - num1, Math.abs(num1) - Math.abs(num2)];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            ...(isSubtractingNegative ? [{ description: "Subtracting negative = adding positive", work: `${num1} - (${num2}) = ${num1} + ${-num2}` }] : []),
+            { description: "Calculate", work: `Result: ${answer}` }
+          ],
+          rule: isSubtractingNegative ? "Subtracting a negative = adding a positive" : "Subtract normally",
+          finalAnswer: answer
+        }
+      };
     }
   }
   
-  const step1Operation = `+ ${b}`;
-  const afterStep1 = c + b;
-  const step2Operation = a < 0 ? `÷ (${a})` : `÷ ${a}`;
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') { num1 = randomInt(1, 20); num2 = -randomInt(1, 20); }
+  else if (skeleton === 'negPos') { num1 = -randomInt(1, 20); num2 = randomInt(1, 20); }
+  else { num1 = -randomInt(1, 20); num2 = -randomInt(1, 20); }
+  const answer = num1 - num2;
+  const problem = `${num1} - ${num2 >= 0 ? num2 : `(${num2})`}`;
+  const choices = ensureFourChoices([answer, -answer, num1 + num2, num2 - num1], answer);
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Subtraction", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-3: MULTIPLICATION (REBUILT)
+// ============================================
+
+export const generateMultiplicationProblem = (difficulty) => {
+  const levelId = '1-3';
   
-  // FIXED: Build axTerm with formatCoefficient for consistency
-  const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
-  const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
-  
-  const row1Bank = [
-    step1Operation,
-    `- ${b}`,
-    `× ${b}`,
-    `÷ ${b}`,
-    `× ${Math.abs(a)}`,
-    `÷ ${Math.abs(a)}`
-  ];
-  
-  const row2Bank = [
-    axTerm,
-    negAxTerm,
-    String(afterStep1),
-    String(-afterStep1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
-  
-  const row3Bank = [
-    step2Operation,
-    a < 0 ? `× (${a})` : `× ${a}`,
-    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
-    `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`
-  ];
-  
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1)
-  ];
-  
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
-      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [...new Set(row1Bank)].sort() },
-      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm], expectedRight: problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
-      { id: 'row3_divide', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [...new Set(row3Bank)].sort() },
-      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: [...new Set(row4Bank)].sort() }
-    ]
-  };
-  
-  return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      rule: 'For ax - b = c, add b first, then divide by a',
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        { description: `Step 1: Add ${b}`, work: `${problem}\n+ ${b}   + ${b}\n${'_'.repeat(problem.length)}\n${a}x = ${afterStep1}` },
-        { description: `Step 2: Divide by ${a}`, work: `${a}x = ${afterStep1}\n${'_'.repeat(3)}   ${'_'.repeat(String(afterStep1).length)}\n ${a}     ${a}\n\nx = ${solution}` }
-      ]
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
+    let num1, num2, answer;
+    
+    if (skeleton === 'posNeg') {
+      num1 = randomInt(1, 12);
+      num2 = -randomInt(1, 12);
+    } else if (skeleton === 'negPos') {
+      num1 = -randomInt(1, 12);
+      num2 = randomInt(1, 12);
+    } else {
+      num1 = -randomInt(1, 12);
+      num2 = -randomInt(1, 12);
     }
+    
+    answer = num1 * num2;
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, num1, num2 });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      // FIXED: Use formatIntegerOperation for proper parentheses
+      const problem = formatIntegerOperation(num1, '×', num2);
+      const misconceptions = [answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2, Math.abs(num1 * num2) * -1];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Multiply absolute values: ${Math.abs(num1)} × ${Math.abs(num2)} = ${Math.abs(answer)}`, work: `` },
+            { description: skeleton === 'negNeg' ? "Negative × Negative = Positive" : "Positive × Negative = Negative", work: `Result: ${answer}` }
+          ],
+          // FIXED: Enhanced rule
+          rule: "Multiplying integers: Same signs = positive result. Different signs = negative result.",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let num1, num2;
+  if (skeleton === 'posNeg') { num1 = randomInt(1, 12); num2 = -randomInt(1, 12); }
+  else if (skeleton === 'negPos') { num1 = -randomInt(1, 12); num2 = randomInt(1, 12); }
+  else { num1 = -randomInt(1, 12); num2 = -randomInt(1, 12); }
+  const answer = num1 * num2;
+  // FIXED: Use formatIntegerOperation for proper parentheses
+  const problem = formatIntegerOperation(num1, '×', num2);
+  const choices = ensureFourChoices([answer, -answer, Math.abs(num1) * Math.abs(num2), num1 + num2], answer);
+  // FIXED: Enhanced rule
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Multiplying integers: Same signs = positive result. Different signs = negative result.", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-4: DIVISION (REBUILT)
+// ============================================
+
+export const generateDivisionProblem = (difficulty) => {
+  const levelId = '1-4';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+    const skeleton = randomFrom(signPatterns);
+    
+    let dividend, divisor, answer;
+    
+    if (skeleton === 'posNeg') {
+      divisor = -randomInt(1, 12);
+      answer = randomInt(1, 12);
+      dividend = answer * divisor;
+    } else if (skeleton === 'negPos') {
+      divisor = randomInt(1, 12);
+      answer = -randomInt(1, 12);
+      dividend = answer * divisor;
+    } else {
+      divisor = -randomInt(1, 12);
+      answer = randomInt(1, 12);
+      dividend = answer * divisor;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, dividend, divisor });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const problem = `${dividend} ÷ ${divisor >= 0 ? divisor : `(${divisor})`}`;
+      const misconceptions = [answer, -answer, Math.abs(dividend) / Math.abs(divisor), divisor, Math.floor(dividend / divisor)];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `${problem} = ?`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Divide absolute values: ${Math.abs(dividend)} ÷ ${Math.abs(divisor)} = ${Math.abs(answer)}`, work: `` },
+            { description: skeleton === 'negNeg' ? "Negative ÷ Negative = Positive" : "Positive ÷ Negative = Negative", work: `Result: ${answer}` }
+          ],
+          // FIXED: Enhanced rule
+          rule: "Dividing integers: Same signs = positive result. Different signs = negative result.",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const signPatterns = ['posNeg', 'negPos', 'negNeg'];
+  const skeleton = randomFrom(signPatterns);
+  let dividend, divisor, answer;
+  if (skeleton === 'posNeg') { divisor = -randomInt(1, 12); answer = randomInt(1, 12); dividend = answer * divisor; }
+  else if (skeleton === 'negPos') { divisor = randomInt(1, 12); answer = -randomInt(1, 12); dividend = answer * divisor; }
+  else { divisor = -randomInt(1, 12); answer = randomInt(1, 12); dividend = answer * divisor; }
+  const problem = `${dividend} ÷ ${divisor >= 0 ? divisor : `(${divisor})`}`;
+  const choices = ensureFourChoices([answer, -answer, Math.abs(dividend) / Math.abs(divisor), divisor], answer);
+  // FIXED: Enhanced rule
+  return { problem, displayProblem: `${problem} = ?`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Dividing integers: Same signs = positive result. Different signs = negative result.", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-5: BASIC DISTRIBUTION (REBUILT)
+// ============================================
+
+export const generateBasicDistributionProblem = (difficulty) => {
+  const levelId = '1-5';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    
+    const skeletons = difficulty === 'easy' 
+      ? ['a(bx + c)', 'a(c + bx)']
+      : ['a(bx + c)', 'a(c + bx)', 'a(bx + c)', 'a(c + bx)'];
+    
+    const skeleton = randomFrom(skeletons);
+    const outside = randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
+    
+    let problem, answerCoef, answerConst, constantFirst;
+    
+    if (skeleton === 'a(bx + c)') {
+      // Variable first: a(2x + 3) → 6x + 9
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+      constantFirst = false;
+    } else {
+      // Constant first: a(3 + 2x) → 9 + 6x
+      problem = `${outside}(${constant} + ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+      constantFirst = true;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(varCoef, variable, outside * constant, constantFirst),
+        canonicalizeExpression(outside * varCoef, variable, constant, constantFirst),
+        canonicalizeExpression(outside + varCoef, variable, outside + constant, constantFirst),
+        canonicalizeExpression(answerCoef, variable, constant, constantFirst),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside} to each term`, work: `${outside} × ${formatCoefficient(varCoef, variable)} = ${formatCoefficient(answerCoef, variable)}` },
+            { description: ``, work: `${outside} × ${constant} = ${answerConst}` },
+            { description: `Combine`, work: answer }
+          ],
+          rule: "Distribute: multiply outside number by EACH term inside",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = outside * constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(varCoef, variable, outside * constant, false), canonicalizeExpression(outside * varCoef, variable, constant, false)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-6: DISTRIBUTION WITH SUBTRACTION (REBUILT)
+// ============================================
+
+export const generateDistributionSubtractionProblem = (difficulty) => {
+  const levelId = '1-6';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    const skeletons = difficulty === 'easy' ? ['a(bx - c)', 'a(c - bx)'] : ['a(bx - c)', 'a(c - bx)', 'a(bx - c)', 'a(c - bx)'];
+    const skeleton = randomFrom(skeletons);
+    const outside = randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
+    
+    let problem, answerCoef, answerConst, constantFirst;
+    
+    if (skeleton === 'a(bx - c)') {
+      // Variable first: a(2x - 3) → 6x - 9
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = -(outside * constant);
+      constantFirst = false;
+    } else {
+      // Constant first: a(3 - 2x) → 9 - 6x
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = -(outside * varCoef);
+      answerConst = outside * constant;
+      constantFirst = true;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(answerCoef, variable, Math.abs(answerConst), constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, answerConst, constantFirst),
+        canonicalizeExpression(outside * varCoef, variable, outside * constant, constantFirst),
+        canonicalizeExpression(varCoef, variable, -(outside * constant), constantFirst),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside}`, work: `` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Distribute and watch your signs!",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = -(outside * constant);
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(answerCoef, variable, Math.abs(answerConst), false)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Distribution with subtraction", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-7: NEGATIVE OUTSIDE (REBUILT)
+// ============================================
+
+export const generateNegativeOutsideProblem = (difficulty) => {
+  const levelId = '1-7';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    const skeletons = difficulty === 'easy'
+      ? ['-a(bx + c)', '-a(bx - c)']
+      : ['-a(bx + c)', '-a(bx - c)', '-a(c + bx)', '-a(c - bx)', '-a(bx + c)', '-a(c - bx)'];
+    const skeleton = randomFrom(skeletons);
+    const outside = -randomInt(2, 12);
+    const varCoef = randomInt(1, maxCoef);
+    const constant = randomInt(1, 12);
+    
+    let problem, answerCoef, answerConst, constantFirst;
+    
+    if (skeleton === '-a(bx + c)') {
+      // Variable first: -2(3x + 4) → -6x - 8
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+      constantFirst = false;
+    } else if (skeleton === '-a(bx - c)') {
+      // Variable first: -2(3x - 4) → -6x + 8
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+      answerCoef = outside * varCoef;
+      answerConst = -(outside * constant);
+      constantFirst = false;
+    } else if (skeleton === '-a(c + bx)') {
+      // Constant first: -2(4 + 3x) → -8 - 6x
+      problem = `${outside}(${constant} + ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = outside * varCoef;
+      answerConst = outside * constant;
+      constantFirst = true;
+    } else {
+      // Constant first: -2(4 - 3x) → -8 + 6x
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = -(outside * varCoef);
+      answerConst = outside * constant;
+      constantFirst = true;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(-answerCoef, variable, answerConst, constantFirst),
+        canonicalizeExpression(answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst), constantFirst),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute ${outside} to BOTH terms`, work: `Watch the signs!` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Negative outside: distribute the negative to EVERY term",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = -randomInt(2, 12);
+  const varCoef = randomInt(1, difficulty === 'easy' ? 3 : 12);
+  const constant = randomInt(1, 12);
+  const answerCoef = outside * varCoef;
+  const answerConst = outside * constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(-answerCoef, variable, answerConst, false)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Negative distribution", finalAnswer: answer }};
+};
+
+// ============================================
+// LEVEL 1-8: COMPLEX DISTRIBUTION (REBUILT - MUST BE HIGHLY VARIED)
+// ============================================
+
+export const generateNegativeInsideProblem = (difficulty) => {
+  const levelId = '1-8';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    const variable = getVariable(difficulty);
+    const maxCoef = difficulty === 'easy' ? 3 : 12;
+    
+    const skeletons = difficulty === 'easy'
+      ? ['-(x + c)', '-(bx + c)', 'a(-x + c)', '-a(bx - c)']
+      : ['-(x + c)', '-(x - c)', '-(bx + c)', '-(bx - c)', '-(c + bx)', '-(c - bx)', 'a(-x + c)', 'a(-x - c)', 'a(c - bx)', '-a(-x + c)', '-a(-x - c)', '-a(bx - c)', 'a(-bx + c)', 'a(-bx - c)'];
+    
+    const skeleton = randomFrom(skeletons);
+    let outside, varCoef, constant, problem, answerCoef, answerConst, constantFirst;
+    
+    // Determine constantFirst based on skeleton
+    const constantFirstSkeletons = ['-(c + bx)', '-(c - bx)', 'a(c - bx)'];
+    constantFirst = constantFirstSkeletons.includes(skeleton);
+    
+    if (skeleton === '-(x + c)') {
+      outside = -1; varCoef = 1; constant = randomInt(1, 12);
+      problem = `-(${variable} + ${constant})`;
+      answerCoef = -1; answerConst = -constant;
+    } else if (skeleton === '-(x - c)') {
+      outside = -1; varCoef = 1; constant = randomInt(1, 12);
+      problem = `-(${variable} - ${constant})`;
+      answerCoef = -1; answerConst = constant;
+    } else if (skeleton === '-(bx + c)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${formatCoefficient(varCoef, variable)} + ${constant})`;
+      answerCoef = -varCoef; answerConst = -constant;
+    } else if (skeleton === '-(bx - c)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${formatCoefficient(varCoef, variable)} - ${constant})`;
+      answerCoef = -varCoef; answerConst = constant;
+    } else if (skeleton === '-(c + bx)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${constant} + ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = -varCoef; answerConst = -constant;
+    } else if (skeleton === '-(c - bx)') {
+      outside = -1; varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `-(${constant} - ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = varCoef; answerConst = -constant;
+    } else if (skeleton === 'a(-x + c)') {
+      outside = randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} + ${constant})`;
+      answerCoef = -outside; answerConst = outside * constant;
+    } else if (skeleton === 'a(-x - c)') {
+      outside = randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} - ${constant})`;
+      answerCoef = -outside; answerConst = -outside * constant;
+    } else if (skeleton === 'a(c - bx)') {
+      outside = randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${constant} - ${formatCoefficient(varCoef, variable)})`;
+      answerCoef = -outside * varCoef; answerConst = outside * constant;
+    } else if (skeleton === '-a(-x + c)') {
+      outside = -randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} + ${constant})`;
+      answerCoef = -outside; answerConst = outside * constant;
+    } else if (skeleton === '-a(-x - c)') {
+      outside = -randomInt(2, 12); varCoef = -1; constant = randomInt(1, 12);
+      problem = `${outside}(-${variable} - ${constant})`;
+      answerCoef = -outside; answerConst = -outside * constant;
+    } else if (skeleton === '-a(bx - c)') {
+      outside = -randomInt(2, 12); varCoef = randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+      answerCoef = outside * varCoef; answerConst = -outside * constant;
+    } else if (skeleton === 'a(-bx + c)') {
+      outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} + ${constant})`;
+      answerCoef = outside * varCoef; answerConst = outside * constant;
+    } else {
+      outside = randomInt(2, 12); varCoef = -randomInt(2, maxCoef); constant = randomInt(1, 12);
+      problem = `${outside}(${formatCoefficient(varCoef, variable)} - ${constant})`;
+      answerCoef = outside * varCoef; answerConst = -outside * constant;
+    }
+    
+    const signature = generateSignature(levelId, difficulty, { skeleton, outside, varCoef, constant, variable });
+    if (!isRecentDuplicate(levelId, difficulty, signature)) {
+      recordProblem(levelId, difficulty, signature);
+      
+      const answer = canonicalizeExpression(answerCoef, variable, answerConst, constantFirst);
+      const misconceptions = [
+        answer,
+        canonicalizeExpression(-answerCoef, variable, answerConst, constantFirst),
+        canonicalizeExpression(answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(-answerCoef, variable, -answerConst, constantFirst),
+        canonicalizeExpression(Math.abs(answerCoef), variable, Math.abs(answerConst), constantFirst),
+        canonicalizeExpression(answerCoef, variable, 0, constantFirst),
+        canonicalizeExpression(0, variable, answerConst, constantFirst),
+      ];
+      const choices = ensureFourChoices(misconceptions, answer);
+      
+      return {
+        problem, displayProblem: `Simplify: ${problem}`, answer, choices,
+        explanation: {
+          originalProblem: problem,
+          steps: [
+            { description: `Problem: ${problem}`, work: `` },
+            { description: `Distribute carefully - watch ALL signs`, work: `` },
+            { description: `Result`, work: answer }
+          ],
+          rule: "Complex distribution: track every negative carefully!",
+          finalAnswer: answer
+        }
+      };
+    }
+  }
+  
+  const variable = getVariable(difficulty);
+  const outside = -1;
+  const varCoef = 1;
+  const constant = randomInt(1, 12);
+  const answerCoef = -1;
+  const answerConst = -constant;
+  const answer = canonicalizeExpression(answerCoef, variable, answerConst, false);
+  const problem = `-(${variable} + ${constant})`;
+  const choices = ensureFourChoices([answer, canonicalizeExpression(1, variable, constant, false), canonicalizeExpression(-1, variable, constant, false)], answer);
+  return { problem, displayProblem: `Simplify: ${problem}`, answer, choices, explanation: { originalProblem: problem, steps: [], rule: "Complex distribution", finalAnswer: answer }};
+};
+
+export const generateBasicLikeTermsProblem = (difficulty) => {
+  const levelId = '1-9';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax + bx OR bx + ax
+      const skeletons = ['ax + bx', 'bx + ax'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = randomInt(1, 20);
+      const coef2 = randomInt(1, 20);
+      const combined = coef1 + coef2;
+      
+      const problem = skeleton === 'ax + bx' 
+        ? `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`
+        : `${formatCoefficient(coef2, 'x')} + ${formatCoefficient(coef1, 'x')}`;
+      const answer = formatCoefficient(combined, 'x');
+
+      const choices = [
+        answer,
+        `${coef1 + coef2}x²`, // Common error: added exponent
+        problem, // Didn't combine
+        formatCoefficient(coef1 * coef2, 'x') // Multiplied instead of added
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `These are LIKE TERMS (same variable, same exponent)`, work: `` },
+              { description: `Add the coefficients: ${coef1} + ${coef2} = ${combined}`, work: `` },
+              { description: `Keep the variable`, work: `${answer}` }
+            ],
+            rule: "LIKE TERMS: Same variable with same exponent. Add/subtract the coefficients, keep the variable.",
+            finalAnswer: answer
+          }
+        };
+      }
+    } else {
+      // Hard mode: MIX of decimals and integers
+      const useDecimal = Math.random() < 0.5; // 50% chance of decimals
+      const coef1 = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const coef2 = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const combined = Math.round((coef1 + coef2) * 100) / 100;
+      const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+      
+      // Skeleton variety
+      const skeletons = ['av + bv', 'bv + av'];
+      const skeleton = randomFrom(skeletons);
+      
+      const problem = skeleton === 'av + bv'
+        ? `${formatCoefficient(coef1, variable)} + ${formatCoefficient(coef2, variable)}`
+        : `${formatCoefficient(coef2, variable)} + ${formatCoefficient(coef1, variable)}`;
+      const answer = formatCoefficient(combined, variable);
+
+      const choices = [
+        answer,
+        problem, // Didn't combine
+        formatCoefficient(Math.round((coef1 * coef2) * 100) / 100, variable), // Multiplied
+        `${combined}${variable}²` // Added exponent
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Like terms: add coefficients`, work: `${coef1} + ${coef2} = ${combined}` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Add coefficients, keep variable",
+            finalAnswer: answer
+          }
+        };
+      }
+    }
+  }
+  
+  // Fallback after max retries
+  const coef1 = randomInt(1, 20);
+  const coef2 = randomInt(1, 20);
+  const combined = coef1 + coef2;
+  const answer = formatCoefficient(combined, 'x');
+  const problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`;
+  const choices = ensureFourChoices([answer, `${coef1 + coef2}x²`, problem, formatCoefficient(coef1 * coef2, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [{ description: `Combine like terms`, work: answer }], rule: "Like terms", finalAnswer: answer }
   };
 };
 
 // ============================================
-// HELPER: Generate x/a + b = c type (Level 23 style)
+// LEVEL 1-10: COUNT INVENTORY (Unlike Terms)
 // ============================================
-const generateLevel24DivideAdd = (skeleton, difficulty) => {
-  let a, b, c, solution, problem;
-  let problemHasConstantOnLeft = false;
+
+export const generateUnlikeTermsProblem = (difficulty) => {
+  const levelId = '1-10';
   
-  if (difficulty === 'easy') {
-    // CRITICAL: Ensure a is never 0 (division by zero)
-    a = randomNonZeroInt(-12, 12);
-    while (a === 0 || Math.abs(a) < 2) {
-      a = randomNonZeroInt(-12, 12);
-    }
-    
-    b = randomNonZeroInt(-12, 12);
-    const quotient = randomNonZeroInt(-12, 12);
-    solution = a * quotient;
-    c = quotient + b;
-    
-    if (skeleton === 'x/a+b=c') {
-      problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
-    } else {
-      problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
-      problemHasConstantOnLeft = true;
-    }
-  } else {
-    const useDecimal = Math.random() < 0.3;
-    
-    if (useDecimal) {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomNonZeroInt(-24, 24) / 2;
-      while (a === 0 || Math.abs(a) < 1) {
-        a = randomNonZeroInt(-24, 24) / 2;
-      }
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax + c OR c + ax (constant-first)
+      const skeletons = ['ax + c', 'c + ax'];
+      const skeleton = randomFrom(skeletons);
       
-      b = randomNonZeroInt(-24, 24) / 2;
-      const quotient = randomNonZeroInt(-24, 24) / 2;
-      solution = a * quotient;
-      c = quotient + b;
-    } else {
-      // CRITICAL: Ensure a is never 0 (division by zero)
-      a = randomNonZeroInt(-15, 15);
-      while (a === 0 || Math.abs(a) < 2) {
-        a = randomNonZeroInt(-15, 15);
-      }
+      const coefX = randomInt(1, 20);
+      const constant = randomInt(1, 20);
       
-      b = randomNonZeroInt(-15, 15);
-      const quotient = randomNonZeroInt(-15, 15);
-      solution = a * quotient;
-      c = quotient + b;
-    }
-    
-    if (skeleton === 'x/a+b=c') {
-      problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
+      const problem = skeleton === 'ax + c'
+        ? `${formatCoefficient(coefX, 'x')} + ${constant}`
+        : `${constant} + ${formatCoefficient(coefX, 'x')}`;
+      const answer = problem; // Cannot combine - leave as is
+
+      const choices = [
+        answer,
+        formatCoefficient(coefX + constant, 'x'), // Tried to combine unlike terms
+        `${formatCoefficient(coefX, 'x')} × ${constant}`, // Multiplied (readable form)
+        `${coefX + constant}` // Lost variable
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX, constant });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `${formatCoefficient(coefX, 'x')} and ${constant} are NOT like terms`, work: `` },
+              { description: `One has a variable (x), one doesn't`, work: `` },
+              { description: `CANNOT combine - leave as is`, work: `${answer}` }
+            ],
+            rule: "UNLIKE TERMS: Different variables OR one has variable and one doesn't. CANNOT be combined!",
+            finalAnswer: answer
+          }
+        };
+      }
     } else {
-      problem = b < 0 ? `${c} = x/${a} - ${Math.abs(b)}` : `${c} = x/${a} + ${b}`;
-      problemHasConstantOnLeft = true;
+      // Hard mode: MIX of decimals and integers
+      const useDecimal = Math.random() < 0.5;
+      const coefX = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const coefY = useDecimal ? randomDecimal() : randomInt(1, 20);
+      const varX = randomFrom(['x', 'a', 'n']);
+      const varY = randomFrom(['y', 'b', 'm']);
+      
+      // Skeleton variety
+      const skeletons = ['xvar + yvar', 'yvar + xvar'];
+      const skeleton = randomFrom(skeletons);
+      
+      const problem = skeleton === 'xvar + yvar'
+        ? `${formatCoefficient(coefX, varX)} + ${formatCoefficient(coefY, varY)}`
+        : `${formatCoefficient(coefY, varY)} + ${formatCoefficient(coefX, varX)}`;
+      const answer = problem; // Cannot combine
+
+      const choices = [
+        answer,
+        formatCoefficient(Math.round((coefX + coefY) * 100) / 100, varX), // Combined to one var
+        `${Math.round((coefX + coefY) * 100) / 100}${varX}${varY}`, // Combined with both vars
+        `${formatCoefficient(coefX, varX)} × ${formatCoefficient(coefY, varY)}` // Multiplied (readable)
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX, coefY, varX, varY });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Different variables: ${varX} and ${varY}`, work: `` },
+              { description: `Cannot combine`, work: `${answer}` }
+            ],
+            rule: "Different variables = unlike terms",
+            finalAnswer: answer
+          }
+        };
+      }
     }
   }
   
-  const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
-  const afterStep1 = c - b;
-  const step2Operation = a < 0 ? `× (${a})` : `× ${a}`;
-  
-  // FIX: Comprehensive row1Bank matching Level 22 structure
-  const row1Bank = [
-    step1Operation,
-    b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
-    `× ${Math.abs(b)}`,
-    `÷ ${Math.abs(b)}`,
-    `+ ${Math.abs(b)}`,
-    `- ${Math.abs(b)}`,
-    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
-    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
-    c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
-    c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
-  ];
-  
-  // FIX: Comprehensive row2Bank matching Level 22 structure
-  const row2Bank = [
-    `x/${a}`,
-    a < 0 ? `x/${-a}` : `-x/${a}`,
-    String(afterStep1),
-    String(-afterStep1),
-    String(afterStep1 + 1),
-    String(afterStep1 - 1),
-    'x',
-    '-x',
-    String(solution),
-    String(-solution)
-  ];
-  
-  // FIX: Comprehensive row3Bank - THIS WAS THE BUG!
-  const row3Bank = [
-    step2Operation,
-    a < 0 ? `÷ (${a})` : `÷ ${a}`,
-    a < 0 ? `× ${-a}` : `× (${-a})`,
-    a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
-    `× ${Math.abs(a) + 1}`,
-    `÷ ${Math.abs(a) + 1}`,
-    a >= 0 ? `+ ${a}` : `- ${Math.abs(a)}`,
-    a >= 0 ? `- ${a}` : `+ ${Math.abs(a)}`,
-    b >= 0 ? `+ ${b}` : `- ${Math.abs(b)}`,
-    b >= 0 ? `- ${b}` : `+ ${Math.abs(b)}`
-  ];
-  
-  // FIX: Comprehensive row4Bank matching Level 22 structure
-  const row4Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(a),
-    String(-a),
-    String(b),
-    String(-b)
-  ];
-  
-  const staged = {
-    mode: 'equation_solver',
-    rows: [
-      { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
-      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [...new Set(row1Bank)].sort() },
-      { id: 'row2_after_subtract', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`x/${a}`], expectedRight: problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
-      { id: 'row3_multiply', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [...new Set(row3Bank)].sort() },
-      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: [...new Set(row4Bank)].sort() }
-    ]
-  };
-  
+  // Fallback
+  const coefX = randomInt(1, 20);
+  const constant = randomInt(1, 20);
+  const answer = `${formatCoefficient(coefX, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coefX + constant, 'x'), `${coefX + constant}`], answer);
   return {
-    problem,
-    displayProblem: problem,
-    answer: String(solution),
-    choices: [String(solution)],
-    staged,
-    explanation: {
-      rule: 'For x/a + b = c, subtract b first, then multiply by a',
-      steps: [
-        { description: 'Original Problem:', work: problem },
-        { description: `Step 1: ${b < 0 ? 'Add' : 'Subtract'} ${Math.abs(b)}`, work: `${problem}\n${step1Operation}   ${step1Operation}\n${'_'.repeat(problem.length)}\nx/${a} = ${afterStep1}` },
-        { description: `Step 2: Multiply by ${a}`, work: `x/${a} = ${afterStep1}\n${step2Operation}   ${step2Operation}\n${'_'.repeat(problem.length)}\nx = ${solution}` }
-      ]
-    }
+    problem: answer, displayProblem: answer, answer, choices,
+    explanation: { originalProblem: answer, steps: [], rule: "Unlike terms", finalAnswer: answer }
   };
 };
+
+// ============================================
+// LEVEL 1-11: SORT SUPPLIES (Multiple Like Terms)
+// ============================================
+
+export const generateMultipleLikeTermsProblem = (difficulty) => {
+  const levelId = '1-11';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: different orderings of ax + bx + c
+      const skeletons = ['ax + bx + c', 'c + ax + bx', 'ax + c + bx'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = randomInt(1, 20);
+      const coef2 = randomInt(1, 20);
+      const coef3 = randomInt(1, 20);
+      
+      const xTerms = coef1 + coef2;
+      const constant = coef3;
+      
+      // Build problem based on skeleton (different orderings)
+      let problem;
+      if (skeleton === 'ax + bx + c') {
+        problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')} + ${constant}`;
+      } else if (skeleton === 'c + ax + bx') {
+        problem = `${constant} + ${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')}`;
+      } else {
+        problem = `${formatCoefficient(coef1, 'x')} + ${constant} + ${formatCoefficient(coef2, 'x')}`;
+      }
+      
+      // Answer always canonical: xTerms x + constant
+      const answer = `${formatCoefficient(xTerms, 'x')} + ${constant}`;
+
+      const choices = [
+        answer,
+        formatCoefficient(coef1 + coef2 + coef3, 'x'), // Combined all
+        `${formatCoefficient(coef1, 'x')} + ${coef2 + coef3}`, // Combined wrong terms
+        `${formatCoefficient(xTerms, 'x')} × ${constant}` // Multiplied (readable)
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, coef3 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `Identify like terms: ${formatCoefficient(coef1, 'x')} and ${formatCoefficient(coef2, 'x')} are LIKE`, work: `` },
+              { description: `${constant} is UNLIKE (no variable)`, work: `` },
+              { description: `Combine like terms: ${coef1} + ${coef2} = ${xTerms}`, work: `` },
+              { description: `Keep unlike term separate`, work: `${answer}` }
+            ],
+            rule: "Only combine LIKE terms. Leave unlike terms separate.",
+            finalAnswer: answer
+          }
+        };
+      }
+    } else {
+      // Hard mode: MIX decimals and integers
+      const useDecimalX = Math.random() < 0.5;
+      const useDecimalY = Math.random() < 0.5;
+      
+      const coefX1 = useDecimalX ? randomDecimal() : randomInt(1, 20);
+      const coefX2 = useDecimalX ? randomDecimal() : randomInt(1, 20);
+      const coefY = useDecimalY ? randomDecimal() : randomInt(1, 20);
+      const constant = randomInt(1, 20);
+      
+      const xTerms = Math.round((coefX1 + coefX2) * 100) / 100;
+      
+      // Skeleton variety: different orderings
+      const skeletons = ['ax + bx + cy + d', 'd + ax + bx + cy', 'ax + cy + bx + d'];
+      const skeleton = randomFrom(skeletons);
+      
+      let problem;
+      if (skeleton === 'ax + bx + cy + d') {
+        problem = `${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefX2, 'x')} + ${formatCoefficient(coefY, 'y')} + ${constant}`;
+      } else if (skeleton === 'd + ax + bx + cy') {
+        problem = `${constant} + ${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefX2, 'x')} + ${formatCoefficient(coefY, 'y')}`;
+      } else {
+        problem = `${formatCoefficient(coefX1, 'x')} + ${formatCoefficient(coefY, 'y')} + ${formatCoefficient(coefX2, 'x')} + ${constant}`;
+      }
+      
+      // Answer always canonical: x terms, then y, then constant
+      const answer = `${formatCoefficient(xTerms, 'x')} + ${formatCoefficient(coefY, 'y')} + ${constant}`;
+
+      const choices = [
+        answer,
+        `${xTerms + coefY + constant}xy`, // Combined all into xy
+        `${formatCoefficient(xTerms, 'x')} + ${coefY + constant}y`, // Combined y and constant
+        `${formatCoefficient(Math.round((coefX1 + coefX2 + constant) * 100) / 100, 'x')} + ${formatCoefficient(coefY, 'y')}` // Combined x and constant
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coefX1, coefX2, coefY, constant });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Combine x terms: ${coefX1} + ${coefX2} = ${xTerms}`, work: `` },
+              { description: `y term stays: ${formatCoefficient(coefY, 'y')}`, work: `` },
+              { description: `Constant stays: ${constant}`, work: `` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Combine all like terms separately",
+            finalAnswer: answer
+          }
+        };
+      }
+    }
+  }
+  
+  // Fallback
+  const coef1 = randomInt(1, 20);
+  const coef2 = randomInt(1, 20);
+  const constant = randomInt(1, 20);
+  const xTerms = coef1 + coef2;
+  const answer = `${formatCoefficient(xTerms, 'x')} + ${constant}`;
+  const problem = `${formatCoefficient(coef1, 'x')} + ${formatCoefficient(coef2, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coef1 + coef2 + constant, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [], rule: "Combine like terms", finalAnswer: answer }
+  };
+};
+
+// ============================================
+// LEVEL 1-12: PACK IT UP (Subtraction of Like Terms)
+// ============================================
+
+export const generateSubtractLikeTermsProblem = (difficulty) => {
+  const levelId = '1-12';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      // Skeleton variety: ax - bx, bx - ax, ax + (-bx), (-bx) + ax
+      const skeletons = ['ax - bx', 'bx - ax', 'ax + (-bx)'];
+      const skeleton = randomFrom(skeletons);
+      
+      let coef1, coef2, combined, problem;
+      
+      if (skeleton === 'ax - bx') {
+        coef1 = randomInt(2, 20);  // Ensure coef1 > coef2 for positive result
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef1 - coef2;
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+      } else if (skeleton === 'bx - ax') {
+        coef1 = randomInt(2, 20);
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef2 - coef1;  // Negative result
+        problem = `${formatCoefficient(coef2, 'x')} - ${formatCoefficient(coef1, 'x')}`;
+      } else { // ax + (-bx)
+        coef1 = randomInt(2, 20);
+        coef2 = randomInt(1, coef1 - 1);
+        combined = coef1 - coef2;
+        problem = `${formatCoefficient(coef1, 'x')} + (${formatCoefficient(-coef2, 'x')})`;
+      }
+      
+      const answer = formatCoefficient(combined, 'x');
+
+      const choices = [
+  answer,
+  formatCoefficient(Math.abs(coef1) + Math.abs(coef2), 'x'), // Added instead of subtracted
+  formatCoefficient(coef1, 'x'), // Didn't combine at all - just first term
+  formatCoefficient(-combined, 'x') // Wrong sign
+];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Problem: ${problem}`, work: `` },
+              { description: `Like terms with subtraction`, work: `` },
+              { description: `Subtract coefficients: ${Math.abs(coef1)} - ${Math.abs(coef2)} = ${Math.abs(combined)}`, work: `` },
+              { description: `Keep the variable and sign`, work: `${answer}` }
+            ],
+            rule: "Subtracting like terms: subtract coefficients, keep variable",
+            finalAnswer: answer
+          }
+        };
+      }
+    } else {
+      // Hard mode: MIX decimals, multiple skeletons, include subtraction with constants
+      const useDecimal = Math.random() < 0.5;
+      const skeletons = ['ax - bx - c', 'ax - bx + c', 'c + ax - bx', 'ax - c - bx'];
+      const skeleton = randomFrom(skeletons);
+      
+      const coef1 = useDecimal ? randomDecimal() : randomInt(2, 20);
+      const coef2 = useDecimal ? randomDecimal() : randomInt(1, Math.floor(coef1));
+      const coef3 = randomInt(1, 20);
+      const combined = Math.round((coef1 - coef2) * 100) / 100;
+      
+      let problem, answer;
+      
+      if (skeleton === 'ax - bx - c') {
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')} - ${coef3}`;
+        answer = `${formatCoefficient(combined, 'x')} - ${coef3}`;
+      } else if (skeleton === 'ax - bx + c') {
+        problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')} + ${coef3}`;
+        answer = `${formatCoefficient(combined, 'x')} + ${coef3}`;
+      } else if (skeleton === 'c + ax - bx') {
+        problem = `${coef3} + ${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+        answer = `${formatCoefficient(combined, 'x')} + ${coef3}`;  // Canonical: x terms first
+      } else { // ax - c - bx
+        problem = `${formatCoefficient(coef1, 'x')} - ${coef3} - ${formatCoefficient(coef2, 'x')}`;
+        answer = `${formatCoefficient(combined, 'x')} - ${coef3}`;  // Canonical: x terms first
+      }
+
+      const choices = [
+        answer,
+        skeleton.includes('- c') 
+          ? `${formatCoefficient(combined, 'x')} + ${coef3}` 
+          : `${formatCoefficient(combined, 'x')} - ${coef3}`, // Wrong sign on constant
+        formatCoefficient(Math.round((coef1 - coef2 - coef3) * 100) / 100, 'x'), // Combined all
+        formatCoefficient(Math.round((combined + coef3) * 100) / 100, 'x') // Combined x and constant
+      ];
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton, coef1, coef2, coef3 });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const finalChoices = ensureFourChoices(choices, answer);
+
+        return {
+          problem: problem,
+          displayProblem: problem,
+          answer: answer,
+          choices: finalChoices,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Combine x terms: ${coef1} - ${coef2} = ${combined}`, work: `` },
+              { description: `Constant stays separate`, work: `` },
+              { description: `Result`, work: `${answer}` }
+            ],
+            rule: "Combine like terms, keep unlike terms separate",
+            finalAnswer: answer
+          }
+        };
+      }
+    }
+  }
+  
+  // Fallback
+  const coef1 = randomInt(2, 20);
+  const coef2 = randomInt(1, coef1 - 1);
+  const combined = coef1 - coef2;
+  const answer = formatCoefficient(combined, 'x');
+  const problem = `${formatCoefficient(coef1, 'x')} - ${formatCoefficient(coef2, 'x')}`;
+  const choices = ensureFourChoices([answer, formatCoefficient(coef1 + coef2, 'x'), formatCoefficient(-combined, 'x')], answer);
+  return {
+    problem, displayProblem: problem, answer, choices,
+    explanation: { originalProblem: problem, steps: [], rule: "Subtract like terms", finalAnswer: answer }
+  };
+};
+
+// ============================================
+// STAGED WORKFLOW HELPERS (for Levels 13-16)
+// ============================================
+
+// Build Row 1 terms for distribute-then-combine workflow
+// Returns terms in the order students should see them (distributed, not yet combined)
+const buildRow1Terms = ({
+  outside,
+  variable,
+  insideConst,
+  insideOp = '+',
+  standaloneCoef = 0,
+  trailingConst = 0
+}) => {
+  const terms = [];
+  
+  // Distribute to variable term (coefficient assumed 1 inside parentheses for L13-16)
+  const distVarCoef = outside * 1;
+  terms.push(formatWithSign(formatCoefficient(distVarCoef, variable)));
+  
+  // Distribute to constant inside parentheses
+  const distConst = insideOp === '-' ? outside * (-insideConst) : outside * insideConst;
+  terms.push(formatWithSign(distConst));
+  
+  // Standalone variable term after parentheses
+  if (standaloneCoef !== 0) {
+    terms.push(formatWithSign(formatCoefficient(standaloneCoef, variable)));
+  }
+  
+  // Trailing constant
+  if (trailingConst !== 0) {
+    terms.push(formatWithSign(trailingConst));
+  }
+  
+  return terms;
+};
+
+// Build term bank with correct terms + misconception distractors
+// IMPORTANT: No equivalents of correct terms (Option B from requirements)
+const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
+  const bank = [];
+  const seen = new Set();
+  
+  const add = (term) => {
+    if (!term) return;
+    const s = String(term).trim();
+    if (!s) return;
+    
+    // Normalize for duplicate detection (remove leading +)
+    const normalized = s.replace(/^\+/, '');
+    
+    // Check for exact duplicates first
+    if (seen.has(normalized)) return;
+    
+    // Use enhanced equivalence to prevent duplicates
+    const isDuplicate = bank.some(existing => areEquivalent(s, existing));
+    if (isDuplicate) return;
+    
+    seen.add(normalized);
+    bank.push(s);
+  };
+  
+  // Add correct terms first
+  correctTerms.forEach(add);
+  
+  // Add distractors
+  (distractorTerms || []).forEach(add);
+  
+  // Pad with random integers (checking for equivalents)
+  while (bank.length < padTo) {
+    const v = randomNonZeroInt(1, 60) * (Math.random() < 0.5 ? -1 : 1);
+    add(formatWithSign(v));
+  }
+  
+  // Ensure uniqueness and sort
+  const uniqueBank = ensureUniqueTermBank(bank);
+  return sortTermBank(uniqueBank);
+};
+
+// Ensure unique terms in bank (no duplicates like "+10x" appearing twice)
+const ensureUniqueTermBank = (terms) => {
+  const seen = new Set();
+  const unique = [];
+  
+  terms.forEach(term => {
+    const normalized = String(term).trim().replace(/^\+/, '');
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      unique.push(term);
+    }
+  });
+  
+  return unique;
+};
+
+// Generate contextual Row 2 distractors based on common mistakes from Row 1
+const generateContextualRow2Distractors = (row1Terms, correctAnswer, variable) => {
+  // Parse the correct answer to get coefficient and constant
+  const answerStr = String(correctAnswer);
+  let xCoef = 0;
+  let constTerm = 0;
+  
+  // Extract coefficient and constant from answer
+  const varMatch = answerStr.match(new RegExp(`([+-]?\\d*)${variable}`));
+  const constMatch = answerStr.match(/([+-]?\d+)(?![a-z])/);
+  
+  if (varMatch) {
+    const coefStr = varMatch[1];
+    xCoef = coefStr === '' || coefStr === '+' ? 1 : coefStr === '-' ? -1 : parseInt(coefStr);
+  }
+  if (constMatch) {
+    constTerm = parseInt(constMatch[1]);
+  }
+  
+  // Generate misconception-based distractors
+  const distractors = [
+    correctAnswer, // Correct
+    canonicalizeExpression(xCoef, variable, constTerm + 1, false), // Off-by-one constant
+    canonicalizeExpression(xCoef + 1, variable, constTerm, false), // Off-by-one coefficient
+    canonicalizeExpression(xCoef * 2, variable, constTerm, false)  // Doubled coefficient
+  ];
+  
+  return [...new Set(distractors)];
+};
+
+// Create two-row staged specification
+const makeStagedSpec = ({ row1Terms, row2Answer, row1Bank, row2Choices }) => ({
+  mode: 'distribute_then_combine',
+  rows: [
+    {
+      id: 'row1_distribute',
+      prompt: 'Distribute (expand) first.',
+      blanks: row1Terms.length,
+      expected: row1Terms,
+      bank: row1Bank
+    },
+    {
+      id: 'row2_combine',
+      prompt: 'Now combine like terms to finish.',
+      blanks: 1,
+      expected: [row2Answer],
+      choices: row2Choices
+    }
+  ]
+});
+// ============================================
+// LEVELS 13-16 COMPLETE REPLACEMENT - FORMATTING FIXED
+// Fixes: -1 coefficients, double signs, term bank signs
+// ============================================
+
+// Helper to format problem display (no + -, handles -1)
+const formatProblemString = (parts) => {
+  return parts
+    .map((part, idx) => {
+      if (idx === 0) {
+        // First term: no leading +
+        return part.replace(/^\+/, '');
+      } else {
+        // Subsequent terms: ensure proper spacing and no double signs
+        if (part.startsWith('-')) {
+          return ` - ${part.substring(1).replace(/^-/, '')}`;
+        } else {
+          return ` + ${part.replace(/^\+/, '')}`;
+        }
+      }
+    })
+    .join('')
+    .replace(/\s+/g, ' ');
+};
+
+// Format parenthetical expression (handle -1 and sign display)
+const formatParenExpression = (outside, variable, insideConst, insideOp) => {
+  let prefix;
+  if (outside === 1) {
+    prefix = '';
+  } else if (outside === -1) {
+    prefix = '-';
+  } else {
+    prefix = String(outside);
+  }
+  
+  let inner;
+  if (insideOp === '-') {
+    inner = `${variable} - ${Math.abs(insideConst)}`;
+  } else {
+    inner = `${variable} + ${insideConst}`;
+  }
+  
+  return `${prefix}(${inner})`;
+};
+
+// ============================================
+// LEVEL 1-13: PACK IT UP
+// ============================================
+
+export const generateDistributeCombineProblem = (difficulty) => {
+  const levelId = '1-13';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      const skeletons = [
+        { type: 'a(x+b)+cx', desc: 'Basic distribute and add' },
+        { type: 'cx+a(x+b)', desc: 'Reversed order' },
+        { type: 'a(x+b)+cx+d', desc: 'With trailing constant' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(1, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      const trailingConst = skeleton.type === 'a(x+b)+cx+d' ? randomNonZeroInt(-9, 9) : 0;
+      
+      let problemParts = [];
+      let standaloneCoef, insideOp = '+';
+      
+      if (skeleton.type === 'cx+a(x+b)') {
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatCoefficient(standaloneTerm, 'x'),
+          formatParenExpression(outside, 'x', insideTerm, '+')
+        ];
+      } else if (skeleton.type === 'a(x+b)+cx+d') {
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          formatCoefficient(standaloneTerm, 'x'),
+          String(trailingConst)
+        ];
+      } else {
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          formatCoefficient(standaloneTerm, 'x')
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = outside * insideTerm;
+      const totalXCoef = distributedCoef + standaloneCoef;
+      const totalConstant = distributedConstant + trailingConst;
+      
+      const answer = totalConstant !== 0 
+        ? canonicalizeExpression(totalXCoef, 'x', totalConstant, false)
+        : formatCoefficient(totalXCoef, 'x');
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm, trailingConst });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp: '+', 
+          standaloneCoef,
+          trailingConst 
+        });
+        
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),
+            String(insideTerm),
+            formatCoefficient(standaloneTerm + outside, 'x'),
+            String(distributedConstant + (trailingConst || 0))
+          ],
+          padTo: 12
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return {
+          problem, displayProblem: problem, answer, choices, staged,
+          explanation: {
+            originalProblem: problem,
+            steps: [
+              { description: `Distribute`, work: row1Terms.join(' ') },
+              { description: `Combine like terms`, work: answer }
+            ],
+            rule: "Distribute → Combine like terms",
+            finalAnswer: answer
+          }
+        };
+      }
+    } else {
+      // ADVANCED
+      const skeletons = [
+        { type: 'a(v+b)+cv', desc: 'Basic with variable' },
+        { type: 'cv+a(v+b)', desc: 'Reversed order' },
+        { type: 'a(v+b)+cv-d', desc: 'With subtracted trailing' },
+        { type: 'a(v-b)+cv', desc: 'Subtraction inside' },
+        { type: '-a(v+b)+cv', desc: 'Negative outside' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
+      
+      const useDecimal = Math.random() < 0.3;
+      const outside = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
+      const insideTerm = randomNonZeroInt(1, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(-12, 12);
+      
+      let problemParts = [];
+      let standaloneCoef, insideOp, trailingConst = 0;
+      
+      if (skeleton.type === 'cv+a(v+b)') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatCoefficient(standaloneMag, variable),
+          formatParenExpression(outside, variable, insideTerm, '+')
+        ];
+      } else if (skeleton.type === 'a(v+b)+cv-d') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        trailingConst = -randomNonZeroInt(1, 12);
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable),
+          String(trailingConst)
+        ];
+      } else if (skeleton.type === 'a(v-b)+cv') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      } else if (skeleton.type === '-a(v+b)+cv') {
+        insideOp = '+';
+        const outsideMag = Math.abs(outside);
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(-outsideMag, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      } else {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
+      const totalCoef = distributedCoef + standaloneCoef;
+      const totalConstant = distributedConstant + trailingConst;
+      
+      const answer = totalConstant !== 0 
+        ? canonicalizeExpression(totalCoef, variable, totalConstant, false)
+        : formatCoefficient(totalCoef, variable);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneMag, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable, 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef, 
+          trailingConst 
+        });
+        
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(insideTerm),
+            String(distributedConstant)
+          ],
+          padTo: 14
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+      }
+    }
+  }
+  
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm);
+  const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
+  const choices = ensureFourChoices([answer], answer);
+  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
+  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+};
+
+// ============================================
+// LEVEL 1-14: DOUBLE CHECK
+// ============================================
+
+export const generateDistributeSubtractProblem = (difficulty) => {
+  const levelId = '1-14';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      const skeletons = [
+        { type: 'a(x-b)+cx', desc: 'Subtract inside, add outside' },
+        { type: 'a(x+b)-cx', desc: 'Add inside, subtract outside' },
+        { type: 'cx-a(x-b)', desc: 'Reversed with subtraction' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(1, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      
+      let problemParts = [];
+      let insideOp, standaloneCoef;
+      
+      if (skeleton.type === 'a(x-b)+cx') {
+        insideOp = '-';
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '-'),
+          formatCoefficient(standaloneTerm, 'x')
+        ];
+      } else if (skeleton.type === 'a(x+b)-cx') {
+        insideOp = '+';
+        standaloneCoef = -Math.abs(standaloneTerm);
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          formatCoefficient(-Math.abs(standaloneTerm), 'x')
+        ];
+      } else {
+        insideOp = '-';
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatCoefficient(standaloneTerm, 'x'),
+          formatParenExpression(outside, 'x', insideTerm, '-')
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? -(outside * insideTerm) : (outside * insideTerm);
+      const totalXCoef = distributedCoef + standaloneCoef;
+      
+      const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ 
+          outside, 
+          variable: 'x', 
+          insideConst: insideTerm, 
+          insideOp, 
+          standaloneCoef 
+        });
+        
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),
+            String(-insideTerm),
+            formatCoefficient(standaloneTerm - outside, 'x')
+          ],
+          padTo: 12
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Watch signs when distributing with subtraction", finalAnswer: answer } };
+      }
+    } else {
+      // ADVANCED
+      const skeletons = [
+        { type: 'a(v-b)+cv', desc: 'Basic subtraction inside' },
+        { type: 'a(v+b)-cv', desc: 'Subtraction outside' },
+        { type: 'cv-a(v-b)', desc: 'Reversed order' },
+        { type: 'a(v-b)-cv', desc: 'Double subtraction' },
+        { type: '-a(v-b)+cv', desc: 'Negative outside with subtraction' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
+      
+      const useDecimal = Math.random() < 0.25;
+      const outside = useDecimal ? randomFrom([0.25, 0.75, 1.5]) : randomNonZeroInt(-12, 12);
+      const insideTerm = randomNonZeroInt(1, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.25, 0.75, 1.5]) : randomNonZeroInt(-12, 12);
+      
+      let problemParts = [];
+      let insideOp, standaloneCoef;
+      
+      if (skeleton.type === 'a(v-b)+cv') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      } else if (skeleton.type === 'a(v+b)-cv') {
+        insideOp = '+';
+        standaloneCoef = -Math.abs(standaloneMag);
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(-Math.abs(standaloneMag), variable)
+        ];
+      } else if (skeleton.type === 'cv-a(v-b)') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatCoefficient(standaloneMag, variable),
+          formatParenExpression(outside, variable, insideTerm, '-')
+        ];
+      } else if (skeleton.type === 'a(v-b)-cv') {
+        insideOp = '-';
+        standaloneCoef = -Math.abs(standaloneMag);
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(-Math.abs(standaloneMag), variable)
+        ];
+      } else {
+        insideOp = '-';
+        const outsideMag = Math.abs(outside);
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(-outsideMag, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? -(outside * insideTerm) : (outside * insideTerm);
+      const totalCoef = distributedCoef + standaloneCoef;
+      
+      const answer = formatAnswer(totalCoef, variable, distributedConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneMag, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef });
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(-insideTerm),
+            formatCoefficient(standaloneMag - outside, variable)
+          ],
+          padTo: 14
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+      }
+    }
+  }
+  
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const answer = formatAnswer(outside + standaloneTerm, 'x', -(outside * insideTerm));
+  const problem = `${outside}(x - ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
+  const choices = ensureFourChoices([answer], answer);
+  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '-', standaloneCoef: standaloneTerm });
+  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+};
+
+// ============================================
+// LEVEL 1-15: ROCKY LEDGE
+// ============================================
+
+export const generateNegativeDistributeCombineProblem = (difficulty) => {
+  const levelId = '1-15';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      const skeletons = [
+        { type: '-a(x+b)+cx', desc: 'Negative outside with addition' },
+        { type: '-a(x-b)+cx', desc: 'Negative outside with subtraction' },
+        { type: 'cx-a(x+b)', desc: 'Reversed negative distribution' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      
+      const outsideMag = randomNonZeroInt(2, 9); // Avoid -1
+      const outside = -outsideMag;
+      const insideTerm = randomNonZeroInt(1, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      
+      let problemParts = [];
+      let insideOp, standaloneCoef;
+      
+      if (skeleton.type === '-a(x+b)+cx') {
+        insideOp = '+';
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          formatCoefficient(standaloneTerm, 'x')
+        ];
+      } else if (skeleton.type === '-a(x-b)+cx') {
+        insideOp = '-';
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '-'),
+          formatCoefficient(standaloneTerm, 'x')
+        ];
+      } else {
+        insideOp = '+';
+        standaloneCoef = standaloneTerm;
+        problemParts = [
+          formatCoefficient(standaloneTerm, 'x'),
+          formatParenExpression(-outsideMag, 'x', insideTerm, '+')
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
+      const totalXCoef = distributedCoef + standaloneCoef;
+      
+      const answer = formatAnswer(totalXCoef, 'x', distributedConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneTerm });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef });
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, 'x'), 
+            String(insideTerm),
+            String(-insideTerm),
+            formatCoefficient(standaloneTerm - outside, 'x')
+          ],
+          padTo: 12
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
+      }
+    } else {
+      // ADVANCED
+      const skeletons = [
+        { type: '-a(v+b)+cv', desc: 'Negative outside basic' },
+        { type: '-a(v-b)+cv', desc: 'Negative outside with subtraction' },
+        { type: 'cv-a(v+b)', desc: 'Reversed order' },
+        { type: '-a(v+b)-cv', desc: 'Double negative' },
+        { type: '-a(v-b)-cv', desc: 'Full complexity' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
+      
+      const useDecimal = Math.random() < 0.4;
+      const outsideMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(2, 12);
+      const outside = -outsideMag;
+      const insideTerm = randomNonZeroInt(1, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(-12, 12);
+      
+      let problemParts = [];
+      let insideOp, standaloneCoef;
+      
+      if (skeleton.type === '-a(v+b)+cv') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      } else if (skeleton.type === '-a(v-b)+cv') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable)
+        ];
+      } else if (skeleton.type === 'cv-a(v+b)') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        problemParts = [
+          formatCoefficient(standaloneMag, variable),
+          formatParenExpression(-outsideMag, variable, insideTerm, '+')
+        ];
+      } else if (skeleton.type === '-a(v+b)-cv') {
+        insideOp = '+';
+        standaloneCoef = -Math.abs(standaloneMag);
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(-Math.abs(standaloneMag), variable)
+        ];
+      } else {
+        insideOp = '-';
+        standaloneCoef = -Math.abs(standaloneMag);
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(-Math.abs(standaloneMag), variable)
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
+      const totalCoef = distributedCoef + standaloneCoef;
+      
+      const answer = formatAnswer(totalCoef, variable, distributedConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneMag, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef });
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, variable), 
+            String(insideTerm),
+            String(-insideTerm),
+            formatCoefficient(standaloneMag + outside, variable)
+          ],
+          padTo: 14
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Negative outside flips ALL signs inside: -(a + b) = -a - b", finalAnswer: answer } };
+      }
+    }
+  }
+  
+  // Fallback
+  const outside = -randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const answer = formatAnswer(outside + standaloneTerm, 'x', outside * insideTerm);
+  const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')}`;
+  const choices = ensureFourChoices([answer], answer);
+  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm });
+  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 12 });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+};
+
+// ============================================
+// LEVEL 1-16: SUMMIT
+// ============================================
+
+export const generateComplexSimplifyProblem = (difficulty) => {
+  const levelId = '1-16';
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (difficulty === 'easy') {
+      const skeletons = [
+        { type: 'a(x+b)+cx+d', desc: 'Basic with trailing constant' },
+        { type: 'a(x-b)+cx+d', desc: 'Subtraction inside with trailing' },
+        { type: 'cx+a(x+b)-d', desc: 'Reversed with subtraction' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      
+      const outside = randomNonZeroInt(-9, 9);
+      const insideTerm = randomNonZeroInt(1, 9);
+      const standaloneTerm = randomNonZeroInt(-9, 9);
+      const constantMag = randomNonZeroInt(1, 9);
+      
+      let problemParts = [];
+      let insideOp, trailingConst;
+      
+      if (skeleton.type === 'a(x+b)+cx+d') {
+        insideOp = '+';
+        trailingConst = constantMag;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          formatCoefficient(standaloneTerm, 'x'),
+          String(constantMag)
+        ];
+      } else if (skeleton.type === 'a(x-b)+cx+d') {
+        insideOp = '-';
+        trailingConst = constantMag;
+        problemParts = [
+          formatParenExpression(outside, 'x', insideTerm, '-'),
+          formatCoefficient(standaloneTerm, 'x'),
+          String(constantMag)
+        ];
+      } else {
+        insideOp = '+';
+        trailingConst = -constantMag;
+        problemParts = [
+          formatCoefficient(standaloneTerm, 'x'),
+          formatParenExpression(outside, 'x', insideTerm, '+'),
+          String(-constantMag)
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? -(outside * insideTerm) : (outside * insideTerm);
+      const totalXCoef = distributedCoef + standaloneTerm;
+      const totalConstant = distributedConstant + trailingConst;
+      
+      const answer = formatAnswer(totalXCoef, 'x', totalConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outside, insideTerm, standaloneTerm, constantMag });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp, standaloneCoef: standaloneTerm, trailingConst });
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, 'x'),
+            String(insideTerm), 
+            String(trailingConst),
+            formatCoefficient(standaloneTerm + outside, 'x'),
+            String(distributedConstant + trailingConst)
+          ],
+          padTo: 12
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
+      }
+    } else {
+      // ADVANCED
+      const skeletons = [
+        { type: 'a(v+b)+cv+d', desc: 'Basic complexity' },
+        { type: 'a(v-b)+cv-d', desc: 'Double subtraction' },
+        { type: '-a(v+b)+cv+d', desc: 'Negative outside' },
+        { type: 'a(v+b)-cv-d', desc: 'Subtract both' },
+        { type: '-a(v-b)+cv-d', desc: 'Full sign complexity' }
+      ];
+      const skeleton = randomFrom(skeletons);
+      const variable = randomFrom(HARD_VARIABLES);
+      
+      const useDecimal = Math.random() < 0.3;
+      const outsideMag = useDecimal ? randomFrom([0.25, 1.5, 2.5]) : randomNonZeroInt(2, 12);
+      const outside = skeleton.type.startsWith('-a') ? -outsideMag : outsideMag;
+      const insideTerm = randomNonZeroInt(1, 12);
+      const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(1, 12);
+      const constantMag = randomNonZeroInt(1, 12);
+      
+      let problemParts = [];
+      let insideOp, standaloneCoef, trailingConst;
+      
+      if (skeleton.type === 'a(v+b)+cv+d') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        trailingConst = constantMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable),
+          String(constantMag)
+        ];
+      } else if (skeleton.type === 'a(v-b)+cv-d') {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        trailingConst = -constantMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable),
+          String(-constantMag)
+        ];
+      } else if (skeleton.type === '-a(v+b)+cv+d') {
+        insideOp = '+';
+        standaloneCoef = standaloneMag;
+        trailingConst = constantMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(standaloneMag, variable),
+          String(constantMag)
+        ];
+      } else if (skeleton.type === 'a(v+b)-cv-d') {
+        insideOp = '+';
+        standaloneCoef = -standaloneMag;
+        trailingConst = -constantMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '+'),
+          formatCoefficient(-standaloneMag, variable),
+          String(-constantMag)
+        ];
+      } else {
+        insideOp = '-';
+        standaloneCoef = standaloneMag;
+        trailingConst = -constantMag;
+        problemParts = [
+          formatParenExpression(outside, variable, insideTerm, '-'),
+          formatCoefficient(standaloneMag, variable),
+          String(-constantMag)
+        ];
+      }
+      
+      const problem = formatProblemString(problemParts);
+      
+      const distributedCoef = outside;
+      const distributedConstant = insideOp === '-' ? outside * (-insideTerm) : outside * insideTerm;
+      const totalCoef = distributedCoef + standaloneCoef;
+      const totalConstant = distributedConstant + trailingConst;
+      
+      const answer = formatAnswer(totalCoef, variable, totalConstant);
+      
+      const signature = generateSignature(levelId, difficulty, { skeleton: skeleton.type, outsideMag, insideTerm, standaloneMag, constantMag, variable });
+      if (!isRecentDuplicate(levelId, difficulty, signature)) {
+        recordProblem(levelId, difficulty, signature);
+        
+        const row1Terms = buildRow1Terms({ outside, variable, insideConst: insideTerm, insideOp, standaloneCoef, trailingConst });
+        const row1Bank = buildTermBank({
+          correctTerms: row1Terms,
+          distractorTerms: [
+            formatCoefficient(outside, variable),
+            String(insideTerm),
+            String(trailingConst),
+            formatCoefficient(standaloneMag + outside, variable),
+            String(distributedConstant + trailingConst)
+          ],
+          padTo: 14
+        });
+        
+        const row2Choices = generateContextualRow2Distractors(row1Terms, answer, variable);
+        const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+        const choices = ensureFourChoices(row2Choices, answer);
+        
+        return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: 'Full simplification: (1) Distribute. (2) Combine like terms. (3) Combine constants. Track all signs!', finalAnswer: answer } };
+      }
+    }
+  }
+  
+  // Fallback
+  const outside = randomNonZeroInt(2, 9);
+  const insideTerm = randomNonZeroInt(1, 9);
+  const standaloneTerm = randomNonZeroInt(1, 9);
+  const constant = randomNonZeroInt(1, 9);
+  const distributedConstant = outside * insideTerm;
+  const answer = formatAnswer(outside + standaloneTerm, 'x', distributedConstant + constant);
+  const problem = `${outside}(x + ${insideTerm}) + ${formatCoefficient(standaloneTerm, 'x')} + ${constant}`;
+  const choices = ensureFourChoices([answer], answer);
+  const row1Terms = buildRow1Terms({ outside, variable: 'x', insideConst: insideTerm, insideOp: '+', standaloneCoef: standaloneTerm, trailingConst: constant });
+  const row1Bank = buildTermBank({ correctTerms: row1Terms, distractorTerms: [], padTo: 10 });
+  const row2Choices = generateContextualRow2Distractors(row1Terms, answer, 'x');
+  const staged = makeStagedSpec({ row1Terms, row2Answer: answer, row1Bank, row2Choices });
+  
+  return { problem, displayProblem: problem, answer, choices, staged, explanation: { originalProblem: problem, steps: [], rule: "Distribute → Combine", finalAnswer: answer } };
+};
+
+
+// ==============================================================================================================================================
+// PHASE 6: ONE-STEP EQUATIONS (Levels 17-20)
+// Copy these 4 functions and paste them BEFORE the EXPORTS section
+// =============================================================================================================================================
+
+// =============================================================================================================================================
+// LEVEL 1-17: RIVER CROSSING (Addition Equations)
+// =============================================================================================================================================
+
+export const generateAdditionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(1, 20);
+    const addend = randomInt(1, 15);
+    const sum = answer + addend;
+    
+    const problem = `x + ${addend} = ${sum}`;
+    
+    const choices = [
+      answer,
+      sum - addend - 1, // Off by one
+      addend, // Used wrong number
+      sum // Used sum as answer
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, SUBTRACT ${addend} from both sides`, work: `x + ${addend} - ${addend} = ${sum} - ${addend}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} + ${addend} = ${sum} ✓`, work: `` }
+        ],
+        rule: "To undo ADDITION, use SUBTRACTION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const addend = randomDecimal();
+    const sum = Math.round((answer + addend) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${variable} + ${addend} = ${sum}`;
+    
+    const choices = [
+      answer,
+      Math.round((sum - addend - 0.25) * 100) / 100,
+      addend,
+      sum
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${addend} from both sides`, work: `${variable} = ${sum} - ${addend}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo addition with subtraction",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-18: BRIDGE REPAIRS (Subtraction Equations)
+// ============================================
+
+export const generateSubtractionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(10, 30);
+    const subtrahend = randomInt(1, 15);
+    const difference = answer - subtrahend;
+    
+    const problem = `x - ${subtrahend} = ${difference}`;
+    
+    const choices = [
+      answer,
+      difference + subtrahend - 1, // Off by one
+      difference - subtrahend, // Subtracted instead of added
+      subtrahend // Used wrong number
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, ADD ${subtrahend} to both sides`, work: `x - ${subtrahend} + ${subtrahend} = ${difference} + ${subtrahend}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} - ${subtrahend} = ${difference} ✓`, work: `` }
+        ],
+        rule: "To undo SUBTRACTION, use ADDITION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = Math.round((randomInt(10, 30) + randomDecimal()) * 100) / 100;
+    const subtrahend = randomDecimal();
+    const difference = Math.round((answer - subtrahend) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${variable} - ${subtrahend} = ${difference}`;
+    
+    const choices = [
+      answer,
+      Math.round((difference + subtrahend - 0.5) * 100) / 100,
+      Math.round((difference - subtrahend) * 100) / 100,
+      subtrahend
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${subtrahend} to both sides`, work: `${variable} = ${difference} + ${subtrahend}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo subtraction with addition",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-19: ROPE BRIDGE (Multiplication Equations)
+// ============================================
+
+export const generateMultiplicationEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 12);
+    const coefficient = randomInt(2, 9);
+    const product = answer * coefficient;
+    
+    const problem = `${coefficient}x = ${product}`;
+    
+    const choices = [
+      answer,
+      product - coefficient, // Subtracted instead
+      product / coefficient - 1, // Off by one
+      coefficient // Used coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, DIVIDE both sides by ${coefficient}`, work: `${coefficient}x ÷ ${coefficient} = ${product} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient} × ${answer} = ${product} ✓`, work: `` }
+        ],
+        rule: "To undo MULTIPLICATION, use DIVISION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 9);
+    const product = Math.round((answer * coefficient) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${coefficient}${variable} = ${product}`;
+    
+    const choices = [
+      answer,
+      Math.round((product / coefficient - 0.25) * 100) / 100,
+      Math.round((product - coefficient) * 100) / 100,
+      coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Divide both sides by ${coefficient}`, work: `${variable} = ${product} ÷ ${coefficient}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo multiplication with division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-20: CANYON JUMP (Division Equations)
+// ============================================
+
+export const generateDivisionEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 8);
+    const quotient = randomInt(2, 12);
+    const answer = divisor * quotient;
+    
+    const problem = `x ÷ ${divisor} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      quotient + divisor, // Added instead
+      answer - 1, // Off by one
+      quotient // Used quotient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `To solve for x, MULTIPLY both sides by ${divisor}`, work: `x ÷ ${divisor} × ${divisor} = ${quotient} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "To undo DIVISION, use MULTIPLICATION on both sides",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 8);
+    const quotient = randomDecimal();
+    const answer = Math.round((divisor * quotient) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${variable} ÷ ${divisor} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round((quotient * divisor - 0.5) * 100) / 100,
+      Math.round((quotient + divisor) * 100) / 100,
+      quotient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Multiply both sides by ${divisor}`, work: `${variable} = ${quotient} × ${divisor}` },
+          { description: `Result`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Undo division with multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// PHASES 7-9: FINAL 11 LEVELS (21-31)
+// Copy these 11 functions and paste them BEFORE the EXPORTS section
+// ============================================
+
+// ============================================
+// PHASE 7: TWO-STEP EQUATIONS (Levels 21-24)
+// ============================================
+
+// ============================================
+// LEVEL 1-21: NARROW PATH (Two-Step: Multiply then Add)
+// ============================================
+
+export const generateTwoStepAddProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 12);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = coefficient * answer + constant;
+    
+    const problem = `${coefficient}x + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      result - constant, // Forgot to divide
+      (result - constant) / coefficient - 1, // Off by one
+      result / coefficient // Divided first (wrong order)
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x = ${result} - ${constant}` },
+          { description: `Simplify`, work: `${coefficient}x = ${result - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x = ${result - constant} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient}(${answer}) + ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "TWO-STEP: Undo addition/subtraction FIRST, then undo multiplication/division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = Math.round((coefficient * answer + constant) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${coefficient}${variable} + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result - constant) * 100) / 100,
+      Math.round(((result - constant) / coefficient - 0.5) * 100) / 100,
+      Math.round((result / coefficient) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${constant}: ${coefficient}${variable} = ${result - constant}`, work: `` },
+          { description: `Divide by ${coefficient}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo addition first, then multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-22: CLIFF EDGE (Two-Step: Multiply then Subtract)
+// ============================================
+
+export const generateTwoStepSubtractProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(5, 15);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = coefficient * answer - constant;
+    
+    const problem = `${coefficient}x - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      result + constant, // Forgot to divide
+      (result + constant) / coefficient - 1, // Off by one
+      result / coefficient // Wrong order
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Add ${constant} to both sides`, work: `${coefficient}x = ${result} + ${constant}` },
+          { description: `Simplify`, work: `${coefficient}x = ${result + constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x = ${result + constant} ÷ ${coefficient}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${coefficient}(${answer}) - ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "Undo subtraction FIRST, then undo multiplication",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const result = Math.round((coefficient * answer - constant) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${coefficient}${variable} - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result + constant) * 100) / 100,
+      Math.round(((result + constant) / coefficient - 0.5) * 100) / 100,
+      Math.round((result / coefficient) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${constant}: ${coefficient}${variable} = ${result + constant}`, work: `` },
+          { description: `Divide by ${coefficient}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo subtraction first, then multiplication",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-23: WATERFALL (Two-Step: Divide then Add)
+// ============================================
+
+export const generateTwoStepDivideAddProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const quotient = randomInt(3, 10);
+    const answer = divisor * (quotient - constant);
+    
+    const problem = `x ÷ ${divisor} + ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      (quotient - constant) * divisor - divisor, // Off by one divisor
+      quotient * divisor, // Didn't subtract constant
+      divisor * (quotient + constant) // Added instead of subtracted
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `x ÷ ${divisor} = ${quotient} - ${constant}` },
+          { description: `Simplify`, work: `x ÷ ${divisor} = ${quotient - constant}` },
+          { description: `STEP 2: Multiply both sides by ${divisor}`, work: `x = ${quotient - constant} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} + ${constant} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "Undo addition FIRST, then undo division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 6);
+    const constant = randomDecimal();
+    const quotient = randomInt(3, 10);
+    const answer = Math.round((divisor * (quotient - constant)) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${variable} ÷ ${divisor} + ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round(((quotient - constant) * divisor - 1) * 100) / 100,
+      Math.round((quotient * divisor) * 100) / 100,
+      Math.round((divisor * (quotient + constant)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${constant}: ${variable} ÷ ${divisor} = ${quotient - constant}`, work: `` },
+          { description: `Multiply by ${divisor}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo addition first, then division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-24: FINAL DESCENT (Two-Step: Divide then Subtract)
+// ============================================
+
+export const generateTwoStepDivideSubtractProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const divisor = randomInt(2, 6);
+    const constant = randomInt(1, 8);
+    const quotient = randomInt(3, 10);
+    const answer = divisor * (quotient + constant);
+    
+    const problem = `x ÷ ${divisor} - ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      (quotient + constant) * divisor - divisor, // Off by divisor
+      quotient * divisor, // Didn't add constant
+      divisor * (quotient - constant) // Subtracted instead
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Add ${constant} to both sides`, work: `x ÷ ${divisor} = ${quotient} + ${constant}` },
+          { description: `Simplify`, work: `x ÷ ${divisor} = ${quotient + constant}` },
+          { description: `STEP 2: Multiply both sides by ${divisor}`, work: `x = ${quotient + constant} × ${divisor}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${answer} ÷ ${divisor} - ${constant} = ${quotient} ✓`, work: `` }
+        ],
+        rule: "Undo subtraction FIRST, then undo division",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const divisor = randomInt(2, 6);
+    const constant = randomDecimal();
+    const quotient = randomInt(3, 10);
+    const answer = Math.round((divisor * (quotient + constant)) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${variable} ÷ ${divisor} - ${constant} = ${quotient}`;
+    
+    const choices = [
+      answer,
+      Math.round(((quotient + constant) * divisor - 1) * 100) / 100,
+      Math.round((quotient * divisor) * 100) / 100,
+      Math.round((divisor * (quotient - constant)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Add ${constant}: ${variable} ÷ ${divisor} = ${Math.round((quotient + constant) * 100) / 100}`, work: `` },
+          { description: `Multiply by ${divisor}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Undo subtraction first, then division",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// PHASE 8: MULTI-STEP EQUATIONS (Levels 25-28)
+// ============================================
+
+// ============================================
+// LEVEL 1-25: HIDDEN CAVE (Variables on Both Sides)
+// ============================================
+
+export const generateVariablesBothSidesProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const leftCoef = randomInt(3, 7);
+    const rightCoef = randomInt(1, leftCoef - 1);
+    const constant = randomInt(1, 10);
+    
+    // leftCoef * x = rightCoef * x + constant
+    // Solve: (leftCoef - rightCoef) * x = constant
+    const actualConstant = (leftCoef - rightCoef) * answer;
+    
+    const problem = `${leftCoef}x = ${rightCoef}x + ${actualConstant}`;
+    
+    const choices = [
+      answer,
+      actualConstant, // Used constant as answer
+      answer + 1, // Off by one
+      actualConstant / leftCoef // Wrong operation
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${rightCoef}x from both sides`, work: `${leftCoef}x - ${rightCoef}x = ${actualConstant}` },
+          { description: `Simplify`, work: `${leftCoef - rightCoef}x = ${actualConstant}` },
+          { description: `STEP 2: Divide by ${leftCoef - rightCoef}`, work: `x = ${actualConstant} ÷ ${leftCoef - rightCoef}` },
+          { description: `Simplify`, work: `x = ${answer}` },
+          { description: `CHECK: ${leftCoef}(${answer}) = ${rightCoef}(${answer}) + ${actualConstant} ✓`, work: `` }
+        ],
+        rule: "Get all variables on one side, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftCoef = randomInt(3, 7);
+    const rightCoef = randomInt(1, leftCoef - 1);
+    const actualConstant = Math.round(((leftCoef - rightCoef) * answer) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${leftCoef}${variable} = ${rightCoef}${variable} + ${actualConstant}`;
+    
+    const choices = [
+      answer,
+      actualConstant,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((actualConstant / leftCoef) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Subtract ${rightCoef}${variable}: ${leftCoef - rightCoef}${variable} = ${actualConstant}`, work: `` },
+          { description: `Divide by ${leftCoef - rightCoef}: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Collect variables on one side",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-26: ANCIENT RUINS (Distribute & Combine)
+// ============================================
+
+export const generateDistributeEquationProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const outside = randomInt(2, 4);
+    const insideTerm = randomInt(1, 5);
+    const result = outside * answer + outside * insideTerm;
+    
+    const problem = `${outside}(x + ${insideTerm}) = ${result}`;
+    
+    const choices = [
+      answer,
+      result / outside - insideTerm - 1, // Off by one
+      result - insideTerm, // Didn't distribute
+      result / outside // Forgot inside term
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${outside}x + ${outside * insideTerm} = ${result}` },
+          { description: `STEP 2: Subtract ${outside * insideTerm}`, work: `${outside}x = ${result - outside * insideTerm}` },
+          { description: `STEP 3: Divide by ${outside}`, work: `x = ${answer}` },
+          { description: `CHECK: ${outside}(${answer} + ${insideTerm}) = ${result} ✓`, work: `` }
+        ],
+        rule: "Distribute first, then solve like normal",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = randomInt(2, 4);
+    const insideTerm = randomInt(1, 5);
+    const result = Math.round((outside * answer + outside * insideTerm) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${outside}(${variable} + ${insideTerm}) = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result / outside - insideTerm - 0.5) * 100) / 100,
+      Math.round((result - insideTerm) * 100) / 100,
+      Math.round((result / outside) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute: ${outside}${variable} + ${outside * insideTerm} = ${result}`, work: `` },
+          { description: `Subtract: ${outside}${variable} = ${result - outside * insideTerm}`, work: `` },
+          { description: `Divide: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Distribute, then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-27: MAZE (Combine & Solve)
+// ============================================
+
+export const generateCombineSolveProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const coef1 = randomInt(2, 5);
+    const coef2 = randomInt(1, 4);
+    const constant = randomInt(1, 8);
+    const result = (coef1 + coef2) * answer + constant;
+    
+    const problem = `${coef1}x + ${coef2}x + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      (result - constant) - 1, // Forgot to divide
+      result / (coef1 + coef2), // Didn't subtract constant
+      (result - constant) / coef1 // Used wrong coefficient
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Combine like terms`, work: `${coef1 + coef2}x + ${constant} = ${result}` },
+          { description: `STEP 2: Subtract ${constant}`, work: `${coef1 + coef2}x = ${result - constant}` },
+          { description: `STEP 3: Divide by ${coef1 + coef2}`, work: `x = ${answer}` },
+          { description: `CHECK: ${coef1}(${answer}) + ${coef2}(${answer}) + ${constant} = ${result} ✓`, work: `` }
+        ],
+        rule: "Combine like terms FIRST, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coef1 = randomInt(2, 5);
+    const coef2 = randomInt(1, 4);
+    const constant = randomInt(1, 8);
+    const result = Math.round(((coef1 + coef2) * answer + constant) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${coef1}${variable} + ${coef2}${variable} + ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((result - constant - 1) * 100) / 100,
+      Math.round((result / (coef1 + coef2)) * 100) / 100,
+      Math.round(((result - constant) / coef1) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Combine: ${coef1 + coef2}${variable} + ${constant} = ${result}`, work: `` },
+          { description: `Subtract: ${coef1 + coef2}${variable} = ${result - constant}`, work: `` },
+          { description: `Divide: ${variable} = ${answer}`, work: `` }
+        ],
+        rule: "Combine, then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-28: PUZZLE CHAMBER (Complex Multi-Step)
+// ============================================
+
+export const generateComplexMultiStepProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const outside = randomInt(2, 3);
+    const insideTerm = randomInt(1, 4);
+    const addedCoef = randomInt(1, 3);
+    const constant = randomInt(1, 6);
+    
+    // outside(x + insideTerm) + addedCoef*x - constant = result
+    const distributedCoef = outside;
+    const distributedConstant = outside * insideTerm;
+    const totalCoef = distributedCoef + addedCoef;
+    const leftSide = totalCoef * answer + distributedConstant - constant;
+    const result = leftSide;
+    
+    const problem = `${outside}(x + ${insideTerm}) + ${addedCoef}x - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      result / totalCoef,
+      (result + constant) / totalCoef
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${distributedCoef}x + ${distributedConstant} + ${addedCoef}x - ${constant} = ${result}` },
+          { description: `STEP 2: Combine like terms`, work: `${totalCoef}x + ${distributedConstant - constant} = ${result}` },
+          { description: `STEP 3: Subtract ${distributedConstant - constant}`, work: `${totalCoef}x = ${result - (distributedConstant - constant)}` },
+          { description: `STEP 4: Divide by ${totalCoef}`, work: `x = ${answer}` }
+        ],
+        rule: "Distribute → Combine → Solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = randomInt(2, 3);
+    const insideTerm = randomInt(1, 4);
+    const addedCoef = randomInt(1, 3);
+    const constant = randomInt(1, 6);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const distributedCoef = outside;
+    const distributedConstant = outside * insideTerm;
+    const totalCoef = distributedCoef + addedCoef;
+    const result = Math.round((totalCoef * answer + distributedConstant - constant) * 100) / 100;
+    
+    const problem = `${outside}(${variable} + ${insideTerm}) + ${addedCoef}${variable} - ${constant} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((result / totalCoef) * 100) / 100,
+      Math.round(((result + constant) / totalCoef) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute → Combine → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Multi-step: work systematically",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// PHASE 9: VAULT (Final Challenge - Levels 29-31)
+// ============================================
+
+// ============================================
+// LEVEL 1-29: OUTER VAULT (Variables Both Sides + Constants)
+// ============================================
+
+export const generateVaultLevel1Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(3, 12);
+    const leftCoef = randomInt(4, 8);
+    const rightCoef = randomInt(1, leftCoef - 2);
+    const leftConst = randomInt(1, 8);
+    const rightConst = randomInt(1, 8);
+    
+    // leftCoef*x + leftConst = rightCoef*x + rightConst
+    // (leftCoef - rightCoef)*x = rightConst - leftConst
+    const constDiff = (leftCoef - rightCoef) * answer - leftConst + rightConst;
+    
+    const problem = `${leftCoef}x + ${leftConst} = ${rightCoef}x + ${leftConst + constDiff}`;
+    
+    const choices = [
+      answer,
+      constDiff,
+      answer + 1,
+      constDiff / (leftCoef - rightCoef)
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${rightCoef}x from both sides`, work: `${leftCoef - rightCoef}x + ${leftConst} = ${leftConst + constDiff}` },
+          { description: `STEP 2: Subtract ${leftConst} from both sides`, work: `${leftCoef - rightCoef}x = ${constDiff}` },
+          { description: `STEP 3: Divide by ${leftCoef - rightCoef}`, work: `x = ${answer}` }
+        ],
+        rule: "Variables one side, constants other side, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftCoef = randomInt(4, 8);
+    const rightCoef = randomInt(1, leftCoef - 2);
+    const leftConst = randomInt(1, 8);
+    const constDiff = Math.round(((leftCoef - rightCoef) * answer) * 100) / 100;
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const problem = `${leftCoef}${variable} + ${leftConst} = ${rightCoef}${variable} + ${leftConst + constDiff}`;
+    
+    const choices = [
+      answer,
+      Math.round(constDiff * 100) / 100,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((constDiff / (leftCoef - rightCoef)) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Collect variables → Collect constants → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Organize then solve",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-30: INNER VAULT (Distribute Both Sides)
+// ============================================
+
+export const generateVaultLevel2Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 8);
+    const leftOut = randomInt(2, 4);
+    const leftIn = randomInt(1, 4);
+    const rightOut = randomInt(1, 3);
+    const rightIn = randomInt(1, 4);
+    
+    // leftOut(x + leftIn) = rightOut(x + rightIn)
+    // leftOut*x + leftOut*leftIn = rightOut*x + rightOut*rightIn
+    // (leftOut - rightOut)*x = rightOut*rightIn - leftOut*leftIn
+    
+    const leftDist = leftOut * answer + leftOut * leftIn;
+    const rightDist = rightOut * answer + rightOut * rightIn;
+    
+    const problem = `${leftOut}(x + ${leftIn}) = ${rightOut}(x + ${Math.round((leftDist - rightDist) / rightOut + rightIn)})`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      leftOut * leftIn,
+      rightOut * rightIn
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Distribute both sides`, work: `${leftOut}x + ${leftOut * leftIn} = ...` },
+          { description: `STEP 2: Get variables on one side`, work: `` },
+          { description: `STEP 3: Solve for x`, work: `x = ${answer}` }
+        ],
+        rule: "Distribute both sides, then solve",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftOut = randomInt(2, 4);
+    const leftIn = randomInt(1, 4);
+    const rightOut = randomInt(1, 3);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const leftDist = Math.round((leftOut * answer + leftOut * leftIn) * 100) / 100;
+    const rightDist = Math.round((rightOut * answer) * 100) / 100;
+    const rightIn = Math.round(((leftDist - rightDist) / rightOut) * 100) / 100;
+    
+    const problem = `${leftOut}(${variable} + ${leftIn}) = ${rightOut}(${variable} + ${rightIn})`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((leftOut * leftIn) * 100) / 100,
+      Math.round((rightOut * rightIn) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Distribute both sides → Collect → Solve`, work: `${variable} = ${answer}` }
+        ],
+        rule: "Distribute everywhere first",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-31: THE VAULT (Ultimate Challenge)
+// ============================================
+
+export const generateVaultLevel3Problem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(2, 10);
+    const leftOut = randomInt(2, 3);
+    const leftIn1 = randomInt(1, 3);
+    const middleCoef = randomInt(1, 3);
+    const rightConst = randomInt(1, 5);
+    
+    // leftOut(x + leftIn1) + middleCoef*x - rightConst = result
+    const leftDist = leftOut * answer + leftOut * leftIn1;
+    const middle = middleCoef * answer;
+    const result = leftDist + middle - rightConst;
+    
+    const problem = `${leftOut}(x + ${leftIn1}) + ${middleCoef}x - ${rightConst} = ${result}`;
+    
+    const choices = [
+      answer,
+      answer + 1,
+      result / (leftOut + middleCoef),
+      (result + rightConst) / leftOut
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL CHALLENGE! 🎉`, work: `` },
+          { description: `STEP 1: Distribute ${leftOut}`, work: `${leftOut}x + ${leftOut * leftIn1} + ${middleCoef}x - ${rightConst} = ${result}` },
+          { description: `STEP 2: Combine like terms`, work: `${leftOut + middleCoef}x + ${leftOut * leftIn1 - rightConst} = ${result}` },
+          { description: `STEP 3: Subtract ${leftOut * leftIn1 - rightConst}`, work: `${leftOut + middleCoef}x = ${result - (leftOut * leftIn1 - rightConst)}` },
+          { description: `STEP 4: Divide by ${leftOut + middleCoef}`, work: `x = ${answer}` },
+          { description: `🏆 VAULT UNLOCKED! 🏆`, work: `` }
+        ],
+        rule: "YOU DID IT! All skills combined to solve the ultimate puzzle!",
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const leftOut = randomInt(2, 3);
+    const leftIn1 = randomInt(1, 3);
+    const middleCoef = randomInt(1, 3);
+    const rightConst = randomInt(1, 5);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const totalCoef = leftOut + middleCoef;
+    const constTerm = leftOut * leftIn1 - rightConst;
+    const result = Math.round((totalCoef * answer + constTerm) * 100) / 100;
+    
+    const problem = `${leftOut}(${variable} + ${leftIn1}) + ${middleCoef}${variable} - ${rightConst} = ${result}`;
+    
+    const choices = [
+      answer,
+      Math.round((answer + 0.5) * 100) / 100,
+      Math.round((result / totalCoef) * 100) / 100,
+      Math.round(((result + rightConst) / leftOut) * 100) / 100
+    ];
+
+    const finalChoices = ensureFourChoices(choices, answer).map(n => Math.round(n * 100) / 100);
+
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer,
+      choices: finalChoices,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL CHALLENGE! 🎉`, work: `` },
+          { description: `Distribute → Combine → Solve`, work: `${variable} = ${answer}` },
+          { description: `🏆 VAULT UNLOCKED! 🏆`, work: `` }
+        ],
+        rule: "CONGRATULATIONS! Algebra Expedition COMPLETE!",
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// MODULE 3: INEQUALITIES (Levels 32-37)
+// Add these 6 functions to problemGenerators.js
+// ============================================
+
+// Helper function to generate number line SVG
+const generateNumberLine = (value, type, isOpen) => {
+  // type: 'greater', 'less', 'greaterEqual', 'lessEqual'
+  const direction = (type === 'greater' || type === 'greaterEqual') ? 'right' : 'left';
+  const circle = isOpen ? 'open' : 'closed';
+  
+  return {
+    value: value,
+    direction: direction,
+    circleType: circle,
+    svgData: `numberline-${value}-${direction}-${circle}` // Placeholder for actual SVG
+  };
+};
+
+// ============================================
+// LEVEL 1-32: BOUNDARY MARKERS (Speed Round - Match Inequality to Line)
+// ============================================
+
+export const generateBoundaryMarkersProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const value = randomInt(-10, 10);
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater':
+        symbol = '>';
+        isOpen = true;
+        direction = 'right';
+        break;
+      case 'less':
+        symbol = '<';
+        isOpen = true;
+        direction = 'left';
+        break;
+      case 'greaterEqual':
+        symbol = '≥';
+        isOpen = false;
+        direction = 'right';
+        break;
+      case 'lessEqual':
+        symbol = '≤';
+        isOpen = false;
+        direction = 'left';
+        break;
+    }
+    
+    const problem = `x ${symbol} ${value}`;
+    const answer = generateNumberLine(value, inequalityType, isOpen);
+    
+    // Generate 3 wrong number lines
+    const wrongChoices = [
+      generateNumberLine(value, inequalityType === 'greater' ? 'less' : 'greater', isOpen), // Wrong direction
+      generateNumberLine(value, inequalityType, !isOpen), // Wrong circle type
+      generateNumberLine(value + 1, inequalityType, isOpen) // Wrong value
+    ];
+    
+    const choices = [answer, ...wrongChoices].sort(() => Math.random() - 0.5);
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer.svgData, // The correct SVG identifier
+      choices: choices.map(c => c.svgData),
+      inputType: 'numberLine', // NEW: tells UI to display number line options
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `The symbol ${symbol} means ${symbol === '>' ? 'greater than' : symbol === '<' ? 'less than' : symbol === '≥' ? 'greater than or equal to' : 'less than or equal to'}`, work: `` },
+          { description: `Circle type: ${isOpen ? 'OPEN (not including the value)' : 'CLOSED (including the value)'}`, work: `` },
+          { description: `Arrow direction: ${direction === 'right' ? 'RIGHT (values getting larger)' : 'LEFT (values getting smaller)'}`, work: `` }
+        ],
+        rule: `> and < use OPEN circles. ≥ and ≤ use CLOSED circles. Arrow shows all values that make the inequality true.`,
+        finalAnswer: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow pointing ${direction}`
+      }
+    };
+  } else {
+    const value = randomDecimal();
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const problem = `${variable} ${symbol} ${value}`;
+    const answer = generateNumberLine(value, inequalityType, isOpen);
+    
+    const wrongChoices = [
+      generateNumberLine(value, inequalityType === 'greater' ? 'less' : 'greater', isOpen),
+      generateNumberLine(value, inequalityType, !isOpen),
+      generateNumberLine(Math.round((value + 0.5) * 100) / 100, inequalityType, isOpen)
+    ];
+    
+    const choices = [answer, ...wrongChoices].sort(() => Math.random() - 0.5);
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: answer.svgData,
+      choices: choices.map(c => c.svgData),
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `${symbol} → ${isOpen ? 'Open' : 'Closed'} circle, arrow ${direction}`, work: `` }
+        ],
+        rule: `Match symbol to circle type and direction`,
+        finalAnswer: `${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow ${direction}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-33: BOUNDARY REVERSE (Speed Round - Match Line to Inequality)
+// ============================================
+
+export const generateBoundaryReverseProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const value = randomInt(-10, 10);
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const numberLine = generateNumberLine(value, inequalityType, isOpen);
+    const answer = `x ${symbol} ${value}`;
+    
+    // Wrong answers
+    const wrongSymbol1 = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const wrongSymbol2 = symbol === '>' ? '≥' : symbol === '<' ? '≤' : symbol === '≥' ? '>' : '<';
+    
+    const choices = [
+      answer,
+      `x ${wrongSymbol1} ${value}`,
+      `x ${wrongSymbol2} ${value}`,
+      `x ${symbol} ${value + 1}`
+    ];
+    
+    const finalChoices = ensureFourChoices(choices, answer);
+    
+    return {
+      problem: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow pointing ${direction}`,
+      displayProblem: numberLine.svgData, // UI will show actual number line graphic
+      answer: answer,
+      choices: finalChoices,
+      inputType: 'clickToSelect', // Normal click to select
+      explanation: {
+        originalProblem: `Number line shown`,
+        steps: [
+          { description: `Circle type: ${isOpen ? 'OPEN' : 'CLOSED'}`, work: `${isOpen ? '> or <' : '≥ or ≤'}` },
+          { description: `Arrow direction: ${direction.toUpperCase()}`, work: `${direction === 'right' ? '> or ≥' : '< or ≤'}` },
+          { description: `Combining these clues`, work: `Symbol is ${symbol}` },
+          { description: `Value at circle: ${value}`, work: `` }
+        ],
+        rule: `Open circle = strict inequality (>, <). Closed circle = includes equal (≥, ≤). Arrow shows direction.`,
+        finalAnswer: answer
+      }
+    };
+  } else {
+    const value = randomDecimal();
+    const inequalityType = randomFrom(['greater', 'less', 'greaterEqual', 'lessEqual']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    let symbol, isOpen, direction;
+    switch(inequalityType) {
+      case 'greater': symbol = '>'; isOpen = true; direction = 'right'; break;
+      case 'less': symbol = '<'; isOpen = true; direction = 'left'; break;
+      case 'greaterEqual': symbol = '≥'; isOpen = false; direction = 'right'; break;
+      case 'lessEqual': symbol = '≤'; isOpen = false; direction = 'left'; break;
+    }
+    
+    const numberLine = generateNumberLine(value, inequalityType, isOpen);
+    const answer = `${variable} ${symbol} ${value}`;
+    
+    const wrongSymbol1 = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const wrongSymbol2 = symbol === '>' ? '≥' : symbol === '<' ? '≤' : symbol === '≥' ? '>' : '<';
+    
+    const choices = [
+      answer,
+      `${variable} ${wrongSymbol1} ${value}`,
+      `${variable} ${wrongSymbol2} ${value}`,
+      `${variable} ${symbol} ${Math.round((value + 0.5) * 100) / 100}`
+    ];
+    
+    const finalChoices = ensureFourChoices(choices, answer);
+    
+    return {
+      problem: `Number line: ${isOpen ? 'Open' : 'Closed'} circle at ${value}, arrow ${direction}`,
+      displayProblem: numberLine.svgData,
+      answer: answer,
+      choices: finalChoices,
+      inputType: 'clickToSelect',
+      explanation: {
+        originalProblem: `Number line shown`,
+        steps: [
+          { description: `Circle + Arrow → ${symbol}`, work: `` }
+        ],
+        rule: `Read the number line correctly`,
+        finalAnswer: answer
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-34: SECURE PERIMETER (Two-Step, No Flip)
+// ============================================
+
+export const generateSecurePerimeterProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const leftSide = coefficient * answer + constant;
+    const problem = `${coefficient}x + ${constant} ${symbol} ${leftSide}`;
+    
+    const isOpen = (symbol === '>' || symbol === '<');
+    const direction = (symbol === '>' || symbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'less' : 'greater', isOpen).svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer + 1, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x ${symbol} ${leftSide - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x ${symbol} ${answer}` },
+          { description: `Note: Dividing by POSITIVE ${coefficient} does NOT flip the sign!`, work: `` },
+          { description: `Graph: ${isOpen ? 'Open' : 'Closed'} circle at ${answer}, arrow ${direction}`, work: `` }
+        ],
+        rule: `When dividing by a POSITIVE number, the inequality sign stays the SAME.`,
+        finalAnswer: `x ${symbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = randomInt(2, 6);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const leftSide = Math.round((coefficient * answer + constant) * 100) / 100;
+    const problem = `${coefficient}${variable} + ${constant} ${symbol} ${leftSide}`;
+    
+    const isOpen = (symbol === '>' || symbol === '<');
+    const direction = (symbol === '>' || symbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'less' : 'greater', isOpen).svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Solve like equation, sign stays same`, work: `${variable} ${symbol} ${answer}` }
+        ],
+        rule: `Positive operations = no flip`,
+        finalAnswer: `${variable} ${symbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-35: SHIFTING BOUNDARIES (Sign Flip - Divide by Negative)
+// ============================================
+
+export const generateShiftingBoundariesProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = -randomInt(2, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const rightSide = coefficient * answer;
+    const problem = `${coefficient}x ${symbol} ${rightSide}`;
+    
+    // FLIP the symbol when dividing by negative!
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const direction = (flippedSymbol === '>' || flippedSymbol === '≥') ? 'right' : 'left';
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      // Wrong: didn't flip
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      // Wrong: wrong circle type
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      // Wrong: wrong value
+      generateNumberLine(answer + 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true, // NEW: triggers warning popup in UI
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `⚠️ CRITICAL: Dividing by NEGATIVE ${coefficient}`, work: `` },
+          { description: `Divide both sides by ${coefficient}`, work: `x ${symbol} ${rightSide / coefficient}` },
+          { description: `⚠️ FLIP THE SIGN when dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `Graph: ${isOpen ? 'Open' : 'Closed'} circle at ${answer}, arrow ${direction}`, work: `` }
+        ],
+        rule: `CRITICAL RULE: When multiplying or dividing by a NEGATIVE number, you MUST flip the inequality sign!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = -randomInt(2, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const rightSide = Math.round((coefficient * answer) * 100) / 100;
+    const problem = `${coefficient}${variable} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `⚠️ Negative division → FLIP!`, work: `${variable} ${flippedSymbol} ${answer}` }
+        ],
+        rule: `Divide by negative = flip sign`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-36: TWISTED PATHS (Multi-Step with Flip)
+// ============================================
+
+export const generateTwistedPathsProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-10, 10);
+    const coefficient = -randomInt(2, 5);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    const rightSide = coefficient * answer + constant;
+    const problem = `${coefficient}x + ${constant} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer - 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Problem: ${problem}`, work: `` },
+          { description: `STEP 1: Subtract ${constant} from both sides`, work: `${coefficient}x ${symbol} ${rightSide - constant}` },
+          { description: `STEP 2: Divide both sides by ${coefficient}`, work: `x ${symbol} ${(rightSide - constant) / coefficient}` },
+          { description: `⚠️ FLIP because dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `Graph the solution`, work: `` }
+        ],
+        rule: `Two-step: (1) Undo addition/subtraction, (2) Undo multiplication/division, (3) FLIP if dividing by negative!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const coefficient = -randomInt(2, 5);
+    const constant = randomInt(1, 10);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const rightSide = Math.round((coefficient * answer + constant) * 100) / 100;
+    const problem = `${coefficient}${variable} + ${constant} ${symbol} ${rightSide}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer - 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `Two-step with flip`, work: `${variable} ${flippedSymbol} ${answer}` }
+        ],
+        rule: `Multi-step with negative = flip`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+
+// ============================================
+// LEVEL 1-37: FINAL FRONTIER (Complex with Distribution + Flip)
+// ============================================
+
+export const generateFinalFrontierProblem = (difficulty) => {
+  if (difficulty === 'easy') {
+    const answer = randomInt(-8, 8);
+    const outside = -randomInt(2, 4);
+    const inside = randomInt(1, 4);
+    const addConstant = randomInt(1, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    
+    // -2(x - 3) + 4 < result
+    // -2x + 6 + 4 < result
+    // -2x + 10 < result
+    // -2x < result - 10
+    // x > (result - 10) / -2  (FLIP!)
+    
+    const distributed = outside * answer + outside * (-inside) + addConstant;
+    const problem = `${outside}(x - ${inside}) + ${addConstant} ${symbol} ${distributed}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(answer + 1, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL FRONTIER! 🎉`, work: `` },
+          { description: `STEP 1: Distribute ${outside}`, work: `${outside}x + ${outside * (-inside)} + ${addConstant} ${symbol} ${distributed}` },
+          { description: `STEP 2: Combine constants`, work: `${outside}x + ${outside * (-inside) + addConstant} ${symbol} ${distributed}` },
+          { description: `STEP 3: Subtract ${outside * (-inside) + addConstant}`, work: `${outside}x ${symbol} ${distributed - (outside * (-inside) + addConstant)}` },
+          { description: `STEP 4: Divide by ${outside}`, work: `x ${symbol} ${(distributed - (outside * (-inside) + addConstant)) / outside}` },
+          { description: `⚠️ FLIP because dividing by negative!`, work: `x ${flippedSymbol} ${answer}` },
+          { description: `🏆 FRONTIER EXPLORED! 🏆`, work: `` }
+        ],
+        rule: `MASTER LEVEL: Distribute → Combine → Solve → FLIP if negative! You conquered the mathematical frontier!`,
+        finalAnswer: `x ${flippedSymbol} ${answer}`
+      }
+    };
+  } else {
+    const answer = randomDecimal();
+    const outside = -randomInt(2, 4);
+    const inside = randomInt(1, 4);
+    const addConstant = randomInt(1, 6);
+    const symbol = randomFrom(['>', '<', '≥', '≤']);
+    const variable = randomFrom(['a', 'b', 'c', 'd', 'h', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z']);
+    
+    const distributed = Math.round((outside * answer + outside * (-inside) + addConstant) * 100) / 100;
+    const problem = `${outside}(${variable} - ${inside}) + ${addConstant} ${symbol} ${distributed}`;
+    
+    const flippedSymbol = symbol === '>' ? '<' : symbol === '<' ? '>' : symbol === '≥' ? '≤' : '≥';
+    const isOpen = (flippedSymbol === '>' || flippedSymbol === '<');
+    const numberLine = generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen);
+    
+    const choices = [
+      numberLine.svgData,
+      generateNumberLine(answer, symbol === '>' ? 'greater' : symbol === '<' ? 'less' : symbol === '≥' ? 'greaterEqual' : 'lessEqual', symbol === '>' || symbol === '<').svgData,
+      generateNumberLine(answer, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', !isOpen).svgData,
+      generateNumberLine(Math.round((answer + 0.5) * 100) / 100, flippedSymbol === '>' ? 'greater' : flippedSymbol === '<' ? 'less' : flippedSymbol === '≥' ? 'greaterEqual' : 'lessEqual', isOpen).svgData
+    ];
+    
+    return {
+      problem: problem,
+      displayProblem: problem,
+      answer: numberLine.svgData,
+      choices: choices,
+      inputType: 'numberLine',
+      showFlipWarning: true,
+      explanation: {
+        originalProblem: problem,
+        steps: [
+          { description: `🎉 FINAL FRONTIER! 🎉`, work: `` },
+          { description: `Distribute → Combine → Solve → FLIP!`, work: `${variable} ${flippedSymbol} ${answer}` },
+          { description: `🏆 EXPEDITION COMPLETE! 🏆`, work: `` }
+        ],
+        rule: `CONGRATULATIONS! You've mastered all algebra skills!`,
+        finalAnswer: `${variable} ${flippedSymbol} ${answer}`
+      }
+    };
+  }
+};
+//***********************************************************************************************************************************************
+// ============================================
+// LEVELS 13-14 GENERATORS - FIXED VERSION
+// No prompts, sorted terms, proper problem display
+// ============================================
+
+const formatWithSign = (value) => {
+  if (typeof value === 'number') {
+    return value >= 0 ? `+${value}` : `${value}`;
+  }
+  // For strings like "3x"
+  if (value.startsWith('-')) return value;
+  return `+${value}`;
+};
+
+const sortTermBank = (terms) => {
+  // Sort: variables first (alphabetically), then constants (numerically)
+  return terms.sort((a, b) => {
+    const aHasVar = /[a-z]/i.test(a);
+    const bHasVar = /[a-z]/i.test(b);
+    
+    if (aHasVar && !bHasVar) return -1;
+    if (!aHasVar && bHasVar) return 1;
+    
+    // Both have vars or both are constants
+    if (aHasVar && bHasVar) {
+      // Sort variables alphabetically by the variable letter
+      const aVar = a.match(/[a-z]/i)[0];
+      const bVar = b.match(/[a-z]/i)[0];
+      if (aVar !== bVar) return aVar.localeCompare(bVar);
+      // Same variable, sort by coefficient
+      const aCoef = parseInt(a.replace(/[a-z]/i, '')) || 1;
+      const bCoef = parseInt(b.replace(/[a-z]/i, '')) || 1;
+      return aCoef - bCoef;
+    }
+    
+    // Both constants, sort numerically
+    return parseInt(a) - parseInt(b);
+  });
+};
+
+
+// ============================================
+// EXPORTS
+// ============================================
+
+export const problemGenerators = {
+  // Module 1: Base Camp (Levels 1-16)
+  '1-1': generateAdditionProblem,
+  '1-2': generateSubtractionProblem,
+  '1-3': generateMultiplicationProblem,
+  '1-4': generateDivisionProblem,
+  '1-5': generateBasicDistributionProblem,
+  '1-6': generateDistributionSubtractionProblem,
+  '1-7': generateNegativeOutsideProblem,
+  '1-8': generateNegativeInsideProblem,
+  '1-9': generateBasicLikeTermsProblem,
+  '1-10': generateUnlikeTermsProblem,
+  '1-11': generateMultipleLikeTermsProblem,
+  '1-12': generateSubtractLikeTermsProblem,
+  '1-13': generateDistributeCombineProblem,
+  '1-14': generateDistributeSubtractProblem,
+  '1-15': generateNegativeDistributeCombineProblem,
+  '1-16': generateComplexSimplifyProblem,
+
+
+  // Module 2: Territory (Levels 17-31)
+  '1-17': generateOneStepAddSubtract,
+  '1-18': generateOneStepMultiplyDivide,
+  '1-19': generateOneStepAddSubtractNegatives,
+  '1-20': generateOneStepMultiplyDivideNegativesFractions,
+  '1-21': generateTwoStepMultiplyAdd,
+  '1-22': generateTwoStepDivideAdd,
+  '1-23': generateTwoStepAddDivide,
+  '1-24': generateTwoStepMixedReview,
+
+  
+  '1-25': generateVariablesBothSidesProblem,
+  '1-26': generateDistributeEquationProblem,
+  '1-27': generateCombineSolveProblem,
+  '1-28': generateComplexMultiStepProblem,
+  '1-29': generateVaultLevel1Problem,
+  '1-30': generateVaultLevel2Problem,
+  '1-31': generateVaultLevel3Problem,
+  
+  // Module 3: The Frontier - Inequalities (Levels 32-37)
+  '1-32': generateBoundaryMarkersProblem,
+  '1-33': generateBoundaryReverseProblem,
+  '1-34': generateSecurePerimeterProblem,
+  '1-35': generateShiftingBoundariesProblem,
+  '1-36': generateTwistedPathsProblem,
+  '1-37': generateFinalFrontierProblem,
+};
+
+export default problemGenerators;
