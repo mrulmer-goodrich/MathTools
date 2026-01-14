@@ -1,5 +1,4 @@
 // StatsPanel.jsx - COMPLETE FIX: All morning notes addressed
-// VERSION: 2025-01-14_02 (Day 2 Fixes: Mode tracking, nuclear clear)
 // Location: src/algebra/components/StatsPanel.jsx
 
 import React, { useMemo, useState } from 'react';
@@ -34,38 +33,16 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
   };
 
   // Handle clear session
-  // Handle clear session - NUCLEAR OPTION (wipes everything)
   const handleClearSession = () => {
     if (window.confirm('⚠️ This will delete ALL your progress in Algebra Expedition. Are you sure?')) {
       if (window.confirm('This action cannot be undone. Really delete everything?')) {
-        // NUCLEAR OPTION: Clear ALL algebra data including name and avatar
-        const keysToRemove = [
-          'algebra_difficulty',
-          'algebra_current_level',
-          'algebra_progress',
-          'algebra_enhanced_stats',
-          'algebra_practice_difficulty',
-          'algebra_story_seen',
-          'algebra_player_name',        // ✅ NUCLEAR: Remove name
-          'algebra_player_avatar',       // ✅ NUCLEAR: Remove avatar
-          'algebra_icon_positions'       // ✅ NUCLEAR: Reset icon positions
-        ];
-        
-        // Remove all keys
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        
-        // Clear any other algebra_ keys that might exist
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('algebra_')) {
-            localStorage.removeItem(key);
-          }
-        });
-        
-        // Clear session storage too
-        sessionStorage.clear();
-        
-        // Force hard reload from server (bypass cache)
-        window.location.reload(true);
+        localStorage.removeItem('algebra_difficulty');
+        localStorage.removeItem('algebra_current_level');
+        localStorage.removeItem('algebra_progress');
+        localStorage.removeItem('algebra_enhanced_stats');
+        localStorage.removeItem('algebra_practice_difficulty');
+        localStorage.removeItem('algebra_story_seen');
+        window.location.reload();
       }
     }
   };
@@ -119,14 +96,29 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
     const processedLevels = new Set();
     
     Object.entries(levelStats).forEach(([key, data]) => {
-      // Extract level ID and difficulty
+      // NEW KEY FORMAT: "1-1-easy-play" = level-number-difficulty-mode
+      // OLD KEY FORMAT: "1-1-easy" = level-number-difficulty
       const parts = key.split('-');
-      const diffSuffix = parts[parts.length - 1];
-      const levelId = key.replace(`-${diffSuffix}`, '');
-      const levelNum = levelId.split('-')[1];
       
-      // Create unique key for this level
-      const levelKey = `${levelNum}-${diffSuffix}`;
+      let levelNum, diffSuffix, modeSuffix;
+      
+      if (parts.length === 4) {
+        // NEW FORMAT: ["1", "1", "easy", "play"]
+        levelNum = parts[1];
+        diffSuffix = parts[2];
+        modeSuffix = parts[3];
+      } else if (parts.length === 3) {
+        // OLD FORMAT (backward compatibility): ["1", "1", "easy"]
+        levelNum = parts[1];
+        diffSuffix = parts[2];
+        modeSuffix = data.mode || 'unknown';
+      } else {
+        console.warn('Unexpected levelStats key format:', key);
+        return;
+      }
+      
+      // Create unique key for this level (including mode now)
+      const levelKey = `${levelNum}-${diffSuffix}-${modeSuffix}`;
       
       if (processedLevels.has(levelKey)) return;
       processedLevels.add(levelKey);
@@ -141,7 +133,7 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
         correct: data.correct,
         accuracy: levelAccuracy,
         time: avgTime,
-        mode: data.mode || 'unknown'  // ✅ ADDED: Include mode
+        mode: modeSuffix  // Include mode
       });
     });
     
@@ -229,9 +221,6 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <th onClick={() => handleSort('difficulty')} style={{ cursor: 'pointer' }}>
                         Route {sortConfig.key === 'difficulty' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th onClick={() => handleSort('mode')} style={{ cursor: 'pointer' }}>
-                        Mode {sortConfig.key === 'mode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                      </th>
                       <th onClick={() => handleSort('attempted')} style={{ cursor: 'pointer' }}>
                         Attempted {sortConfig.key === 'attempted' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
@@ -251,13 +240,6 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <tr key={`${row.level}-${row.difficulty}-${index}`}>
                         <td className="level-cell">{row.level}</td>
                         <td className="difficulty-cell">{row.difficulty}</td>
-                        <td className="mode-cell" style={{ 
-                          color: row.mode === 'practice' ? '#10B981' : '#3B82F6',
-                          fontWeight: 600,
-                          textTransform: 'capitalize'
-                        }}>
-                          {row.mode === 'practice' ? '🎯 Practice' : '🎮 Game'}
-                        </td>
                         <td>{row.attempted}</td>
                         <td>{row.correct}</td>
                         <td className={row.accuracy >= 70 ? 'acc-good' : row.accuracy >= 50 ? 'acc-ok' : 'acc-poor'}>
