@@ -11,12 +11,6 @@ import FeedbackModal from './FeedbackModal';
 import SuccessOverlay from './SuccessOverlay';
 import ProgressTracker from './ProgressTracker';
 import levels from '../../data/levelData';
-import { generateOneStepAddSubtract } from '../../data/equationGenerators';
-import { generateOneStepMultiplyDivide } from '../../data/equationGenerators';
-import { generateOneStepAddSubtractNegatives } from '../../data/equationGenerators';
-import { generateOneStepMultiplyDivideNegativesFractions } from '../../data/equationGenerators';
-import { generateTwoStepMultiplyAdd } from '../../data/equationGenerators';
-import { generateTwoStepDivideAdd } from '../../data/equationGenerators';
 import { problemGenerators } from '../../data/problemGenerators';
 import EquationWorksheet from './EquationWorksheet';
 
