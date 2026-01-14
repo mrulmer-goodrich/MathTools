@@ -1543,7 +1543,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   let problem = '';
   let problemHasConstantOnLeft = false;
 
-  const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+  let fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 
   if (skeleton === 'x/a+b=c') {
     problem = b < 0 ? `${fracTerm} - ${Math.abs(b)} = ${c}` : `${fracTerm} + ${b} = ${c}`;
@@ -1559,7 +1559,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
 const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
 const afterStep1Right = c - b;
 
-const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 const negFracTerm = `-(x/${a})`;
 
 const row1Bank = [
