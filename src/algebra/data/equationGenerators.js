@@ -1344,10 +1344,6 @@ const afterStep1Right = c - b;
 const axTerm = a < 0 ? `-${formatCoefficient(Math.abs(a))}x` : `${formatCoefficient(a)}x`;
 const negAxTerm = a < 0 ? `${formatCoefficient(Math.abs(a))}x` : `-${formatCoefficient(Math.abs(a))}x`;
 
-// Display strings used in explanation panel (standardized orientation)
-const afterStep1LeftDisplay = axTerm;
-const afterStep1RightDisplay = String(afterStep1Right);
-
 const row1Bank = [
   step1Operation,
   b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
@@ -1563,7 +1559,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
 const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
 const afterStep1Right = c - b;
 
-//const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 const negFracTerm = `-(x/${a})`;
 
 const row1Bank = [
@@ -2546,3 +2542,25 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
     }
   };
 };
+
+
+
+// ======================================================
+// Compatibility export: some modules expect a levelId->generator map.
+// This does not change any existing imports; it only adds a safe alias.
+// ======================================================
+
+export const equationGenerators = {
+  '1-17': generateOneStepAddSubtract,
+  '1-18': generateOneStepMultiplyDivide,
+  '1-19': generateOneStepAddSubtractNegatives,
+  '1-20': generateOneStepMultiplyDivideNegativesFractions,
+  '1-21': generateTwoStepMultiplyAdd,
+  '1-22': generateTwoStepDivideAdd,
+  '1-23': generateTwoStepAddDivide,
+  '1-24': generateTwoStepMixedReview,
+
+  // keep other existing levels intact if present elsewhere
+};
+
+export default equationGenerators;
