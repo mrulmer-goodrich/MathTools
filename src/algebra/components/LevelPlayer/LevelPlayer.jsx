@@ -1,5 +1,4 @@
 // LevelPlayer.jsx - FIXED: Passes problem to FeedbackModal, proper stats tracking
-// VERSION: 2025-01-14_02 (Day 2 Fixes: Practice navigation)
 // Location: src/algebra/components/LevelPlayer/LevelPlayer.jsx
 
 import React, { useState, useEffect } from 'react';
@@ -78,41 +77,17 @@ const LevelPlayer = ({
 
   const generateNewProblem = () => {
     const generator = problemGenerators[levelId];
-
-    if (!generator) {
-      console.error(`No generator found for levelId: ${levelId}`);
-      setCurrentProblem(null);
-      return;
+    if (generator) {
+      const problem = generator(difficulty);
+      setCurrentProblem(problem);
+      setShowFeedback(false);
+      setShowSuccess(false);
+      setSelectedAnswer(null);
+      setProblemStartTime(Date.now());
+      setProblemAttempts(0);
+    } else {
+      console.error(`No generator found for level ${levelId}`);
     }
-
-    // Some generators can legitimately fail to produce a problem if constraints are too tight.
-    // Retry a handful of times before giving up so students never see a blank worksheet shell.
-    let problem = null;
-    const maxTries = 25;
-    for (let i = 0; i < maxTries; i++) {
-      try {
-        const candidate = generator(difficulty);
-        if (candidate) {
-          problem = candidate;
-          break;
-        }
-      } catch (err) {
-        console.error(`Generator threw for levelId=${levelId}, difficulty=${difficulty} (try ${i + 1}/${maxTries})`, err);
-      }
-    }
-
-    if (!problem) {
-      console.error(`Generator returned no problem for levelId=${levelId}, difficulty=${difficulty} after ${maxTries} tries`);
-      setCurrentProblem(null);
-      return;
-    }
-
-    setCurrentProblem(problem);
-    setShowFeedback(false);
-    setShowSuccess(false);
-    setSelectedAnswer(null);
-    setProblemStartTime(Date.now());
-    setProblemAttempts(0);
   };
 
   const handleProblemComplete = () => {
@@ -342,11 +317,8 @@ const LevelPlayer = ({
 
   return (
     <div className="level-player" data-region={region}>
-      <button 
-        className="btn-back-base" 
-        onClick={playMode === 'practice' ? onBackToPractice : onReturnToMenu}
-      >
-        ← {playMode === 'practice' ? 'Back to Practice' : 'Back to Base Camp'}
+      <button className="btn-back-base" onClick={onReturnToMenu}>
+        ← Back to Base Camp
       </button>
 
       <div className="level-content">
