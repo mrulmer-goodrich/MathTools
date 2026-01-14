@@ -1,5 +1,3 @@
-// problemGenerators.js
-// VERSION: 2025-01-14_02 (Day 2 Fixes: Variable fix, bank shuffle)
 import { generateOneStepAddSubtract } from './equationGenerators';
 import { generateOneStepMultiplyDivide } from './equationGenerators';
 import { generateOneStepAddSubtractNegatives } from './equationGenerators';
@@ -29,19 +27,6 @@ export const validateAndFilterChoices = (choices, correctAnswer) => {
   }
   
   return [...new Set(validChoices)];
-};
-
-// ============================================
-// SHUFFLE ARRAY (Bank Randomization)
-// ============================================
-
-export const shuffleArray = (array) => {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 };
 
 // ============================================
@@ -1757,14 +1742,14 @@ const makeStagedSpec = ({ row1Terms, row2Answer, row1Bank, row2Choices }) => ({
       prompt: 'Distribute (expand) first.',
       blanks: row1Terms.length,
       expected: row1Terms,
-      bank: shuffleArray(row1Bank)  // ✅ FIXED: Shuffle bank
+      bank: row1Bank
     },
     {
       id: 'row2_combine',
       prompt: 'Now combine like terms to finish.',
       blanks: 1,
       expected: [row2Answer],
-      choices: shuffleArray(row2Choices)  // ✅ FIXED: Shuffle choices
+      choices: row2Choices
     }
   ]
 });
@@ -1886,9 +1871,9 @@ export const generateDistributeCombineProblem = (difficulty) => {
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
-            formatCoefficient(outside, variable),  // ✅ FIXED: Use actual variable
+            formatCoefficient(outside, 'x'),
             String(insideTerm),
-            formatCoefficient(standaloneTerm + outside, variable),  // ✅ FIXED: Use actual variable
+            formatCoefficient(standaloneTerm + outside, 'x'),
             String(distributedConstant + (trailingConst || 0))
           ],
           padTo: 12
@@ -1998,9 +1983,14 @@ export const generateDistributeCombineProblem = (difficulty) => {
         const row1Bank = buildTermBank({
           correctTerms: row1Terms,
           distractorTerms: [
-            formatCoefficient(outside, variable),
-            String(insideTerm),
-            String(distributedConstant)
+            formatCoefficient(Math.abs(outside), variable),  // Wrong: positive version of distributed coef
+            formatCoefficient(-Math.abs(outside), variable), // Wrong: negative version
+            String(insideTerm),  // Just the inside constant
+            String(-insideTerm), // Negated inside constant
+            String(distributedConstant),  // The distributed constant
+            String(-distributedConstant), // Wrong sign
+            formatCoefficient(Math.abs(standaloneCoef), variable), // Wrong sign of standalone
+            formatCoefficient(-Math.abs(standaloneCoef), variable)  // Negated standalone
           ],
           padTo: 14
         });
