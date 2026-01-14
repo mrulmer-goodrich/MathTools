@@ -1368,8 +1368,12 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
       instruction: 'Simplify each side',
       leftBlanks: 1,
       rightBlanks: 1,
-      expectedLeft: row2ExpectedLeft,
-      expectedRight: row2ExpectedRight,
+      expectedLeft: Array.isArray(row2ExpectedLeft)
+        ? row2ExpectedLeft
+        :[row2ExpectedLeft],
+      expectedRight: Array.isArray(row2ExpectedRight)
+        ? row2ExpectedRight
+        :[row2ExpectedRight],
       bank: [...new Set(row2Bank)].sort()
     }
   ]
