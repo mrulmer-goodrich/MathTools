@@ -83,17 +83,7 @@ const LevelPlayer = ({
       return;
     }
 
-    try {
-      const problem = generator(difficulty);
-      setCurrentProblem(problem);
-      setShowFeedback(false);
-      setShowSuccess(false);
-      setSelectedAnswer(null);
-      setProblemStartTime(Date.now());
-      setProblemAttempts(0);
-    } catch (err) {
-      console.error('[LevelPlayer] Generator error:');
-    }
+  
   };
 
   const handleProblemComplete = () => {
