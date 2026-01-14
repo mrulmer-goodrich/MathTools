@@ -104,14 +104,18 @@ const formatCoefficient = (coefficient, variable) => {
 // If problem was a(b + x), answer is ab + ax (NOT ax + ab)
 // constantFirst = true means constant came first in original problem
 const canonicalizeExpression = (coefficient, variable, constant, constantFirst = false) => {
+  // CRITICAL FIX: Eliminate zero-coefficient terms
+  if (Math.abs(coefficient) < 0.0001) {
+    // No variable term, return constant only
+    return String(constant);
+  }
+  
   // Handle coefficient display
   let varPart = formatCoefficient(coefficient, variable);
   
   // Handle constant
   if (coefficient === 0 && constant === 0) {
     return '0';
-  } else if (coefficient === 0) {
-    return String(constant);
   } else if (constant === 0) {
     return varPart;
   } else if (constantFirst) {
@@ -224,6 +228,20 @@ const uniqueChoices = (choices) => {
 
 // Helper to format expressions consistently (used by Levels 9+)
 const formatAnswer = (coefficient, variable, constant) => {
+  // CRITICAL FIX: Eliminate zero-coefficient terms (e.g., 0z - 15 → -15)
+  if (Math.abs(coefficient) < 0.0001) {
+    // No variable term remains, return constant only
+    return String(constant);
+  }
+  
+  // Zero constant, return variable term only
+  if (Math.abs(constant) < 0.0001) {
+    return coefficient === -1 ? `-${variable}` : 
+           coefficient === 1 ? variable :
+           `${coefficient}${variable}`;
+  }
+  
+  // Both terms present
   const varPart = coefficient === -1 ? `-${variable}` : 
                   coefficient === 1 ? variable :
                   `${coefficient}${variable}`;
@@ -1661,6 +1679,9 @@ const buildTermBank = ({ correctTerms, distractorTerms, padTo = 10 }) => {
     // Normalize for duplicate detection (remove leading +)
     const normalized = s.replace(/^\+/, '');
     
+    // CRITICAL FIX: Reject zero-coefficient variable terms (e.g., +0x-15), which should simplify to a constant only
+    if (/[^\d]0\s*[a-zA-Z]/.test(` ${normalized}`)) return;
+    
     // Check for exact duplicates first
     if (seen.has(normalized)) return;
     
@@ -2307,7 +2328,7 @@ export const generateNegativeDistributeCombineProblem = (difficulty) => {
       
       const useDecimal = Math.random() < 0.4;
       const outsideMag = useDecimal ? randomFrom([0.5, 1.5, 2.5]) : randomNonZeroInt(2, 12);
-      const outside = -outsideMag;
+      let outside = -outsideMag; // Changed to 'let' to allow reassignment in skeleton branches
       const insideTerm = randomNonZeroInt(1, 12);
       const standaloneMag = useDecimal ? randomFrom([0.5, 1.5]) : randomNonZeroInt(-12, 12);
       
