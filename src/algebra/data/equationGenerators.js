@@ -48,6 +48,23 @@ const randomNonZeroInt = (min, max) => {
   return val;
 };
 
+// FIXED 2025-01-14: Ensure constants are never too small for two-step problems
+// This prevents Level 22 from generating one-step problems like "x/4 = -6"
+const randomNonZeroIntWithMin = (min, max, minAbsValue = 2) => {
+  let val;
+  let attempts = 0;
+  do {
+    val = randomNonZeroInt(min, max);
+    attempts++;
+  } while (Math.abs(val) < minAbsValue && attempts < 100);
+  
+  // Fallback if we can't find a valid value
+  if (Math.abs(val) < minAbsValue) {
+    return val > 0 ? minAbsValue : -minAbsValue;
+  }
+  return val;
+};
+
 // FIX BUG #2: Helper to simplify denominators - NEVER show "x/(7+12)", always show "x/19"
 const simplifyDenominator = (denominator) => {
   // If it's a number, return as-is
@@ -1617,7 +1634,8 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       a = randomNonZeroInt(-12, 12);
     }
     
-    b = randomNonZeroInt(-12, 12);
+    // FIXED 2025-01-14: Ensure b is never too small (prevents one-step problems)
+    b = randomNonZeroIntWithMin(-12, 12, 2);
     
     // Pick solution such that x/a is a whole number (mental math friendly)
     const quotient = randomNonZeroInt(-12, 12);
@@ -1652,7 +1670,11 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         a = (randomNonZeroInt(-24, 24) / 2);
       }
       
+      // FIXED 2025-01-14: Ensure b is never too small
       b = (randomNonZeroInt(-24, 24) / 2);
+      while (b === 0 || Math.abs(b) < 1) {
+        b = (randomNonZeroInt(-24, 24) / 2);
+      }
       
       // Pick solution such that x/a is whole or half
       const quotient = (randomNonZeroInt(-24, 24) / 2);
@@ -1679,7 +1701,8 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         a = randomNonZeroInt(-12, 12);
       }
       
-      b = randomNonZeroInt(-12, 12);
+      // FIXED 2025-01-14: Ensure b is never too small
+      b = randomNonZeroIntWithMin(-12, 12, 2);
       
       const quotient = randomNonZeroInt(-12, 12);
       solution = a * quotient;
@@ -1758,10 +1781,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   ];
   
   // Build Row 4 bank (final solution)
+  // FIXED 2025-01-14: solution ALWAYS correct, even with negative denominators
+  // Example: x/(-3) = -14 → solution = (-3) × (-14) = 42 ✓
   const row4Bank = [
     'x',
     '-x',
-    String(solution),
+    String(solution),          // ALWAYS the correct answer
     String(-solution),
     String(solution + 1),
     String(solution - 1),
