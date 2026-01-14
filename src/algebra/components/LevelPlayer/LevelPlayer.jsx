@@ -71,8 +71,19 @@ const LevelPlayer = ({
   }, [showIntro]);
 
   const generateNewProblem = () => {
-    const generator = problemGenerators[levelId];
-    if (generator) {
+    // Registry-only generator resolution. Levels should be keyed by levelId (e.g., '1-21').
+    // Support both named-export object and nested export shapes defensively.
+    const generatorMap = (problemGenerators && typeof problemGenerators === 'object')
+      ? (problemGenerators.problemGenerators || problemGenerators)
+      : {};
+
+    const generator = generatorMap[levelId];
+    if (!generator || typeof generator !== 'function') {
+      console.error(`No generator found for level ${levelId}`);
+      return;
+    }
+
+    try {
       const problem = generator(difficulty);
       setCurrentProblem(problem);
       setShowFeedback(false);
@@ -80,8 +91,8 @@ const LevelPlayer = ({
       setSelectedAnswer(null);
       setProblemStartTime(Date.now());
       setProblemAttempts(0);
-    } else {
-      console.error(`No generator found for level ${levelId}`);
+    } catch (err) {
+      console.error('[LevelPlayer] Generator error:', err);
     }
   };
 
