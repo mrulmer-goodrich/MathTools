@@ -1563,7 +1563,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
 const step1Operation = b < 0 ? `+ ${Math.abs(b)}` : `- ${Math.abs(b)}`;
 const afterStep1Right = c - b;
 
-const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
+//const fracTerm = `(x/${a})`; // atomic grouping prevents parsing ambiguity
 const negFracTerm = `-(x/${a})`;
 
 const row1Bank = [
