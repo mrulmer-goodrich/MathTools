@@ -1,4 +1,5 @@
 // StatsPanel.jsx - COMPLETE FIX: All morning notes addressed
+// VERSION: 2025-01-14_02 (Day 2 Fixes: Mode tracking, nuclear clear)
 // Location: src/algebra/components/StatsPanel.jsx
 
 import React, { useMemo, useState } from 'react';
@@ -33,16 +34,38 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
   };
 
   // Handle clear session
+  // Handle clear session - NUCLEAR OPTION (wipes everything)
   const handleClearSession = () => {
     if (window.confirm('⚠️ This will delete ALL your progress in Algebra Expedition. Are you sure?')) {
       if (window.confirm('This action cannot be undone. Really delete everything?')) {
-        localStorage.removeItem('algebra_difficulty');
-        localStorage.removeItem('algebra_current_level');
-        localStorage.removeItem('algebra_progress');
-        localStorage.removeItem('algebra_enhanced_stats');
-        localStorage.removeItem('algebra_practice_difficulty');
-        localStorage.removeItem('algebra_story_seen');
-        window.location.reload();
+        // NUCLEAR OPTION: Clear ALL algebra data including name and avatar
+        const keysToRemove = [
+          'algebra_difficulty',
+          'algebra_current_level',
+          'algebra_progress',
+          'algebra_enhanced_stats',
+          'algebra_practice_difficulty',
+          'algebra_story_seen',
+          'algebra_player_name',        // ✅ NUCLEAR: Remove name
+          'algebra_player_avatar',       // ✅ NUCLEAR: Remove avatar
+          'algebra_icon_positions'       // ✅ NUCLEAR: Reset icon positions
+        ];
+        
+        // Remove all keys
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Clear any other algebra_ keys that might exist
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('algebra_')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Clear session storage too
+        sessionStorage.clear();
+        
+        // Force hard reload from server (bypass cache)
+        window.location.reload(true);
       }
     }
   };
