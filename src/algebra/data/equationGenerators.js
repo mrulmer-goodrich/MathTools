@@ -1150,18 +1150,32 @@ let p, q, k, b, solution, a;
     : [`÷ ${operationValueDisplay}`, `÷ ${operationValueDisplay}`];
   
   // Build Row 2 bank
-  const row2Bank = [
-    'x',
-    '-x',
-    String(solution),
-    String(-solution),
-    String(solution + 1),
-    String(solution - 1),
-    String(Math.abs(operationValue)),
-    String(-Math.abs(operationValue)),
-    String(Math.abs(b)),
-    String(-Math.abs(b))
-  ];
+  // FIXED 2025-01-14: Don't include operationValue decimals for fraction coefficients
+  const row2Bank = isFractionCoefficient
+    ? [
+        'x',
+        '-x',
+        String(solution),
+        String(-solution),
+        String(solution + 1),
+        String(solution - 1),
+        String(Math.abs(b)),
+        String(-Math.abs(b)),
+        String(Math.abs(b) + 1),
+        String(Math.abs(b) - 1)
+      ]
+    : [
+        'x',
+        '-x',
+        String(solution),
+        String(-solution),
+        String(solution + 1),
+        String(solution - 1),
+        String(Math.abs(operationValue)),
+        String(-Math.abs(operationValue)),
+        String(Math.abs(b)),
+        String(-Math.abs(b))
+      ];
   
   const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
@@ -1658,6 +1672,14 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       problemHasConstantOnLeft = true;
     }
     
+    // CRITICAL VALIDATION: Ensure problem is actually two-step
+    // If b=0 or display logic failed, regenerate
+    if (!problem.includes('+') && !problem.includes(' - ')) {
+      console.error('Level 22 generated one-step problem, regenerating...', { a, b, c, problem });
+      // Force regeneration by returning to top of function
+      return generateTwoStepDivideAdd(difficulty);
+    }
+    
   } else {
     // Hard: Same range but with occasional decimals
     const useDecimal = Math.random() < 0.2;
@@ -1693,6 +1715,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         problemHasConstantOnLeft = true;
       }
       
+      // CRITICAL VALIDATION: Ensure decimal problem is two-step
+      if (!problem.includes('+') && !problem.includes(' - ')) {
+        console.error('Level 22 decimal generated one-step, regenerating...');
+        return generateTwoStepDivideAdd(difficulty);
+      }
+      
     } else {
       // Regular integers
       // CRITICAL: Ensure a is never 0 (division by zero)
@@ -1719,6 +1747,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         problem = b < 0 ? `${c} = -${Math.abs(b)} + x/${a}` : `${c} = ${b} + x/${a}`;
         problemHasConstantOnLeft = true;
       }
+    }
+    
+    // CRITICAL VALIDATION (applies to both decimal and integer): Ensure two-step
+    if (!problem.includes('+') && !problem.includes(' - ')) {
+      console.error('Level 22 hard generated one-step, regenerating...');
+      return generateTwoStepDivideAdd(difficulty);
     }
   }
   
