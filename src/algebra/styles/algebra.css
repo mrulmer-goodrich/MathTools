@@ -747,6 +747,12 @@ h1, h2, h3, h4, h5, h6 {
   padding: var(--space-3);
   background: rgba(249, 250, 251, 0.4);
   border-radius: var(--radius-lg);
+  /* UI FIX #9: Prevent vertical overflow, add scroll */
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Auto-scroll to bottom to show active row */
+  scroll-behavior: smooth;
 }
 
 /* Individual Row */
