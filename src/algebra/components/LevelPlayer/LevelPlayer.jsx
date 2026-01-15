@@ -317,8 +317,17 @@ const LevelPlayer = ({
 
   return (
     <div className="level-player" data-region={region}>
-      <button className="btn-back-base" onClick={onReturnToMenu}>
-        ← Back to Base Camp
+      <button 
+        className="btn-back-base" 
+        onClick={() => {
+          if (playMode === 'practice' && onBackToPractice) {
+            onBackToPractice();
+          } else {
+            onReturnToMenu();
+          }
+        }}
+      >
+        ← {playMode === 'practice' ? 'Back to Practice' : 'Back to Base Camp'}
       </button>
 
       <div className="level-content">
