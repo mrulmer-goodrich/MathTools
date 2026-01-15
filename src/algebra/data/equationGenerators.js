@@ -940,6 +940,13 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       solution = Math.round(b / a);  // Ensure integer solution
       b = a * solution;  // Recalculate to ensure exact
       
+      // CRITICAL FIX 2025-01-15: Prevent b=0
+      while (b === 0) {
+        b = randomNonZeroInt(-12, 12);
+        solution = Math.round(b / a);
+        b = a * solution;
+      }
+      
       if (skeleton === 'ax=b') {
         problem = a === 1 ? `x = ${b}` : a === -1 ? `-x = ${b}` : `${a}x = ${b}`;
       } else {
@@ -979,6 +986,13 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       solution = Math.round(-b / a);  // Negative result
       b = -a * solution;  // Recalculate exact
       
+      // CRITICAL FIX 2025-01-15: Prevent b=0
+      while (b === 0) {
+        b = randomNonZeroInt(-12, 12);
+        solution = Math.round(-b / a);
+        b = -a * solution;
+      }
+      
       problem = `-${a}x = ${b}`;
       operationNeeded = 'divide';
       operationValue = -a;
@@ -1004,6 +1018,13 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       b = randomNonZeroInt(-12, 12);
       solution = Math.round(b / a);
       b = a * solution;
+      
+      // CRITICAL FIX 2025-01-15: Prevent b=0
+      while (b === 0) {
+        b = randomNonZeroInt(-12, 12);
+        solution = Math.round(b / a);
+        b = a * solution;
+      }
       
       if (skeleton === 'ax=b') {
         problem = a === 1 ? `x = ${b}` : a === -1 ? `-x = ${b}` : `${a}x = ${b}`;
@@ -1041,6 +1062,13 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       b = randomNonZeroInt(-12, 12);
       solution = Math.round(-b / a);
       b = -a * solution;
+      
+      // CRITICAL FIX 2025-01-15: Prevent b=0
+      while (b === 0) {
+        b = randomNonZeroInt(-12, 12);
+        solution = Math.round(-b / a);
+        b = -a * solution;
+      }
       
       problem = `-${a}x = ${b}`;
       operationNeeded = 'divide';
@@ -1700,7 +1728,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   const afterStep2Right = problemHasConstantOnLeft ? 'x' : String(solution);
   
   // Build Row 1 bank (first operation: subtract b)
-  // CONSISTENT SPACING
+  // CRITICAL FIX 2025-01-15: Include SIGNED multiply for negative denominators
   const row1Bank = [
     step1Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
@@ -1708,8 +1736,9 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     `÷ ${Math.abs(b)}`,
     `+ ${Math.abs(b)}`,
     `- ${Math.abs(b)}`,
-    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
-    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
+    `× ${Math.abs(a)}`,
+    `÷ ${Math.abs(a)}`,
+    a < 0 ? `× (${a})` : `× ${a}`,  // SIGNED multiply - the CORRECT eventual operation
     c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
     c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
@@ -2578,7 +2607,7 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
   const afterStep1 = c - b;
   const step2Operation = a < 0 ? `× (${a})` : `× ${a}`;
   
-  // FIX: Comprehensive row1Bank matching Level 22 structure
+  // FIX: Comprehensive row1Bank with SIGNED multiply operation
   const row1Bank = [
     step1Operation,
     b < 0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`,
@@ -2586,8 +2615,9 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
     `÷ ${Math.abs(b)}`,
     `+ ${Math.abs(b)}`,
     `- ${Math.abs(b)}`,
-    a < 0 ? `× ${Math.abs(a)}` : `× ${Math.abs(a)}`,
-    a < 0 ? `÷ ${Math.abs(a)}` : `÷ ${Math.abs(a)}`,
+    `× ${Math.abs(a)}`,
+    `÷ ${Math.abs(a)}`,
+    a < 0 ? `× (${a})` : `× ${a}`,  // SIGNED multiply - CRITICAL for negative denominators
     c >= 0 ? `+ ${c}` : `- ${Math.abs(c)}`,
     c >= 0 ? `- ${c}` : `+ ${Math.abs(c)}`
   ];
