@@ -214,12 +214,6 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
               <div className="summary-label">Active Time</div>
             </div>
           </div>
-            </div>
-            <div className="summary-stat">
-              <div className="summary-value">{activeTime}</div>
-              <div className="summary-label">Active Time</div>
-            </div>
-          </div>
 
           {/* Level Performance Table - COMBINED VIEW */}
           <div className="stats-section-pro">
