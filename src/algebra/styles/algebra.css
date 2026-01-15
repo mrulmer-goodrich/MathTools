@@ -1121,11 +1121,13 @@ body {
   border-radius: 0.75rem;
   padding: 0.6rem !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  max-height: 45vh;
+  max-height: 55vh;  /* INCREASED from 45vh to prevent cutoff */
   overflow-y: auto;
+  overflow-x: hidden;  /* Prevent horizontal scroll */
   position: relative;
   z-index: 30 !important;
   border: 3px solid #4CAF50 !important;
+  scroll-behavior: smooth;  /* Smooth auto-scroll */
 }
 
 .equation-problem-container-scrollable.equation-final-state {
