@@ -155,8 +155,8 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
       
-      // For difficulty, use string comparison
-      if (sortConfig.key === 'difficulty') {
+      // For difficulty/mode, use string comparison
+      if (sortConfig.key === 'difficulty' || sortConfig.key === 'mode') {
         return sortConfig.direction === 'asc' 
           ? aVal.localeCompare(bVal)
           : bVal.localeCompare(aVal);
@@ -210,8 +210,10 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
               <div className="summary-label">Accuracy</div>
             </div>
             <div className="summary-stat">
-              <div className="summary-value">{firstTryPercentage}%</div>
-              <div className="summary-label">First Try</div>
+              <div className="summary-value">{activeTime}</div>
+              <div className="summary-label">Active Time</div>
+            </div>
+          </div>
             </div>
             <div className="summary-stat">
               <div className="summary-value">{activeTime}</div>
@@ -234,6 +236,9 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <th onClick={() => handleSort('difficulty')} style={{ cursor: 'pointer' }}>
                         Route {sortConfig.key === 'difficulty' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
+                      <th onClick={() => handleSort('mode')} style={{ cursor: 'pointer' }}>
+                        Mode {sortConfig.key === 'mode' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th onClick={() => handleSort('attempted')} style={{ cursor: 'pointer' }}>
                         Attempted {sortConfig.key === 'attempted' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                       </th>
@@ -253,6 +258,7 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                       <tr key={`${row.level}-${row.difficulty}-${index}`}>
                         <td className="level-cell">{row.level}</td>
                         <td className="difficulty-cell">{row.difficulty}</td>
+                        <td className="mode-cell">{row.mode === 'practice' ? 'Practice' : 'Game'}</td>
                         <td>{row.attempted}</td>
                         <td>{row.correct}</td>
                         <td className={row.accuracy >= 70 ? 'acc-good' : row.accuracy >= 50 ? 'acc-ok' : 'acc-poor'}>
