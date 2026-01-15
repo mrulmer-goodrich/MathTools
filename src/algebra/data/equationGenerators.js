@@ -953,7 +953,11 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       
     } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
       // Division: x/a = b
+      // CRITICAL FIX 2025-01-15: Prevent denominator of 1
       a = randomNonZeroInt(-12, 12);
+      while (a === 0 || Math.abs(a) === 1) {
+        a = randomNonZeroInt(-12, 12);
+      }
       b = randomNonZeroInt(-12, 12);
       solution = a * b;  // EXACT
       
@@ -1013,7 +1017,11 @@ export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
       operationValueDisplay = String(a);
       
     } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
+      // CRITICAL FIX 2025-01-15: Prevent denominator of 1
       a = randomNonZeroInt(-12, 12);
+      while (a === 0 || Math.abs(a) === 1) {
+        a = randomNonZeroInt(-12, 12);
+      }
       b = randomNonZeroInt(-12, 12);
       solution = a * b;
       
@@ -1724,11 +1732,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
   const row2ExpectedRight = problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)];
   
   // Build Row 3 bank (operation: multiply by a)
-  // CONSISTENT FORMATTING
+  // CRITICAL FIX 2025-01-15: step2Operation MUST be first for correct answer
+  // When a=-4, this ensures × (-4) appears in bank (not just × 4)
   const row3Bank = [
-    step2Operation,
+    step2Operation,                        // × (-4) when a=-4 ✓ CORRECT ANSWER
     a < 0 ? `÷ (${a})` : `÷ ${a}`,
-    a < 0 ? `× ${-a}` : `× (${-a})`,
+    a < 0 ? `× ${-a}` : `× (${-a})`,       // × 4 when a=-4 (student misconception)
     a < 0 ? `÷ ${-a}` : `÷ (${-a})`,
     `× ${Math.abs(a) + 1}`,
     `÷ ${Math.abs(a) + 1}`,
@@ -2173,7 +2182,9 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
   let problemHasConstantOnLeft = false;
   
   if (difficulty === 'easy') {
-    a = randomNonZeroInt(-12, 12);
+    // CRITICAL FIX 2025-01-15: Force POSITIVE coefficients in easy mode
+    // Prevents confusing problems like "-8 + 3x = -2"
+    a = randomInt(2, 12);  // POSITIVE ONLY, min 2
     b = randomNonZeroInt(-12, 12);
     solution = randomNonZeroInt(-12, 12);
     c = a * solution + b;
@@ -2510,6 +2521,12 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
     solution = a * quotient;
     c = quotient + b;
     
+    // CRITICAL FIX 2025-01-15: Prevent c=0 (creates invalid problems)
+    while (c === 0) {
+      b = randomNonZeroInt(-12, 12);
+      c = quotient + b;
+    }
+    
     if (skeleton === 'x/a+b=c') {
       problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
     } else {
@@ -2541,6 +2558,12 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
       const quotient = randomNonZeroInt(-15, 15);
       solution = a * quotient;
       c = quotient + b;
+      
+      // CRITICAL FIX 2025-01-15: Prevent c=0 (creates invalid problems)
+      while (c === 0) {
+        b = randomNonZeroInt(-15, 15);
+        c = quotient + b;
+      }
     }
     
     if (skeleton === 'x/a+b=c') {
