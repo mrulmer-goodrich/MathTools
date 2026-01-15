@@ -65,30 +65,15 @@ const randomNonZeroIntWithMin = (min, max, minAbsValue = 2) => {
   return val;
 };
 
-// FIX BUG #2: Helper to simplify denominators - NEVER show "x/(7+12)", always show "x/19"
-const simplifyDenominator = (denominator) => {
-  // If it's a number, return as-is
-  if (typeof denominator === 'number') return denominator;
-  
-  // If it's a string that looks like arithmetic, evaluate it
-  const str = String(denominator).trim();
-  
-  // Check if it contains arithmetic operations
-  if (str.includes('+') || str.includes('-') || str.includes('*') || str.includes('/')) {
-    try {
-      // Safely evaluate simple arithmetic (only numbers and basic operators)
-      const sanitized = str.replace(/[^0-9+\-*/().\s]/g, '');
-      if (sanitized === str) {
-        // eslint-disable-next-line no-eval
-        const result = eval(sanitized);
-        return Number.isFinite(result) ? result : str;
-      }
-    } catch (e) {
-      console.warn('Could not simplify denominator:', str);
-    }
+// PHASE 1: Fisher-Yates shuffle for term banks
+// Prevents answers from appearing in predictable positions
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  
-  return str;
+  return shuffled;
 };
 
 // Format with explicit sign (for equation banks)
@@ -349,7 +334,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [row1Expected[0]],
         expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_solution',
@@ -359,7 +344,7 @@ export const generateOneStepAddSubtract = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       }
     ]
   };
@@ -592,7 +577,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [row1Expected[0]],
         expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_solution',
@@ -602,7 +587,7 @@ export const generateOneStepMultiplyDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       }
     ]
   };
@@ -867,7 +852,7 @@ export const generateOneStepAddSubtractNegatives = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [row1Expected[0]],
         expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_solution',
@@ -877,7 +862,7 @@ export const generateOneStepAddSubtractNegatives = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       }
     ]
   };
@@ -925,61 +910,51 @@ export const generateOneStepAddSubtractNegatives = (difficulty) => {
 export const generateOneStepMultiplyDivideNegativesFractions = (difficulty) => {
   const levelId = '1-20';
   
-  // Format fraction for display with proper HTML structure
-  const formatFraction = (num, den) => {
-    if (den === 1) return String(num);
-    // Return fraction in format: (num/den)
-    return `(${num}/${den})`;
-  };
+  // PHASE 3 FIX: Removed fractional coefficients
+  // Simplified skeletons - multiplication and division one-step equations
+  // Number range: ±1 to ±12 (times tables mastery)
+  // Variable can be on either side
   
-  // All 7 skeletons
   const allSkeletons = [
-    'ax=b',      // (p/q)x = b
-    'x/a=b',     // x/a = b
-    'b=ax',      // b = (p/q)x
-    'b=x/a',     // b = x/a
-    'a=x/b',     // a = x/b
-    '-ax=b',     // -(p/q)x = b
-    'x/(-a)=b'   // x/(-a) = b
+    'ax=b',      // 3x = 12
+    'x/a=b',     // x/4 = 3
+    'b=ax',      // 12 = 3x
+    'b=x/a',     // 3 = x/4
+    '-ax=b',     // -3x = 12
+    'x/(-a)=b'   // x/(-4) = 3
   ];
   
   const skeleton = getNextSkeleton(levelId, difficulty, allSkeletons);
   
- let problem, operationNeeded, operationValue, operationValueDisplay;
-let problemHasConstantOnLeft = false;
-let p, q, k, b, solution, a;
-
+  let problem, operationNeeded, operationValue, operationValueDisplay;
+  let problemHasConstantOnLeft = false;
+  let a, b, solution;
   
   if (difficulty === 'easy') {
-    // EASY MODE: Exact construction
+    // EASY: ±1 to ±12 range (times tables)
     
     if (skeleton === 'ax=b' || skeleton === 'b=ax') {
-      // Use coefficient form: (p/q)x = b
-      // Construction: Pick p, q, k; then x = q*k and b = p*k
-      const denominators = [2, 3, 4, 5];
-      q = denominators[Math.floor(Math.random() * denominators.length)];
-      p = randomNonZeroInt(-3, 3); // Small numerators
-      k = randomNonZeroInt(1, 6);   // Small multiplier
-      
-      solution = q * k;  // EXACT
-      b = p * k;         // EXACT
+      // Multiplication: ax = b
+      a = randomNonZeroInt(-12, 12);
+      b = randomNonZeroInt(-12, 12);
+      solution = Math.round(b / a);  // Ensure integer solution
+      b = a * solution;  // Recalculate to ensure exact
       
       if (skeleton === 'ax=b') {
-        problem = `(${p}/${q})x = ${b}`;
+        problem = a === 1 ? `x = ${b}` : a === -1 ? `-x = ${b}` : `${a}x = ${b}`;
       } else {
-        problem = `${b} = (${p}/${q})x`;
+        problem = a === 1 ? `${b} = x` : a === -1 ? `${b} = -x` : `${b} = ${a}x`;
         problemHasConstantOnLeft = true;
       }
       
       operationNeeded = 'divide';
-      operationValue = p / q;  // Numeric value for calculations
-      operationValueDisplay = `(${p}/${q})`;  // Display string
+      operationValue = a;
+      operationValueDisplay = String(a);
       
     } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
-      // Division form: x/a = b
-      // Construction: Pick a, b; then x = a*b
-      a = randomNonZeroInt(2, 12);
-      b = randomNonZeroInt(-10, 10);
+      // Division: x/a = b
+      a = randomNonZeroInt(-12, 12);
+      b = randomNonZeroInt(-12, 12);
       solution = a * b;  // EXACT
       
       if (skeleton === 'x/a=b') {
@@ -993,72 +968,54 @@ let p, q, k, b, solution, a;
       operationValue = a;
       operationValueDisplay = String(a);
       
-    } else if (skeleton === 'a=x/b') {
-      // Form: a = x/b
-      b = randomNonZeroInt(2, 12);
-      a = randomNonZeroInt(-10, 10);
-      solution = a * b;  // EXACT
-      
-      problem = `${a} = x/${b}`;
-      problemHasConstantOnLeft = true;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      operationValueDisplay = String(b);
-      
     } else if (skeleton === '-ax=b') {
-      // Negative coefficient: -(p/q)x = b
-      q = [2, 3, 4][Math.floor(Math.random() * 3)];
-      p = randomNonZeroInt(1, 3);  // Positive p
-      k = randomNonZeroInt(1, 6);
+      // Negative coefficient: -ax = b
+      a = randomNonZeroInt(2, 12);  // Positive a
+      b = randomNonZeroInt(-12, 12);
+      solution = Math.round(-b / a);  // Negative result
+      b = -a * solution;  // Recalculate exact
       
-      solution = -q * k;  // Negative solution
-      b = -p * k;         // EXACT
-      
-      problem = `(-${p}/${q})x = ${b}`;
+      problem = `-${a}x = ${b}`;
       operationNeeded = 'divide';
-      operationValue = -p / q;
-      operationValueDisplay = `(-${p}/${q})`;
+      operationValue = -a;
+      operationValueDisplay = String(-a);
       
     } else if (skeleton === 'x/(-a)=b') {
-      // Negative divisor: x/(-a) = b (ASCII minus only!)
-      a = randomNonZeroInt(2, 8);
-      b = randomNonZeroInt(-8, 8);
+      // Negative divisor: x/(-a) = b
+      a = randomNonZeroInt(2, 12);
+      b = randomNonZeroInt(-12, 12);
       solution = -a * b;  // EXACT
       
-      problem = `x/(-${a}) = ${b}`;  // ASCII minus
+      problem = `x/(-${a}) = ${b}`;
       operationNeeded = 'multiply';
       operationValue = -a;
       operationValueDisplay = `(-${a})`;
     }
     
   } else {
-    // HARD MODE: Exact construction with larger ranges
+    // HARD: Same range but more complex patterns
     
     if (skeleton === 'ax=b' || skeleton === 'b=ax') {
-      // Coefficient form with more complex fractions
-      const denominators = [2, 3, 4, 5, 6, 8, 10, 12];
-      q = denominators[Math.floor(Math.random() * denominators.length)];
-      p = randomNonZeroInt(-9, 9);  // Larger range
-      k = randomNonZeroInt(-12, 12);
-      
-      solution = q * k;  // EXACT
-      b = p * k;         // EXACT
+      a = randomNonZeroInt(-12, 12);
+      b = randomNonZeroInt(-12, 12);
+      solution = Math.round(b / a);
+      b = a * solution;
       
       if (skeleton === 'ax=b') {
-        problem = `(${p}/${q})x = ${b}`;
+        problem = a === 1 ? `x = ${b}` : a === -1 ? `-x = ${b}` : `${a}x = ${b}`;
       } else {
-        problem = `${b} = (${p}/${q})x`;
+        problem = a === 1 ? `${b} = x` : a === -1 ? `${b} = -x` : `${b} = ${a}x`;
         problemHasConstantOnLeft = true;
       }
       
       operationNeeded = 'divide';
-      operationValue = p / q;
-      operationValueDisplay = `(${p}/${q})`;
+      operationValue = a;
+      operationValueDisplay = String(a);
       
     } else if (skeleton === 'x/a=b' || skeleton === 'b=x/a') {
       a = randomNonZeroInt(-12, 12);
-      b = randomNonZeroInt(-15, 15);
-      solution = a * b;  // EXACT
+      b = randomNonZeroInt(-12, 12);
+      solution = a * b;
       
       if (skeleton === 'x/a=b') {
         problem = `x/${a} = ${b}`;
@@ -1071,116 +1028,65 @@ let p, q, k, b, solution, a;
       operationValue = a;
       operationValueDisplay = String(a);
       
-    } else if (skeleton === 'a=x/b') {
-      b = randomNonZeroInt(-12, 12);
-      a = randomNonZeroInt(-15, 15);
-      solution = a * b;  // EXACT
-      
-      problem = `${a} = x/${b}`;
-      problemHasConstantOnLeft = true;
-      operationNeeded = 'multiply';
-      operationValue = b;
-      operationValueDisplay = String(b);
-      
     } else if (skeleton === '-ax=b') {
-      q = [2, 3, 4, 5, 6, 8][Math.floor(Math.random() * 6)];
-      p = randomNonZeroInt(1, 9);
-      k = randomNonZeroInt(-12, 12);
+      a = randomNonZeroInt(2, 12);
+      b = randomNonZeroInt(-12, 12);
+      solution = Math.round(-b / a);
+      b = -a * solution;
       
-      solution = -q * k;
-      b = -p * k;  // EXACT
-      
-      problem = `(-${p}/${q})x = ${b}`;
+      problem = `-${a}x = ${b}`;
       operationNeeded = 'divide';
-      operationValue = -p / q;
-      operationValueDisplay = `(-${p}/${q})`;
+      operationValue = -a;
+      operationValueDisplay = String(-a);
       
     } else if (skeleton === 'x/(-a)=b') {
       a = randomNonZeroInt(2, 12);
-      b = randomNonZeroInt(-15, 15);
-      solution = -a * b;  // EXACT
+      b = randomNonZeroInt(-12, 12);
+      solution = -a * b;
       
-      problem = `x/(-${a}) = ${b}`;  // ASCII minus
+      problem = `x/(-${a}) = ${b}`;
       operationNeeded = 'multiply';
       operationValue = -a;
       operationValueDisplay = `(-${a})`;
     }
   }
   
-  // Build Row 1 bank (operations)
-  // Use operationValueDisplay for all student-facing strings
-  const isFractionCoefficient = operationValueDisplay.includes('/');
-  
-  let row1Bank;
-  if (isFractionCoefficient) {
-    // Fraction coefficient distractors - pedagogically meaningful
-    const [fullMatch, sign, num, den] = operationValueDisplay.match(/^\((-?)(\d+)\/(\d+)\)$/) || [null, '', '1', '1'];
-    const oppositeSign = sign === '-' ? '' : '-';
-    
-    row1Bank = [
-      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
-      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
-      operationNeeded === 'multiply' ? `× (${den}/${num})` : `÷ (${den}/${num})`, // Reciprocal
-      operationNeeded === 'multiply' ? `÷ (${den}/${num})` : `× (${den}/${num})`, // Reciprocal wrong op
-      operationNeeded === 'multiply' ? `× (${oppositeSign}${num}/${den})` : `÷ (${oppositeSign}${num}/${den})`, // Sign error
-      operationNeeded === 'multiply' ? `÷ (${oppositeSign}${num}/${den})` : `× (${oppositeSign}${num}/${den})`, // Sign + op error
-      `+ ${b}`, // Addition distractor
-      `- ${b}`, // Subtraction distractor
-      formatWithSign(b + 1),
-      formatWithSign(b - 1)
-    ];
-  } else {
-    // Integer distractors - existing logic works fine
-    row1Bank = [
-      operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
-      operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
-      operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`, // Sign error
-      `× ${Math.abs(operationValue) + 1}`,
-      `÷ ${Math.abs(operationValue) + 1}`,
-      formatWithSign(Math.abs(operationValue)),
-      formatWithSign(-Math.abs(operationValue)),
-      `× ${Math.abs(b)}`,
-      `÷ ${Math.abs(b)}`,
-      operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
-    ];
-  }
+  // Build Row 1 bank (operations) - integer only
+  const row1Bank = [
+    operationNeeded === 'multiply' ? `× ${operationValueDisplay}` : `÷ ${operationValueDisplay}`, // Correct
+    operationNeeded === 'multiply' ? `÷ ${operationValueDisplay}` : `× ${operationValueDisplay}`, // Wrong operation
+    operationNeeded === 'multiply' ? `× ${-operationValue}` : `÷ ${-operationValue}`, // Sign error
+    `× ${Math.abs(operationValue) + 1}`,
+    `÷ ${Math.abs(operationValue) + 1}`,
+    formatWithSign(Math.abs(operationValue)),
+    formatWithSign(-Math.abs(operationValue)),
+    `× ${Math.abs(b)}`,
+    `÷ ${Math.abs(b)}`,
+    operationNeeded === 'multiply' ? `× ${Math.abs(operationValue) * 2}` : `÷ ${Math.abs(operationValue) * 2}`
+  ];
   
   const row1Expected = operationNeeded === 'multiply' 
     ? [`× ${operationValueDisplay}`, `× ${operationValueDisplay}`]
     : [`÷ ${operationValueDisplay}`, `÷ ${operationValueDisplay}`];
   
   // Build Row 2 bank
-  // FIXED 2025-01-14: Don't include operationValue decimals for fraction coefficients
-  const row2Bank = isFractionCoefficient
-    ? [
-        'x',
-        '-x',
-        String(solution),
-        String(-solution),
-        String(solution + 1),
-        String(solution - 1),
-        String(Math.abs(b)),
-        String(-Math.abs(b)),
-        String(Math.abs(b) + 1),
-        String(Math.abs(b) - 1)
-      ]
-    : [
-        'x',
-        '-x',
-        String(solution),
-        String(-solution),
-        String(solution + 1),
-        String(solution - 1),
-        String(Math.abs(operationValue)),
-        String(-Math.abs(operationValue)),
-        String(Math.abs(b)),
-        String(-Math.abs(b))
-      ];
+  const row2Bank = [
+    'x',
+    '-x',
+    String(solution),
+    String(-solution),
+    String(solution + 1),
+    String(solution - 1),
+    String(Math.abs(operationValue)),
+    String(-Math.abs(operationValue)),
+    String(Math.abs(b)),
+    String(-Math.abs(b))
+  ];
   
   const row2ExpectedLeft = problemHasConstantOnLeft ? [String(solution)] : ['x'];
   const row2ExpectedRight = problemHasConstantOnLeft ? ['x'] : [String(solution)];
   
-    // Build staged structure (matches Levels 17-19 format)
+  // Build staged structure
   const staged = {
     mode: 'equation_solver',
     rows: [
@@ -1199,7 +1105,7 @@ let p, q, k, b, solution, a;
         rightBlanks: 1,
         expectedLeft: [row1Expected[0]],
         expectedRight: [row1Expected[1]],
-        bank: [...new Set(row1Bank)].sort()
+        bank: shuffleArray([...new Set(row1Bank)])
       },
       {
         id: 'row2_solution',
@@ -1209,12 +1115,11 @@ let p, q, k, b, solution, a;
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: shuffleArray([...new Set(row2Bank)])
       }
     ]
   };
 
-  // Determine rule based on operation (same tone as Level 18)
   const rule = operationNeeded === 'multiply'
     ? 'To isolate the variable, clear the fence by multiplying both sides by the number across the fence.'
     : 'To isolate the variable, unstick the sticky by dividing the sticky number on both sides.';
@@ -1267,8 +1172,9 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
   let aDisplay, aNumeric;
   
   if (difficulty === 'easy') {
-    // Easy: -12 to 12, times tables, whole numbers
-    a = randomNonZeroInt(-12, 12);
+    // Easy: 2 to 12 for coefficient (POSITIVE ONLY to avoid double-negative confusion)
+    // -12 to 12 for constants - this makes first problems easier
+    a = randomNonZeroInt(2, 12);  // PHASE 4 FIX: Positive only
     b = randomNonZeroInt(-12, 12);
     solution = randomNonZeroInt(-12, 12);
     
@@ -1553,7 +1459,7 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step1Operation],
         expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_after_subtract',
@@ -1563,7 +1469,7 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       },
       {
         id: 'row3_divide',
@@ -1573,7 +1479,7 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step2Operation],
         expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
+        bank: [...new Set(row3Bank)]
       },
       {
         id: 'row4_solution',
@@ -1583,7 +1489,7 @@ export const generateTwoStepMultiplyAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row4ExpectedLeft,
         expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
+        bank: [...new Set(row4Bank)]
       }
     ]
   };
@@ -1656,7 +1562,12 @@ export const generateTwoStepDivideAdd = (difficulty) => {
     solution = a * quotient;  // Ensures x/a = quotient (whole number)
     
     // Calculate c: c = x/a + b = quotient + b
+    // PHASE 5 FIX: Ensure c is never zero
     c = quotient + b;
+    while (c === 0) {
+      b = randomNonZeroIntWithMin(-12, 12, 2);
+      c = quotient + b;
+    }
     
     // Build problem string based on skeleton
     // CRITICAL: If b is negative, display as subtraction
@@ -1702,6 +1613,14 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       const quotient = (randomNonZeroInt(-24, 24) / 2);
       solution = a * quotient;
       c = quotient + b;
+      // PHASE 5 FIX: Ensure c never zero
+      while (c === 0) {
+        b = (randomNonZeroInt(-24, 24) / 2);
+        while (b === 0 || Math.abs(b) < 1) {
+          b = (randomNonZeroInt(-24, 24) / 2);
+        }
+        c = quotient + b;
+      }
       
       if (skeleton === 'x/a+b=c') {
         problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
@@ -1735,6 +1654,11 @@ export const generateTwoStepDivideAdd = (difficulty) => {
       const quotient = randomNonZeroInt(-12, 12);
       solution = a * quotient;
       c = quotient + b;
+      // PHASE 5 FIX: Ensure c never zero
+      while (c === 0) {
+        b = randomNonZeroIntWithMin(-12, 12, 2);
+        c = quotient + b;
+      }
       
       if (skeleton === 'x/a+b=c') {
         problem = b < 0 ? `x/${a} - ${Math.abs(b)} = ${c}` : `x/${a} + ${b} = ${c}`;
@@ -1852,7 +1776,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step1Operation],
         expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_after_subtract',
@@ -1862,7 +1786,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       },
       {
         id: 'row3_multiply',
@@ -1872,7 +1796,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step2Operation],
         expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
+        bank: [...new Set(row3Bank)]
       },
       {
         id: 'row4_solution',
@@ -1882,7 +1806,7 @@ export const generateTwoStepDivideAdd = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row4ExpectedLeft,
         expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
+        bank: [...new Set(row4Bank)]
       }
     ]
   };
@@ -2111,7 +2035,7 @@ export const generateTwoStepAddDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step1Operation],
         expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_after_multiply',
@@ -2121,7 +2045,7 @@ export const generateTwoStepAddDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       },
       {
         id: 'row3_subtract',
@@ -2131,7 +2055,7 @@ export const generateTwoStepAddDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step2Operation],
         expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
+        bank: [...new Set(row3Bank)]
       },
       {
         id: 'row4_solution',
@@ -2141,7 +2065,7 @@ export const generateTwoStepAddDivide = (difficulty) => {
         rightBlanks: 1,
         expectedLeft: row4ExpectedLeft,
         expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
+        bank: [...new Set(row4Bank)]
       }
     ]
   };
@@ -2370,7 +2294,7 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step1Operation],
         expectedRight: [step1Operation],
-        bank: [...new Set(row1Bank)].sort()
+        bank: [...new Set(row1Bank)]
       },
       {
         id: 'row2_after_subtract',
@@ -2380,7 +2304,7 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
         rightBlanks: 1,
         expectedLeft: row2ExpectedLeft,
         expectedRight: row2ExpectedRight,
-        bank: [...new Set(row2Bank)].sort()
+        bank: [...new Set(row2Bank)]
       },
       {
         id: 'row3_divide',
@@ -2390,7 +2314,7 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
         rightBlanks: 1,
         expectedLeft: [step2Operation],
         expectedRight: [step2Operation],
-        bank: [...new Set(row3Bank)].sort()
+        bank: [...new Set(row3Bank)]
       },
       {
         id: 'row4_solution',
@@ -2400,7 +2324,7 @@ const generateLevel24MultiplyAdd = (skeleton, difficulty) => {
         rightBlanks: 1,
         expectedLeft: row4ExpectedLeft,
         expectedRight: row4ExpectedRight,
-        bank: [...new Set(row4Bank)].sort()
+        bank: [...new Set(row4Bank)]
       }
     ]
   };
@@ -2543,10 +2467,10 @@ const generateLevel24MultiplySubtract = (skeleton, difficulty) => {
     mode: 'equation_solver',
     rows: [
       { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
-      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [...new Set(row1Bank)].sort() },
-      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm], expectedRight: problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
-      { id: 'row3_divide', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [...new Set(row3Bank)].sort() },
-      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: [...new Set(row4Bank)].sort() }
+      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: shuffleArray([...new Set(row1Bank)]) },
+      { id: 'row2_after_add', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [axTerm], expectedRight: problemHasConstantOnLeft ? [axTerm] : [String(afterStep1)], bank: shuffleArray([...new Set(row2Bank)]) },
+      { id: 'row3_divide', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: shuffleArray([...new Set(row3Bank)]) },
+      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: shuffleArray([...new Set(row4Bank)]) }
     ]
   };
   
@@ -2691,10 +2615,10 @@ const generateLevel24DivideAdd = (skeleton, difficulty) => {
     mode: 'equation_solver',
     rows: [
       { id: 'row0_draw_line', type: 'single_choice', instruction: 'What do you do first?', choices: ['Draw a line'], expected: ['Draw a line'] },
-      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: [...new Set(row1Bank)].sort() },
-      { id: 'row2_after_subtract', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`x/${a}`], expectedRight: problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)], bank: [...new Set(row2Bank)].sort() },
-      { id: 'row3_multiply', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: [...new Set(row3Bank)].sort() },
-      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: [...new Set(row4Bank)].sort() }
+      { id: 'row1_operation', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step1Operation], expectedRight: [step1Operation], bank: shuffleArray([...new Set(row1Bank)]) },
+      { id: 'row2_after_subtract', type: 'dual_box', instruction: 'Simplify each side', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(afterStep1)] : [`x/${a}`], expectedRight: problemHasConstantOnLeft ? [`x/${a}`] : [String(afterStep1)], bank: shuffleArray([...new Set(row2Bank)]) },
+      { id: 'row3_multiply', type: 'dual_box', instruction: 'What do we do to both sides?', leftBlanks: 1, rightBlanks: 1, expectedLeft: [step2Operation], expectedRight: [step2Operation], bank: shuffleArray([...new Set(row3Bank)]) },
+      { id: 'row4_solution', type: 'dual_box', instruction: 'Simplify to solve', leftBlanks: 1, rightBlanks: 1, expectedLeft: problemHasConstantOnLeft ? [String(solution)] : ['x'], expectedRight: problemHasConstantOnLeft ? ['x'] : [String(solution)], bank: shuffleArray([...new Set(row4Bank)]) }
     ]
   };
   
