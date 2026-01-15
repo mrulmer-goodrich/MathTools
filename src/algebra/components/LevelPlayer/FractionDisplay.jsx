@@ -121,10 +121,11 @@ const FractionDisplay = ({ expression }) => {
     );
   }
   
-  // CRITICAL FIX: Check for (expression)/denominator pattern BEFORE greedy split
-  // Defense-in-depth for cases like "(4+x)/12", "(x-3)/7", "(-5+x)/8"
+  // CRITICAL FIX v2: Check for (expression)/denominator pattern BEFORE greedy split
+  // Defense-in-depth for cases like "(4+x)/12", "(x-3)/7", "(-5+x)/8", "(8+x)/9"
   // This pattern catches compound numerators that should stay grouped
-  const compoundNumeratorPattern = /^\(([^)]+)\)\s*\/\s*(.+)$/;
+  // IMPORTANT: Denominator must be SIMPLE (no operators) to match this pattern
+  const compoundNumeratorPattern = /^\(([^)]+)\)\s*\/\s*(-?\d+(?:\.\d+)?)$/;
   const compoundMatch = str.match(compoundNumeratorPattern);
   
   if (compoundMatch) {
