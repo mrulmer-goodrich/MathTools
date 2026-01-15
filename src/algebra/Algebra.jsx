@@ -187,14 +187,16 @@ const Algebra = () => {
     // Track attempted problems (including wrong answers)
     setStats(prev => {
       const diffKey = difficulty || 'easy';
-      const levelKey = `${levelId}-${diffKey}`;
+      const modeKey = playMode || 'play';  // PHASE 8 FIX: Include mode
+      const levelKey = `${levelId}-${diffKey}-${modeKey}`;  // PHASE 8 FIX: 4-part key
       const existingLevel = prev.levelStats[levelKey] || {
         attempted: 0,
         correct: 0,
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now()
+        lastPlayed: Date.now(),
+        mode: modeKey  // PHASE 8 FIX: Store mode explicitly
       };
 
       return {
@@ -218,17 +220,19 @@ const Algebra = () => {
       crystals: prev.crystals + crystalsEarned
     }));
 
-    // Enhanced stats tracking per level and difficulty
+    // Enhanced stats tracking per level and difficulty AND MODE
     setStats(prev => {
       const diffKey = difficulty || 'easy';
-      const levelKey = `${levelId}-${diffKey}`;
+      const modeKey = playMode || 'play';  // PHASE 8 FIX: Include mode
+      const levelKey = `${levelId}-${diffKey}-${modeKey}`;  // PHASE 8 FIX: 4-part key
       const existingLevel = prev.levelStats[levelKey] || {
         attempted: 0,
         correct: 0,
         firstTryCorrect: 0,
         totalSolved: 0,
         totalTime: 0,
-        lastPlayed: Date.now()
+        lastPlayed: Date.now(),
+        mode: modeKey  // PHASE 8 FIX: Store mode explicitly
       };
 
       return {
