@@ -18,6 +18,16 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
   
   // UI FIX #11: Name change state
   const [newPlayerName, setNewPlayerName] = useState(playerName || '');
+  
+  // FIX e) Avatar selector ref for scrolling
+  const avatarSelectorRef = React.useRef(null);
+  
+  // FIX e) Scroll to avatar selector when it opens
+  React.useEffect(() => {
+    if (showAvatarSelector && avatarSelectorRef.current) {
+      avatarSelectorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [showAvatarSelector]);
 
   // Handle column header click for sorting
   const handleSort = (key) => {
@@ -339,13 +349,15 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
 
           {/* Avatar Selector Grid */}
           {showAvatarSelector && (
-            <div style={{
-              marginTop: '1rem',
-              padding: '1rem',
-              background: '#F9FAFB',
-              borderRadius: '8px',
-              border: '2px solid #E5E7EB'
-            }}>
+            <div 
+              ref={avatarSelectorRef}
+              style={{
+                marginTop: '1rem',
+                padding: '1rem',
+                background: '#F9FAFB',
+                borderRadius: '8px',
+                border: '2px solid #E5E7EB'
+              }}>
               <h4 style={{
                 fontSize: '0.875rem',
                 fontWeight: 700,
