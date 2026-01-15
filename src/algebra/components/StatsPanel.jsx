@@ -15,6 +15,9 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
   const [selectedAvatar, setSelectedAvatar] = useState(() => {
     return localStorage.getItem('algebra_player_avatar') || '1';
   });
+  
+  // UI FIX #11: Name change state
+  const [newPlayerName, setNewPlayerName] = useState(playerName || '');
 
   // Handle column header click for sorting
   const handleSort = (key) => {
@@ -31,6 +34,15 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
     setShowAvatarSelector(false);
     // Trigger storage event so FloatingIcons updates
     window.dispatchEvent(new Event('storage'));
+  };
+  
+  // UI FIX #11: Handle name change
+  const handleNameChange = () => {
+    if (newPlayerName.trim()) {
+      localStorage.setItem('algebra_player_name', newPlayerName.trim());
+      // Trigger reload to update name everywhere
+      window.location.reload();
+    }
   };
 
   // Handle clear session
@@ -292,7 +304,7 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                 e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)';
               }}
             >
-              👤 Change Avatar
+              👤 Change Avatar & Name
             </button>
             
             <button
@@ -372,6 +384,61 @@ const StatsPanel = ({ stats, progress, playerName, difficulty, onClose }) => {
                     }}
                   />
                 ))}
+              </div>
+              
+              {/* UI FIX #11: Name Change Field */}
+              <div style={{ marginTop: '1rem' }}>
+                <h4 style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  color: '#1F2937',
+                  marginBottom: '0.5rem',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  Change Your Name
+                </h4>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={newPlayerName}
+                    onChange={(e) => setNewPlayerName(e.target.value)}
+                    placeholder={playerName}
+                    maxLength={20}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '0.875rem',
+                      border: '2px solid #E5E7EB',
+                      borderRadius: '6px',
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 600
+                    }}
+                  />
+                  <button
+                    onClick={handleNameChange}
+                    disabled={!newPlayerName.trim() || newPlayerName.trim() === playerName}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: newPlayerName.trim() && newPlayerName.trim() !== playerName
+                        ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                        : '#E5E7EB',
+                      color: newPlayerName.trim() && newPlayerName.trim() !== playerName
+                        ? 'white'
+                        : '#9CA3AF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      fontFamily: 'Poppins, sans-serif',
+                      cursor: newPlayerName.trim() && newPlayerName.trim() !== playerName
+                        ? 'pointer'
+                        : 'not-allowed',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </div>
           )}
