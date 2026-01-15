@@ -1,9 +1,10 @@
-// FeedbackModal.jsx - v15 SURGICAL FIX: Equations with fractions in feedback
+// FeedbackModal.jsx - v16 UI FIX: Draggable + click-to-dismiss
 // Location: src/algebra/components/FeedbackModal.jsx
 // FIX: renderProblemValue now splits equations on = before passing to FractionDisplay
 // This fixes "(4+x)/12" displaying incorrectly in step-by-step solutions
+// UI FIX #10: Added draggable functionality and click-to-dismiss
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import StackedEquation from '../StackedEquation';
 import FractionDisplay from './FractionDisplay';
 import '../../styles/algebra.css';
@@ -15,6 +16,61 @@ const FeedbackModal = ({
   selectedAnswer,
   problem
 }) => {
+  // UI FIX #10: Draggable state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const modalRef = useRef(null);
+  const draggedRef = useRef(false);
+
+  useEffect(() => {
+    // Reset position when modal opens
+    setPosition({ x: 0, y: 0 });
+  }, [explanation]);
+
+  const handleMouseDown = (e) => {
+    // Only drag if clicking the header area
+    if (e.target.closest('.feedback-header-compact')) {
+      setIsDragging(true);
+      draggedRef.current = false;
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      draggedRef.current = true;
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  const handleOverlayClick = (e) => {
+    // UI FIX #10: Click overlay background to dismiss
+    if (e.target.className === 'feedback-modal-overlay') {
+      onContinue();
+    }
+  };
   // SAFETY: Handle explanation as object or string
   const getExplanationContent = () => {
     if (!explanation) {
@@ -102,11 +158,31 @@ const FeedbackModal = ({
   };
 
   return (
-    <div className="feedback-modal-overlay">
-      <div className="feedback-modal-content-compact">
-        {/* Header - MINIMAL */}
-        <div className="feedback-header-compact">
+    <div className="feedback-modal-overlay" onClick={handleOverlayClick}>
+      <div 
+        ref={modalRef}
+        className="feedback-modal-content-compact"
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          cursor: isDragging ? 'grabbing' : 'default',
+          transition: isDragging ? 'none' : 'transform 0.2s ease'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header - MINIMAL + Draggable */}
+        <div 
+          className="feedback-header-compact"
+          onMouseDown={handleMouseDown}
+          style={{ cursor: 'grab', userSelect: 'none' }}
+        >
           <h2 className="feedback-title-compact">Not Quite!</h2>
+          <span style={{ 
+            fontSize: '0.75rem', 
+            opacity: 0.6,
+            marginLeft: '0.5rem'
+          }}>
+            (drag to move)
+          </span>
         </div>
 
         {/* Original Problem - COMPACT with fractions */}
