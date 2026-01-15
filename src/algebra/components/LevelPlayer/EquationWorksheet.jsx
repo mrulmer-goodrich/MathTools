@@ -37,6 +37,19 @@ const EquationWorksheet = ({
     setShowFinalAnswer(false);
   }, [problem]);
 
+  // UI FIX #9: Auto-scroll to show active row when index changes
+  useEffect(() => {
+    if (workAreaRef.current) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        const activeRow = workAreaRef.current.querySelector('.worksheet-row.active');
+        if (activeRow) {
+          activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    }
+  }, [currentRowIndex]);
+
   if (!problem.staged || !problem.staged.rows) {
     console.error('EquationWorksheet: Invalid staged structure', problem);
     return <div className="error">Problem structure invalid</div>;
